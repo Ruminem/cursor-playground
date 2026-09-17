@@ -1,0 +1,70 @@
+rate 48
+color o e89a4a
+color d c26f34
+color w fff6e8
+color p f4a0b0
+color z 9cc8ff
+color # 3a2a30
+frame
+.
+.
+.
+.
+..................zzzz
+....................z
+...................z
+..................zzzz
+...............###.###
+.....###########o###o#
+...###doodoodoodpooop##
+..##oodoodoodoodoooooo#
+..#doodoodoodoodoodooo#
+..#doodoodoodoodo##o###
+..#oooooooooooooooooo##
+..#oooooooooooooooop##
+.##oooooooooooooo####
+.#ooooo##oooooooo#
+.#################
+.
+frame
+........................z
+.......................z
+......................zzzz
+..................zzzz
+....................z
+...................z
+..................zzzz
+.
+........######.###.###
+....#####dood###o###o#
+..###odoodoodoodpooop##
+..#doodoodoodoodoodooo#
+..#doodoodoodoodoodooo#
+..#doodoodoodoodo##o###
+..#oooooooooooooooooo##
+..#oooooooooooooooop##
+.##oooooooooooooo####
+.#ooooo##oooooooo#
+.#################
+.
+frame
+......................zzzz
+........................z
+.......................z
+......................zzzz
+..................zzzz
+....................z
+...................z
+..................zzzz
+...............###.###
+.....###########o###o#
+...###doodoodoodpooop##
+..##oodoodoodoodoooooo#
+..#doodoodoodoodoodooo#
+..#doodoodoodoodo##o###
+..#oooooooooooooooooo##
+..#oooooooooooooooop##
+.##oooooooooooooo####
+.#ooooo##oooooooo#
+.#################
+.
