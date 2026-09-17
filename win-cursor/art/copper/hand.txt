@@ -1,0 +1,17 @@
+hotspot 5,0
+color 0 3a1e0cff
+color 1 50b098ff
+color 2 7a4020ff
+color 3 c07040ff
+color 4 e8a070ff
+color 5 ffd0a8ff
+....00
+....00
+....00
+0000540000
+.04544510
+..051320
+..052220
+..030030
+..00..00
+.0......0

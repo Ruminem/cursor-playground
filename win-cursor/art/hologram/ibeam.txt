@@ -1,0 +1,34 @@
+hotspot 5,9
+color 0 5a3ca078
+color 1 60e0ffd8
+color 2 88c4f7d8
+color 3 88e0dbd8
+color 4 b0a8f0d8
+color 5 b0e0b8d8
+color 6 d78ce8d8
+color 7 d7e094d8
+color 8 f8f8ffff
+color 9 ff70e0d8
+color A ff8cc4d8
+color B ffa8a8d8
+color C ffc48cd8
+color D ffe070d8
+.000000000
+08888888880
+08469ABCD80
+08888B88880
+.0008C8000
+...08D80
+...08780
+...08580
+...08380
+...08180
+...08280
+...08480
+...08680
+...08980
+.0008A8000
+08888B88880
+089ABCD7580
+08888888880
+.000000000

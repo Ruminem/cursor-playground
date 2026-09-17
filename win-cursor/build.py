@@ -77,6 +77,8 @@ def build() -> str:
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*CURSOR_CSS*/", "\n".join(css))
         .replace("/*CURSOR_DATA*/", json.dumps(data, separators=(",", ":")))
+        .replace("<!--COUNT-->", str(len(SCHEMES)))
+        .replace("<!--GROUPS-->", str(len(groups)))
         .replace("<!--PICKER-->", "".join(
             f'<div class="group"><h3 class="group-name">{cat}</h3><div class="picker">{"".join(items)}</div></div>'
             for cat, items in groups.items()))
