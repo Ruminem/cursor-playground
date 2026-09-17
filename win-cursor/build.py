@@ -7,20 +7,15 @@ preview.html 에는 그림 데이터가 들어가고, dist/ 의 커서 파일은
 art/ 를 고치면 이걸 다시 돌리고 결과까지 커밋해야 웹에 반영된다.
 """
 import base64
+import json
 from pathlib import Path
 
 from make_cur import png_to_cur, read_hotspot, txt_to_png
 
 HERE = Path(__file__).parent
 
-# install.ps1 의 $schemes 와 순서·이름을 맞춘다
-SCHEMES = [
-    ("pink", "분홍", "검은 외곽선에 분홍 채우기. 기본 크기의 또렷한 픽셀."),
-    ("neon", "네온", "속이 빈 어두운 몸체에 청록·자홍 관, 바깥으로 반투명 번짐."),
-    ("minimal", "미니멀", "절반 크기의 가는 검정 실루엣과 흰 테두리. 점 하나짜리 링크."),
-    ("onebit", "1비트", "흑백 두 색에 디더링 음영과 딱딱한 그림자, 손가락 링크."),
-    ("fantasy", "판타지", "은빛 칼, 나무 모래시계, 방패, 나침반, 마법 지팡이."),
-]
+# 구성표 목록은 schemes.json 한 곳에 둔다 (install.ps1, handler.ps1 도 같은 파일을 읽음)
+SCHEMES = json.loads((HERE / "schemes.json").read_text(encoding="utf-8"))
 # 파일, 칸 이름, 브라우저가 이미지를 못 쓸 때의 기본 커서
 ROLES = [
     ("arrow", "일반 선택", "default"),
@@ -33,8 +28,10 @@ ROLES = [
 
 
 def build() -> str:
-    css, picker, panels = [], [], []
-    for sid, sname, sdesc in SCHEMES:
+    css, panels = [], []
+    groups: dict[str, list[str]] = {}
+    for scheme in SCHEMES:
+        sid, sname, sdesc = scheme["id"], scheme["name"], scheme["desc"]
         cards, thumb = [], ""
         for rid, rlabel, fallback in ROLES:
             text = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
@@ -60,7 +57,7 @@ def build() -> str:
             <p class="coords">{w}×{h} · hotspot <b>{hx},{hy}</b></p>
           </div>
         </article>""")
-        picker.append(f"""
+        groups.setdefault(scheme["category"], []).append(f"""
       <button type="button" class="pick c-hand" data-pick="{sid}" aria-pressed="false">
         <span class="thumb" style="background-image:url({thumb})"></span>
         <span class="pick-name">{sname}</span>
@@ -77,7 +74,9 @@ def build() -> str:
     page = (
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*CURSOR_CSS*/", "\n".join(css))
-        .replace("<!--PICKER-->", "".join(picker))
+        .replace("<!--PICKER-->", "".join(
+            f'<div class="group"><h3 class="group-name">{cat}</h3><div class="picker">{"".join(items)}</div></div>'
+            for cat, items in groups.items()))
         .replace("<!--PANELS-->", "".join(panels))
     )
     head, body = page.split("</style>", 1)
@@ -92,7 +91,8 @@ def build() -> str:
 
 def build_dist() -> int:
     count = 0
-    for sid, _, _ in SCHEMES:
+    for scheme in SCHEMES:
+        sid = scheme["id"]
         out = HERE / "dist" / sid
         out.mkdir(parents=True, exist_ok=True)
         for rid, _, _ in ROLES:

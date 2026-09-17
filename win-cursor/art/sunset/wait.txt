@@ -1,0 +1,30 @@
+hotspot 5,7
+color 0 281432ff
+color 1 50287aff
+color 2 833182ff
+color 3 9c3686ff
+color 4 b63a8bff
+color 5 c84684ff
+color 6 d75479ff
+color 7 e6626dff
+color 8 f57062ff
+color 9 ff815aff
+color A ff955aff
+color B ffa95aff
+color C ffd25aff
+00000000000
+0CCCCCCCCC0
+00000000000
+.0BBBBBBB0
+.0AAAAAAA0
+..0999990
+...08880
+....070
+....060
+...05550
+..0444440
+.033333330
+.022222220
+00000000000
+01111111110
+00000000000

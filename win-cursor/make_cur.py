@@ -47,8 +47,23 @@ def read_hotspot(text: str) -> tuple[int, int] | None:
     return None
 
 
+def read_palette(text: str) -> dict[str, tuple[int, int, int, int]]:
+    """기본 팔레트에 파일의 `color X RRGGBB[AA]` 줄을 덮어쓴다."""
+    palette = dict(PALETTE)
+    for line in text.splitlines():
+        if line.startswith("color "):
+            _, ch, hexcode = line.split()
+            if len(ch) != 1 or ch == "." or len(hexcode) not in (6, 8):
+                raise SystemExit(f"잘못된 색 줄: {line!r}")
+            r, g, b, a = bytes.fromhex(hexcode if len(hexcode) == 8 else hexcode + "ff")
+            palette[ch] = (r, g, b, a)
+    return palette
+
+
 def txt_to_png(text: str) -> bytes:
-    rows = [line for line in text.splitlines() if line.strip() and not line.startswith("hotspot")]
+    palette = read_palette(text)
+    rows = [line for line in text.splitlines()
+            if line.strip() and not line.startswith(("hotspot", "color "))]
     w = max(MIN_SIZE, max(len(r) for r in rows))
     h = max(MIN_SIZE, len(rows))
     w = h = max(w, h)  # 정사각형이 아니면 윈도우가 늘려서 찌그러진다
@@ -58,9 +73,9 @@ def txt_to_png(text: str) -> bytes:
         row = rows[y] if y < len(rows) else ""
         for x in range(w):
             ch = row[x] if x < len(row) else "."
-            if ch not in PALETTE:
+            if ch not in palette:
                 raise SystemExit(f"{y + 1}행 {x + 1}열: 팔레트에 없는 글자 {ch!r}")
-            raw += bytes(PALETTE[ch])
+            raw += bytes(palette[ch])
 
     def chunk(kind: bytes, data: bytes) -> bytes:
         return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))

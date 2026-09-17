@@ -1,0 +1,21 @@
+hotspot 6,1
+color 0 286ea0ff
+color 1 8cd2f0ff
+color 2 a2dcf4ff
+color 3 b4f0ff50
+color 4 b9e7f8ff
+color 5 d0f2fbff
+color 6 e6fcffff
+color 7 ffffffff
+.....33
+....3003
+....3003
+.3333003333
+300006600003
+.3055755503
+..30447403
+..30222703
+..30100103
+..30033003
+.3033..3303
+..3......3

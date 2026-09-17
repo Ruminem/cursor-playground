@@ -1,0 +1,36 @@
+hotspot 5,9
+color 0 286ea0ff
+color 1 8cd2f0ff
+color 2 92d5f1ff
+color 3 99d8f2ff
+color 4 9fdbf3ff
+color 5 a6def4ff
+color 6 b3e4f6ff
+color 7 b4f0ff50
+color 8 b9e7f8ff
+color 9 bfeaf9ff
+color A c6edfaff
+color B ccf0fbff
+color C d9f6fdff
+color D e0f9feff
+color E e6fcffff
+color F ffffffff
+.777777777
+70000000007
+70FEEEEEF07
+70000D00007
+.7770C0777
+...70F07
+...70B07
+...70A07
+...70907
+...70807
+...70607
+...70F07
+...70507
+...70407
+.777030777
+70000200007
+7011F111107
+70000000007
+.777777777

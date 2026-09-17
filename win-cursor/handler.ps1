@@ -3,7 +3,7 @@
 # setup.ps1 이 이 파일을 %LOCALAPPDATA%\cursor-playground 에 내려받고 -Setup 으로 실행한다.
 #
 # 받는 주소는 아래 다섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
-#   cursor-playground://apply/<구성표>/<방문>   커서를 내려받아 구성표로 등록하고 바로 적용
+#   cursor-playground://apply/<구성표>/<방문>   커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
 #   cursor-playground://restore/<방문>          그 방문에서 처음 적용하기 직전 상태로 되돌림
 #   cursor-playground://status                  지금 상태를 알림 창으로 보여 줌
 #   cursor-playground://settings                마우스 속성 창을 포인터 탭으로 엶
@@ -19,7 +19,7 @@ $ProgressPreference = 'SilentlyContinue'  # 내려받기 진행 표시가 꽤 �
 $base = 'https://ruminem.github.io/cursor-playground/win-cursor'
 if ($env:CURSOR_PLAYGROUND_BASE) { $base = $env:CURSOR_PLAYGROUND_BASE }  # 로컬 시험용
 
-$schemes = [ordered]@{ pink = '분홍'; neon = '네온'; minimal = '미니멀'; onebit = '1비트'; fantasy = '판타지' }
+$prefix = 'cursor-playground '
 $root = Join-Path $env:LOCALAPPDATA 'cursor-playground'
 $initialFile = Join-Path $root 'backup-initial.json'  # 설치할 때 상태. 완전 제거 때 돌아감
 $visitFile = Join-Path $root 'backup-visit.json'      # 마지막 방문에서 처음 적용하기 직전 상태. 원래대로 때 돌아감
@@ -34,7 +34,14 @@ $slots = [ordered]@{
     UpArrow = ''; Hand = 'hand'; Pin = ''; Person = ''
 }
 
-function RegName($id) { "cursor-playground $($schemes[$id])" }
+# 구성표 목록은 Pages 의 schemes.json 에서 읽는다. 테마가 늘어도 이 스크립트를 다시 설치할 필요가 없음
+function Get-SchemeName($id) {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $bytes = (Invoke-WebRequest -UseBasicParsing -Uri "$base/schemes.json").RawContentStream.ToArray()
+    $entry = [Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json | ForEach-Object { $_ } | Where-Object { $_.id -ceq $id } | Select-Object -First 1
+    # 레지스트리 이름에 들어가므로 글자·숫자·공백만 허용
+    if ($entry -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry.name }
+}
 
 function Notify($text, [switch]$IsError) {
     if ($env:CURSOR_PLAYGROUND_NO_POPUP) { if ($IsError) { "오류: $text" } else { $text }; return }
@@ -87,7 +94,7 @@ function Restore-State($state) {
 }
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
-function Install-Scheme($id) {
+function Install-Scheme($id, $name) {
     $dest = Join-Path $root $id
     New-Item -ItemType Directory -Force $dest | Out-Null
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -103,30 +110,36 @@ function Install-Scheme($id) {
         $cur
     }
     if (-not (Test-Path $schemesKey)) { New-Item $schemesKey | Out-Null }
-    New-ItemProperty -Path $schemesKey -Name (RegName $id) -Value ($paths -join ',') -PropertyType ExpandString -Force | Out-Null
+    New-ItemProperty -Path $schemesKey -Name "$prefix$name" -Value ($paths -join ',') -PropertyType ExpandString -Force | Out-Null
     $paths
 }
 
-function Set-Scheme($id) {
-    $paths = @(Install-Scheme $id)
+function Set-Scheme($id, $name) {
+    $paths = @(Install-Scheme $id $name)
     $i = 0
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value $paths[$i] -PropertyType ExpandString -Force | Out-Null
         $i++
     }
-    Set-ItemProperty -Path $cursorsKey -Name '(default)' -Value (RegName $id)
+    Set-ItemProperty -Path $cursorsKey -Name '(default)' -Value "$prefix$name"
     New-ItemProperty -Path $cursorsKey -Name 'Scheme Source' -Value 1 -PropertyType DWord -Force | Out-Null
     Update-Cursors
 }
 
-# 지금 쓰고 있지 않은 구성표만 지운다 (되돌린 곳이 우리 구성표면 그 파일은 남아야 함)
+function Get-OurSchemes {
+    if (-not (Test-Path $schemesKey)) { return @() }
+    @((Get-Item $schemesKey).GetValueNames() | Where-Object { $_.StartsWith($prefix) })
+}
+
+# 지금 쓰고 있지 않은 구성표와 그 커서 폴더만 지운다 (되돌린 곳이 우리 구성표면 그 파일은 남아야 함)
 function Remove-UnusedSchemes {
-    $current = (Get-ItemProperty $cursorsKey).'(default)'
-    foreach ($id in $schemes.Keys) {
-        if ((RegName $id) -eq $current) { continue }
-        Remove-ItemProperty -Path $schemesKey -Name (RegName $id) -ErrorAction SilentlyContinue
-        $dest = Join-Path $root $id
-        if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+    $c = Get-ItemProperty $cursorsKey
+    foreach ($n in Get-OurSchemes) {
+        if ($n -ne $c.'(default)') { Remove-ItemProperty -Path $schemesKey -Name $n }
+    }
+    $keep = if ($c.Arrow -and $c.Arrow.StartsWith("$root\")) { Split-Path $c.Arrow -Parent } else { $null }
+    if (Test-Path $root) {
+        Get-ChildItem $root -Directory | Where-Object { $_.FullName -ne $keep } | Remove-Item -Recurse -Force
     }
 }
 
@@ -142,8 +155,7 @@ function Reset-ToDefault {
 function Get-StatusText {
     $current = (Get-ItemProperty $cursorsKey).'(default)'
     if (-not $current) { $current = '없음 (칸을 직접 고른 상태이거나 윈도우 기본)' }
-    $values = if (Test-Path $schemesKey) { Get-ItemProperty $schemesKey } else { $null }
-    $installed = @($schemes.Keys | Where-Object { $values -and $null -ne $values.(RegName $_) } | ForEach-Object { $schemes[$_] })
+    $installed = @(Get-OurSchemes | ForEach-Object { $_.Substring($prefix.Length) })
     $installedText = if ($installed) { $installed -join ', ' } else { '없음' }
     $visit = Read-State $visitFile
     $visitText = if ($visit) {
@@ -184,13 +196,15 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch '^cursor-playground://apply/([a-z]+)/([a-z0-9]{16})/?$' -and $schemes.Contains($Matches[1])) {
+    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})/?$') {
         $id = $Matches[1]; $visit = $Matches[2]
+        $name = Get-SchemeName $id
+        if (-not $name) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
         if (-not (Test-Path $initialFile)) { Save-State $initialFile '' }
         $saved = Read-State $visitFile
         if (-not $saved -or $saved.Visit -ne $visit) { Save-State $visitFile $visit }
-        Set-Scheme $id
-        if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $(RegName $id)" }
+        Set-Scheme $id $name
+        if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $prefix$name" }
     }
     elseif ($Url -cmatch '^cursor-playground://restore/([a-z0-9]{16})/?$') {
         $visit = $Matches[1]
@@ -219,7 +233,7 @@ try {
         elseif ((Get-ItemProperty $cursorsKey).'(default)' -like 'cursor-playground *') { Reset-ToDefault }
         # 설치할 때도 우리 구성표를 쓰고 있었다면 파일이 곧 사라지므로 윈도우 기본으로 돌린다
         if ((Get-ItemProperty $cursorsKey).'(default)' -like 'cursor-playground *') { Reset-ToDefault }
-        foreach ($id in $schemes.Keys) { Remove-ItemProperty -Path $schemesKey -Name (RegName $id) -ErrorAction SilentlyContinue }
+        foreach ($n in Get-OurSchemes) { Remove-ItemProperty -Path $schemesKey -Name $n }
         if (Test-Path $linkKey) { Remove-Item $linkKey -Recurse -Force }
         if (Test-Path $root) { Remove-Item $root -Recurse -Force }
         Notify '설치할 때 상태로 되돌리고 웹 버튼 연결과 설치 폴더를 지움. 다시 쓰려면 페이지의 한 줄 설치부터.'

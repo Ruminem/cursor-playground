@@ -13,14 +13,9 @@
 param([switch]$Install, [switch]$Uninstall, [switch]$Status, [string[]]$Scheme)
 $ErrorActionPreference = 'Stop'
 
-# 폴더 이름 = 표시 이름
-$schemes = [ordered]@{
-    pink    = '분홍'
-    neon    = '네온'
-    minimal = '미니멀'
-    onebit  = '1비트'
-    fantasy = '판타지'
-}
+# 폴더 이름 = 표시 이름. 목록은 schemes.json 한 곳에 둔다
+$schemes = [ordered]@{}
+Get-Content (Join-Path $PSScriptRoot 'schemes.json') -Raw -Encoding UTF8 | ConvertFrom-Json | ForEach-Object { $_ } | ForEach-Object { $schemes[$_.id] = $_.name }
 $root = Join-Path $env:LOCALAPPDATA 'cursor-playground'
 $key = 'HKCU:\Control Panel\Cursors\Schemes'
 

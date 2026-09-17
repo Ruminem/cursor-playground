@@ -1,0 +1,22 @@
+hotspot 5,5
+color 0 5a120aff
+color 1 d8321eff
+color 2 e9581eff
+color 3 f97d1eff
+color 4 ff7a1ea0
+color 5 ff9f27ff
+color 6 ffbd33ff
+color 7 ffd74dff
+color 8 ffe581ff
+color 9 fff4b4ff
+...4.....4
+.000...000
+01110.01110
+02222222220
+03333333330
+05555555550
+.066666660
+..0777770
+...08880
+....090
+.....0

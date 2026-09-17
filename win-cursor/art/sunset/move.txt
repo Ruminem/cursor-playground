@@ -1,0 +1,38 @@
+hotspot 9,9
+color 0 281432ff
+color 1 50287aff
+color 2 652c7dff
+color 3 793081ff
+color 4 8e3384ff
+color 5 a23788ff
+color 6 b73b8bff
+color 7 c64486ff
+color 8 d24f7cff
+color 9 de5b73ff
+color A eb676aff
+color B f77260ff
+color C ff805aff
+color D ff905aff
+color E ffa05aff
+color F ffb15aff
+color G ffc25aff
+color H ffd25aff
+.........0
+........0H0
+.......0GGG0
+......0FFFFF0
+.......00E00
+........0D0
+...0....0C0....0
+..0B0...0B0...0B0
+.0AA00000A00000AA0
+0999999999999999990
+.08800000800000880
+..070...070...070
+...0....060....0
+........050
+.......00400
+......0333330
+.......02220
+........010
+.........0

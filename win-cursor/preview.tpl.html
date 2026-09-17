@@ -31,6 +31,8 @@ h1 em{font-style:normal;color:var(--accent)}
 .lede{margin:0;max-width:62ch;color:var(--muted)}
 h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
 
+.groups{display:grid;gap:18px}
+.group-name{margin:0 0 8px;font:600 13px/1 var(--body);color:var(--muted)}
 .picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 .pick{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
 .pick:hover{border-color:var(--muted)}
@@ -115,9 +117,9 @@ pre .c{color:var(--muted)}
 
 <div class="wrap c-arrow" id="app" data-scheme="pink">
   <header>
-    <span class="eyebrow">win-cursor · 포인터 구성표 5종</span>
+    <span class="eyebrow">win-cursor · 포인터 구성표 25종</span>
     <h1>cursor-playground <em>schemes</em></h1>
-    <p class="lede">텍스트 픽셀아트로 그린 윈도우 커서 구성표 다섯 가지. 구성표를 고르면 이 페이지의 커서가 먼저 바뀌고, 마음에 들면 버튼 하나로 윈도우에 바로 적용함. 이것저것 적용해 보다 질리면 원래대로 누르면 페이지를 열기 전 커서로 돌아감.</p>
+    <p class="lede">텍스트 픽셀아트로 그린 윈도우 커서 구성표 25가지를 여섯 갈래로 묶음. 구성표를 고르면 이 페이지의 커서가 먼저 바뀌고, 마음에 들면 버튼 하나로 윈도우에 바로 적용함. 이것저것 적용해 보다 질리면 원래대로 누르면 페이지를 열기 전 커서로 돌아감.</p>
   </header>
 
   <section class="setup" aria-labelledby="setup-title">
@@ -139,7 +141,7 @@ pre .c{color:var(--muted)}
         <button type="button" class="ghost c-hand" data-action="restore">원래대로</button>
       </div>
     </div>
-    <div class="picker" role="group" aria-label="구성표"><!--PICKER--></div>
+    <div class="groups" role="group" aria-label="구성표"><!--PICKER--></div>
   </section>
 
   <section>

@@ -1,0 +1,34 @@
+hotspot 6,8
+color 0 286ea0ff
+color 1 8cd2f0ff
+color 2 9ad8f2ff
+color 3 a1dcf3ff
+color 4 a8dff5ff
+color 5 afe2f6ff
+color 6 b4f0ff50
+color 7 b6e5f7ff
+color 8 bce9f8ff
+color 9 c3ecf9ff
+color A caeffaff
+color B d1f2fcff
+color C d8f6fdff
+color D e6fcffff
+color E ffffffff
+.66666666666
+6000000000006
+60EDDDDDEDD06
+6000000000006
+.60CECCCCC06
+.60BBEBBBB06
+..60AAEAA06
+...6099E06
+....60806
+....60706
+...6055506
+..604E44406
+.60333E33306
+.602222E2206
+6000000000006
+601E11111E106
+6000000000006
+.66666666666
