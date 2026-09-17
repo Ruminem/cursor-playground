@@ -3,7 +3,8 @@
 # setup.ps1 이 이 파일을 %LOCALAPPDATA%\cursor-playground 에 내려받고 -Setup 으로 실행한다.
 #
 # 받는 주소는 아래 여섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
-#   cursor-playground://apply/<구성표>/<방문>[/<크기>]  커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
+#   cursor-playground://apply/<구성표>/<방문>[/<크기>[/<색조>]]  커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
+#                                              <색조> 가 0 이 아니면 색상환을 그만큼 돌린 새 구성표(예: 네온 색조120)로 만든다
 #   cursor-playground://size/<크기>/<방문>      포인터 크기만 바꿈. <크기> 는 32, 48, 64, 96, 128 중 하나
 #   cursor-playground://restore/<방문>          그 방문에서 처음 적용하기 직전 상태로 되돌림
 #   cursor-playground://status                  지금 상태를 알림 창으로 보여 줌
@@ -109,9 +110,145 @@ function Restore-State($state) {
     Update-Cursors
 }
 
+# ── 색조 ────────────────────────────────────────────────────────────────
+# 커서 파일 안 PNG 를 픽셀마다 다시 칠한다. PowerShell 반복문으로는 너무 느려서 윈도우에 들어 있는 C# 컴파일(Add-Type)을 씀
+function Initialize-Recolor {
+    if ('CursorPlayground.Recolor' -as [type]) { return }
+    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace CursorPlayground {
+    // 커서 파일 안 PNG 의 픽셀마다 색상환 각도만 돌린다. 식은 preview.tpl.html 의 rotate() 와 같다.
+    public static class Recolor {
+        static double Hue2(double p, double q, double t) {
+            if (t < 0) t += 1; if (t > 1) t -= 1;
+            if (t < 1.0 / 6) return p + (q - p) * 6 * t;
+            if (t < 0.5) return q;
+            if (t < 2.0 / 3) return p + (q - p) * (2.0 / 3 - t) * 6;
+            return p;
+        }
+        static byte ToByte(double v) {
+            return (byte)Math.Max(0, Math.Min(255, Math.Floor(v * 255 + 0.5)));
+        }
+        public static void Rotate(byte[] bgra, int deg) {
+            for (int i = 0; i < bgra.Length; i += 4) {
+                if (bgra[i + 3] == 0) continue;
+                double b = bgra[i] / 255.0, g = bgra[i + 1] / 255.0, r = bgra[i + 2] / 255.0;
+                double max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b));
+                double l = (max + min) / 2, c = max - min;
+                if (c == 0) continue;
+                double s = l > 0.5 ? c / (2 - max - min) : c / (max + min), h;
+                if (max == r) h = (g - b) / c + (g < b ? 6 : 0); else if (max == g) h = (b - r) / c + 2; else h = (r - g) / c + 4;
+                h = h / 6 + deg / 360.0; h -= Math.Floor(h);
+                double q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+                bgra[i + 2] = ToByte(Hue2(p, q, h + 1.0 / 3));
+                bgra[i + 1] = ToByte(Hue2(p, q, h));
+                bgra[i] = ToByte(Hue2(p, q, h - 1.0 / 3));
+            }
+        }
+        public static byte[] Png(byte[] png, int deg) {
+            using (var input = new MemoryStream(png))
+            using (var bmp = new Bitmap(input)) {
+                var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+                var data = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+                var buf = new byte[Math.Abs(data.Stride) * bmp.Height];
+                Marshal.Copy(data.Scan0, buf, 0, buf.Length);
+                Rotate(buf, deg);
+                Marshal.Copy(buf, 0, data.Scan0, buf.Length);
+                bmp.UnlockBits(data);
+                using (var output = new MemoryStream()) {
+                    bmp.Save(output, ImageFormat.Png);
+                    return output.ToArray();
+                }
+            }
+        }
+        // .cur: 6바이트 머리 + 이미지마다 16바이트 항목(크기·위치) + PNG 들
+        public static byte[] Cur(byte[] cur, int deg) {
+            int count = BitConverter.ToUInt16(cur, 4);
+            var entries = new List<byte[]>();
+            var images = new List<byte[]>();
+            for (int i = 0; i < count; i++) {
+                int e = 6 + 16 * i;
+                int size = BitConverter.ToInt32(cur, e + 8), offset = BitConverter.ToInt32(cur, e + 12);
+                var image = new byte[size];
+                Buffer.BlockCopy(cur, offset, image, 0, size);
+                images.Add(Png(image, deg));
+                var entry = new byte[16];
+                Buffer.BlockCopy(cur, e, entry, 0, 16);
+                entries.Add(entry);
+            }
+            using (var o = new MemoryStream()) {
+                o.Write(cur, 0, 6);
+                int at = 6 + 16 * count;
+                for (int i = 0; i < count; i++) {
+                    BitConverter.GetBytes(images[i].Length).CopyTo(entries[i], 8);
+                    BitConverter.GetBytes(at).CopyTo(entries[i], 12);
+                    o.Write(entries[i], 0, 16);
+                    at += images[i].Length;
+                }
+                foreach (var image in images) o.Write(image, 0, image.Length);
+                return o.ToArray();
+            }
+        }
+        static void Chunk(Stream s, string id, byte[] data) {
+            s.Write(Encoding.ASCII.GetBytes(id), 0, 4);
+            s.Write(BitConverter.GetBytes(data.Length), 0, 4);
+            s.Write(data, 0, data.Length);
+            if (data.Length % 2 == 1) s.WriteByte(0);
+        }
+        // .ani: RIFF ACON 안의 LIST fram 에 든 icon 조각(= .cur)마다 다시 칠하고 나머지 조각은 그대로 둔다
+        public static byte[] Ani(byte[] ani, int deg) {
+            using (var body = new MemoryStream()) {
+                body.Write(ani, 8, 4);
+                int pos = 12;
+                while (pos + 8 <= ani.Length) {
+                    string id = Encoding.ASCII.GetString(ani, pos, 4);
+                    int size = BitConverter.ToInt32(ani, pos + 4), start = pos + 8;
+                    if (id == "LIST" && Encoding.ASCII.GetString(ani, start, 4) == "fram") {
+                        using (var list = new MemoryStream()) {
+                            list.Write(ani, start, 4);
+                            int p = start + 4, end = start + size;
+                            while (p + 8 <= end) {
+                                string cid = Encoding.ASCII.GetString(ani, p, 4);
+                                int cs = BitConverter.ToInt32(ani, p + 4);
+                                var chunk = new byte[cs];
+                                Buffer.BlockCopy(ani, p + 8, chunk, 0, cs);
+                                Chunk(list, cid, cid == "icon" ? Cur(chunk, deg) : chunk);
+                                p += 8 + cs + (cs % 2);
+                            }
+                            Chunk(body, "LIST", list.ToArray());
+                        }
+                    } else {
+                        var chunk = new byte[size];
+                        Buffer.BlockCopy(ani, start, chunk, 0, size);
+                        Chunk(body, id, chunk);
+                    }
+                    pos = start + size + (size % 2);
+                }
+                var b = body.ToArray();
+                using (var o = new MemoryStream()) {
+                    o.Write(Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                    o.Write(BitConverter.GetBytes(b.Length), 0, 4);
+                    o.Write(b, 0, b.Length);
+                    return o.ToArray();
+                }
+            }
+        }
+    }
+}
+'@
+}
+
 # ── 구성표 ──────────────────────────────────────────────────────────────
-function Install-Scheme($id, $name, $ext) {
-    $dest = Join-Path $root $id
+function Install-Scheme($id, $name, $ext, [int]$hue) {
+    $dest = Join-Path $root $(if ($hue) { "$id-h$hue" } else { $id })
+    if ($hue) { Initialize-Recolor }
     New-Item -ItemType Directory -Force $dest | Out-Null
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $paths = foreach ($slot in $slots.Keys) {
@@ -125,6 +262,10 @@ function Install-Scheme($id, $name, $ext) {
         if (-not (($ext -eq 'cur' -and $isCur) -or ($ext -eq 'ani' -and $isAni))) {
             Remove-Item $cur; throw "$file.$ext 가 커서 파일이 아님"
         }
+        if ($hue) {
+            $colored = if ($isAni) { [CursorPlayground.Recolor]::Ani($head, $hue) } else { [CursorPlayground.Recolor]::Cur($head, $hue) }
+            [IO.File]::WriteAllBytes($cur, $colored)
+        }
         $cur
     }
     if (-not (Test-Path $schemesKey)) { New-Item $schemesKey | Out-Null }
@@ -132,8 +273,8 @@ function Install-Scheme($id, $name, $ext) {
     $paths
 }
 
-function Set-Scheme($id, $name, $ext) {
-    $paths = @(Install-Scheme $id $name $ext)
+function Set-Scheme($id, $name, $ext, [int]$hue) {
+    $paths = @(Install-Scheme $id $name $ext $hue)
     $i = 0
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value $paths[$i] -PropertyType ExpandString -Force | Out-Null
@@ -229,15 +370,15 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128))?/?$') {
-        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]
+    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3}))?)?/?$' -and [int]('0' + $Matches[4]) -lt 360) {
+        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4])
         $entry = Get-Scheme $id
         if (-not $entry) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
-        $name = $entry.name
+        $name = if ($hue) { "$($entry.name) 색조$hue" } else { $entry.name }
         $ext = if ($entry.animated -eq $true) { 'ani' } else { 'cur' }
         Save-VisitBackup $visit
         if ($size) { Set-Size $size }
-        Set-Scheme $id $name $ext
+        Set-Scheme $id $name $ext $hue
         if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $prefix$name" }
     }
     elseif ($Url -cmatch '^cursor-playground://size/(32|48|64|96|128)/([a-z0-9]{16})/?$') {
