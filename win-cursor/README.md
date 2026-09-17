@@ -26,9 +26,25 @@
 
 ## 등록
 
-```powershell
-powershell -ExecutionPolicy Bypass -File install.ps1             # 다섯 개 모두 등록
-powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall  # 모두 제거
+**[cursors.bat](cursors.bat)** 을 더블클릭하면 메뉴가 뜸. Python 3.10+ 필요.
+
+```
+  cursor-playground 커서 구성표
+  1) 전체 등록   2) 전체 제거
+  3) 개별 등록   4) 개별 제거
+  5) 현재 상태   0) 끝내기
+```
+
+개별 등록·제거는 번호를 `1,3` 처럼 여러 개 고를 수 있음. 현재 상태는 구성표별 등록 여부, 커서 파일 수, 지금 적용 중인 구성표를 보여 줌.
+
+메뉴 없이 바로 실행할 때는 인자를 붙임:
+
+```bat
+cursors.bat -Install                    :: 전체 등록
+cursors.bat -Install -Scheme neon,pink  :: 개별 등록
+cursors.bat -Uninstall                  :: 전체 제거
+cursors.bat -Uninstall -Scheme neon     :: 개별 제거
+cursors.bat -Status                     :: 현재 상태
 ```
 
 커서를 `%LOCALAPPDATA%\cursor-playground\<폴더>` 에 만들어 두고 구성표로 등록함. 관리자 권한 필요 없음.
@@ -36,7 +52,8 @@ powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall  # 모두 제거
 
 - 새 구성표: `art/` 에 폴더를 만들고 `install.ps1` 의 `$schemes` 에 한 줄 추가
 - 구성표는 레지스트리 `HKCU\Control Panel\Cursors\Schemes` 에 값 하나로 저장되고, 17칸 경로를 정해진 순서로 쉼표로 이은 형식임
-- install.ps1 은 한글 때문에 UTF-8 BOM 으로 저장해야 함 (Windows PowerShell 5.1 은 BOM 없으면 ANSI 로 읽음)
+- 실제 동작은 [install.ps1](install.ps1) 에 있고, cursors.bat 은 그걸 실행만 함
+- install.ps1 은 한글 때문에 UTF-8 BOM 으로 저장해야 함 (Windows PowerShell 5.1 은 BOM 없으면 ANSI 로 읽음). cursors.bat 은 반대로 영문만 씀 (cmd 는 .bat 을 콘솔 코드페이지로 읽음)
 
 ## 그림 그리는 법
 
