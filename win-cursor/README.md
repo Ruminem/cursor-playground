@@ -12,17 +12,22 @@
    irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex
    ```
    [setup.ps1](setup.ps1) 이 [handler.ps1](handler.ps1) 을 `%LOCALAPPDATA%\cursor-playground` 에 받고,
-   `cursor-playground://` 주소를 거기에 연결하고, **지금 포인터 설정을 백업** 함
+   `cursor-playground://` 주소를 거기에 연결하고, **지금 포인터 설정을 백업** 함 (완전 제거 때 돌아갈 곳)
 2. 페이지에서 구성표를 고르고 **이 구성표 적용** → 확인 → 브라우저의 "앱 열기" 에서 열기
-3. 질리면 **원래대로** — 백업한 포인터 설정으로 돌아가고, 추가한 구성표와 커서 파일을 지움
-4. 다 치우려면 페이지 아래 **완전 제거** — 원래대로 + 주소 연결과 설치 폴더 삭제
+3. 이것저것 적용해 보다 질리면 **원래대로** — 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감
+   - 예: 네온 적용 → 페이지 닫음 → 다시 열어 분홍 적용 → 원래대로 → 네온
+   - 탭을 닫았다 열면 새로 셈. 같은 탭 새로고침은 이어짐
+4. **포인터 설정 열기** — 윈도우 마우스 속성 창을 포인터 탭으로 엶
+5. 다 치우려면 페이지 아래 **완전 제거** — 한 줄 설치할 때의 커서로 돌린 뒤 주소 연결과 설치 폴더 삭제
 
 동작 방식:
 
 - 커서 파일은 Pages 의 [dist/](dist/) 에서 받음. `python build.py` 가 `art/` 로 `preview.html` 과 `dist/` 를 같이 만들고, 둘 다 커밋해야 웹에 반영됨
 - 적용은 `HKCU\Control Panel\Cursors` 의 17칸과 구성표 이름을 바꾸고 `SystemParametersInfo(SPI_SETCURSORS)` 로 바로 다시 읽힘
-- 백업은 처음 설치할 때(없으면 처음 적용할 때) `backup.json` 으로 저장하고, 원래대로를 하면 지움. 그 뒤 다시 적용하면 그때 설정을 새로 백업
-- 아무 웹 페이지나 이 주소를 부를 수 있으므로, 받는 요청은 `apply/<구성표 5개 중 하나>`, `restore`, `status`, `unlink` 뿐. 다른 주소나 끼워 넣은 인자는 전부 무시함
+- 백업은 두 개. `backup-initial.json` 은 한 줄 설치할 때 상태(완전 제거용), `backup-visit.json` 은 페이지를 연 뒤 첫 적용 직전 상태(원래대로용)
+- 페이지는 열 때마다 16자리 방문 번호를 만들어 `sessionStorage` 에 두고 요청에 붙임. 새 방문 번호로 적용이 오면 그때 방문 백업을 새로 뜸
+- 원래대로 뒤에는 지금 쓰는 구성표를 뺀 나머지 구성표와 커서 파일을 지움
+- 아무 웹 페이지나 이 주소를 부를 수 있으므로, 받는 요청은 `apply/<구성표 5개 중 하나>/<방문>`, `restore/<방문>`, `status`, `settings`, `unlink` 뿐. 다른 주소나 끼워 넣은 인자는 전부 무시함
 - 모양은 [preview.tpl.html](preview.tpl.html) 에서 고침. 글꼴은 Google Fonts (Silkscreen, IBM Plex Sans KR, IBM Plex Mono — 모두 SIL OFL)
 
 ## 구성표 5종

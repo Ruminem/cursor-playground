@@ -1,12 +1,14 @@
 ﻿# SPDX-License-Identifier: Apache-2.0
-# 시안 페이지 버튼(cursor-playground:// 주소)을 받아 커서 구성표를 적용하거나 원래대로 되돌린다.
+# 시안 페이지 버튼(cursor-playground:// 주소)을 받아 커서 구성표를 적용하거나 되돌린다.
 # setup.ps1 이 이 파일을 %LOCALAPPDATA%\cursor-playground 에 내려받고 -Setup 으로 실행한다.
 #
-# 받는 주소는 아래 네 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
-#   cursor-playground://apply/<구성표>   커서를 내려받아 구성표로 등록하고 바로 적용
-#   cursor-playground://restore          처음 설치할 때 백업한 포인터 설정으로 되돌리고, 추가한 구성표를 지움
-#   cursor-playground://status           지금 상태를 알림 창으로 보여 줌
-#   cursor-playground://unlink           원래대로 돌린 뒤 주소 연결과 설치 폴더까지 지움
+# 받는 주소는 아래 다섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
+#   cursor-playground://apply/<구성표>/<방문>   커서를 내려받아 구성표로 등록하고 바로 적용
+#   cursor-playground://restore/<방문>          그 방문에서 처음 적용하기 직전 상태로 되돌림
+#   cursor-playground://status                  지금 상태를 알림 창으로 보여 줌
+#   cursor-playground://settings                마우스 속성 창을 포인터 탭으로 엶
+#   cursor-playground://unlink                  설치할 때 상태로 되돌린 뒤 주소 연결과 설치 폴더까지 지움
+# <방문> 은 페이지를 열 때마다 새로 만드는 16자리 번호. 같은 방문 안에서 여러 번 적용해도 백업은 처음 한 번만 뜬다.
 #
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
 [CmdletBinding(PositionalBinding = $false)]
@@ -19,7 +21,8 @@ if ($env:CURSOR_PLAYGROUND_BASE) { $base = $env:CURSOR_PLAYGROUND_BASE }  # 로�
 
 $schemes = [ordered]@{ pink = '분홍'; neon = '네온'; minimal = '미니멀'; onebit = '1비트'; fantasy = '판타지' }
 $root = Join-Path $env:LOCALAPPDATA 'cursor-playground'
-$backupFile = Join-Path $root 'backup.json'
+$initialFile = Join-Path $root 'backup-initial.json'  # 설치할 때 상태. 완전 제거 때 돌아감
+$visitFile = Join-Path $root 'backup-visit.json'      # 마지막 방문에서 처음 적용하기 직전 상태. 원래대로 때 돌아감
 $cursorsKey = 'HKCU:\Control Panel\Cursors'
 $schemesKey = 'HKCU:\Control Panel\Cursors\Schemes'
 $linkKey = 'HKCU:\Software\Classes\cursor-playground'
@@ -50,8 +53,7 @@ function Update-Cursors {
 }
 
 # ── 백업 ────────────────────────────────────────────────────────────────
-function Save-Backup {
-    if (Test-Path $backupFile) { return $false }
+function Save-State($file, $visit) {
     $key = Get-Item $cursorsKey
     $values = foreach ($name in $key.GetValueNames()) {
         [pscustomobject]@{
@@ -61,14 +63,17 @@ function Save-Backup {
         }
     }
     New-Item -ItemType Directory -Force $root | Out-Null
-    ConvertTo-Json @($values) | Set-Content -Path $backupFile -Encoding UTF8
-    $true
+    ConvertTo-Json -Depth 3 ([pscustomobject]@{ Visit = $visit; Values = @($values) }) | Set-Content -Path $file -Encoding UTF8
 }
 
-function Restore-Backup {
-    if (-not (Test-Path $backupFile)) { return $false }
+function Read-State($file) {
+    if (-not (Test-Path $file)) { return $null }
+    Get-Content $file -Raw -Encoding UTF8 | ConvertFrom-Json
+}
+
+function Restore-State($state) {
     # PowerShell 5.1 의 ConvertFrom-Json 은 배열을 한 덩어리로 넘기므로 ForEach-Object 로 풀어야 한다
-    $saved = @(Get-Content $backupFile -Raw -Encoding UTF8 | ConvertFrom-Json | ForEach-Object { $_ })
+    $saved = @($state.Values | ForEach-Object { $_ })
     $key = Get-Item $cursorsKey
     $keep = @($saved | ForEach-Object { $_.Name })
     foreach ($name in $key.GetValueNames()) {
@@ -79,8 +84,6 @@ function Restore-Backup {
         New-ItemProperty -Path $cursorsKey -Name $name -Value $v.Value -PropertyType $v.Kind -Force | Out-Null
     }
     Update-Cursors
-    Remove-Item $backupFile
-    $true
 }
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
@@ -116,15 +119,17 @@ function Set-Scheme($id) {
     Update-Cursors
 }
 
-function Remove-AllSchemes {
+# 지금 쓰고 있지 않은 구성표만 지운다 (되돌린 곳이 우리 구성표면 그 파일은 남아야 함)
+function Remove-UnusedSchemes {
+    $current = (Get-ItemProperty $cursorsKey).'(default)'
     foreach ($id in $schemes.Keys) {
+        if ((RegName $id) -eq $current) { continue }
         Remove-ItemProperty -Path $schemesKey -Name (RegName $id) -ErrorAction SilentlyContinue
         $dest = Join-Path $root $id
         if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
     }
 }
 
-# 백업이 없으면 윈도우 기본 커서로 돌린다
 function Reset-ToDefault {
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value '' -PropertyType ExpandString -Force | Out-Null
@@ -134,24 +139,19 @@ function Reset-ToDefault {
     Update-Cursors
 }
 
-function Invoke-Restore {
-    $restored = Restore-Backup
-    if (-not $restored) {
-        $current = (Get-ItemProperty $cursorsKey).'(default)'
-        if ($current -like 'cursor-playground *') { Reset-ToDefault }
-    }
-    Remove-AllSchemes
-    $restored
-}
-
 function Get-StatusText {
     $current = (Get-ItemProperty $cursorsKey).'(default)'
     if (-not $current) { $current = '없음 (칸을 직접 고른 상태이거나 윈도우 기본)' }
     $values = if (Test-Path $schemesKey) { Get-ItemProperty $schemesKey } else { $null }
     $installed = @($schemes.Keys | Where-Object { $values -and $null -ne $values.(RegName $_) } | ForEach-Object { $schemes[$_] })
     $installedText = if ($installed) { $installed -join ', ' } else { '없음' }
-    $backupText = if (Test-Path $backupFile) { '있음' } else { '없음' }
-    "지금 적용된 구성표: $current`n추가해 둔 구성표: $installedText`n원래대로 돌릴 백업: $backupText"
+    $visit = Read-State $visitFile
+    $visitText = if ($visit) {
+        $name = ($visit.Values | ForEach-Object { $_ } | Where-Object { $_.Name -eq '' }).Value
+        if ($name) { $name } else { '구성표 없음 (윈도우 기본이거나 칸을 직접 고른 상태)' }
+    } else { '없음' }
+    $initialText = if (Test-Path $initialFile) { '있음' } else { '없음' }
+    "지금 적용된 구성표: $current`n받아 둔 구성표: $installedText`n원래대로 누르면 돌아갈 곳: $visitText`n설치할 때 상태 백업: $initialText"
 }
 
 # ── 진입점 ──────────────────────────────────────────────────────────────
@@ -167,11 +167,12 @@ if ($Setup) {
     Set-ItemProperty -Path $linkKey -Name 'URL Protocol' -Value ''
     $command = "`"$PSHOME\powershell.exe`" -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Url `"%1`""
     Set-ItemProperty -Path "$linkKey\shell\open\command" -Name '(default)' -Value $command
-    $made = Save-Backup
+    $made = -not (Test-Path $initialFile)
+    if ($made) { Save-State $initialFile '' }
     ''
     '  cursor-playground 준비 끝'
-    if ($made) { '  지금 마우스 포인터 설정을 백업함. 페이지의 [원래대로] 로 여기로 돌아옴' }
-    else { '  예전에 만든 백업이 있어서 그대로 둠' }
+    if ($made) { '  지금 마우스 포인터 설정을 백업함. 페이지 맨 아래 [완전 제거] 를 하면 여기로 돌아옴' }
+    else { '  설치할 때 만든 백업이 있어서 그대로 둠' }
     '  이제 시안 페이지에서 구성표의 [이 구성표 적용] 을 누르면 됨'
     ''
     return
@@ -183,25 +184,45 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch '^cursor-playground://apply/([a-z]+)/?$' -and $schemes.Contains($Matches[1])) {
-        $id = $Matches[1]
-        [void](Save-Backup)
+    if ($Url -cmatch '^cursor-playground://apply/([a-z]+)/([a-z0-9]{16})/?$' -and $schemes.Contains($Matches[1])) {
+        $id = $Matches[1]; $visit = $Matches[2]
+        if (-not (Test-Path $initialFile)) { Save-State $initialFile '' }
+        $saved = Read-State $visitFile
+        if (-not $saved -or $saved.Visit -ne $visit) { Save-State $visitFile $visit }
         Set-Scheme $id
-        if ($env:CURSOR_PLAYGROUND_NO_POPUP) { Notify "적용함: $(RegName $id)" }
+        if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $(RegName $id)" }
     }
-    elseif ($Url -cmatch '^cursor-playground://restore/?$') {
-        $restored = Invoke-Restore
-        if ($restored) { Notify '처음 백업해 둔 마우스 포인터 설정으로 되돌리고, 추가한 구성표를 지움.' }
-        else { Notify '백업이 없어서, 이 구성표를 쓰던 중이었다면 윈도우 기본 커서로 돌리고 추가한 구성표를 지움.' }
+    elseif ($Url -cmatch '^cursor-playground://restore/([a-z0-9]{16})/?$') {
+        $visit = $Matches[1]
+        $saved = Read-State $visitFile
+        if (-not $saved -or $saved.Visit -ne $visit) {
+            Notify '이번에 페이지를 연 뒤로 적용한 구성표가 없어서 되돌릴 게 없음.'
+        } else {
+            Restore-State $saved
+            Remove-Item $visitFile
+            Remove-UnusedSchemes
+            $now = (Get-ItemProperty $cursorsKey).'(default)'
+            if (-not $now) { $now = '구성표 없음 (윈도우 기본이거나 칸을 직접 고른 상태)' }
+            Notify "페이지를 연 뒤 처음 적용하기 직전으로 되돌림.`n지금: $now"
+        }
     }
     elseif ($Url -cmatch '^cursor-playground://status/?$') {
         Notify (Get-StatusText)
     }
+    elseif ($Url -cmatch '^cursor-playground://settings/?$') {
+        # 마우스 속성 창의 두 번째 탭(포인터)
+        Start-Process -FilePath "$env:SystemRoot\System32\control.exe" -ArgumentList 'main.cpl,,1'
+    }
     elseif ($Url -cmatch '^cursor-playground://unlink/?$') {
-        [void](Invoke-Restore)
+        $initial = Read-State $initialFile
+        if ($initial) { Restore-State $initial }
+        elseif ((Get-ItemProperty $cursorsKey).'(default)' -like 'cursor-playground *') { Reset-ToDefault }
+        # 설치할 때도 우리 구성표를 쓰고 있었다면 파일이 곧 사라지므로 윈도우 기본으로 돌린다
+        if ((Get-ItemProperty $cursorsKey).'(default)' -like 'cursor-playground *') { Reset-ToDefault }
+        foreach ($id in $schemes.Keys) { Remove-ItemProperty -Path $schemesKey -Name (RegName $id) -ErrorAction SilentlyContinue }
         if (Test-Path $linkKey) { Remove-Item $linkKey -Recurse -Force }
         if (Test-Path $root) { Remove-Item $root -Recurse -Force }
-        Notify '원래대로 되돌리고 웹 버튼 연결과 설치 폴더를 지움. 다시 쓰려면 페이지의 한 줄 설치부터.'
+        Notify '설치할 때 상태로 되돌리고 웹 버튼 연결과 설치 폴더를 지움. 다시 쓰려면 페이지의 한 줄 설치부터.'
     }
     else {
         Notify "알 수 없는 요청이라 무시함`n$Url" -IsError

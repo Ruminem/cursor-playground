@@ -154,12 +154,12 @@ pre .c{color:var(--muted)}
   <header>
     <span class="eyebrow">win-cursor · 포인터 구성표 5종</span>
     <h1>cursor-playground <em>schemes</em></h1>
-    <p class="lede">텍스트 픽셀아트로 그린 윈도우 커서 구성표 다섯 가지. 구성표를 고르면 이 페이지의 커서가 먼저 바뀌고, 마음에 들면 버튼 하나로 윈도우에 바로 적용함. 질리면 원래대로.</p>
+    <p class="lede">텍스트 픽셀아트로 그린 윈도우 커서 구성표 다섯 가지. 구성표를 고르면 이 페이지의 커서가 먼저 바뀌고, 마음에 들면 버튼 하나로 윈도우에 바로 적용함. 이것저것 적용해 보다 질리면 원래대로 누르면 페이지를 열기 전 커서로 돌아감.</p>
   </header>
 
   <section class="setup" aria-labelledby="setup-title">
     <h2 id="setup-title">처음 한 번</h2>
-    <p>윈도우 PowerShell 을 열고 아래 한 줄을 붙여넣음. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠. 관리자 권한 필요 없음.</p>
+    <p>윈도우 PowerShell 을 열고 아래 한 줄을 붙여넣음. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음.</p>
     <div class="cmd">
       <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
       <button type="button" class="copy c-hand" id="copy-btn">복사</button>
@@ -171,6 +171,7 @@ pre .c{color:var(--muted)}
     <div class="section-head">
       <h2>구성표 고르기</h2>
       <div class="global">
+        <button type="button" class="ghost c-hand" data-action="settings">포인터 설정 열기</button>
         <button type="button" class="ghost c-hand" data-action="status">현재 상태</button>
         <button type="button" class="ghost c-hand" data-action="restore">원래대로</button>
       </div>
@@ -567,7 +568,7 @@ pre .c{color:var(--muted)}
         </article></div>
     </div>
     <p class="reg-status" id="reg-status" role="status"></p>
-    <p class="legend"><i></i> 파란 칸이 핫스팟 — 실제로 클릭되는 픽셀. 카드에 올리면 그 커서가 됨</p>
+    <p class="legend"><i></i> 파란 네모는 클릭이 실제로 일어나는 점(핫스팟). 화살표는 뾰족한 끝, 모래시계는 가운데처럼 커서마다 다름. 카드 위에 마우스를 올리면 그 커서로 바뀜.</p>
   </section>
 
   <section>
@@ -589,10 +590,11 @@ pre .c{color:var(--muted)}
   <section class="install">
     <h2>그 밖에</h2>
     <ul class="steps">
-      <li><b>원래대로</b> 는 처음 한 번 설치할 때의 포인터 설정으로 돌아가고, 추가한 구성표와 커서 파일을 지움. 다시 적용하면 그때 설정을 새로 백업함.</li>
+      <li><b>원래대로</b> 는 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감. 페이지를 닫았다 다시 열면 그때부터 새로 셈 (같은 탭 새로고침은 이어짐).</li>
+      <li><b>포인터 설정 열기</b> 는 윈도우 마우스 속성 창을 포인터 탭으로 엶. 칸 하나만 바꾸거나 구성표를 직접 고를 때.</li>
       <li>버튼을 눌렀는데 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 위의 한 줄부터.</li>
       <li>그림을 직접 고치려면 <a href="https://github.com/Ruminem/cursor-playground">저장소</a>를 받아 <code>art/</code> 를 고치고 <code>python build.py</code>. 로컬 메뉴는 <code>win-cursor/cursors.bat</code>.</li>
-      <li>다 치우고 싶으면 <button type="button" class="linkish c-hand" data-action="unlink">완전 제거</button> — 원래대로 돌린 뒤 버튼 연결과 설치 폴더까지 지움.</li>
+      <li>다 치우고 싶으면 <button type="button" class="linkish c-hand" data-action="unlink">완전 제거</button> — 한 줄 설치할 때의 커서로 돌린 뒤 버튼 연결과 설치 폴더까지 지움.</li>
     </ul>
   </section>
 </div>
@@ -611,12 +613,22 @@ pre .c{color:var(--muted)}
 (function(){
   var dlg = document.getElementById('act-dialog'), status = document.getElementById('reg-status');
   var pending = null;
+  // 방문 번호: 탭을 닫으면 사라지고 새로고침으로는 유지된다. 원래대로는 이 번호의 첫 적용 직전으로 돌아간다
+  var visit = null;
+  try { visit = sessionStorage.getItem('cp-visit'); } catch (e) {}
+  if (!/^[a-z0-9]{16}$/.test(visit || '')) {
+    var bytes = new Uint8Array(8); crypto.getRandomValues(bytes);
+    visit = Array.prototype.map.call(bytes, function(b){ return ('0' + b.toString(16)).slice(-2); }).join('');
+    try { sessionStorage.setItem('cp-visit', visit); } catch (e) {}
+  }
   var ASK = {
-    restore: { title: '원래대로 되돌릴까요?', body: '처음 설치할 때 백업한 마우스 포인터 설정으로 돌아가고, 추가한 구성표와 커서 파일을 지움.', ok: '되돌리기' },
-    unlink: { title: '완전 제거할까요?', body: '원래대로 되돌린 뒤, 이 페이지 버튼 연결과 설치 폴더까지 지움. 다시 쓰려면 한 줄 설치부터 다시 해야 함.', ok: '완전 제거' }
+    restore: { title: '원래대로 되돌릴까요?', body: '이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아가고, 지금 안 쓰는 구성표 파일은 지움.', ok: '되돌리기' },
+    unlink: { title: '완전 제거할까요?', body: '한 줄 설치할 때의 커서로 되돌린 뒤, 이 페이지 버튼 연결과 설치 폴더까지 지움. 다시 쓰려면 한 줄 설치부터 다시 해야 함.', ok: '완전 제거' }
   };
   function send(action){
-    if (!/^(apply\/[a-z]+|restore|status|unlink)$/.test(action)) return;
+    if (action === 'restore') action = 'restore/' + visit;
+    else if (/^apply\/[a-z]+$/.test(action)) action = action + '/' + visit;
+    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
     status.innerHTML = '요청을 보냄. 브라우저가 앱을 열지 물으면 <b>열기</b>. 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 맨 위 <b>처음 한 번</b>부터.';
     window.location.href = 'cursor-playground://' + action;
   }
