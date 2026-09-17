@@ -1,3 +1,4 @@
 # cmd 는 LF 줄바꿈 .bat 을 잘못 읽는 경우가 있다
 *.bat text eol=crlf
 *.ps1 text eol=crlf
+*.cur binary

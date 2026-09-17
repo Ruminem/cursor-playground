@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
-"""art/ 의 구성표 그림으로 preview.html 을 다시 만든다.
+"""art/ 의 구성표 그림으로 preview.html 과 dist/<구성표>/*.cur 를 다시 만든다.
 
-사용법: python preview.py
+사용법: python build.py
 
-그림 데이터를 HTML 안에 넣으므로 art/ 를 고치면 이걸 다시 돌려야 시안에 반영된다.
+preview.html 에는 그림 데이터가 들어가고, dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려받는다.
+art/ 를 고치면 이걸 다시 돌리고 결과까지 커밋해야 웹에 반영된다.
 """
 import base64
 from pathlib import Path
 
-from make_cur import read_hotspot, txt_to_png
+from make_cur import png_to_cur, read_hotspot, txt_to_png
 
 HERE = Path(__file__).parent
 
@@ -68,7 +69,7 @@ def build() -> str:
     <div class="panel" data-panel="{sid}" hidden>
       <div class="desc-row">
         <p class="desc"><b>cursor-playground {sname}</b> — {sdesc}</p>
-        <button type="button" class="register c-hand" data-register="{sid}" data-name="{sname}">윈도우에 등록</button>
+        <button type="button" class="register c-hand" data-apply="{sid}" data-name="{sname}">이 구성표 적용</button>
       </div>
       <div class="grid">{"".join(cards)}</div>
     </div>""")
@@ -84,12 +85,25 @@ def build() -> str:
     return (
         '<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        "<!-- 자동 생성: python preview.py 로 다시 만들 것. 고칠 때는 preview.tpl.html 을 고친다 -->\n"
+        "<!-- 자동 생성: python build.py 로 다시 만들 것. 고칠 때는 preview.tpl.html 을 고친다 -->\n"
         f"{head}</style>\n</head>\n<body>{body}</body>\n</html>\n"
     )
+
+
+def build_dist() -> int:
+    count = 0
+    for sid, _, _ in SCHEMES:
+        out = HERE / "dist" / sid
+        out.mkdir(parents=True, exist_ok=True)
+        for rid, _, _ in ROLES:
+            text = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
+            (out / f"{rid}.cur").write_bytes(png_to_cur(txt_to_png(text), read_hotspot(text) or (0, 0)))
+            count += 1
+    return count
 
 
 if __name__ == "__main__":
     out = HERE / "preview.html"
     out.write_text(build(), encoding="utf-8")
     print(f"{out} 만듦")
+    print(f"dist/ 커서 {build_dist()}개 만듦")

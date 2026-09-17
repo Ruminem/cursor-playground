@@ -3,14 +3,27 @@
 텍스트 픽셀아트로 윈도우 커서(.cur)를 그리고 포인터 구성표로 등록하는 실험.
 표준 라이브러리만 씀 (Python 3.10+).
 
-## 시안
+## 웹에서 바로 적용
 
-**[시안 페이지 열기](https://ruminem.github.io/cursor-playground/win-cursor/preview.html)** — 구성표를 골라 가며 브라우저에서 커서를 직접 만져 보는 페이지.
+**[시안 페이지 열기](https://ruminem.github.io/cursor-playground/win-cursor/preview.html)** — 구성표를 골라 가며 커서를 만져 보고, 버튼 하나로 윈도우에 적용·원래대로.
 
-- GitHub Pages 로 main 브랜치를 그대로 올림. main 에 푸시하면 1~2분 뒤 반영됨
-- 원본은 [preview.html](preview.html). 클론한 폴더에서 바로 열어도 됨
-- 그림 데이터가 파일 안에 들어가 있음. `art/` 를 고친 뒤 `python preview.py` 로 다시 만듦. 모양은 [preview.tpl.html](preview.tpl.html) 에서 고침
-- 글꼴은 Google Fonts 에서 불러옴 (Silkscreen, IBM Plex Sans KR, IBM Plex Mono — 모두 SIL OFL). 오프라인이면 시스템 글꼴로 보임
+1. **처음 한 번** — PowerShell 에 붙여넣기 (클론·Python·관리자 권한 필요 없음)
+   ```powershell
+   irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex
+   ```
+   [setup.ps1](setup.ps1) 이 [handler.ps1](handler.ps1) 을 `%LOCALAPPDATA%\cursor-playground` 에 받고,
+   `cursor-playground://` 주소를 거기에 연결하고, **지금 포인터 설정을 백업** 함
+2. 페이지에서 구성표를 고르고 **이 구성표 적용** → 확인 → 브라우저의 "앱 열기" 에서 열기
+3. 질리면 **원래대로** — 백업한 포인터 설정으로 돌아가고, 추가한 구성표와 커서 파일을 지움
+4. 다 치우려면 페이지 아래 **완전 제거** — 원래대로 + 주소 연결과 설치 폴더 삭제
+
+동작 방식:
+
+- 커서 파일은 Pages 의 [dist/](dist/) 에서 받음. `python build.py` 가 `art/` 로 `preview.html` 과 `dist/` 를 같이 만들고, 둘 다 커밋해야 웹에 반영됨
+- 적용은 `HKCU\Control Panel\Cursors` 의 17칸과 구성표 이름을 바꾸고 `SystemParametersInfo(SPI_SETCURSORS)` 로 바로 다시 읽힘
+- 백업은 처음 설치할 때(없으면 처음 적용할 때) `backup.json` 으로 저장하고, 원래대로를 하면 지움. 그 뒤 다시 적용하면 그때 설정을 새로 백업
+- 아무 웹 페이지나 이 주소를 부를 수 있으므로, 받는 요청은 `apply/<구성표 5개 중 하나>`, `restore`, `status`, `unlink` 뿐. 다른 주소나 끼워 넣은 인자는 전부 무시함
+- 모양은 [preview.tpl.html](preview.tpl.html) 에서 고침. 글꼴은 Google Fonts (Silkscreen, IBM Plex Sans KR, IBM Plex Mono — 모두 SIL OFL)
 
 ## 구성표 5종
 
@@ -33,22 +46,16 @@
 | `move.txt` | 이동 |
 | `hand.txt` | 링크 선택 |
 
-## 등록
+## 저장소에서 직접 등록
 
-**[cursors.bat](cursors.bat)** 을 더블클릭하면 메뉴가 뜸. Python 3.10+ 필요.
+그림을 고치면서 볼 때는 클론한 폴더의 **[cursors.bat](cursors.bat)** 을 더블클릭. Python 3.10+ 필요. 등록만 하고 적용은 포인터 설정에서 고름.
 
 ```
   cursor-playground 커서 구성표
   1) 전체 등록   2) 전체 제거
   3) 개별 등록   4) 개별 제거
-  5) 현재 상태
-  6) 웹 페이지 등록 버튼 켜기   7) 끄기
-  0) 끝내기
+  5) 현재 상태   0) 끝내기
 ```
-
-개별 등록·제거는 번호를 `1,3` 처럼 여러 개 고를 수 있음. 현재 상태는 구성표별 등록 여부, 커서 파일 수, 지금 적용 중인 구성표를 보여 줌.
-
-메뉴 없이 바로 실행할 때는 인자를 붙임:
 
 ```bat
 cursors.bat -Install                    :: 전체 등록
@@ -56,25 +63,11 @@ cursors.bat -Install -Scheme neon,pink  :: 개별 등록
 cursors.bat -Uninstall                  :: 전체 제거
 cursors.bat -Uninstall -Scheme neon     :: 개별 제거
 cursors.bat -Status                     :: 현재 상태
-cursors.bat -EnableLink                 :: 웹 페이지 등록 버튼 켜기
-cursors.bat -DisableLink                :: 끄기
 ```
 
-### 시안 페이지에서 바로 등록
-
-시안 페이지의 **윈도우에 등록** 버튼 → 확인 팝업 → 브라우저의 "앱 열기" 확인 → 등록 후 윈도우 알림.
-
-- 먼저 메뉴 **6)** 을 한 번 실행해야 함. `cursor-playground://` 주소를 이 저장소의 install.ps1 에 연결함 (`HKCU\Software\Classes\cursor-playground`, 관리자 권한 필요 없음)
-- 저장소 폴더를 옮기면 6) 을 다시 실행. 현재 상태(5) 에서 연결 상태를 볼 수 있음
-- 아무 웹 페이지나 이 주소를 부를 수 있으므로, 받는 요청은 `cursor-playground://install/<구성표>` 하나뿐이고 구성표 이름도 다섯 개만 허용함. 제거나 다른 인자는 전부 무시함. 원치 않으면 7) 로 끔
-
-커서를 `%LOCALAPPDATA%\cursor-playground\<폴더>` 에 만들어 두고 구성표로 등록함. 관리자 권한 필요 없음.
-등록 뒤 설정 → Bluetooth 및 장치 → 마우스 → 추가 마우스 설정 → **포인터** 탭 → **구성표** 에서 고르고 확인.
-
-- 새 구성표: `art/` 에 폴더를 만들고 `install.ps1` 의 `$schemes` 에 한 줄 추가
+- 새 구성표: `art/` 에 폴더를 만들고 `install.ps1`, `handler.ps1`, `build.py` 의 구성표 목록에 한 줄씩 추가
 - 구성표는 레지스트리 `HKCU\Control Panel\Cursors\Schemes` 에 값 하나로 저장되고, 17칸 경로를 정해진 순서로 쉼표로 이은 형식임
-- 실제 동작은 [install.ps1](install.ps1) 에 있고, cursors.bat 은 그걸 실행만 함
-- install.ps1 은 한글 때문에 UTF-8 BOM 으로 저장해야 함 (Windows PowerShell 5.1 은 BOM 없으면 ANSI 로 읽음). cursors.bat 은 반대로 영문만 씀 (cmd 는 .bat 을 콘솔 코드페이지로 읽음)
+- .ps1 은 한글 때문에 UTF-8 BOM 으로 저장해야 함 (Windows PowerShell 5.1 은 BOM 없으면 ANSI 로 읽음). 반대로 cursors.bat 과 setup.ps1 은 영문만 씀 (cmd 와 `irm` 이 코드페이지를 잘못 고를 수 있음)
 
 ## 그림 그리는 법
 
