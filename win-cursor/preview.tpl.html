@@ -42,6 +42,10 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .size[aria-pressed="true"]{background:var(--accent);color:#1E1A20}
 .size:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .size-note{font-size:13px;color:var(--muted);flex:1 1 260px}
+.huebar{margin-top:10px;padding-top:0;border-top:0}
+.huebar input[type="range"]{width:220px;max-width:100%;accent-color:var(--accent)}
+.huebar input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.huebar output{font:600 14px/1 var(--mono);min-width:3.5em}
 .group-name{margin:0 0 8px;font:600 13px/1 var(--body);color:var(--muted)}
 .picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 .pick{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
@@ -170,6 +174,13 @@ pre .c{color:var(--muted)}
       <button type="button" class="ghost c-hand" data-action="size">크기만 적용</button>
       <span class="size-note">고르면 이 페이지 커서가 바로 그 크기가 됨. <b>이 구성표 적용</b> 은 크기까지 같이 적용함.</span>
     </div>
+    <div class="sizebar huebar">
+      <label class="size-label" for="hue">색조</label>
+      <input type="range" id="hue" class="c-hand" min="0" max="355" step="5" value="0">
+      <output id="hue-out" for="hue">0°</output>
+      <button type="button" class="ghost c-hand" id="hue-reset">원래 색</button>
+      <span class="size-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. <b>이 구성표 적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
+    </div>
   </section>
 
   <section>
@@ -218,93 +229,126 @@ pre .c{color:var(--muted)}
 </dialog>
 
 <script>
-// 페이지 커서: 크기 미리보기와 움직이는 커서.
-// 32px 그림을 캔버스로 픽셀 그대로 키워 CSS 커서를 만들고(브라우저는 128px 까지 허용),
+// 페이지 커서: 크기, 색조, 움직임을 지금 고른 구성표에만 입힌다.
+// 32px 그림을 캔버스로 픽셀 그대로 키우고(브라우저는 128px 까지 허용), 색조는 픽셀마다 색상환 각도만 돌린다.
 // 움직이는 구성표는 프레임을 번갈아 끼운다. 브라우저는 .ani 를 움직이지 않기 때문.
+// 색조 돌리는 식은 handler.ps1 의 C# Recolor 와 같아야 페이지와 윈도우의 색이 같다.
 (function(){
   var DATA = /*CURSOR_DATA*/;
+  var EXTRA = /*EXTRA_DATA*/;
   var SIZES = [32, 48, 64, 96, 128];
-  var size = 32, scaledCache = {};
-  try { var saved = parseInt(localStorage.getItem('cp-size'), 10); if (SIZES.indexOf(saved) >= 0) size = saved; } catch (e) {}
-  var staticStyle = document.createElement('style'), animStyle = document.createElement('style');
-  document.head.appendChild(staticStyle); document.head.appendChild(animStyle);
+  var size = 32, hue = 0, cache = {};
+  try {
+    var savedSize = parseInt(localStorage.getItem('cp-size'), 10); if (SIZES.indexOf(savedSize) >= 0) size = savedSize;
+    var savedHue = parseInt(localStorage.getItem('cp-hue'), 10); if (savedHue >= 0 && savedHue < 360) hue = savedHue;
+  } catch (e) {}
+  var style = document.createElement('style'), thumbStyle = document.createElement('style');
+  document.head.appendChild(style); document.head.appendChild(thumbStyle);
   var app = document.getElementById('app');
 
-  function scale(uri, px){
-    var key = px + '|' + uri;
-    if (!scaledCache[key]) {
-      scaledCache[key] = new Promise(function(resolve){
+  function hue2(p, q, t){
+    if (t < 0) t += 1; if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  }
+  function rotate(d, deg){
+    for (var i = 0; i < d.length; i += 4) {
+      if (d[i + 3] === 0) continue;
+      var r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+      var max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, c = max - min;
+      if (c === 0) continue;
+      var s = l > 0.5 ? c / (2 - max - min) : c / (max + min), h;
+      if (max === r) h = (g - b) / c + (g < b ? 6 : 0); else if (max === g) h = (b - r) / c + 2; else h = (r - g) / c + 4;
+      h = h / 6 + deg / 360; h -= Math.floor(h);
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+      d[i] = Math.round(hue2(p, q, h + 1/3) * 255); d[i + 1] = Math.round(hue2(p, q, h) * 255); d[i + 2] = Math.round(hue2(p, q, h - 1/3) * 255);
+    }
+  }
+  // px 가 0 이면 원래 크기
+  function paint(uri, px, deg){
+    var key = px + '|' + deg + '|' + uri;
+    if (!cache[key]) {
+      cache[key] = new Promise(function(resolve){
         var img = new Image();
         img.onload = function(){
-          var c = document.createElement('canvas'); c.width = c.height = px;
-          var g = c.getContext('2d'); g.imageSmoothingEnabled = false;
-          g.drawImage(img, 0, 0, px, px);
-          resolve({ uri: c.toDataURL('image/png'), k: px / img.naturalWidth });
+          var n = px || img.naturalWidth, cv = document.createElement('canvas'); cv.width = cv.height = n;
+          var g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, n, n);
+          if (deg) { var data = g.getImageData(0, 0, n, n); rotate(data.data, deg); g.putImageData(data, 0, 0); }
+          resolve({ uri: cv.toDataURL('image/png'), k: n / img.naturalWidth });
         };
         img.src = uri;
       });
     }
-    return scaledCache[key];
+    return cache[key];
   }
-  function rule(sid, rid, d, s){
-    var hx = Math.floor(d[1] * s.k), hy = Math.floor(d[2] * s.k);
-    return '[data-scheme="' + sid + '"] .c-' + rid + ',[data-scheme="' + sid + '"].c-' + rid + ',.card.s-' + sid + '.c-' + rid +
-      '{cursor:url(' + s.uri + ') ' + hx + ' ' + hy + ',' + d[3] + '}';
-  }
-
-  // 크기를 바꾸면 모든 구성표의 첫 프레임 커서를 그 크기로 다시 만든다 (32 는 빌드 때 넣어 둔 CSS 그대로)
-  var staticDone = {};
-  function applyStatic(px){
-    if (px === 32) { staticStyle.textContent = ''; return; }
-    if (staticDone[px]) { staticStyle.textContent = staticDone[px]; return; }
-    var jobs = [];
-    Object.keys(DATA).forEach(function(sid){
-      Object.keys(DATA[sid]).forEach(function(rid){
-        var d = DATA[sid][rid];
-        jobs.push(scale(d[0][0], px).then(function(s){ return rule(sid, rid, d, s); }));
-      });
+  function animated(sid){
+    return [DATA[sid], EXTRA[sid]].some(function(roles){
+      return roles && Object.keys(roles).some(function(r){ return roles[r][0].length > 1; });
     });
-    Promise.all(jobs).then(function(rules){ staticDone[px] = rules.join(' '); if (size === px) staticStyle.textContent = staticDone[px]; });
   }
 
-  // 지금 고른 구성표가 움직이는 것이면 프레임을 번갈아 끼운다. 카드 그림은 인라인 스타일을 덮도록 !important
   var lastKey = '';
   function tick(){
-    var sid = app.getAttribute('data-scheme'), roles = DATA[sid];
-    if (!roles || !Object.keys(roles).some(function(r){ return roles[r][0].length > 1; })) {
-      if (lastKey) { animStyle.textContent = ''; lastKey = ''; }
+    var sid = app.getAttribute('data-scheme'), px = size, deg = hue;
+    if (!DATA[sid]) return;
+    var moving = animated(sid) && motionOK;
+    if (px === 32 && deg === 0 && !moving) {
+      if (lastKey) { style.textContent = ''; lastKey = ''; }
       return;
     }
-    var now = performance.now(), px = size, picks = [];
-    Object.keys(roles).forEach(function(rid){
-      var d = roles[rid], n = d[0].length;
-      picks.push([rid, d, n > 1 ? Math.floor(now / d[4]) % n : 0]);
+    var now = performance.now(), jobs = [], parts = [];
+    Object.keys(DATA[sid]).forEach(function(rid){
+      var d = DATA[sid][rid], f = moving ? Math.floor(now / d[4]) % d[0].length : 0;
+      parts.push(f);
+      jobs.push(Promise.all([paint(d[0][f], px, deg), paint(d[0][f], 0, deg)]).then(function(r){
+        var hx = Math.floor(d[1] * r[0].k), hy = Math.floor(d[2] * r[0].k);
+        return '[data-scheme="' + sid + '"] .c-' + rid + ',[data-scheme="' + sid + '"].c-' + rid + ',.card.s-' + sid + '.c-' + rid +
+          '{cursor:url(' + r[0].uri + ') ' + hx + ' ' + hy + ',' + d[3] + '}' +
+          ' .card.s-' + sid + '.c-' + rid + ' .sprite{background-image:url(' + r[1].uri + ')!important}';
+      }));
     });
-    var key = sid + '|' + px + '|' + picks.map(function(p){ return p[2]; }).join(',');
+    Object.keys(EXTRA[sid] || {}).forEach(function(rid){
+      var d = EXTRA[sid][rid], f = moving ? Math.floor(now / d[1]) % d[0].length : 0;
+      parts.push(f);
+      jobs.push(paint(d[0][f], 0, deg).then(function(r){
+        return ' .extra.s-' + sid + '.e-' + rid + ' i{background-image:url(' + r.uri + ')!important}';
+      }));
+    });
+    var key = sid + '|' + px + '|' + deg + '|' + parts.join(',');
     if (key === lastKey) return;
-    Promise.all(picks.map(function(p){ return scale(p[1][0][p[2]], px); })).then(function(scaled){
-      if (app.getAttribute('data-scheme') !== sid || size !== px) return;
-      animStyle.textContent = picks.map(function(p, i){
-        return rule(sid, p[0], p[1], scaled[i]) +
-          ' .card.s-' + sid + '.c-' + p[0] + ' .sprite{background-image:url(' + p[1][0][p[2]] + ')!important}';
-      }).join(' ');
+    Promise.all(jobs).then(function(rules){
+      if (app.getAttribute('data-scheme') !== sid || size !== px || hue !== deg) return;
+      style.textContent = rules.join(' ');
       lastKey = key;
     });
   }
   var motionOK = !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (motionOK) setInterval(tick, 50);
+  setInterval(tick, 50);
 
-  function choose(px){
-    size = px; lastKey = '';
+  function chooseSize(px){
+    size = px;
     document.querySelectorAll('[data-size]').forEach(function(b){ b.setAttribute('aria-pressed', String(parseInt(b.getAttribute('data-size'), 10) === px)); });
     try { localStorage.setItem('cp-size', String(px)); } catch (e) {}
-    applyStatic(px);
+    tick();
+  }
+  var hueInput = document.getElementById('hue'), hueOut = document.getElementById('hue-out');
+  function chooseHue(deg){
+    hue = deg; hueInput.value = String(deg); hueOut.textContent = deg + '°';
+    // 목록 썸네일은 60장이라 CSS 필터로 비슷하게만 보여 줌
+    thumbStyle.textContent = deg ? '.thumb{filter:hue-rotate(' + deg + 'deg)}' : '';
+    try { localStorage.setItem('cp-hue', String(deg)); } catch (e) {}
+    tick();
   }
   document.querySelectorAll('[data-size]').forEach(function(b){
-    b.addEventListener('click', function(){ choose(parseInt(b.getAttribute('data-size'), 10)); });
+    b.addEventListener('click', function(){ chooseSize(parseInt(b.getAttribute('data-size'), 10)); });
   });
+  hueInput.addEventListener('input', function(){ chooseHue(parseInt(hueInput.value, 10)); });
+  document.getElementById('hue-reset').addEventListener('click', function(){ chooseHue(0); });
   window.cpSize = function(){ return size; };
-  choose(size);
+  window.cpHue = function(){ return hue; };
+  chooseSize(size); chooseHue(hue);
 })();
 
 (function(){
@@ -325,8 +369,8 @@ pre .c{color:var(--muted)}
   function send(action){
     if (action === 'restore') action = 'restore/' + visit;
     else if (action === 'size') action = 'size/' + window.cpSize() + '/' + visit;
-    else if (/^apply\/[a-z]+$/.test(action)) action = action + '/' + visit + '/' + window.cpSize();
-    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}\/(32|48|64|96|128)|size\/(32|48|64|96|128)\/[a-z0-9]{16}|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
+    else if (/^apply\/[a-z]+$/.test(action)) action = action + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue();
+    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}\/(32|48|64|96|128)\/([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])|size\/(32|48|64|96|128)\/[a-z0-9]{16}|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
     status.innerHTML = '요청을 보냄. 브라우저가 앱을 열지 물으면 <b>열기</b>. 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 맨 위 <b>처음 한 번</b>부터.';
     window.location.href = 'cursor-playground://' + action;
   }
@@ -342,7 +386,7 @@ pre .c{color:var(--muted)}
       var name = b.getAttribute('data-name');
       ask('apply/' + b.getAttribute('data-apply'), {
         title: name + ' 구성표를 적용할까요?',
-        body: '커서를 내려받아 포인터 구성표에 추가하고, 고른 크기(' + window.cpSize() + 'px)로 바로 적용함. 원래대로 버튼으로 페이지를 열기 전 커서와 크기로 돌아갈 수 있음.',
+        body: '커서를 내려받아' + (window.cpHue() ? ' 색조를 ' + window.cpHue() + '° 돌린 새 구성표로' : ' 포인터 구성표에') + ' 추가하고, 고른 크기(' + window.cpSize() + 'px)로 바로 적용함. 원래대로 버튼으로 페이지를 열기 전 커서와 크기로 돌아갈 수 있음.',
         ok: '적용'
       });
     });

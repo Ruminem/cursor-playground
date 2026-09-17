@@ -57,6 +57,7 @@ def favicon() -> str:
 def build() -> str:
     css, panels = [], []
     data: dict[str, dict[str, list]] = {}
+    extra_data: dict[str, dict[str, list]] = {}
     groups: dict[str, list[str]] = {}
     for scheme in SCHEMES:
         sid, sname, sdesc = scheme["id"], scheme["name"], scheme["desc"]
@@ -93,8 +94,10 @@ def build() -> str:
         for rid, rlabel, _ in EXTRA:
             text = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
             src = canvas_size(text)
-            pic = "data:image/png;base64," + base64.b64encode(txt_to_png(text, None, src)).decode()
-            extras.append(f'<div class="extra"><span class="pic"><i style="background-image:url({pic})"></i></span>{rlabel}</div>')
+            pics = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in split_frames(text)]
+            # 움직이거나 색조를 바꿀 때 페이지 스크립트가 프레임을 번갈아 끼울 수 있게 넘긴다
+            extra_data.setdefault(sid, {})[rid] = [pics, read_rate(text) * 1000 // 60]
+            extras.append(f'<div class="extra s-{sid} e-{rid}"><span class="pic"><i style="background-image:url({pics[0]})"></i></span>{rlabel}</div>')
         groups.setdefault(scheme["category"], []).append(f"""
       <button type="button" class="pick c-hand" data-pick="{sid}" aria-pressed="false">
         <span class="thumb" style="background-image:url({thumb})"></span>
@@ -114,6 +117,7 @@ def build() -> str:
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*CURSOR_CSS*/", "\n".join(css))
         .replace("/*CURSOR_DATA*/", json.dumps(data, separators=(",", ":")))
+        .replace("/*EXTRA_DATA*/", json.dumps(extra_data, separators=(",", ":")))
         .replace("<!--FAVICON-->", favicon())
         .replace("<!--COUNT-->", str(len(SCHEMES)))
         .replace("<!--GROUPS-->", str(len(groups)))
