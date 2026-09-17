@@ -149,8 +149,31 @@ def build_dist() -> int:
     return count
 
 
+def update_readme() -> None:
+    """README 의 영어·한국어 구성표 표를 schemes.json 으로 다시 채운다 (두 언어가 어긋나지 않게)"""
+    path = HERE / "README.md"
+    text = path.read_text(encoding="utf-8")
+    for lang, name, desc, cat, head in (
+        ("en", "name_en", "desc_en", "category_en", "| Folder | Name | Style |"),
+        ("ko", "name", "desc", "category", "| 폴더 | 이름 | 스타일 |"),
+    ):
+        rows, current = [], None
+        for s in SCHEMES:
+            if s[cat] != current:
+                current = s[cat]
+                rows += ["", f"**{current}**", "", head, "|---|---|---|"]
+            rows.append(f"| `art/{s['id']}` | {s[name]} | {s[desc]} |")
+        start, end = f"<!-- schemes:{lang} -->", f"<!-- /schemes:{lang} -->"
+        before, rest = text.split(start, 1)
+        _, after = rest.split(end, 1)
+        text = before + start + "\n".join(rows) + "\n\n" + end + after
+    path.write_text(text, encoding="utf-8")
+
+
 if __name__ == "__main__":
     out = HERE / "preview.html"
     out.write_text(build(), encoding="utf-8")
     print(f"{out} 만듦")
     print(f"dist/ 커서 {build_dist()}개 만듦")
+    update_readme()
+    print("README 구성표 표 갱신함")
