@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 자동 생성: python preview.py 로 다시 만들 것. 고칠 때는 preview.tpl.html 을 고친다 -->
+<title>cursor-playground 구성표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#F6F3F6; --surface:#FFFFFF; --ink:#262028; --muted:#7D7280; --line:#E3DCE4;
+  --accent:#D9579F; --accent-ink:#A8327A; --check-a:#ECE6EC; --check-b:#FFFFFF; --hot:#2A7DE1;
+  --display:"Silkscreen", ui-monospace, monospace;
+  --body:"IBM Plex Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#18151A; --surface:#221E24; --ink:#F1ECF2; --muted:#A99DAC; --line:#37303A;
+    --accent:#F27DBE; --accent-ink:#F7A6D3; --check-a:#2A252D; --check-b:#332D36; --hot:#6FB1FF;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#18151A; --surface:#221E24; --ink:#F1ECF2; --muted:#A99DAC; --line:#37303A;
+  --accent:#F27DBE; --accent-ink:#F7A6D3; --check-a:#2A252D; --check-b:#332D36; --hot:#6FB1FF;
+}
+[data-scheme="pink"] .c-arrow,[data-scheme="pink"].c-arrow,.card.s-pink.c-arrow{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR4nO3VsQ2AMAxE0Rs70zETGxiJAgkT0nGf4r6U2q+IbEkqwRWNqH1sKOIEkIgLQCFuAALxALgRU4AT8QpwIZYAB2I1tL9vAdRO6AP9n7ANQgD/Xc/okaLPdEoppZTk6ABNoNSkHgNMIgAAAABJRU5ErkJggg==) 0 0,default}
+[data-scheme="pink"] .c-ibeam,[data-scheme="pink"].c-ibeam,.card.s-pink.c-ibeam{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAASElEQVR4nO2WMQ4AIAgD+2xf55v8Aa44mLhYGO6SzhwsRZLiIV+JNeY1FoGcNNR2gUPGtTUCCCCAAAKtuqBXG1b8AwAAAKBKNjX7kKyphV/EAAAAAElFTkSuQmCC) 4 8,text}
+[data-scheme="pink"] .c-wait,[data-scheme="pink"].c-wait,.card.s-pink.c-wait{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAbElEQVR4nGNgYGD4TwKmCfj/oWIfQUxTBwx0CIAdgQ/Q2nKwA35dMsKJ6eEAnI6gl+VYHUFvy1EcMVCWD7gDwKke5AB6pX4My5EdQE9HoOR7ZAeMiHJgwIvi0cpoFIyCUTAKRsEoGAUMIxoAAEIlGMnklTWbAAAAAElFTkSuQmCC) 5 7,wait}
+[data-scheme="pink"] .c-no,[data-scheme="pink"].c-no,.card.s-pink.c-no{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAbUlEQVR4nO2WwQ0AIAgDGcz9R3ENfRsL8SGVxF7Cl16igmbFGaB4wb21rRgiMNgRyQ1HR5Apcdo8TWJpeipxSwA1pEp4zaIAikAkQRPwJKgCSIJyEV2J1Gf4ag48n4QldkGJbVjiPyCEEELYN0x0diFXc0gyUwAAAABJRU5ErkJggg==) 9 9,not-allowed}
+[data-scheme="pink"] .c-move,[data-scheme="pink"].c-move,.card.s-pink.c-move{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAd0lEQVR4nO2WUQqAIBAF99idrjN1gw2CBCWjjc2ReAP7I+IbXFHNnuEG4tuyOiVxhJ81WqIKxySaFnBtGBXuQYFUqV5QdPx9eNPrUnfjGRKXpz1aaRLEDkxxBsqiAbHe/J+9BeRNOMdbQIZXEvinhAwXQggh7Et2D6L69rP55poAAAAASUVORK5CYII=) 9 9,move}
+[data-scheme="pink"] .c-hand,[data-scheme="pink"].c-hand,.card.s-pink.c-hand{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAWklEQVR4nO3OSw4AEAxF0S7b6qzJDhgIKfGZKAP3JJ108q5IFtVps/9RMThfT43N/ucDCj3Yn3nAatw8YDduHbCNsB5fRtwaH0bcHm8iXo3XiJfjAAAAgHwlAfuUtYIlcQ+3AAAAAElFTkSuQmCC) 5 4,pointer}
+[data-scheme="neon"] .c-arrow,[data-scheme="neon"].c-arrow,.card.s-neon.c-arrow{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nO3Wuw2AMAwE0ExAQc0ATML+ezBEaIgUGTtJge+aOym1X75OOe96tVEYeYtXGqIDcBANsG8HB9EDKAgLgCM8ABQRAWCIEQCCmAHSESuAVMTCGbAjFxC9CWk9I3gJP4hfi3oAM1v8LXCWGrMK3t7Ct2GAordp7m9JURRFUQogDyswZb16iNj+AAAAAElFTkSuQmCC) 1 1,default}
+[data-scheme="neon"] .c-ibeam,[data-scheme="neon"].c-ibeam,.card.s-neon.c-ibeam{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVR4nGPQeP3fjVjMQAsANfw/EZi2DhDik8GJ6eIAZIxkKd1CABmj+JrmaQCLY2gf7KMOGHXAqANGHTCoSsLBUhcMrtpwINoDA9ciGgWjYBSMglEwChgGGAAA+Op4pXUoiWAAAAAASUVORK5CYII=) 5 9,text}
+[data-scheme="neon"] .c-wait,[data-scheme="neon"].c-wait,.card.s-neon.c-wait{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaUlEQVR4nGPQeP3fjVTMQE0ANfQ/CZg2DhDikyGIaeqAgQ4BgqEAs5zqDkByBP2DH80BOB1BU98TcgRdLMflCLpaPuAOGNAoGPBEOKDZcMALosFSFI9WRgPXIBkFo2AUjIJRMAoYRjoAAGcMzMQQeeWhAAAAAElFTkSuQmCC) 6 8,wait}
+[data-scheme="neon"] .c-no,[data-scheme="neon"].c-no,.card.s-neon.c-no{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjElEQVR4nO3WQQqAMAwEwLzAg2ff07f7q3oStGbV0iTNYRcCHoQdFNKKgNSyFzTimaasKuMHaYvXZXtMC3Ep14oBxAaByrVf4IJA5eBdFTFafgOcz38Qw19BK7+W9CBMAV+IEMAbIgyAEKEADWEN6EaY7oKpeyDFJpx+FqQ4DVPcB1LciBiGYRhGgnMA1DYSdPucqHwAAAAASUVORK5CYII=) 9 9,not-allowed}
+[data-scheme="neon"] .c-move,[data-scheme="neon"].c-move,.card.s-neon.c-move{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjklEQVR4nGNgIAJovP7vBsMM9AZIlv+nuyOQLRfik/lPV0egWw7DdHMENsvRHUHPuEe2mHYhgJ7aCaUBquYOXKkdmwPwqafYcnSfkipOseVocQ3H+MQpcgS+1E4qJit3DHgIDHgaGBS5YFCUA4OiJBy0dcGA1IbYHDHgjZLB0Cyjv+WjYBSMglEwChhoDADz2SmKFQs+wQAAAABJRU5ErkJggg==) 10 10,move}
+[data-scheme="neon"] .c-hand,[data-scheme="neon"].c-hand,.card.s-neon.c-hand{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAYklEQVR4nO2SsQ2AMAwEfwIKaubx7GxlOmQhJ6HAbriTvnGRuyKSJLfTnpvdPyU87mE2u1cE+L4d94IsvZcHjEZAZcAyouwTvokola8iWuSjiFZ5FtEuTyL65QAAAACgv3EB6oP6W8YLeTsAAAAASUVORK5CYII=) 6 5,pointer}
+[data-scheme="minimal"] .c-arrow,[data-scheme="minimal"].c-arrow,.card.s-minimal.c-arrow{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUklEQVR4nO3RMQ7AIBADQf//004TJIQIVLGb3Q94dCdJsm21esddQwxADTEDKogVEEfsAFHEFyCGOAEiiBvgd8TtBZULRIZXxFxsmIiIiIhE0gP8MZln0b1ZIQAAAABJRU5ErkJggg==) 1 1,default}
+[data-scheme="minimal"] .c-ibeam,[data-scheme="minimal"].c-ibeam,.card.s-minimal.c-ibeam{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAARklEQVR4nO3VMQoAIAwEwf3/pxUkgoj1mWIHhHS5pDAAjHLXEdVsvUedC7GbxzdwhohPbgADGMAALX7Cbrcgfw0lSZL4bAKJabJO3NrKqgAAAABJRU5ErkJggg==) 3 7,text}
+[data-scheme="minimal"] .c-wait,[data-scheme="minimal"].c-wait,.card.s-minimal.c-wait{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXklEQVR4nO3TQQrAIBBD0Tmx694+RWihyIi0dOLmv404ggmCEQlJCrc7tK+tHXruLeFZ6DgvL/Fmbgm3lLgunz7z6vzPEp/PS0s4w9NfUP78Q4lpGastoQAAAEBscgI3uot1vSND4AAAAABJRU5ErkJggg==) 5 5,wait}
+[data-scheme="minimal"] .c-no,[data-scheme="minimal"].c-no,.card.s-minimal.c-no{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAX0lEQVR4nO2UQQoAIAgE/f+n6xZiGnRwg5iBLi3oIKVZYCSYAtdsO+0ivnExgZVJBKq8RcAXPzVqk4iFq0YygZu7NoHsXi4QM9lDrDLpN5TvgeebMBMJEwAAAAAA+5YJ9fg90cRCcC8AAAAASUVORK5CYII=) 6 6,not-allowed}
+[data-scheme="minimal"] .c-move,[data-scheme="minimal"].c-move,.card.s-minimal.c-move{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAVklEQVR4nO3UOwoAIRAE0bn/pdvEAfEDJmOD1AODZYMuDIw4kKRw6eOyROR4HmvE0/FxbBdQGjMOptN32fjtKY2w3MAUsQTt/pfjHbDewBQBAACA+F4DfQu8RMJoSKMAAAAASUVORK5CYII=) 6 6,move}
+[data-scheme="minimal"] .c-hand,[data-scheme="minimal"].c-hand,.card.s-minimal.c-hand{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAP0lEQVR4nO3UMQoAIAxD0dz/0nWRUoQ6Jst/4Jw/qNJQg9zuaB9rxDtujdjGbREE/CKiFzH2FGP/AAAAAACFHCXcdIwTpc4xAAAAAElFTkSuQmCC) 4 4,pointer}
+[data-scheme="onebit"] .c-arrow,[data-scheme="onebit"].c-arrow,.card.s-onebit.c-arrow{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAb0lEQVR4nO3UMQ6AMAxDUZ+T+98jqAyopKFiiT3gL3XOa6gAgIC4UCNipERcACXiBqgQD4ACsQDYiBLARLwCWIgtgIHYDc2nF1D8E47i9ACmgfxHmG5bbaEdkNdL30K+JX0LXz6NJOlw55xzDr/oBJTzCAfffZBuAAAAAElFTkSuQmCC) 0 0,default}
+[data-scheme="onebit"] .c-ibeam,[data-scheme="onebit"].c-ibeam,.card.s-onebit.c-ibeam{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUElEQVR4nO2VMQoAIAzE7p3+/x+K0KEIli4tgglkbnQ5SZoJS5kRFjBKA7zuqLc0QHZge77a20LbtxNAAAEEPBWQ2YKP1vBi2xpGAgAAgCpY1Bexi7S+4uEAAAAASUVORK5CYII=) 4 8,text}
+[data-scheme="onebit"] .c-wait,[data-scheme="onebit"].c-wait,.card.s-onebit.c-wait{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVR4nO2VMQoAIAwD887+/x8VxEFBwQ5tRHKQOZelBQAPJAW/YQhYikAgKQJd4nI9XSAV2vqjRHX5IsEq3wlwyicJXnmlxLG8SoJ6B/SMnnhGFogQQggh8BUN6ck6AhZzjRoAAAAASUVORK5CYII=) 5 7,wait}
+[data-scheme="onebit"] .c-no,[data-scheme="onebit"].c-no,.card.s-onebit.c-no{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nO2VUQqAMAxDe07vfw+FgTIhUYdJv/KgPyLNq461irODamGEITpEYDAR8YajX+CUQM03UDaJW9OX5khUFz5PuiAhF7iekwDpV3hqxiTaBJhEqwCSsB9E+g4J1wl8Pf3K6f/chJLpqQTDFb6yDW3hJ+M2BDXvhRbQQgohhBBCKTkA7GC5+q5ECagAAAAASUVORK5CYII=) 8 8,not-allowed}
+[data-scheme="onebit"] .c-move,[data-scheme="onebit"].c-move,.card.s-onebit.c-move{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAh0lEQVR4nO2VWwrAIAwEc07vf48UoQW18dFmTaDNQH5E3KGulGgNJkc44yXBJdYSVbibRHMFedI5dhKFwPZwXhCY7X8f3rnjngC0E23JqhmtIyQYAUxC8QXUBZUOSw/X1UiHzV4B/GneQgYC0n4oUgfM2NJ2lcQv/gVdCc/wC9fwIAiCgD7LAeCINcrn7htkAAAAAElFTkSuQmCC) 9 9,move}
+[data-scheme="onebit"] .c-hand,[data-scheme="onebit"].c-hand,.card.s-onebit.c-hand{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaUlEQVR4nO2UOw4AIAhDOaf3vwcuauIHdLA42Jc0jn1GRGRGS56glVcSo0D6XiD8KTqBSJlWYAkgh3NZZIGYjW0pWqBJ7E707ziSgAsclsP2gymBvv0k4AwffDuqk7DVnJwQQgghhMhNMmNeR3ySC2jXAAAAAElFTkSuQmCC) 4 0,pointer}
+[data-scheme="fantasy"] .c-arrow,[data-scheme="fantasy"].c-arrow,.card.s-fantasy.c-arrow{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nGNgYGD4j4QHBPwHgYF0CNhSEDhy6trAOSIvr2JAHQG2cNQRo44Yio6gucPwOQKMX2wwoHnI4HQEkuU0jxoMR9DTcgxHoFlOXwfALO+J0PkfYiRB3yhA9zk9HYEtzrE5gnYOwOFLuucGnI6jR3lA0BED6YBRMApGwSgYBQxDFgAASgrwSN5iId0AAAAASUVORK5CYII=) 1 1,default}
+[data-scheme="fantasy"] .c-ibeam,[data-scheme="fantasy"].c-ibeam,.card.s-fantasy.c-ibeam{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAW0lEQVR4nGNgYGD4TySmGfj/YoMBXkxzB4QYSeC0HCRHcwcg454IHWRL6RIFKI5BcwDdwagDRh0w6oBRB4xMBwx4XTDwteGAtwcGukU0CkbBKBgFo2AUMAwkAACXC8WzPhuaiwAAAABJRU5ErkJggg==) 4 9,text}
+[data-scheme="fantasy"] .c-wait,[data-scheme="fantasy"].c-wait,.card.s-fantasy.c-wait{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAj0lEQVR4nGNgYGD4TwGmCvjfE6FDMqaqA0KMJEjGVHUALBRAND6ArI6aDmAg0wFUBSg+w2U53RwAwi82GMAxsjg9HMCAwwEMdHUAzBFoCY5uDgCLofl+ZDkAnhsGKgqwZUGGEZMNUSxHdwTNHYDNcmRH0MIB/8l0wDCqjge8QTLQTbJRMApGwSgYBQwjGgAAWMLIa8HO2zgAAAAASUVORK5CYII=) 7 9,wait}
+[data-scheme="fantasy"] .c-no,[data-scheme="fantasy"].c-no,.card.s-fantasy.c-no{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhUlEQVR4nGNgYGD4TwGmCvj/YoMByZjqDjhy6hpWnJdXgYGHtwP2aRhhdQBInG4hgOwIdMvpFgUwR6BbTtc0gM3y4RkC+BIingRINQegOAJfLqCV5RiOwOYAWluO0xH0tByrI+htOYYjBsJyuCOond1IdsBA+n4UjIJRMApGwSgYBQz0AgCOzsdLWBhzawAAAABJRU5ErkJggg==) 7 8,not-allowed}
+[data-scheme="fantasy"] .c-move,[data-scheme="fantasy"].c-move,.card.s-fantasy.c-move{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArElEQVR4nGNgwA7+E4FpBsAWvNhggBPTyhFwg2EWhRhJYGAsjqCaQ3BavE/DiJBDKLcc5gBsvsbmAJgjqBEKBC2HYVo5Am+cE+MASqMCp+XEOAAtFKjjgCOnrqFgmAOQxWjiAHSLYRgkj0uOLiGAy2KaRQEux9A0DeByBCEHUCUX4AsFYhxA88KI1pYTjApsDqB2XTAoasMBbw8MmhbRKBgFo2AUjIJRwEBPAAAYX01y0xREOAAAAABJRU5ErkJggg==) 9 9,move}
+[data-scheme="fantasy"] .c-hand,[data-scheme="fantasy"].c-hand,.card.s-fantasy.c-hand{cursor:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAW0lEQVR4nGNgQID/SJjuAGzxiw0GA+IIuOUwTG9HwC0GATRHjIwQQHEEWmKkf0jAcE+Ezv8QI4kByxmjjhh1xKgjRh1BjiPoDgakuB4Fo2AUjIJRMApGAQO1AQDziI7El7QBlwAAAABJRU5ErkJggg==) 3 3,pointer}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:32px 56px}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:36px}
+header{display:grid;gap:10px}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(28px,6vw,44px)/1.05 var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.lede{margin:0;max-width:62ch;color:var(--muted)}
+h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
+
+.picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.pick{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
+.pick:hover{border-color:var(--muted)}
+.pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.thumb{width:72px;height:64px;background-color:var(--check-a);background-repeat:no-repeat;background-position:6px 4px;
+  background-size:96px 96px;image-rendering:pixelated;border-radius:3px}
+.pick-name{font-weight:700;font-size:14px}
+@media (max-width:560px){.picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.desc{margin:0 0 14px;color:var(--muted)}
+.desc b{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;gap:16px;align-items:center;outline:none;transition:border-color .15s}
+.card:hover,.card:focus-visible{border-color:var(--accent)}
+.card:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+.stage{--px:5px;position:relative;flex:none;width:calc(22 * var(--px));height:calc(22 * var(--px));
+  background:repeating-conic-gradient(var(--check-a) 0 25%,var(--check-b) 0 50%) 0 0/calc(var(--px)*2) calc(var(--px)*2)}
+.sprite{position:absolute;inset:0;background-repeat:no-repeat;background-position:0 0;
+  background-size:calc(32 * var(--px)) calc(32 * var(--px));image-rendering:pixelated}
+.hot{position:absolute;width:var(--px);height:var(--px);left:calc(var(--hx) * var(--px));top:calc(var(--hy) * var(--px));
+  outline:2px solid var(--hot);outline-offset:1px}
+.meta{min-width:0}
+.meta h3{margin:0 0 2px;font-size:16px;font-weight:700}
+.meta p{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.meta code,.coords{font-family:var(--mono)}
+.coords b{color:var(--hot);font-weight:600}
+.legend{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin:12px 0 0}
+.legend i{width:5px;height:5px;outline:2px solid var(--hot);outline-offset:1px;display:inline-block}
+
+.play{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;display:grid;gap:18px}
+.play .row{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
+.play label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.play input{font:inherit;color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:9px 11px;width:100%}
+.play input:focus-visible,.play button:focus-visible,.play a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.play a{color:var(--accent-ink);font-weight:700;text-underline-offset:3px}
+.play button{font:600 14px/1 var(--body);border-radius:4px;padding:11px 16px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.play button:disabled{opacity:.55}
+.play button.busy{background:var(--accent);border-color:var(--accent);color:#1E1A20}
+.drag{display:grid;place-items:center;height:96px;border:1.5px dashed var(--accent);border-radius:6px;color:var(--accent-ink);font-weight:500;user-select:none;touch-action:none;overflow:hidden}
+.drag span{padding:6px 12px;background:var(--surface);border:1px solid var(--line);border-radius:4px}
+.note{font-size:13px;color:var(--muted);margin:0}
+
+.install{display:grid;gap:10px}
+.install h2{margin:0}
+.bat{margin:0}
+.bat a{color:var(--accent-ink);font:600 15px/1.4 var(--mono);text-underline-offset:3px}
+.bat a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+pre{margin:0;overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;font:13px/1.7 var(--mono)}
+pre .c{color:var(--muted)}
+.steps{margin:0;padding-left:20px;display:grid;gap:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap c-arrow" id="app" data-scheme="pink">
+  <header>
+    <span class="eyebrow">win-cursor · 포인터 구성표 5종</span>
+    <h1>cursor-playground <em>schemes</em></h1>
+    <p class="lede">텍스트 픽셀아트로 그린 윈도우 커서 구성표 다섯 가지. 구성표를 고르면 이 페이지의 커서도 그 구성표로 바뀌어서, 윈도우에 적용하기 전에 느낌을 볼 수 있음.</p>
+  </header>
+
+  <section>
+    <h2>구성표 고르기</h2>
+    <div class="picker" role="group" aria-label="구성표">
+      <button type="button" class="pick c-hand" data-pick="pink" aria-pressed="false">
+        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR4nO3VsQ2AMAxE0Rs70zETGxiJAgkT0nGf4r6U2q+IbEkqwRWNqH1sKOIEkIgLQCFuAALxALgRU4AT8QpwIZYAB2I1tL9vAdRO6AP9n7ANQgD/Xc/okaLPdEoppZTk6ABNoNSkHgNMIgAAAABJRU5ErkJggg==)"></span>
+        <span class="pick-name">분홍</span>
+      </button>
+      <button type="button" class="pick c-hand" data-pick="neon" aria-pressed="false">
+        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nO3Wuw2AMAwE0ExAQc0ATML+ezBEaIgUGTtJge+aOym1X75OOe96tVEYeYtXGqIDcBANsG8HB9EDKAgLgCM8ABQRAWCIEQCCmAHSESuAVMTCGbAjFxC9CWk9I3gJP4hfi3oAM1v8LXCWGrMK3t7Ct2GAordp7m9JURRFUQogDyswZb16iNj+AAAAAElFTkSuQmCC)"></span>
+        <span class="pick-name">네온</span>
+      </button>
+      <button type="button" class="pick c-hand" data-pick="minimal" aria-pressed="false">
+        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUklEQVR4nO3RMQ7AIBADQf//004TJIQIVLGb3Q94dCdJsm21esddQwxADTEDKogVEEfsAFHEFyCGOAEiiBvgd8TtBZULRIZXxFxsmIiIiIhE0gP8MZln0b1ZIQAAAABJRU5ErkJggg==)"></span>
+        <span class="pick-name">미니멀</span>
+      </button>
+      <button type="button" class="pick c-hand" data-pick="onebit" aria-pressed="false">
+        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAb0lEQVR4nO3UMQ6AMAxDUZ+T+98jqAyopKFiiT3gL3XOa6gAgIC4UCNipERcACXiBqgQD4ACsQDYiBLARLwCWIgtgIHYDc2nF1D8E47i9ACmgfxHmG5bbaEdkNdL30K+JX0LXz6NJOlw55xzDr/oBJTzCAfffZBuAAAAAElFTkSuQmCC)"></span>
+        <span class="pick-name">1비트</span>
+      </button>
+      <button type="button" class="pick c-hand" data-pick="fantasy" aria-pressed="false">
+        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nGNgYGD4j4QHBPwHgYF0CNhSEDhy6trAOSIvr2JAHQG2cNQRo44Yio6gucPwOQKMX2wwoHnI4HQEkuU0jxoMR9DTcgxHoFlOXwfALO+J0PkfYiRB3yhA9zk9HYEtzrE5gnYOwOFLuucGnI6jR3lA0BED6YBRMApGwSgYBQxDFgAASgrwSN5iId0AAAAASUVORK5CYII=)"></span>
+        <span class="pick-name">판타지</span>
+      </button></div>
+  </section>
+
+  <section>
+    <h2>여섯 칸</h2>
+    
+    <div class="panel" data-panel="pink" hidden>
+      <p class="desc"><b>cursor-playground 분홍</b> — 검은 외곽선에 분홍 채우기. 기본 크기의 또렷한 픽셀.</p>
+      <div class="grid">
+        <article class="card s-pink c-arrow" tabindex="0">
+          <div class="stage" style="--hx:0;--hy:0">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR4nO3VsQ2AMAxE0Rs70zETGxiJAgkT0nGf4r6U2q+IbEkqwRWNqH1sKOIEkIgLQCFuAALxALgRU4AT8QpwIZYAB2I1tL9vAdRO6AP9n7ANQgD/Xc/okaLPdEoppZTk6ABNoNSkHgNMIgAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>일반 선택</h3>
+            <p><code>art/pink/arrow.txt</code></p>
+            <p class="coords">11×17 · hotspot <b>0,0</b></p>
+          </div>
+        </article>
+        <article class="card s-pink c-ibeam" tabindex="0">
+          <div class="stage" style="--hx:4;--hy:8">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAASElEQVR4nO2WMQ4AIAgD+2xf55v8Aa44mLhYGO6SzhwsRZLiIV+JNeY1FoGcNNR2gUPGtTUCCCCAAAKtuqBXG1b8AwAAAKBKNjX7kKyphV/EAAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>텍스트 선택</h3>
+            <p><code>art/pink/ibeam.txt</code></p>
+            <p class="coords">9×17 · hotspot <b>4,8</b></p>
+          </div>
+        </article>
+        <article class="card s-pink c-wait" tabindex="0">
+          <div class="stage" style="--hx:5;--hy:7">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAbElEQVR4nGNgYGD4TwKmCfj/oWIfQUxTBwx0CIAdgQ/Q2nKwA35dMsKJ6eEAnI6gl+VYHUFvy1EcMVCWD7gDwKke5AB6pX4My5EdQE9HoOR7ZAeMiHJgwIvi0cpoFIyCUTAKRsEoGAUMIxoAAEIlGMnklTWbAAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용 중</h3>
+            <p><code>art/pink/wait.txt</code></p>
+            <p class="coords">11×16 · hotspot <b>5,7</b></p>
+          </div>
+        </article>
+        <article class="card s-pink c-no" tabindex="0">
+          <div class="stage" style="--hx:9;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAbUlEQVR4nO2WwQ0AIAgDGcz9R3ENfRsL8SGVxF7Cl16igmbFGaB4wb21rRgiMNgRyQ1HR5Apcdo8TWJpeipxSwA1pEp4zaIAikAkQRPwJKgCSIJyEV2J1Gf4ag48n4QldkGJbVjiPyCEEELYN0x0diFXc0gyUwAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용할 수 없음</h3>
+            <p><code>art/pink/no.txt</code></p>
+            <p class="coords">19×19 · hotspot <b>9,9</b></p>
+          </div>
+        </article>
+        <article class="card s-pink c-move" tabindex="0">
+          <div class="stage" style="--hx:9;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAd0lEQVR4nO2WUQqAIBAF99idrjN1gw2CBCWjjc2ReAP7I+IbXFHNnuEG4tuyOiVxhJ81WqIKxySaFnBtGBXuQYFUqV5QdPx9eNPrUnfjGRKXpz1aaRLEDkxxBsqiAbHe/J+9BeRNOMdbQIZXEvinhAwXQggh7Et2D6L69rP55poAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>이동</h3>
+            <p><code>art/pink/move.txt</code></p>
+            <p class="coords">19×19 · hotspot <b>9,9</b></p>
+          </div>
+        </article>
+        <article class="card s-pink c-hand" tabindex="0">
+          <div class="stage" style="--hx:5;--hy:4">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAWklEQVR4nO3OSw4AEAxF0S7b6qzJDhgIKfGZKAP3JJ108q5IFtVps/9RMThfT43N/ucDCj3Yn3nAatw8YDduHbCNsB5fRtwaH0bcHm8iXo3XiJfjAAAAgHwlAfuUtYIlcQ+3AAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>링크 선택</h3>
+            <p><code>art/pink/hand.txt</code></p>
+            <p class="coords">11×10 · hotspot <b>5,4</b></p>
+          </div>
+        </article></div>
+    </div>
+    <div class="panel" data-panel="neon" hidden>
+      <p class="desc"><b>cursor-playground 네온</b> — 속이 빈 어두운 몸체에 청록·자홍 관, 바깥으로 반투명 번짐.</p>
+      <div class="grid">
+        <article class="card s-neon c-arrow" tabindex="0">
+          <div class="stage" style="--hx:1;--hy:1">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nO3Wuw2AMAwE0ExAQc0ATML+ezBEaIgUGTtJge+aOym1X75OOe96tVEYeYtXGqIDcBANsG8HB9EDKAgLgCM8ABQRAWCIEQCCmAHSESuAVMTCGbAjFxC9CWk9I3gJP4hfi3oAM1v8LXCWGrMK3t7Ct2GAordp7m9JURRFUQogDyswZb16iNj+AAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>일반 선택</h3>
+            <p><code>art/neon/arrow.txt</code></p>
+            <p class="coords">13×19 · hotspot <b>1,1</b></p>
+          </div>
+        </article>
+        <article class="card s-neon c-ibeam" tabindex="0">
+          <div class="stage" style="--hx:5;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVR4nGPQeP3fjVjMQAsANfw/EZi2DhDik8GJ6eIAZIxkKd1CABmj+JrmaQCLY2gf7KMOGHXAqANGHTCoSsLBUhcMrtpwINoDA9ciGgWjYBSMglEwChgGGAAA+Op4pXUoiWAAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>텍스트 선택</h3>
+            <p><code>art/neon/ibeam.txt</code></p>
+            <p class="coords">11×19 · hotspot <b>5,9</b></p>
+          </div>
+        </article>
+        <article class="card s-neon c-wait" tabindex="0">
+          <div class="stage" style="--hx:6;--hy:8">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaUlEQVR4nGPQeP3fjVTMQE0ANfQ/CZg2DhDikyGIaeqAgQ4BgqEAs5zqDkByBP2DH80BOB1BU98TcgRdLMflCLpaPuAOGNAoGPBEOKDZcMALosFSFI9WRgPXIBkFo2AUjIJRMAoYRjoAAGcMzMQQeeWhAAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용 중</h3>
+            <p><code>art/neon/wait.txt</code></p>
+            <p class="coords">13×18 · hotspot <b>6,8</b></p>
+          </div>
+        </article>
+        <article class="card s-neon c-no" tabindex="0">
+          <div class="stage" style="--hx:9;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjElEQVR4nO3WQQqAMAwEwLzAg2ff07f7q3oStGbV0iTNYRcCHoQdFNKKgNSyFzTimaasKuMHaYvXZXtMC3Ep14oBxAaByrVf4IJA5eBdFTFafgOcz38Qw19BK7+W9CBMAV+IEMAbIgyAEKEADWEN6EaY7oKpeyDFJpx+FqQ4DVPcB1LciBiGYRhGgnMA1DYSdPucqHwAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용할 수 없음</h3>
+            <p><code>art/neon/no.txt</code></p>
+            <p class="coords">19×19 · hotspot <b>9,9</b></p>
+          </div>
+        </article>
+        <article class="card s-neon c-move" tabindex="0">
+          <div class="stage" style="--hx:10;--hy:10">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjklEQVR4nGNgIAJovP7vBsMM9AZIlv+nuyOQLRfik/lPV0egWw7DdHMENsvRHUHPuEe2mHYhgJ7aCaUBquYOXKkdmwPwqafYcnSfkipOseVocQ3H+MQpcgS+1E4qJit3DHgIDHgaGBS5YFCUA4OiJBy0dcGA1IbYHDHgjZLB0Cyjv+WjYBSMglEwChhoDADz2SmKFQs+wQAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>이동</h3>
+            <p><code>art/neon/move.txt</code></p>
+            <p class="coords">21×21 · hotspot <b>10,10</b></p>
+          </div>
+        </article>
+        <article class="card s-neon c-hand" tabindex="0">
+          <div class="stage" style="--hx:6;--hy:5">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAYklEQVR4nO2SsQ2AMAwEfwIKaubx7GxlOmQhJ6HAbriTvnGRuyKSJLfTnpvdPyU87mE2u1cE+L4d94IsvZcHjEZAZcAyouwTvokola8iWuSjiFZ5FtEuTyL65QAAAACgv3EB6oP6W8YLeTsAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>링크 선택</h3>
+            <p><code>art/neon/hand.txt</code></p>
+            <p class="coords">13×12 · hotspot <b>6,5</b></p>
+          </div>
+        </article></div>
+    </div>
+    <div class="panel" data-panel="minimal" hidden>
+      <p class="desc"><b>cursor-playground 미니멀</b> — 절반 크기의 가는 검정 실루엣과 흰 테두리. 점 하나짜리 링크.</p>
+      <div class="grid">
+        <article class="card s-minimal c-arrow" tabindex="0">
+          <div class="stage" style="--hx:1;--hy:1">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUklEQVR4nO3RMQ7AIBADQf//004TJIQIVLGb3Q94dCdJsm21esddQwxADTEDKogVEEfsAFHEFyCGOAEiiBvgd8TtBZULRIZXxFxsmIiIiIhE0gP8MZln0b1ZIQAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>일반 선택</h3>
+            <p><code>art/minimal/arrow.txt</code></p>
+            <p class="coords">10×12 · hotspot <b>1,1</b></p>
+          </div>
+        </article>
+        <article class="card s-minimal c-ibeam" tabindex="0">
+          <div class="stage" style="--hx:3;--hy:7">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAARklEQVR4nO3VMQoAIAwEwf3/pxUkgoj1mWIHhHS5pDAAjHLXEdVsvUedC7GbxzdwhohPbgADGMAALX7Cbrcgfw0lSZL4bAKJabJO3NrKqgAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>텍스트 선택</h3>
+            <p><code>art/minimal/ibeam.txt</code></p>
+            <p class="coords">7×15 · hotspot <b>3,7</b></p>
+          </div>
+        </article>
+        <article class="card s-minimal c-wait" tabindex="0">
+          <div class="stage" style="--hx:5;--hy:5">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXklEQVR4nO3TQQrAIBBD0Tmx694+RWihyIi0dOLmv404ggmCEQlJCrc7tK+tHXruLeFZ6DgvL/Fmbgm3lLgunz7z6vzPEp/PS0s4w9NfUP78Q4lpGastoQAAAEBscgI3uot1vSND4AAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용 중</h3>
+            <p><code>art/minimal/wait.txt</code></p>
+            <p class="coords">11×11 · hotspot <b>5,5</b></p>
+          </div>
+        </article>
+        <article class="card s-minimal c-no" tabindex="0">
+          <div class="stage" style="--hx:6;--hy:6">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAX0lEQVR4nO2UQQoAIAgE/f+n6xZiGnRwg5iBLi3oIKVZYCSYAtdsO+0ivnExgZVJBKq8RcAXPzVqk4iFq0YygZu7NoHsXi4QM9lDrDLpN5TvgeebMBMJEwAAAAAA+5YJ9fg90cRCcC8AAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용할 수 없음</h3>
+            <p><code>art/minimal/no.txt</code></p>
+            <p class="coords">13×13 · hotspot <b>6,6</b></p>
+          </div>
+        </article>
+        <article class="card s-minimal c-move" tabindex="0">
+          <div class="stage" style="--hx:6;--hy:6">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAVklEQVR4nO3UOwoAIRAE0bn/pdvEAfEDJmOD1AODZYMuDIw4kKRw6eOyROR4HmvE0/FxbBdQGjMOptN32fjtKY2w3MAUsQTt/pfjHbDewBQBAACA+F4DfQu8RMJoSKMAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>이동</h3>
+            <p><code>art/minimal/move.txt</code></p>
+            <p class="coords">13×13 · hotspot <b>6,6</b></p>
+          </div>
+        </article>
+        <article class="card s-minimal c-hand" tabindex="0">
+          <div class="stage" style="--hx:4;--hy:4">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAP0lEQVR4nO3UMQoAIAxD0dz/0nWRUoQ6Jst/4Jw/qNJQg9zuaB9rxDtujdjGbREE/CKiFzH2FGP/AAAAAACFHCXcdIwTpc4xAAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>링크 선택</h3>
+            <p><code>art/minimal/hand.txt</code></p>
+            <p class="coords">9×9 · hotspot <b>4,4</b></p>
+          </div>
+        </article></div>
+    </div>
+    <div class="panel" data-panel="onebit" hidden>
+      <p class="desc"><b>cursor-playground 1비트</b> — 흑백 두 색에 디더링 음영과 딱딱한 그림자, 손가락 링크.</p>
+      <div class="grid">
+        <article class="card s-onebit c-arrow" tabindex="0">
+          <div class="stage" style="--hx:0;--hy:0">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAb0lEQVR4nO3UMQ6AMAxDUZ+T+98jqAyopKFiiT3gL3XOa6gAgIC4UCNipERcACXiBqgQD4ACsQDYiBLARLwCWIgtgIHYDc2nF1D8E47i9ACmgfxHmG5bbaEdkNdL30K+JX0LXz6NJOlw55xzDr/oBJTzCAfffZBuAAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>일반 선택</h3>
+            <p><code>art/onebit/arrow.txt</code></p>
+            <p class="coords">12×18 · hotspot <b>0,0</b></p>
+          </div>
+        </article>
+        <article class="card s-onebit c-ibeam" tabindex="0">
+          <div class="stage" style="--hx:4;--hy:8">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUElEQVR4nO2VMQoAIAzE7p3+/x+K0KEIli4tgglkbnQ5SZoJS5kRFjBKA7zuqLc0QHZge77a20LbtxNAAAEEPBWQ2YKP1vBi2xpGAgAAgCpY1Bexi7S+4uEAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>텍스트 선택</h3>
+            <p><code>art/onebit/ibeam.txt</code></p>
+            <p class="coords">10×18 · hotspot <b>4,8</b></p>
+          </div>
+        </article>
+        <article class="card s-onebit c-wait" tabindex="0">
+          <div class="stage" style="--hx:5;--hy:7">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVR4nO2VMQoAIAwD887+/x8VxEFBwQ5tRHKQOZelBQAPJAW/YQhYikAgKQJd4nI9XSAV2vqjRHX5IsEq3wlwyicJXnmlxLG8SoJ6B/SMnnhGFogQQggh8BUN6ck6AhZzjRoAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용 중</h3>
+            <p><code>art/onebit/wait.txt</code></p>
+            <p class="coords">12×17 · hotspot <b>5,7</b></p>
+          </div>
+        </article>
+        <article class="card s-onebit c-no" tabindex="0">
+          <div class="stage" style="--hx:8;--hy:8">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nO2VUQqAMAxDe07vfw+FgTIhUYdJv/KgPyLNq461irODamGEITpEYDAR8YajX+CUQM03UDaJW9OX5khUFz5PuiAhF7iekwDpV3hqxiTaBJhEqwCSsB9E+g4J1wl8Pf3K6f/chJLpqQTDFb6yDW3hJ+M2BDXvhRbQQgohhBBCKTkA7GC5+q5ECagAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용할 수 없음</h3>
+            <p><code>art/onebit/no.txt</code></p>
+            <p class="coords">18×18 · hotspot <b>8,8</b></p>
+          </div>
+        </article>
+        <article class="card s-onebit c-move" tabindex="0">
+          <div class="stage" style="--hx:9;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAh0lEQVR4nO2VWwrAIAwEc07vf48UoQW18dFmTaDNQH5E3KGulGgNJkc44yXBJdYSVbibRHMFedI5dhKFwPZwXhCY7X8f3rnjngC0E23JqhmtIyQYAUxC8QXUBZUOSw/X1UiHzV4B/GneQgYC0n4oUgfM2NJ2lcQv/gVdCc/wC9fwIAiCgD7LAeCINcrn7htkAAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>이동</h3>
+            <p><code>art/onebit/move.txt</code></p>
+            <p class="coords">20×20 · hotspot <b>9,9</b></p>
+          </div>
+        </article>
+        <article class="card s-onebit c-hand" tabindex="0">
+          <div class="stage" style="--hx:4;--hy:0">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaUlEQVR4nO2UOw4AIAhDOaf3vwcuauIHdLA42Jc0jn1GRGRGS56glVcSo0D6XiD8KTqBSJlWYAkgh3NZZIGYjW0pWqBJ7E707ziSgAsclsP2gymBvv0k4AwffDuqk7DVnJwQQgghhMhNMmNeR3ySC2jXAAAAAElFTkSuQmCC)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>링크 선택</h3>
+            <p><code>art/onebit/hand.txt</code></p>
+            <p class="coords">14×16 · hotspot <b>4,0</b></p>
+          </div>
+        </article></div>
+    </div>
+    <div class="panel" data-panel="fantasy" hidden>
+      <p class="desc"><b>cursor-playground 판타지</b> — 은빛 칼, 나무 모래시계, 방패, 나침반, 마법 지팡이.</p>
+      <div class="grid">
+        <article class="card s-fantasy c-arrow" tabindex="0">
+          <div class="stage" style="--hx:1;--hy:1">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nGNgYGD4j4QHBPwHgYF0CNhSEDhy6trAOSIvr2JAHQG2cNQRo44Yio6gucPwOQKMX2wwoHnI4HQEkuU0jxoMR9DTcgxHoFlOXwfALO+J0PkfYiRB3yhA9zk9HYEtzrE5gnYOwOFLuucGnI6jR3lA0BED6YBRMApGwSgYBQxDFgAASgrwSN5iId0AAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>일반 선택</h3>
+            <p><code>art/fantasy/arrow.txt</code></p>
+            <p class="coords">20×20 · hotspot <b>1,1</b></p>
+          </div>
+        </article>
+        <article class="card s-fantasy c-ibeam" tabindex="0">
+          <div class="stage" style="--hx:4;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAW0lEQVR4nGNgYGD4TySmGfj/YoMBXkxzB4QYSeC0HCRHcwcg454IHWRL6RIFKI5BcwDdwagDRh0w6oBRB4xMBwx4XTDwteGAtwcGukU0CkbBKBgFo2AUMAwkAACXC8WzPhuaiwAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>텍스트 선택</h3>
+            <p><code>art/fantasy/ibeam.txt</code></p>
+            <p class="coords">10×19 · hotspot <b>4,9</b></p>
+          </div>
+        </article>
+        <article class="card s-fantasy c-wait" tabindex="0">
+          <div class="stage" style="--hx:7;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAj0lEQVR4nGNgYGD4TwGmCvjfE6FDMqaqA0KMJEjGVHUALBRAND6ArI6aDmAg0wFUBSg+w2U53RwAwi82GMAxsjg9HMCAwwEMdHUAzBFoCY5uDgCLofl+ZDkAnhsGKgqwZUGGEZMNUSxHdwTNHYDNcmRH0MIB/8l0wDCqjge8QTLQTbJRMApGwSgYBQwjGgAAWMLIa8HO2zgAAAAASUVORK5CYII=)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용 중</h3>
+            <p><code>art/fantasy/wait.txt</code></p>
+            <p class="coords">15×20 · hotspot <b>7,9</b></p>
+          </div>
+        </article>
+        <article class="card s-fantasy c-no" tabindex="0">
+          <div class="stage" style="--hx:7;--hy:8">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhUlEQVR4nGNgYGD4TwGmCvj/YoMByZjqDjhy6hpWnJdXgYGHtwP2aRhhdQBInG4hgOwIdMvpFgUwR6BbTtc0gM3y4RkC+BIingRINQegOAJfLqCV5RiOwOYAWluO0xH0tByrI+htOYYjBsJyuCOond1IdsBA+n4UjIJRMApGwSgYBQz0AgCOzsdLWBhzawAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>사용할 수 없음</h3>
+            <p><code>art/fantasy/no.txt</code></p>
+            <p class="coords">15×17 · hotspot <b>7,8</b></p>
+          </div>
+        </article>
+        <article class="card s-fantasy c-move" tabindex="0">
+          <div class="stage" style="--hx:9;--hy:9">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArElEQVR4nGNgwA7+E4FpBsAWvNhggBPTyhFwg2EWhRhJYGAsjqCaQ3BavE/DiJBDKLcc5gBsvsbmAJgjqBEKBC2HYVo5Am+cE+MASqMCp+XEOAAtFKjjgCOnrqFgmAOQxWjiAHSLYRgkj0uOLiGAy2KaRQEux9A0DeByBCEHUCUX4AsFYhxA88KI1pYTjApsDqB2XTAoasMBbw8MmhbRKBgFo2AUjIJRwEBPAAAYX01y0xREOAAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>이동</h3>
+            <p><code>art/fantasy/move.txt</code></p>
+            <p class="coords">19×19 · hotspot <b>9,9</b></p>
+          </div>
+        </article>
+        <article class="card s-fantasy c-hand" tabindex="0">
+          <div class="stage" style="--hx:3;--hy:3">
+            <div class="sprite" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAW0lEQVR4nGNgQID/SJjuAGzxiw0GA+IIuOUwTG9HwC0GATRHjIwQQHEEWmKkf0jAcE+Ezv8QI4kByxmjjhh1xKgjRh1BjiPoDgakuB4Fo2AUjIJRMApGAQO1AQDziI7El7QBlwAAAABJRU5ErkJggg==)"></div>
+            <span class="hot" aria-hidden="true"></span>
+          </div>
+          <div class="meta">
+            <h3>링크 선택</h3>
+            <p><code>art/fantasy/hand.txt</code></p>
+            <p class="coords">18×17 · hotspot <b>3,3</b></p>
+          </div>
+        </article></div>
+    </div>
+    <p class="legend"><i></i> 파란 칸이 핫스팟 — 실제로 클릭되는 픽셀. 카드에 올리면 그 커서가 됨</p>
+  </section>
+
+  <section>
+    <h2>만져 보기</h2>
+    <div class="play">
+      <div class="row">
+        <a class="c-hand" href="#" onclick="return false">링크 위에 올려 보기</a>
+        <button class="c-no" type="button" disabled>비활성 버튼</button>
+        <button class="c-wait busy" type="button">사용 중인 버튼</button>
+      </div>
+      <label for="try-text">입력칸
+        <input id="try-text" class="c-ibeam" type="text" value="여기는 텍스트 선택 커서">
+      </label>
+      <div class="drag c-move" id="drag-zone"><span id="drag-chip">끌어서 옮기는 영역</span></div>
+      <p class="note">페이지 기본 커서도 고른 구성표의 일반 선택. 브라우저가 커서 이미지를 막는 환경에서는 기본 커서로 대신 보임.</p>
+    </div>
+  </section>
+
+  <section class="install">
+    <h2>윈도우에 등록</h2>
+    <p class="bat"><a href="cursors.bat">cursors.bat</a> 을 탐색기에서 더블클릭하면 메뉴가 뜸. Python 3.10+ 필요.</p>
+<pre>  cursor-playground 커서 구성표
+  1) 전체 등록   2) 전체 제거
+  3) 개별 등록   4) 개별 제거
+  5) 현재 상태   0) 끝내기
+
+<span class="c">:: 메뉴 없이 바로</span>
+cursors.bat -Install                    <span class="c">:: 전체 등록</span>
+cursors.bat -Install -Scheme neon,pink  <span class="c">:: 개별 등록</span>
+cursors.bat -Uninstall                  <span class="c">:: 전체 제거</span>
+cursors.bat -Uninstall -Scheme neon     <span class="c">:: 개별 제거</span>
+cursors.bat -Status                     <span class="c">:: 현재 상태</span></pre>
+    <ol class="steps">
+      <li>설정 → Bluetooth 및 장치 → 마우스 → 추가 마우스 설정</li>
+      <li><b>포인터</b> 탭 → 구성표에서 <b>cursor-playground 분홍 / 네온 / 미니멀 / 1비트 / 판타지</b> 중 하나 → 확인</li>
+      <li>채운 칸은 여섯 개, 나머지 11칸은 윈도우 기본 커서</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function(){
+  var app = document.getElementById('app');
+  var picks = document.querySelectorAll('[data-pick]');
+  var panels = document.querySelectorAll('[data-panel]');
+  function choose(id){
+    app.setAttribute('data-scheme', id);
+    picks.forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-pick') === id)); });
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-panel') !== id; });
+    try { localStorage.setItem('scheme', id); } catch (e) {}
+  }
+  picks.forEach(function(b){ b.addEventListener('click', function(){ choose(b.getAttribute('data-pick')); }); });
+  var saved = null;
+  try { saved = localStorage.getItem('scheme'); } catch (e) {}
+  choose(document.querySelector('[data-pick="' + saved + '"]') ? saved : 'pink');
+
+  var zone = document.getElementById('drag-zone'), chip = document.getElementById('drag-chip');
+  var start = null, pos = {x:0, y:0};
+  zone.addEventListener('pointerdown', function(e){ start = {x:e.clientX - pos.x, y:e.clientY - pos.y}; zone.setPointerCapture(e.pointerId); });
+  zone.addEventListener('pointermove', function(e){
+    if (!start) return;
+    var r = zone.getBoundingClientRect(), c = chip.getBoundingClientRect();
+    var mx = (r.width - c.width) / 2, my = (r.height - c.height) / 2;
+    pos = {x: Math.max(-mx, Math.min(mx, e.clientX - start.x)), y: Math.max(-my, Math.min(my, e.clientY - start.y))};
+    chip.style.transform = 'translate(' + pos.x + 'px,' + pos.y + 'px)';
+  });
+  zone.addEventListener('pointerup', function(){ start = null; });
+})();
+</script>
+</body>
+</html>

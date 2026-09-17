@@ -3,6 +3,14 @@
 텍스트 픽셀아트로 윈도우 커서(.cur)를 그리고 포인터 구성표로 등록하는 실험.
 표준 라이브러리만 씀 (Python 3.10+).
 
+## 시안
+
+**[preview.html](preview.html)** — 구성표를 골라 가며 브라우저에서 커서를 직접 만져 보는 페이지.
+
+- 클론한 폴더에서 열어야 페이지로 보임. GitHub 웹에서 링크를 누르면 소스 코드가 보임 (GitHub 은 저장소 안 HTML 을 실행하지 않음)
+- 그림 데이터가 파일 안에 들어가 있음. `art/` 를 고친 뒤 `python preview.py` 로 다시 만듦. 모양은 [preview.tpl.html](preview.tpl.html) 에서 고침
+- 글꼴은 Google Fonts 에서 불러옴 (Silkscreen, IBM Plex Sans KR, IBM Plex Mono — 모두 SIL OFL). 오프라인이면 시스템 글꼴로 보임
+
 ## 구성표 5종
 
 | 폴더 | 등록 이름 | 스타일 |
