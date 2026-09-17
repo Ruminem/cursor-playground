@@ -21,14 +21,16 @@ $key = 'HKCU:\Control Panel\Cursors\Schemes'
 
 # 구성표 값은 이 17칸을 이 순서로 쉼표로 이은 것이다. 그림 파일이 없는 칸은 비워서 윈도우 기본 커서.
 $slots = [ordered]@{
-    Arrow = 'arrow'; Help = ''; AppStarting = ''; Wait = 'wait'; Crosshair = ''; IBeam = 'ibeam'
-    NWPen = ''; No = 'no'; SizeNS = ''; SizeWE = ''; SizeNWSE = ''; SizeNESW = ''; SizeAll = 'move'
-    UpArrow = ''; Hand = 'hand'; Pin = ''; Person = ''
+    Arrow = 'arrow'; Help = 'help'; AppStarting = 'busy'; Wait = 'wait'; Crosshair = 'cross'; IBeam = 'ibeam'
+    NWPen = 'pen'; No = 'no'; SizeNS = 'ns'; SizeWE = 'we'; SizeNWSE = 'nwse'; SizeNESW = 'nesw'; SizeAll = 'move'
+    UpArrow = 'up'; Hand = 'hand'; Pin = 'pin'; Person = 'person'
 }
 
 function RegName($id) { "cursor-playground $($schemes[$id])" }
 
 function Resolve-Ids($ids) {
+    # powershell -File 로 실행하면 neon,pink 가 목록이 아니라 문자열 하나로 넘어오므로 쉼표로 나눈다
+    $ids = @($ids | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
     if (-not $ids) { return @($schemes.Keys) }
     foreach ($id in $ids) {
         if (-not $schemes.Contains($id)) { throw "없는 구성표: $id (가능: $($schemes.Keys -join ', '))" }
@@ -45,7 +47,9 @@ function Install-Scheme($id) {
     $paths = foreach ($slot in $slots.Keys) {
         $src = Join-Path $PSScriptRoot "art\$id\$($slots[$slot]).txt"
         if (-not $slots[$slot] -or -not (Test-Path $src)) { ''; continue }
-        $cur = Join-Path $dest "$($slots[$slot]).cur"
+        # 프레임이 여러 개인 그림은 움직이는 커서(.ani)로 만든다
+        $ext = if (Select-String -Path $src -Pattern '^frame$' -Quiet) { 'ani' } else { 'cur' }
+        $cur = Join-Path $dest "$($slots[$slot]).$ext"
         python (Join-Path $PSScriptRoot 'make_cur.py') $src $cur | Out-Null
         if ($LASTEXITCODE -ne 0) { throw "$src 변환 실패" }
         $cur
@@ -75,7 +79,7 @@ function Show-Status {
     $current = (Get-ItemProperty 'HKCU:\Control Panel\Cursors').'(default)'
     $values = if (Test-Path $key) { Get-ItemProperty $key } else { $null }
     ''
-    '  ' + (Pad '구성표' 28) + (Pad '등록' 8) + (Pad '파일' 8) + '적용'
+    '  ' + (Pad '구성표' 34) + (Pad '등록' 8) + (Pad '파일' 8) + '적용'
     foreach ($id in $schemes.Keys) {
         $name = RegName $id
         $value = if ($values) { $values.$name } else { $null }
@@ -86,7 +90,7 @@ function Show-Status {
             $files = "$(@($p | Where-Object { Test-Path $_ }).Count)/$($p.Count)"
         }
         $applied = if ($current -eq $name) { '◀ 지금' } else { '' }
-        '  ' + (Pad $name 28) + (Pad $reg 8) + (Pad $files 8) + $applied
+        '  ' + (Pad $name 34) + (Pad $reg 8) + (Pad $files 8) + $applied
     }
     ''
     if ($current) { "  지금 적용된 구성표: $current" } else { '  지금 적용된 구성표: 없음 (윈도우 기본이거나 칸을 직접 고른 상태)' }

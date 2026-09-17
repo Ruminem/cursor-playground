@@ -29,20 +29,20 @@ $schemesKey = 'HKCU:\Control Panel\Cursors\Schemes'
 $linkKey = 'HKCU:\Software\Classes\cursor-playground'
 $accessKey = 'HKCU:\Software\Microsoft\Accessibility'  # 설정 앱의 포인터 크기 슬라이더(1~15)가 읽는 곳
 
-# 구성표 17칸 순서. 값이 있는 칸만 커서 파일을 받고 나머지는 윈도우 기본 커서.
+# 구성표 17칸 순서와 칸마다 받을 파일 이름. 움직이는 구성표는 .ani, 나머지는 .cur
 $slots = [ordered]@{
-    Arrow = 'arrow'; Help = ''; AppStarting = ''; Wait = 'wait'; Crosshair = ''; IBeam = 'ibeam'
-    NWPen = ''; No = 'no'; SizeNS = ''; SizeWE = ''; SizeNWSE = ''; SizeNESW = ''; SizeAll = 'move'
-    UpArrow = ''; Hand = 'hand'; Pin = ''; Person = ''
+    Arrow = 'arrow'; Help = 'help'; AppStarting = 'busy'; Wait = 'wait'; Crosshair = 'cross'; IBeam = 'ibeam'
+    NWPen = 'pen'; No = 'no'; SizeNS = 'ns'; SizeWE = 'we'; SizeNWSE = 'nwse'; SizeNESW = 'nesw'; SizeAll = 'move'
+    UpArrow = 'up'; Hand = 'hand'; Pin = 'pin'; Person = 'person'
 }
 
 # 구성표 목록은 Pages 의 schemes.json 에서 읽는다. 테마가 늘어도 이 스크립트를 다시 설치할 필요가 없음
-function Get-SchemeName($id) {
+function Get-Scheme($id) {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $bytes = (Invoke-WebRequest -UseBasicParsing -Uri "$base/schemes.json").RawContentStream.ToArray()
     $entry = [Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json | ForEach-Object { $_ } | Where-Object { $_.id -ceq $id } | Select-Object -First 1
     # 레지스트리 이름에 들어가므로 글자·숫자·공백만 허용
-    if ($entry -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry.name }
+    if ($entry -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
 }
 
 function Notify($text, [switch]$IsError) {
@@ -110,18 +110,20 @@ function Restore-State($state) {
 }
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
-function Install-Scheme($id, $name) {
+function Install-Scheme($id, $name, $ext) {
     $dest = Join-Path $root $id
     New-Item -ItemType Directory -Force $dest | Out-Null
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $paths = foreach ($slot in $slots.Keys) {
         $file = $slots[$slot]
         if (-not $file) { ''; continue }
-        $cur = Join-Path $dest "$file.cur"
-        Invoke-WebRequest -UseBasicParsing -Uri "$base/dist/$id/$file.cur" -OutFile $cur
+        $cur = Join-Path $dest "$file.$ext"
+        Invoke-WebRequest -UseBasicParsing -Uri "$base/dist/$id/$file.$ext" -OutFile $cur
         $head = [IO.File]::ReadAllBytes($cur)
-        if ($head.Length -lt 22 -or $head[0] -ne 0 -or $head[1] -ne 0 -or $head[2] -ne 2 -or $head[3] -ne 0) {
-            Remove-Item $cur; throw "$file.cur 가 커서 파일이 아님"
+        $isCur = $head.Length -ge 22 -and $head[0] -eq 0 -and $head[1] -eq 0 -and $head[2] -eq 2 -and $head[3] -eq 0
+        $isAni = $head.Length -ge 12 -and [Text.Encoding]::ASCII.GetString($head, 0, 4) -eq 'RIFF' -and [Text.Encoding]::ASCII.GetString($head, 8, 4) -eq 'ACON'
+        if (-not (($ext -eq 'cur' -and $isCur) -or ($ext -eq 'ani' -and $isAni))) {
+            Remove-Item $cur; throw "$file.$ext 가 커서 파일이 아님"
         }
         $cur
     }
@@ -130,8 +132,8 @@ function Install-Scheme($id, $name) {
     $paths
 }
 
-function Set-Scheme($id, $name) {
-    $paths = @(Install-Scheme $id $name)
+function Set-Scheme($id, $name, $ext) {
+    $paths = @(Install-Scheme $id $name $ext)
     $i = 0
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value $paths[$i] -PropertyType ExpandString -Force | Out-Null
@@ -229,11 +231,13 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 try {
     if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128))?/?$') {
         $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]
-        $name = Get-SchemeName $id
-        if (-not $name) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
+        $entry = Get-Scheme $id
+        if (-not $entry) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
+        $name = $entry.name
+        $ext = if ($entry.animated -eq $true) { 'ani' } else { 'cur' }
         Save-VisitBackup $visit
         if ($size) { Set-Size $size }
-        Set-Scheme $id $name
+        Set-Scheme $id $name $ext
         if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $prefix$name" }
     }
     elseif ($Url -cmatch '^cursor-playground://size/(32|48|64|96|128)/([a-z0-9]{16})/?$') {

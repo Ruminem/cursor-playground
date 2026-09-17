@@ -76,6 +76,12 @@ def build() -> str:
             <p class="coords">{w}×{h} · hotspot <b>{hx},{hy}</b></p>
           </div>
         </article>""")
+        extras = []
+        for rid, rlabel, _ in EXTRA:
+            text = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
+            src = canvas_size(text)
+            pic = "data:image/png;base64," + base64.b64encode(txt_to_png(text, None, src)).decode()
+            extras.append(f'<div class="extra"><span class="pic"><i style="background-image:url({pic})"></i></span>{rlabel}</div>')
         groups.setdefault(scheme["category"], []).append(f"""
       <button type="button" class="pick c-hand" data-pick="{sid}" aria-pressed="false">
         <span class="thumb" style="background-image:url({thumb})"></span>
@@ -88,6 +94,7 @@ def build() -> str:
         <button type="button" class="register c-hand" data-apply="{sid}" data-name="{sname}">이 구성표 적용</button>
       </div>
       <div class="grid">{"".join(cards)}</div>
+      <div class="extras"><h4>나머지 11칸</h4><div class="extra-grid">{"".join(extras)}</div></div>
     </div>""")
 
     page = (
