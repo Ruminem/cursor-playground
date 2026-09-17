@@ -128,6 +128,11 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/flicker` | Flickering flame | The flame edge wavers and sparks fly upwards. |
 | `art/twinkle` | Twinkling stars | Stars inside a space body switch on and off in turn. |
 | `art/jitter` | Glitch jitter | The red and cyan slip shakes, and now and then one row jumps sideways. |
+| `art/wave` | Wave | Blue wave bands roll sideways with white foam riding along. |
+| `art/heartbeat` | Heartbeat | The pink body brightens in a double beat and its glow spreads out. |
+| `art/electric` | Electric | The yellow and white outline crackles while blue sparks jump around it. |
+| `art/barber` | Barber pole | Red, white and blue diagonal stripes keep spinning. |
+| `art/coderain` | Code rain | Streams of green code pour down inside a black body. |
 
 **Game items**
 
@@ -354,6 +359,11 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/flicker` | 일렁이는 불꽃 | 불꽃 경계가 흔들리고 위로 불티가 튐. |
 | `art/twinkle` | 반짝이는 별 | 우주 몸체 속 별들이 차례로 켜졌다 꺼짐. |
 | `art/jitter` | 글리치 떨림 | 빨강·청록 어긋남이 떨리고 가끔 한 줄이 옆으로 밀림. |
+| `art/wave` | 파도 | 파란 물결 띠가 옆으로 넘실거리고 흰 포말이 따라 흐름. |
+| `art/heartbeat` | 두근두근 | 분홍 몸체가 콩닥 두 번씩 밝아지며 번짐이 퍼짐. |
+| `art/electric` | 전기 | 노랑·흰 외곽선이 번쩍이고 둘레로 푸른 불꽃이 튐. |
+| `art/barber` | 이발소 기둥 | 빨강·흰·파랑 사선 줄무늬가 쉬지 않고 돌아감. |
+| `art/coderain` | 글자비 | 검은 몸체 안에서 초록 글자 줄기가 위에서 아래로 쏟아짐. |
 
 **게임 아이템**
 

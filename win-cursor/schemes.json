@@ -59,6 +59,11 @@
   {"id": "flicker", "name": "일렁이는 불꽃", "category": "움직이는", "desc": "불꽃 경계가 흔들리고 위로 불티가 튐.", "animated": true, "name_en": "Flickering flame", "desc_en": "The flame edge wavers and sparks fly upwards.", "category_en": "Animated"},
   {"id": "twinkle", "name": "반짝이는 별", "category": "움직이는", "desc": "우주 몸체 속 별들이 차례로 켜졌다 꺼짐.", "animated": true, "name_en": "Twinkling stars", "desc_en": "Stars inside a space body switch on and off in turn.", "category_en": "Animated"},
   {"id": "jitter", "name": "글리치 떨림", "category": "움직이는", "desc": "빨강·청록 어긋남이 떨리고 가끔 한 줄이 옆으로 밀림.", "animated": true, "name_en": "Glitch jitter", "desc_en": "The red and cyan slip shakes, and now and then one row jumps sideways.", "category_en": "Animated"},
+  {"id": "wave", "name": "파도", "category": "움직이는", "desc": "파란 물결 띠가 옆으로 넘실거리고 흰 포말이 따라 흐름.", "animated": true, "name_en": "Wave", "desc_en": "Blue wave bands roll sideways with white foam riding along.", "category_en": "Animated"},
+  {"id": "heartbeat", "name": "두근두근", "category": "움직이는", "desc": "분홍 몸체가 콩닥 두 번씩 밝아지며 번짐이 퍼짐.", "animated": true, "name_en": "Heartbeat", "desc_en": "The pink body brightens in a double beat and its glow spreads out.", "category_en": "Animated"},
+  {"id": "electric", "name": "전기", "category": "움직이는", "desc": "노랑·흰 외곽선이 번쩍이고 둘레로 푸른 불꽃이 튐.", "animated": true, "name_en": "Electric", "desc_en": "The yellow and white outline crackles while blue sparks jump around it.", "category_en": "Animated"},
+  {"id": "barber", "name": "이발소 기둥", "category": "움직이는", "desc": "빨강·흰·파랑 사선 줄무늬가 쉬지 않고 돌아감.", "animated": true, "name_en": "Barber pole", "desc_en": "Red, white and blue diagonal stripes keep spinning.", "category_en": "Animated"},
+  {"id": "coderain", "name": "글자비", "category": "움직이는", "desc": "검은 몸체 안에서 초록 글자 줄기가 위에서 아래로 쏟아짐.", "animated": true, "name_en": "Code rain", "desc_en": "Streams of green code pour down inside a black body.", "category_en": "Animated"},
 
   {"id": "fantasy", "name": "판타지", "category": "게임 아이템", "desc": "은빛 칼, 나무 모래시계, 방패, 나침반, 마법 지팡이.", "name_en": "Fantasy", "desc_en": "A silver sword, wooden hourglass, shield, compass and magic wand.", "category_en": "Game items"}
 ]
