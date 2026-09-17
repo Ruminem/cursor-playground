@@ -1,3 +1,3 @@
-- 여기까지 됨: 저장소 생성 (README, LICENSE, NEXT.md)
-- 다음 할 것: 첫 작업물 고르기 (윈도우 커서 파일 / 웹 커서 효과 / 바탕화면 오버레이)
+- 여기까지 됨: win-cursor — txt/PNG → .cur 변환, 화살표·하트 샘플. 윈도우 API로 로드·렌더링 확인함
+- 다음 할 것: 실제 포인터로 지정해 보기. 애니메이션 커서(.ani) 또는 web-trail / desktop-overlay
 - 막힌 것: 없음

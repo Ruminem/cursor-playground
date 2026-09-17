@@ -1,0 +1,10 @@
+.###...###.
+#ppp#.#ppp#
+#ooppppppp#
+#opppppppp#
+#ppppppppp#
+.#ppppppp#.
+..#ppppp#..
+...#ppp#...
+....#p#....
+.....#.....
