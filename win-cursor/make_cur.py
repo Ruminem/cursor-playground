@@ -7,6 +7,9 @@ txt 첫 줄에 `hotspot x,y` 를 적어 두면 핫스팟으로 쓴다. --hotspot
 
 .cur 는 .ico 와 같은 구조에 핫스팟(클릭 지점) 좌표만 더한 형식이고,
 Vista 이후로는 이미지 자리에 PNG 를 그대로 넣을 수 있다.
+
+txt 에서 만들 때는 32·48·64·96·128px 이미지를 한 파일에 담는다. 윈도우 포인터 크기를 키우면
+윈도우가 그 크기에 맞는 이미지를 골라 쓰므로, 32px 한 장을 늘릴 때처럼 픽셀이 뭉개지지 않는다.
 """
 import argparse
 import struct
@@ -60,21 +63,33 @@ def read_palette(text: str) -> dict[str, tuple[int, int, int, int]]:
     return palette
 
 
-def txt_to_png(text: str) -> bytes:
+SIZES = (32, 48, 64, 96, 128)  # 윈도우 포인터 크기 설정에서 쓰는 값들
+
+
+def canvas_size(text: str) -> int:
+    rows = [line for line in text.splitlines()
+            if line.strip() and not line.startswith(("hotspot", "color "))]
+    # 정사각형이 아니면 윈도우가 늘려서 찌그러진다
+    return max(MIN_SIZE, max(len(r) for r in rows), len(rows))
+
+
+def txt_to_png(text: str, size: int | None = None) -> bytes:
+    """size 를 주면 픽셀을 그대로 키우거나 줄여(최근접) size x size 로 만든다."""
     palette = read_palette(text)
     rows = [line for line in text.splitlines()
             if line.strip() and not line.startswith(("hotspot", "color "))]
-    w = max(MIN_SIZE, max(len(r) for r in rows))
-    h = max(MIN_SIZE, len(rows))
-    w = h = max(w, h)  # 정사각형이 아니면 윈도우가 늘려서 찌그러진다
+    src = canvas_size(text)
+    w = h = size or src
     raw = bytearray()
     for y in range(h):
         raw.append(0)  # PNG 행 필터: 없음
-        row = rows[y] if y < len(rows) else ""
+        sy = y * src // h
+        row = rows[sy] if sy < len(rows) else ""
         for x in range(w):
-            ch = row[x] if x < len(row) else "."
+            sx = x * src // w
+            ch = row[sx] if sx < len(row) else "."
             if ch not in palette:
-                raise SystemExit(f"{y + 1}행 {x + 1}열: 팔레트에 없는 글자 {ch!r}")
+                raise SystemExit(f"{sy + 1}행 {sx + 1}열: 팔레트에 없는 글자 {ch!r}")
             raw += bytes(palette[ch])
 
     def chunk(kind: bytes, data: bytes) -> bytes:
@@ -85,17 +100,31 @@ def txt_to_png(text: str) -> bytes:
 
 
 def png_to_cur(png: bytes, hotspot: tuple[int, int]) -> bytes:
-    if png[:8] != b"\x89PNG\r\n\x1a\n":
-        raise SystemExit("PNG 파일이 아님")
-    w, h = struct.unpack(">II", png[16:24])
-    if w > 256 or h > 256:
-        raise SystemExit(f"커서는 256x256 까지만 됨 (지금 {w}x{h})")
+    return pngs_to_cur([(png, hotspot)])
+
+
+def pngs_to_cur(images: list[tuple[bytes, tuple[int, int]]]) -> bytes:
+    header = struct.pack("<HHH", 0, 2, len(images))  # 예약, 종류(2=커서), 이미지 수
+    entries, data = b"", b""
+    offset = 6 + 16 * len(images)
+    for png, (hx, hy) in images:
+        if png[:8] != b"\x89PNG\r\n\x1a\n":
+            raise SystemExit("PNG 파일이 아님")
+        w, h = struct.unpack(">II", png[16:24])
+        if w > 256 or h > 256:
+            raise SystemExit(f"커서는 256x256 까지만 됨 (지금 {w}x{h})")
+        if not (0 <= hx < w and 0 <= hy < h):
+            raise SystemExit(f"핫스팟 {hx},{hy} 가 그림({w}x{h}) 밖에 있음")
+        entries += struct.pack("<BBBBHHII", w % 256, h % 256, 0, 0, hx, hy, len(png), offset + len(data))
+        data += png
+    return header + entries + data
+
+
+def txt_to_cur(text: str, hotspot: tuple[int, int]) -> bytes:
+    """SIZES 크기마다 이미지를 만들어 한 파일에 담는다. 핫스팟도 같은 비율로 옮긴다."""
+    src = canvas_size(text)
     hx, hy = hotspot
-    if not (0 <= hx < w and 0 <= hy < h):
-        raise SystemExit(f"핫스팟 {hx},{hy} 가 그림({w}x{h}) 밖에 있음")
-    header = struct.pack("<HHH", 0, 2, 1)  # 예약, 종류(2=커서), 이미지 수
-    entry = struct.pack("<BBBBHHII", w % 256, h % 256, 0, 0, hx, hy, len(png), 6 + 16)
-    return header + entry + png
+    return pngs_to_cur([(txt_to_png(text, s), (hx * s // src, hy * s // src)) for s in SIZES])
 
 
 def main() -> None:
@@ -107,21 +136,22 @@ def main() -> None:
     args = ap.parse_args()
 
     hotspot = (0, 0)
+    text = None
     if args.src.suffix.lower() == ".txt":
         text = args.src.read_text(encoding="utf-8")
         hotspot = read_hotspot(text) or hotspot
-        png = txt_to_png(text)
         if args.png:
             args.png.parent.mkdir(parents=True, exist_ok=True)
-            args.png.write_bytes(png)
-    else:
-        png = args.src.read_bytes()
+            args.png.write_bytes(txt_to_png(text))
 
     if args.hotspot:
         hx, hy = args.hotspot.split(",")
         hotspot = (int(hx), int(hy))
     args.dst.parent.mkdir(parents=True, exist_ok=True)
-    args.dst.write_bytes(png_to_cur(png, hotspot))
+    if text is not None:
+        args.dst.write_bytes(txt_to_cur(text, hotspot))
+    else:
+        args.dst.write_bytes(png_to_cur(args.src.read_bytes(), hotspot))
     print(f"{args.dst} 만듦")
 
 

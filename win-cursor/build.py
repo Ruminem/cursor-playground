@@ -10,7 +10,7 @@ import base64
 import json
 from pathlib import Path
 
-from make_cur import png_to_cur, read_hotspot, txt_to_png
+from make_cur import read_hotspot, txt_to_cur, txt_to_png
 
 HERE = Path(__file__).parent
 
@@ -29,6 +29,7 @@ ROLES = [
 
 def build() -> str:
     css, panels = [], []
+    data: dict[str, dict[str, list]] = {}
     groups: dict[str, list[str]] = {}
     for scheme in SCHEMES:
         sid, sname, sdesc = scheme["id"], scheme["name"], scheme["desc"]
@@ -43,6 +44,7 @@ def build() -> str:
                 f'[data-scheme="{sid}"] .c-{rid},[data-scheme="{sid}"].c-{rid},.card.s-{sid}.c-{rid}'
                 f"{{cursor:url({uri}) {hx} {hy},{fallback}}}"
             )
+            data.setdefault(sid, {})[rid] = [uri, hx, hy, fallback]
             if rid == "arrow":
                 thumb = uri
             cards.append(f"""
@@ -74,6 +76,7 @@ def build() -> str:
     page = (
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*CURSOR_CSS*/", "\n".join(css))
+        .replace("/*CURSOR_DATA*/", json.dumps(data, separators=(",", ":")))
         .replace("<!--PICKER-->", "".join(
             f'<div class="group"><h3 class="group-name">{cat}</h3><div class="picker">{"".join(items)}</div></div>'
             for cat, items in groups.items()))
@@ -97,7 +100,7 @@ def build_dist() -> int:
         out.mkdir(parents=True, exist_ok=True)
         for rid, _, _ in ROLES:
             text = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
-            (out / f"{rid}.cur").write_bytes(png_to_cur(txt_to_png(text), read_hotspot(text) or (0, 0)))
+            (out / f"{rid}.cur").write_bytes(txt_to_cur(text, read_hotspot(text) or (0, 0)))
             count += 1
     return count
 

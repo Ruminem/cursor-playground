@@ -2,8 +2,9 @@
 # 시안 페이지 버튼(cursor-playground:// 주소)을 받아 커서 구성표를 적용하거나 되돌린다.
 # setup.ps1 이 이 파일을 %LOCALAPPDATA%\cursor-playground 에 내려받고 -Setup 으로 실행한다.
 #
-# 받는 주소는 아래 다섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
-#   cursor-playground://apply/<구성표>/<방문>   커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
+# 받는 주소는 아래 여섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
+#   cursor-playground://apply/<구성표>/<방문>[/<크기>]  커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
+#   cursor-playground://size/<크기>/<방문>      포인터 크기만 바꿈. <크기> 는 32, 48, 64, 96, 128 중 하나
 #   cursor-playground://restore/<방문>          그 방문에서 처음 적용하기 직전 상태로 되돌림
 #   cursor-playground://status                  지금 상태를 알림 창으로 보여 줌
 #   cursor-playground://settings                마우스 속성 창을 포인터 탭으로 엶
@@ -26,6 +27,7 @@ $visitFile = Join-Path $root 'backup-visit.json'      # 마지막 방문에서 �
 $cursorsKey = 'HKCU:\Control Panel\Cursors'
 $schemesKey = 'HKCU:\Control Panel\Cursors\Schemes'
 $linkKey = 'HKCU:\Software\Classes\cursor-playground'
+$accessKey = 'HKCU:\Software\Microsoft\Accessibility'  # 설정 앱의 포인터 크기 슬라이더(1~15)가 읽는 곳
 
 # 구성표 17칸 순서. 값이 있는 칸만 커서 파일을 받고 나머지는 윈도우 기본 커서.
 $slots = [ordered]@{
@@ -59,6 +61,13 @@ function Update-Cursors {
     [void][CursorPlayground.Native]::SystemParametersInfo(0x57, 0, [IntPtr]::Zero, 0x03)
 }
 
+# 포인터 크기는 레지스트리만 바꾸면 반영되지 않는다. 설정 앱이 쓰는 문서화되지 않은 호출(0x2029)로 바꾸며,
+# 이 호출이 CursorBaseSize 도 같이 저장한다
+function Set-SystemCursorSize([int]$size) {
+    [void](Update-Cursors)
+    [void][CursorPlayground.Native]::SystemParametersInfo(0x2029, 0, [IntPtr]$size, 0x01)
+}
+
 # ── 백업 ────────────────────────────────────────────────────────────────
 function Save-State($file, $visit) {
     $key = Get-Item $cursorsKey
@@ -70,7 +79,8 @@ function Save-State($file, $visit) {
         }
     }
     New-Item -ItemType Directory -Force $root | Out-Null
-    ConvertTo-Json -Depth 3 ([pscustomobject]@{ Visit = $visit; Values = @($values) }) | Set-Content -Path $file -Encoding UTF8
+    $access = (Get-ItemProperty $accessKey -ErrorAction SilentlyContinue).CursorSize
+    ConvertTo-Json -Depth 3 ([pscustomobject]@{ Visit = $visit; Values = @($values); AccessCursorSize = $access }) | Set-Content -Path $file -Encoding UTF8
 }
 
 function Read-State($file) {
@@ -89,6 +99,12 @@ function Restore-State($state) {
     foreach ($v in $saved) {
         $name = if ($v.Name -eq '') { '(default)' } else { $v.Name }
         New-ItemProperty -Path $cursorsKey -Name $name -Value $v.Value -PropertyType $v.Kind -Force | Out-Null
+    }
+    $base = (Get-ItemProperty $cursorsKey).CursorBaseSize
+    Set-SystemCursorSize $(if ($base) { $base } else { 32 })
+    if ($state.PSObject.Properties['AccessCursorSize']) {
+        if ($null -eq $state.AccessCursorSize) { Remove-ItemProperty -Path $accessKey -Name CursorSize -ErrorAction SilentlyContinue }
+        else { New-ItemProperty -Path $accessKey -Name CursorSize -Value ([int]$state.AccessCursorSize) -PropertyType DWord -Force | Out-Null }
     }
     Update-Cursors
 }
@@ -143,6 +159,19 @@ function Remove-UnusedSchemes {
     }
 }
 
+# 커서 파일에 32~128px 이미지가 다 들어 있어서, 크기를 바꾸면 윈도우가 맞는 이미지를 골라 씀
+function Set-Size([int]$size) {
+    Set-SystemCursorSize $size
+    if (-not (Test-Path $accessKey)) { New-Item $accessKey | Out-Null }
+    New-ItemProperty -Path $accessKey -Name CursorSize -Value (($size - 32) / 16 + 1) -PropertyType DWord -Force | Out-Null
+}
+
+function Save-VisitBackup($visit) {
+    if (-not (Test-Path $initialFile)) { Save-State $initialFile '' }
+    $saved = Read-State $visitFile
+    if (-not $saved -or $saved.Visit -ne $visit) { Save-State $visitFile $visit }
+}
+
 function Reset-ToDefault {
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value '' -PropertyType ExpandString -Force | Out-Null
@@ -163,7 +192,9 @@ function Get-StatusText {
         if ($name) { $name } else { '구성표 없음 (윈도우 기본이거나 칸을 직접 고른 상태)' }
     } else { '없음' }
     $initialText = if (Test-Path $initialFile) { '있음' } else { '없음' }
-    "지금 적용된 구성표: $current`n받아 둔 구성표: $installedText`n원래대로 누르면 돌아갈 곳: $visitText`n설치할 때 상태 백업: $initialText"
+    $size = (Get-ItemProperty $cursorsKey).CursorBaseSize
+    if (-not $size) { $size = 32 }
+    "지금 적용된 구성표: $current`n포인터 크기: ${size}px`n받아 둔 구성표: $installedText`n원래대로 누르면 돌아갈 곳: $visitText`n설치할 때 상태 백업: $initialText"
 }
 
 # ── 진입점 ──────────────────────────────────────────────────────────────
@@ -196,15 +227,21 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})/?$') {
-        $id = $Matches[1]; $visit = $Matches[2]
+    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128))?/?$') {
+        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]
         $name = Get-SchemeName $id
         if (-not $name) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
-        if (-not (Test-Path $initialFile)) { Save-State $initialFile '' }
-        $saved = Read-State $visitFile
-        if (-not $saved -or $saved.Visit -ne $visit) { Save-State $visitFile $visit }
+        Save-VisitBackup $visit
+        if ($size) { Set-Size $size }
         Set-Scheme $id $name
         if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $prefix$name" }
+    }
+    elseif ($Url -cmatch '^cursor-playground://size/(32|48|64|96|128)/([a-z0-9]{16})/?$') {
+        $size = $Matches[1]
+        Save-VisitBackup $Matches[2]
+        Set-Size $size
+        Update-Cursors
+        if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "크기: $size" }
     }
     elseif ($Url -cmatch '^cursor-playground://restore/([a-z0-9]{16})/?$') {
         $visit = $Matches[1]

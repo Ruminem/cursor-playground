@@ -32,6 +32,14 @@ h1 em{font-style:normal;color:var(--accent)}
 h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
 
 .groups{display:grid;gap:18px}
+.sizebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.size-label{font:600 13px/1 var(--body);color:var(--muted)}
+.sizes{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.size{font:600 14px/1 var(--body);color:var(--ink);background:var(--surface);border:0;border-right:1px solid var(--line);padding:9px 12px}
+.size:last-child{border-right:0}
+.size[aria-pressed="true"]{background:var(--accent);color:#1E1A20}
+.size:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.size-note{font-size:13px;color:var(--muted);flex:1 1 260px}
 .group-name{margin:0 0 8px;font:600 13px/1 var(--body);color:var(--muted)}
 .picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 .pick{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
@@ -142,6 +150,18 @@ pre .c{color:var(--muted)}
       </div>
     </div>
     <div class="groups" role="group" aria-label="구성표"><!--PICKER--></div>
+    <div class="sizebar">
+      <span class="size-label" id="size-label">커서 크기</span>
+      <div class="sizes" role="group" aria-labelledby="size-label">
+        <button type="button" class="size c-hand" data-size="32" aria-pressed="true">기본</button>
+        <button type="button" class="size c-hand" data-size="48" aria-pressed="false">1.5배</button>
+        <button type="button" class="size c-hand" data-size="64" aria-pressed="false">2배</button>
+        <button type="button" class="size c-hand" data-size="96" aria-pressed="false">3배</button>
+        <button type="button" class="size c-hand" data-size="128" aria-pressed="false">4배</button>
+      </div>
+      <button type="button" class="ghost c-hand" data-action="size">크기만 적용</button>
+      <span class="size-note">고르면 이 페이지 커서가 바로 그 크기가 됨. <b>이 구성표 적용</b> 은 크기까지 같이 적용함.</span>
+    </div>
   </section>
 
   <section>
@@ -190,6 +210,54 @@ pre .c{color:var(--muted)}
 </dialog>
 
 <script>
+// 커서 크기 미리보기: 32px 그림을 캔버스로 픽셀 그대로 키워 CSS 커서를 다시 만든다 (브라우저는 128px 까지 허용)
+(function(){
+  var DATA = /*CURSOR_DATA*/;
+  var SIZES = [32, 48, 64, 96, 128];
+  var size = 32, cache = {};
+  try { var saved = parseInt(localStorage.getItem('cp-size'), 10); if (SIZES.indexOf(saved) >= 0) size = saved; } catch (e) {}
+  var style = document.createElement('style'); document.head.appendChild(style);
+  function scaled(uri, px){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){
+        var c = document.createElement('canvas'); c.width = c.height = px;
+        var g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+        g.drawImage(img, 0, 0, px, px);
+        resolve({ uri: c.toDataURL('image/png'), k: px / img.naturalWidth });
+      };
+      img.src = uri;
+    });
+  }
+  function apply(px){
+    if (px === 32) { style.textContent = ''; return; }
+    if (cache[px]) { style.textContent = cache[px]; return; }
+    var jobs = [];
+    Object.keys(DATA).forEach(function(sid){
+      Object.keys(DATA[sid]).forEach(function(rid){
+        var d = DATA[sid][rid];
+        jobs.push(scaled(d[0], px).then(function(r){
+          var hx = Math.floor(d[1] * r.k), hy = Math.floor(d[2] * r.k);
+          return '[data-scheme="' + sid + '"] .c-' + rid + ',[data-scheme="' + sid + '"].c-' + rid + ',.card.s-' + sid + '.c-' + rid +
+            '{cursor:url(' + r.uri + ') ' + hx + ' ' + hy + ',' + d[3] + '}';
+        }));
+      });
+    });
+    Promise.all(jobs).then(function(rules){ cache[px] = rules.join(' '); if (size === px) style.textContent = cache[px]; });
+  }
+  function choose(px){
+    size = px;
+    document.querySelectorAll('[data-size]').forEach(function(b){ b.setAttribute('aria-pressed', String(parseInt(b.getAttribute('data-size'), 10) === px)); });
+    try { localStorage.setItem('cp-size', String(px)); } catch (e) {}
+    apply(px);
+  }
+  document.querySelectorAll('[data-size]').forEach(function(b){
+    b.addEventListener('click', function(){ choose(parseInt(b.getAttribute('data-size'), 10)); });
+  });
+  window.cpSize = function(){ return size; };
+  choose(size);
+})();
+
 (function(){
   var dlg = document.getElementById('act-dialog'), status = document.getElementById('reg-status');
   var pending = null;
@@ -207,8 +275,9 @@ pre .c{color:var(--muted)}
   };
   function send(action){
     if (action === 'restore') action = 'restore/' + visit;
-    else if (/^apply\/[a-z]+$/.test(action)) action = action + '/' + visit;
-    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
+    else if (action === 'size') action = 'size/' + window.cpSize() + '/' + visit;
+    else if (/^apply\/[a-z]+$/.test(action)) action = action + '/' + visit + '/' + window.cpSize();
+    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}\/(32|48|64|96|128)|size\/(32|48|64|96|128)\/[a-z0-9]{16}|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
     status.innerHTML = '요청을 보냄. 브라우저가 앱을 열지 물으면 <b>열기</b>. 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 맨 위 <b>처음 한 번</b>부터.';
     window.location.href = 'cursor-playground://' + action;
   }
@@ -224,7 +293,7 @@ pre .c{color:var(--muted)}
       var name = b.getAttribute('data-name');
       ask('apply/' + b.getAttribute('data-apply'), {
         title: name + ' 구성표를 적용할까요?',
-        body: '커서를 내려받아 포인터 구성표에 추가하고 바로 적용함. 언제든 원래대로 버튼으로 처음 설정에 돌아갈 수 있음.',
+        body: '커서를 내려받아 포인터 구성표에 추가하고, 고른 크기(' + window.cpSize() + 'px)로 바로 적용함. 원래대로 버튼으로 페이지를 열기 전 커서와 크기로 돌아갈 수 있음.',
         ok: '적용'
       });
     });
