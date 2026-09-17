@@ -1,0 +1,20 @@
+hotspot 5,9
+CCCCCCCCCCC
+CcccccccccC
+CckkkkkkkcC
+CcccckccccC
+CCCCckcCCCC
+...CckcC
+...CckcC
+...CckcC
+...CckcC
+...CckcC
+...CckcC
+...CckcC
+...CckcC
+...CckcC
+CCCCckcCCCC
+CcccckccccC
+CckkkkkkkcC
+CcccccccccC
+CCCCCCCCCCC

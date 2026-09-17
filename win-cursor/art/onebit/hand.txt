@@ -1,0 +1,17 @@
+hotspot 4,0
+....##
+...#oo#
+...#oo#:
+...#oo#:
+...#oo###
+...#oo#oo###
+.###oo#oo#oo#
+#oo#oooooooo#:
+#ooooooooooo#:
+.#o#o#o#o#oo#:
+..#o#o#o#o#o#:
+..#oo#o#o#o#::
+...#oo#o#oo#:
+...#oooooo#::
+....#######:
+.....:::::::

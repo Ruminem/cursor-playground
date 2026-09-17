@@ -1,0 +1,20 @@
+hotspot 4,9
+##########
+#YYYYYYYY#
+#NYYYYYYN#
+####nN####
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+...#nN#
+####nN####
+#NYYYYYYN#
+#YYYYYYYY#
+##########

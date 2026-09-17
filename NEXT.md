@@ -1,3 +1,3 @@
-- 여기까지 됨: win-cursor — txt/PNG → .cur 변환, 분홍 구성표 6칸(install.ps1 로 등록/제거). 윈도우 API 렌더링으로 모양 확인함
-- 다음 할 것: 사용 중·백그라운드 작업 칸을 애니메이션(.ani)으로. 남은 칸 채우기. 또는 web-trail / desktop-overlay
+- 여기까지 됨: win-cursor — 구성표 5종(분홍·네온·미니멀·1비트·판타지) 각 6칸, install.ps1 로 한 번에 등록/제거. 윈도우 API 렌더링으로 모양 확인함
+- 다음 할 것: 사용 중·백그라운드 작업 칸을 애니메이션(.ani)으로. 남은 11칸 채우기. 또는 web-trail / desktop-overlay
 - 막힌 것: 없음

@@ -1,0 +1,22 @@
+hotspot 10,10
+.........CCC
+........CCcCC
+.......CCckcCC
+......CCckkkcCC
+......CckkkkkcC
+......CCcckccCC
+...CCC.CCckcCC.CCC
+..CCcCC.CckcC.CCcCC
+.CCckcCCCckcCCCckcCC
+CCckkccccckccccckkcCC
+CckkkkkkkkkkkkkkkkkcC
+CCckkccccckccccckkcCC
+.CCckcCCCckcCCCckcCC
+..CCcCC.CckcC.CCcCC
+...CCC.CCckcCC.CCC
+......CCcckccCC
+......CckkkkkcC
+......CCckkkcCC
+.......CCckcCC
+........CCcCC
+.........CCC

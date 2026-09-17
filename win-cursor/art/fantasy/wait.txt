@@ -1,0 +1,21 @@
+hotspot 7,9
+###############
+#nnnnnnnnnnnnn#
+#NNNNNNNNNNNNN#
+##n#ooooooo#n##
+.#n#ooooooo#n#
+.#n##ooooo##n#
+.#n###YYY###n#
+.#n#.#YYY#.#n#
+.#n#.##Y##.#n#
+.#n#..#Y#..#n#
+.#n#..#Y#..#n#
+.#n#.##o##.#n#
+.#n#.#ooo#.#n#
+.#n###YYY###n#
+.#n##YYYYY##n#
+.#n#YYYYYYY#n#
+##n#YYYYYYY#n##
+#NNNNNNNNNNNNN#
+#nnnnnnnnnnnnn#
+###############
