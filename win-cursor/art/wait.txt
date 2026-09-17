@@ -1,0 +1,16 @@
+###########
+#ppppppppp#
+###########
+.#ooooooo#.
+.#yyyyyyy#.
+..#yyyyy#..
+...#yyy#...
+....#y#....
+....#y#....
+...#oyo#...
+..#ooyoo#..
+.#oooyooo#.
+.#yyyyyyy#.
+###########
+#ppppppppp#
+###########

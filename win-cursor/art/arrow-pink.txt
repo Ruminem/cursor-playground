@@ -1,0 +1,17 @@
+#
+##
+#p#
+#pp#
+#ppp#
+#pppp#
+#ppppp#
+#pppppp#
+#ppppppp#
+#pppppppp#
+#ppppp#####
+#pp#pp#
+#p#.#pp#
+##..#pp#
+#....#pp#
+.....#pp#
+......##

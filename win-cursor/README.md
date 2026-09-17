@@ -27,7 +27,32 @@ python make_cur.py 내그림.png out/mine.cur --hotspot 0,0
 
 PNG로 그려도 됨. 투명 배경, 256x256 이하.
 
-## 윈도우에 적용
+## 구성표로 등록
+
+`install.ps1` 이 `art/` 그림으로 커서를 만들어 `%LOCALAPPDATA%\cursor-playground\pink` 에 복사하고
+포인터 구성표 **cursor-playground 분홍** 으로 등록함. 관리자 권한 필요 없음.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File install.ps1             # 등록
+powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall  # 제거
+```
+
+등록 뒤 포인터 설정의 **구성표** 목록에서 고르고 확인. 채운 칸은 6개, 나머지는 윈도우 기본.
+
+| 칸 | 그림 |
+|---|---|
+| 일반 선택 | `arrow-pink` |
+| 텍스트 선택 | `ibeam` |
+| 사용 중 | `wait` |
+| 사용할 수 없음 | `no` |
+| 이동 | `move` |
+| 링크 선택 | `heart` |
+
+칸 배정과 핫스팟은 `install.ps1` 의 `$roles` 에서 바꿈. 구성표는 레지스트리
+`HKCU\Control Panel\Cursors\Schemes` 에 값 하나로 저장되고, 17칸 경로를 정해진 순서로 쉼표로 이은 형식임.
+install.ps1 은 한글 때문에 UTF-8 BOM 으로 저장해야 함 (Windows PowerShell 5.1 은 BOM 없으면 ANSI 로 읽음).
+
+## 파일 하나만 적용
 
 1. 설정 → Bluetooth 및 장치 → 마우스 → 추가 마우스 설정 → **포인터** 탭
 2. "일반 선택" 선택 → **찾아보기** → `out/*.cur` 고르기 → 확인
