@@ -1,0 +1,41 @@
+hotspot 0,0
+color 0 5580a896
+color 1 6574a596
+color 2 7568a396
+color 3 7ab8f0aa
+color 4 7ab8f0c8
+color 5 7ab8f0e6
+color 6 86629b96
+color 7 91a6edaa
+color 8 91a6edc8
+color 9 91a6ede6
+color A 97628c96
+color B a8627d96
+color C a895eac8
+color D a895eae6
+color E c08cdeaa
+color F c08cdec8
+color G c08cdee6
+color H d88cc9aa
+color I d88cc9c8
+color J d88cc9e6
+color K f08cb4aa
+color L f08cb4c8
+color M f08cb4e6
+1
+11
+191
+0546
+053E6
+054EE6
+188JJJ6
+187JHHG6.89IJED2
+199HIJGE614EF542
+055FEG54303GG54
+035FEF0001EJG40
+0346EG0....AH
+BKB.05MB..6EJ0
+BB..04KB.0GEG53
+B....0LLBBK45KL
+.....1DC2K544L40
+......22.001122B

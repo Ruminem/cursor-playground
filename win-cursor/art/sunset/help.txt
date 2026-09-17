@@ -1,0 +1,33 @@
+hotspot 0,0
+color 0 281432ff
+color 1 50287aff
+color 2 692d7eff
+color 3 833182ff
+color 4 9c3686ff
+color 5 b63a8bff
+color 6 c84684ff
+color 7 d75479ff
+color 8 e6626dff
+color 9 f57062ff
+color A ff815aff
+color B ff955aff
+color C ffa95aff
+color D ffbe5aff
+color E ffd25aff
+0
+00
+0E0
+0DD0
+0CCC0
+0BBBB0
+0AAAAA0...00000
+09999990.0077700
+0888888800700070
+0777777770000070
+0666660000000700
+0550550....0700
+040.0440...070
+00..0330...000
+0....0220..070
+.....0110..000
+......00

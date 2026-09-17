@@ -1,0 +1,35 @@
+hotspot 0,1
+color 0 5a120aff
+color 1 d8321eff
+color 2 e1461eff
+color 3 ea5b1eff
+color 4 f36f1eff
+color 5 fc831eff
+color 6 ff7a1ea0
+color 7 ff9523ff
+color 8 ffa62aff
+color 9 ffb630ff
+color A ffc737ff
+color B ffd545ff
+color C ffdc61ff
+color D ffe47dff
+color E ffec98ff
+color F fff4b4ff
+6
+0
+006
+010
+0220
+033306
+044440
+0555550..000000
+07777770.011111
+088888880033330
+09999999900555
+0AAAAA00000770
+0BB0BB0...0000
+0C0.0CC0.60BBB6
+00..0DD060CCCC0
+0....0EE0000000
+.....0FF0000000
+......00

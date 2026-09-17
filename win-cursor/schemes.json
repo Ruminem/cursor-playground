@@ -54,5 +54,11 @@
   {"id": "ocean", "name": "바다", "category": "자연·계절", "desc": "파란 물결 띠와 하얀 포말."},
   {"id": "desert", "name": "사막", "category": "자연·계절", "desc": "모래색 바탕에 모래언덕 결."},
 
+  {"id": "rainbowflow", "name": "무지개 흐름", "category": "움직이는", "desc": "빨주노초파보 띠가 위로 쉬지 않고 흘러감.", "animated": true},
+  {"id": "neonpulse", "name": "네온 맥박", "category": "움직이는", "desc": "청록 네온 번짐이 숨 쉬듯 커졌다 작아짐.", "animated": true},
+  {"id": "flicker", "name": "일렁이는 불꽃", "category": "움직이는", "desc": "불꽃 경계가 흔들리고 위로 불티가 튐.", "animated": true},
+  {"id": "twinkle", "name": "반짝이는 별", "category": "움직이는", "desc": "우주 몸체 속 별들이 차례로 켜졌다 꺼짐.", "animated": true},
+  {"id": "jitter", "name": "글리치 떨림", "category": "움직이는", "desc": "빨강·청록 어긋남이 떨리고 가끔 한 줄이 옆으로 밀림.", "animated": true},
+
   {"id": "fantasy", "name": "판타지", "category": "게임 아이템", "desc": "은빛 칼, 나무 모래시계, 방패, 나침반, 마법 지팡이."}
 ]

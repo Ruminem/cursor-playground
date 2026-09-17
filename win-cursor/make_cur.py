@@ -64,21 +64,48 @@ def read_palette(text: str) -> dict[str, tuple[int, int, int, int]]:
 
 
 SIZES = (32, 48, 64, 96, 128)  # 윈도우 포인터 크기 설정에서 쓰는 값들
+HEADER = ("hotspot", "color ", "rate ")
+
+
+def is_row(line: str) -> bool:
+    return bool(line.strip()) and not line.startswith(HEADER) and line != "frame"
+
+
+def split_frames(text: str) -> list[str]:
+    """`frame` 줄로 나눈 프레임마다 머리줄(hotspot, color, rate)을 붙인 텍스트를 돌려준다. 프레임이 없으면 [text]."""
+    lines = text.splitlines()
+    head = [l for l in lines if l.startswith(HEADER)]
+    bodies: list[list[str]] = [[]]
+    for l in lines:
+        if l == "frame":
+            if bodies[-1]:
+                bodies.append([])
+        elif is_row(l):
+            bodies[-1].append(l)
+    return ["\n".join(head + b) for b in bodies if b]
+
+
+def read_rate(text: str) -> int:
+    """프레임 하나를 보여 줄 시간. 1/60초 단위 (6 = 0.1초)"""
+    for line in text.splitlines():
+        if line.startswith("rate "):
+            return int(line.split()[1])
+    return 6
 
 
 def canvas_size(text: str) -> int:
-    rows = [line for line in text.splitlines()
-            if line.strip() and not line.startswith(("hotspot", "color "))]
+    # 프레임이 여러 개면 모든 프레임을 합쳐서 재야 프레임마다 크기와 핫스팟 비율이 같아진다
+    frames = [[l for l in f.splitlines() if is_row(l)] for f in split_frames(text)]
     # 정사각형이 아니면 윈도우가 늘려서 찌그러진다
-    return max(MIN_SIZE, max(len(r) for r in rows), len(rows))
+    return max(MIN_SIZE, *(len(r) for rows in frames for r in rows), *(len(rows) for rows in frames))
 
 
-def txt_to_png(text: str, size: int | None = None) -> bytes:
-    """size 를 주면 픽셀을 그대로 키우거나 줄여(최근접) size x size 로 만든다."""
+def txt_to_png(text: str, size: int | None = None, src: int | None = None) -> bytes:
+    """size 를 주면 픽셀을 그대로 키우거나 줄여(최근접) size x size 로 만든다. 프레임이 여럿이면 첫 프레임."""
+    src = src or canvas_size(text)
+    text = split_frames(text)[0]
     palette = read_palette(text)
-    rows = [line for line in text.splitlines()
-            if line.strip() and not line.startswith(("hotspot", "color "))]
-    src = canvas_size(text)
+    rows = [line for line in text.splitlines() if is_row(line)]
     w = h = size or src
     raw = bytearray()
     for y in range(h):
@@ -120,17 +147,36 @@ def pngs_to_cur(images: list[tuple[bytes, tuple[int, int]]]) -> bytes:
     return header + entries + data
 
 
-def txt_to_cur(text: str, hotspot: tuple[int, int]) -> bytes:
+def txt_to_cur(text: str, hotspot: tuple[int, int], src: int | None = None) -> bytes:
     """SIZES 크기마다 이미지를 만들어 한 파일에 담는다. 핫스팟도 같은 비율로 옮긴다."""
-    src = canvas_size(text)
+    src = src or canvas_size(text)
     hx, hy = hotspot
-    return pngs_to_cur([(txt_to_png(text, s), (hx * s // src, hy * s // src)) for s in SIZES])
+    return pngs_to_cur([(txt_to_png(text, s, src), (hx * s // src, hy * s // src)) for s in SIZES])
+
+
+def txt_to_ani(text: str, hotspot: tuple[int, int]) -> bytes:
+    """프레임마다 여러 크기 .cur 를 만들어 애니메이션 커서(.ani, RIFF ACON)로 묶는다."""
+    src = canvas_size(text)
+    frames = [txt_to_cur(f, hotspot, src) for f in split_frames(text)]
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return kind + struct.pack("<I", len(data)) + data + (b"\0" if len(data) % 2 else b"")
+
+    # anih: 크기, 프레임 수, 단계 수, 폭·높이·비트수·면 수(프레임 안에 있으므로 0), 표시 속도, 플래그(1 = 프레임이 아이콘·커서 데이터)
+    anih = struct.pack("<9I", 36, len(frames), len(frames), 0, 0, 0, 0, read_rate(text), 1)
+    fram = b"fram" + b"".join(chunk(b"icon", f) for f in frames)
+    body = b"ACON" + chunk(b"anih", anih) + chunk(b"LIST", fram)
+    return b"RIFF" + struct.pack("<I", len(body)) + body
+
+
+def is_animated(text: str) -> bool:
+    return len(split_frames(text)) > 1
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("src", type=Path, help=".txt 픽셀아트 또는 .png")
-    ap.add_argument("dst", type=Path, help="만들 .cur 경로")
+    ap.add_argument("dst", type=Path, help="만들 .cur 경로 (프레임이 여러 개면 .ani)")
     ap.add_argument("--hotspot", help="클릭 지점 x,y (기본: txt 의 hotspot 줄, 없으면 0,0 = 왼쪽 위)")
     ap.add_argument("--png", type=Path, help="중간 PNG 도 저장 (txt 입력일 때)")
     args = ap.parse_args()
@@ -148,7 +194,11 @@ def main() -> None:
         hx, hy = args.hotspot.split(",")
         hotspot = (int(hx), int(hy))
     args.dst.parent.mkdir(parents=True, exist_ok=True)
-    if text is not None:
+    if text is not None and is_animated(text):
+        if args.dst.suffix.lower() != ".ani":
+            raise SystemExit("프레임이 여러 개인 그림은 .ani 로 저장해야 함")
+        args.dst.write_bytes(txt_to_ani(text, hotspot))
+    elif text is not None:
         args.dst.write_bytes(txt_to_cur(text, hotspot))
     else:
         args.dst.write_bytes(png_to_cur(args.src.read_bytes(), hotspot))

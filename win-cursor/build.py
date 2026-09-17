@@ -10,7 +10,7 @@ import base64
 import json
 from pathlib import Path
 
-from make_cur import read_hotspot, txt_to_cur, txt_to_png
+from make_cur import canvas_size, is_animated, is_row, read_hotspot, read_rate, split_frames, txt_to_ani, txt_to_cur, txt_to_png
 
 HERE = Path(__file__).parent
 
@@ -25,6 +25,20 @@ ROLES = [
     ("move", "이동", "move"),
     ("hand", "링크 선택", "pointer"),
 ]
+# 나머지 11칸. 테마 화살표·모래시계에서 만든 것이라 시안에는 작은 그림으로만 보여 준다
+EXTRA = [
+    ("help", "도움말 선택", "help"),
+    ("busy", "백그라운드 작업", "progress"),
+    ("cross", "정밀 선택", "crosshair"),
+    ("pen", "필기", "default"),
+    ("ns", "세로 크기 조정", "ns-resize"),
+    ("we", "가로 크기 조정", "ew-resize"),
+    ("nwse", "대각선 크기 조정 1", "nwse-resize"),
+    ("nesw", "대각선 크기 조정 2", "nesw-resize"),
+    ("up", "대체 선택", "default"),
+    ("pin", "위치 선택", "default"),
+    ("person", "사용자 선택", "default"),
+]
 
 
 def build() -> str:
@@ -37,14 +51,17 @@ def build() -> str:
         for rid, rlabel, fallback in ROLES:
             text = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
             hx, hy = read_hotspot(text) or (0, 0)
-            uri = "data:image/png;base64," + base64.b64encode(txt_to_png(text)).decode()
-            rows = [r for r in text.splitlines() if r.strip() and not r.startswith("hotspot")]
+            frames, src = split_frames(text), canvas_size(text)
+            # 움직이는 커서는 프레임마다 그림을 넣어 두고 페이지 스크립트가 번갈아 끼운다. CSS 기본값은 첫 프레임
+            uris = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in frames]
+            uri = uris[0]
+            rows = [r for r in frames[0].splitlines() if is_row(r)]
             w, h = max(len(r) for r in rows), len(rows)
             css.append(
                 f'[data-scheme="{sid}"] .c-{rid},[data-scheme="{sid}"].c-{rid},.card.s-{sid}.c-{rid}'
                 f"{{cursor:url({uri}) {hx} {hy},{fallback}}}"
             )
-            data.setdefault(sid, {})[rid] = [uri, hx, hy, fallback]
+            data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, read_rate(text) * 1000 // 60]
             if rid == "arrow":
                 thumb = uri
             cards.append(f"""
@@ -100,9 +117,13 @@ def build_dist() -> int:
         sid = scheme["id"]
         out = HERE / "dist" / sid
         out.mkdir(parents=True, exist_ok=True)
-        for rid, _, _ in ROLES:
+        for rid, _, _ in ROLES + EXTRA:
             text = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
-            (out / f"{rid}.cur").write_bytes(txt_to_cur(text, read_hotspot(text) or (0, 0)))
+            hot = read_hotspot(text) or (0, 0)
+            if is_animated(text):
+                (out / f"{rid}.ani").write_bytes(txt_to_ani(text, hot))
+            else:
+                (out / f"{rid}.cur").write_bytes(txt_to_cur(text, hot))
             count += 1
     return count
 
