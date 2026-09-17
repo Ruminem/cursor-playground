@@ -41,6 +41,19 @@ EXTRA = [
 ]
 
 
+def favicon() -> str:
+    """탭 아이콘. 직접 그린 분홍 화살표를 가운데 두고 꽉 채운 64px (저장소와 같은 Apache-2.0, 외부 아이콘 안 씀)"""
+    text = (HERE / "art" / "pink" / "arrow.txt").read_text(encoding="utf-8")
+    head = [l for l in text.splitlines() if not is_row(l)]
+    rows = [l for l in text.splitlines() if is_row(l)]
+    w, h = max(len(r) for r in rows), len(rows)
+    side = max(w, h) + 2
+    left, top = (side - w) // 2, (side - h) // 2
+    square = [""] * top + ["." * left + r for r in rows]
+    png = txt_to_png("\n".join(head + square), 64, side)
+    return "data:image/png;base64," + base64.b64encode(png).decode()
+
+
 def build() -> str:
     css, panels = [], []
     data: dict[str, dict[str, list]] = {}
@@ -101,6 +114,7 @@ def build() -> str:
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*CURSOR_CSS*/", "\n".join(css))
         .replace("/*CURSOR_DATA*/", json.dumps(data, separators=(",", ":")))
+        .replace("<!--FAVICON-->", favicon())
         .replace("<!--COUNT-->", str(len(SCHEMES)))
         .replace("<!--GROUPS-->", str(len(groups)))
         .replace("<!--PICKER-->", "".join(
