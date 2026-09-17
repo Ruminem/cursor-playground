@@ -41,7 +41,20 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .pick-name{font-weight:700;font-size:14px}
 @media (max-width:560px){.picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-.desc{margin:0 0 14px;color:var(--muted)}
+.desc-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 14px}
+.desc{margin:0;color:var(--muted)}
+.register{font:700 14px/1 var(--body);color:#1E1A20;background:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:10px 14px}
+.register:hover{filter:brightness(1.06)}
+.register:focus-visible,.dlg button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.reg-status{margin:10px 0 0;font-size:13px;color:var(--muted)}
+.reg-status b{color:var(--ink)}
+.dlg{border:1px solid var(--line);border-radius:8px;padding:22px;max-width:min(420px,calc(100vw - 32px));background:var(--surface);color:var(--ink)}
+.dlg::backdrop{background:rgb(10 8 12 / .55)}
+.dlg h3{margin:0 0 8px;font-size:18px}
+.dlg p{margin:0 0 8px;color:var(--muted);font-size:14px}
+.dlg .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.dlg button{font:600 14px/1 var(--body);border-radius:4px;padding:10px 14px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.dlg button.ok{background:var(--accent);border-color:var(--accent);color:#1E1A20}
 .desc b{color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;gap:16px;align-items:center;outline:none;transition:border-color .15s}
@@ -100,6 +113,7 @@ pre .c{color:var(--muted)}
   <section>
     <h2>여섯 칸</h2>
     <!--PANELS-->
+    <p class="reg-status" id="reg-status" role="status"></p>
     <p class="legend"><i></i> 파란 칸이 핫스팟 — 실제로 클릭되는 픽셀. 카드에 올리면 그 커서가 됨</p>
   </section>
 
@@ -133,6 +147,7 @@ cursors.bat -Install -Scheme neon,pink  <span class="c">:: 개별 등록</span>
 cursors.bat -Uninstall                  <span class="c">:: 전체 제거</span>
 cursors.bat -Uninstall -Scheme neon     <span class="c">:: 개별 제거</span>
 cursors.bat -Status                     <span class="c">:: 현재 상태</span></pre>
+    <p class="bat">이 페이지의 <b>윈도우에 등록</b> 버튼을 쓰려면 메뉴에서 <b>6) 웹 페이지 등록 버튼 켜기</b>를 한 번 실행해 둠.</p>
     <ol class="steps">
       <li>설정 → Bluetooth 및 장치 → 마우스 → 추가 마우스 설정</li>
       <li><b>포인터</b> 탭 → 구성표에서 <b>cursor-playground 분홍 / 네온 / 미니멀 / 1비트 / 판타지</b> 중 하나 → 확인</li>
@@ -141,7 +156,38 @@ cursors.bat -Status                     <span class="c">:: 현재 상태</span><
   </section>
 </div>
 
+<dialog class="dlg" id="reg-dialog" aria-labelledby="reg-title">
+  <h3 id="reg-title"><span id="reg-name"></span> 구성표를 등록할까요?</h3>
+  <p>이 PC의 포인터 구성표 목록에 <b>cursor-playground <span id="reg-name2"></span></b> 을 추가함. 적용은 하지 않음.</p>
+  <p>다음에 브라우저가 앱을 열지 물으면 <b>열기</b>를 누름.</p>
+  <div class="actions">
+    <button type="button" id="reg-cancel">취소</button>
+    <button type="button" class="ok" id="reg-ok">등록</button>
+  </div>
+</dialog>
+
 <script>
+(function(){
+  var dlg = document.getElementById('reg-dialog'), status = document.getElementById('reg-status');
+  var pending = null;
+  document.querySelectorAll('[data-register]').forEach(function(b){
+    b.addEventListener('click', function(){
+      pending = b.getAttribute('data-register');
+      document.getElementById('reg-name').textContent = b.getAttribute('data-name');
+      document.getElementById('reg-name2').textContent = b.getAttribute('data-name');
+      dlg.showModal();
+    });
+  });
+  document.getElementById('reg-cancel').addEventListener('click', function(){ dlg.close(); });
+  document.getElementById('reg-ok').addEventListener('click', function(){
+    dlg.close();
+    if (!/^[a-z]+$/.test(pending || '')) return;
+    status.innerHTML = '등록 요청을 보냄. 브라우저 확인 창에서 <b>열기</b>를 누르면 잠시 뒤 윈도우 알림이 뜸. ' +
+      '아무 반응이 없으면 이 PC에 연결이 안 된 것 — 저장소의 <b>cursors.bat</b> → <b>6) 웹 페이지 등록 버튼 켜기</b>를 먼저 실행.';
+    window.location.href = 'cursor-playground://install/' + pending;
+  });
+})();
+
 (function(){
   var app = document.getElementById('app');
   var picks = document.querySelectorAll('[data-pick]');

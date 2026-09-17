@@ -6,9 +6,15 @@
 #   전체 제거:  install.ps1 -Uninstall
 #   개별 제거:  install.ps1 -Uninstall -Scheme neon
 #   상태:       install.ps1 -Status
+#   웹 버튼:    install.ps1 -EnableLink / -DisableLink  (cursor-playground:// 주소를 이 스크립트에 연결)
 # 등록만 하고 적용은 하지 않는다. 설정 → 마우스 → 추가 마우스 설정 → 포인터 → 구성표에서 고른다.
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
-param([switch]$Install, [switch]$Uninstall, [switch]$Status, [string[]]$Scheme)
+[CmdletBinding(PositionalBinding = $false)]
+param(
+    [switch]$Install, [switch]$Uninstall, [switch]$Status, [string[]]$Scheme,
+    [switch]$EnableLink, [switch]$DisableLink,
+    [string]$Url  # 브라우저가 cursor-playground://install/<구성표> 를 열 때만 넘어온다
+)
 $ErrorActionPreference = 'Stop'
 
 # 폴더 이름 = 표시 이름
@@ -68,6 +74,54 @@ function Remove-Scheme($id) {
     "제거함: $(RegName $id)"
 }
 
+# ── 웹 페이지 버튼 연결 ─────────────────────────────────────────────────
+# 어느 웹 페이지든 이 주소를 부를 수 있으므로, 받는 요청은 "정해진 구성표 하나를 등록" 뿐이다.
+$linkKey = 'HKCU:\Software\Classes\cursor-playground'
+$linkCommand = "`"$PSHOME\powershell.exe`" -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Url `"%1`""
+
+function Enable-Link {
+    New-Item -Path "$linkKey\shell\open\command" -Force | Out-Null
+    Set-ItemProperty -Path $linkKey -Name '(default)' -Value 'URL:cursor-playground'
+    Set-ItemProperty -Path $linkKey -Name 'URL Protocol' -Value ''
+    Set-ItemProperty -Path "$linkKey\shell\open\command" -Name '(default)' -Value $linkCommand
+    "웹 버튼 연결함: cursor-playground:// → $PSCommandPath"
+    '저장소 폴더를 옮기면 다시 켤 것'
+}
+
+function Disable-Link {
+    if (Test-Path $linkKey) { Remove-Item $linkKey -Recurse -Force }
+    '웹 버튼 연결 끔'
+}
+
+function Get-LinkTarget {
+    $cmd = (Get-ItemProperty "$linkKey\shell\open\command" -ErrorAction SilentlyContinue).'(default)'
+    if ($cmd -match '-File "([^"]+)"') { $Matches[1] }
+}
+
+function Notify($text, [switch]$IsError) {
+    if ($env:CURSOR_PLAYGROUND_NO_POPUP) { if ($IsError) { "오류: $text" } else { $text }; return }
+    Add-Type -AssemblyName System.Windows.Forms
+    $icon = if ($IsError) { 'Error' } else { 'Information' }
+    [void][Windows.Forms.MessageBox]::Show($text, 'cursor-playground', 'OK', $icon)
+}
+
+function Invoke-Url($url) {
+    # 주소 외의 인자가 섞여 오면 (따옴표를 깨고 -Uninstall 등을 끼워 넣는 시도) 아무것도 하지 않는다
+    if ($Install -or $Uninstall -or $Status -or $Scheme -or $EnableLink -or $DisableLink) {
+        return Notify '알 수 없는 요청이라 무시함' -IsError
+    }
+    if ($url -cnotmatch '^cursor-playground://install/([a-z]+)/?$' -or -not $schemes.Contains($Matches[1])) {
+        return Notify "알 수 없는 요청이라 무시함`n$url" -IsError
+    }
+    $id = $Matches[1]
+    try {
+        Install-Scheme $id | Out-Null
+        Notify "$(RegName $id) 구성표를 등록함.`n`n설정 → 마우스 → 추가 마우스 설정 → 포인터 → 구성표에서 고르고 확인."
+    } catch {
+        Notify "$(RegName $id) 등록 실패: $($_.Exception.Message)" -IsError
+    }
+}
+
 # 콘솔에서 한글은 두 칸을 차지하므로 폭을 따로 세서 맞춘다
 function Pad($text, $width) {
     $w = 0; foreach ($ch in $text.ToCharArray()) { $w += 1 + [int]([int]$ch -ge 0x1100) }
@@ -93,6 +147,10 @@ function Show-Status {
     }
     ''
     if ($current) { "  지금 적용된 구성표: $current" } else { '  지금 적용된 구성표: 없음 (윈도우 기본이거나 칸을 직접 고른 상태)' }
+    $target = Get-LinkTarget
+    if (-not $target) { '  웹 버튼 연결: 꺼짐' }
+    elseif ($target -eq $PSCommandPath) { '  웹 버튼 연결: 켜짐' }
+    else { "  웹 버튼 연결: 켜졌지만 다른 경로를 가리킴 ($target). 다시 켤 것" }
 }
 
 # 화면에 목록을 보여 주고, 고른 구성표 id 만 돌려준다
@@ -114,7 +172,9 @@ function Show-Menu {
         Write-Host '  cursor-playground 커서 구성표'
         Write-Host '  1) 전체 등록   2) 전체 제거'
         Write-Host '  3) 개별 등록   4) 개별 제거'
-        Write-Host '  5) 현재 상태   0) 끝내기'
+        Write-Host '  5) 현재 상태'
+        Write-Host '  6) 웹 페이지 등록 버튼 켜기   7) 끄기'
+        Write-Host '  0) 끝내기'
         $choice = Read-Host '  번호'
         try {
             $out = switch ($choice.Trim()) {
@@ -123,8 +183,10 @@ function Show-Menu {
                 '3' { Read-Ids '등록' | ForEach-Object { Install-Scheme $_ } }
                 '4' { Read-Ids '제거' | ForEach-Object { Remove-Scheme $_ } }
                 '5' { Show-Status }
+                '6' { Enable-Link }
+                '7' { Disable-Link }
                 { $_ -in '0', '' } { return }
-                default { '  1~5 또는 0 을 입력' }
+                default { '  1~7 또는 0 을 입력' }
             }
             $out | ForEach-Object { Write-Host "  $($_.TrimStart())" }
         } catch {
@@ -133,7 +195,10 @@ function Show-Menu {
     }
 }
 
-if ($Install) { Resolve-Ids $Scheme | ForEach-Object { Install-Scheme $_ } }
+if ($PSBoundParameters.ContainsKey('Url')) { Invoke-Url $Url }
+elseif ($EnableLink) { Enable-Link }
+elseif ($DisableLink) { Disable-Link }
+elseif ($Install) { Resolve-Ids $Scheme | ForEach-Object { Install-Scheme $_ } }
 elseif ($Uninstall) { Resolve-Ids $Scheme | ForEach-Object { Remove-Scheme $_ } }
 elseif ($Status) { Show-Status }
 else { Show-Menu }

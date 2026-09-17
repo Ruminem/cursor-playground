@@ -41,7 +41,9 @@
   cursor-playground 커서 구성표
   1) 전체 등록   2) 전체 제거
   3) 개별 등록   4) 개별 제거
-  5) 현재 상태   0) 끝내기
+  5) 현재 상태
+  6) 웹 페이지 등록 버튼 켜기   7) 끄기
+  0) 끝내기
 ```
 
 개별 등록·제거는 번호를 `1,3` 처럼 여러 개 고를 수 있음. 현재 상태는 구성표별 등록 여부, 커서 파일 수, 지금 적용 중인 구성표를 보여 줌.
@@ -54,7 +56,17 @@ cursors.bat -Install -Scheme neon,pink  :: 개별 등록
 cursors.bat -Uninstall                  :: 전체 제거
 cursors.bat -Uninstall -Scheme neon     :: 개별 제거
 cursors.bat -Status                     :: 현재 상태
+cursors.bat -EnableLink                 :: 웹 페이지 등록 버튼 켜기
+cursors.bat -DisableLink                :: 끄기
 ```
+
+### 시안 페이지에서 바로 등록
+
+시안 페이지의 **윈도우에 등록** 버튼 → 확인 팝업 → 브라우저의 "앱 열기" 확인 → 등록 후 윈도우 알림.
+
+- 먼저 메뉴 **6)** 을 한 번 실행해야 함. `cursor-playground://` 주소를 이 저장소의 install.ps1 에 연결함 (`HKCU\Software\Classes\cursor-playground`, 관리자 권한 필요 없음)
+- 저장소 폴더를 옮기면 6) 을 다시 실행. 현재 상태(5) 에서 연결 상태를 볼 수 있음
+- 아무 웹 페이지나 이 주소를 부를 수 있으므로, 받는 요청은 `cursor-playground://install/<구성표>` 하나뿐이고 구성표 이름도 다섯 개만 허용함. 제거나 다른 인자는 전부 무시함. 원치 않으면 7) 로 끔
 
 커서를 `%LOCALAPPDATA%\cursor-playground\<폴더>` 에 만들어 두고 구성표로 등록함. 관리자 권한 필요 없음.
 등록 뒤 설정 → Bluetooth 및 장치 → 마우스 → 추가 마우스 설정 → **포인터** 탭 → **구성표** 에서 고르고 확인.

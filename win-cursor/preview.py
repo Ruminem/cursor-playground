@@ -66,7 +66,10 @@ def build() -> str:
       </button>""")
         panels.append(f"""
     <div class="panel" data-panel="{sid}" hidden>
-      <p class="desc"><b>cursor-playground {sname}</b> — {sdesc}</p>
+      <div class="desc-row">
+        <p class="desc"><b>cursor-playground {sname}</b> — {sdesc}</p>
+        <button type="button" class="register c-hand" data-register="{sid}" data-name="{sname}">윈도우에 등록</button>
+      </div>
       <div class="grid">{"".join(cards)}</div>
     </div>""")
 
