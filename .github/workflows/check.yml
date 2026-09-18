@@ -17,8 +17,8 @@ jobs:
     steps:
       # 줄바꿈이 CRLF 로 바뀌면 build.py 결과와 달라져 아래 비교가 헛되이 실패한다
       - run: git config --global core.autocrlf input
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           # PNG 압축 결과가 파이썬(zlib) 버전마다 달라서 개발에 쓰는 버전과 맞춘다
           python-version: '3.14'
