@@ -395,7 +395,65 @@ def specks_of(solid: dict) -> tuple[list, dict]:
     return specks, {p: solid[p] for p in body}
 
 
-def sampler_of(frame: dict) -> tuple:
+def _ring_at(got: dict, n: int):
+    """번짐 층 하나에서 자리로 색을 뜨는 함수. 그 자리 가까이에 아무것도 없으면 비워 둔다 —
+    이 마개가 없으면 한쪽에만 번진 층이 nearest 를 타고 반대쪽까지 칠해진다"""
+    xs = [x for x, _ in got]; ys = [y for _, y in got]
+    x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
+    found = nearest(set(got), (x0, y0, x1, y1))
+    cap = (n + 2) ** 2
+
+    def at(u: float, v: float) -> tuple | None:
+        p = (round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))
+        q = found.get(p)
+        return got[q] if q and (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 <= cap else None
+
+    return at
+
+
+def _rings(core: set) -> list[set]:
+    """몸 바깥 층들의 자리. 프레임과 무관하므로 묶음마다 한 번만 만든다"""
+    out, grown = [], set(core)
+    for _ in range(HALO):
+        r = ring_of(grown)
+        grown |= r
+        out.append(r)
+    return out
+
+
+def _lit(rings: list[set], frames: list[dict]) -> list[bool]:
+    """번짐으로 볼 층. 가장 많이 찬 프레임이 반을 넘으면 그 층을 산 것으로 본다.
+
+    층이 살아 있으면 덜 찬 프레임은 찬 자리만 칠해져서 번짐이 프레임마다 늘었다 줄었다 한다.
+    프레임마다 따로 재면 잔상이 얇아지는 프레임에서 통째로 사라져 깜빡인다."""
+    return [bool(r) and any(len([p for p in r if p in f]) * 2 >= len(r) for f in frames) for r in rings]
+
+
+def _outward(frame: dict, rings: list[set], lit: list[bool]) -> list:
+    """이 프레임의 번짐 층들 (층마다 자리로 색을 뜨는 함수, 없으면 None)"""
+    out = []
+    for n, r in enumerate(rings):
+        got = {p: frame[p] for p in r if p in frame} if lit[n] else {}
+        out.append(_ring_at(got, n) if got else None)
+    return out
+
+
+def samplers_of(frames: list[dict]) -> list[tuple]:
+    """프레임 묶음의 색 뜨는 도구들. 번짐은 묶음 전체를 봐야 재므로 여기서 한 번에 만든다.
+
+    층 자리는 이 프레임의 몸이 아니라 **프레임 전부에서 변치 않는 부분** 바깥으로 잡는다.
+    한 프레임만 부푼 것을 바깥으로 세야 잔상이 잡힌다 — 글리치의 빨강·청록 잔상은 그
+    프레임에서는 몸에 붙어 있어서, 프레임 하나만 보면 번짐 층이 통째로 비어 나온다."""
+    bodies = [set(specks_of({p: c for p, c in f.items() if c[3] >= 200} or dict(f))[1]) for f in frames]
+    core = set.intersection(*bodies)
+    if not core:                               # 프레임끼리 겹치는 곳이 없으면 장마다 따로 잰다
+        return [sampler_of(f) for f in frames]
+    rings = _rings(core)
+    lit = _lit(rings, frames)
+    return [sampler_of(f, rings, lit) for f in frames]
+
+
+def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) -> tuple:
     """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
     specks, solid = specks_of(solid)
@@ -406,13 +464,10 @@ def sampler_of(frame: dict) -> tuple:
     x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
     found = nearest(set(fill), (x0, y0, x1, y1))
     gloss = max(frame.values(), key=lambda c: (c[0] + c[1] + c[2]) * (1 if c[3] >= 200 else 0))
-    # 몸 바깥 번짐: 층마다 반 넘게 차 있으면 그 층의 가장 흔한 색을 번짐으로 본다
-    halo, grown = [], set(solid)
-    for _ in range(HALO):
-        r = ring_of(grown)
-        grown |= r
-        got = [frame[p] for p in r if p in frame]
-        halo.append(Counter(got).most_common(1)[0][0] if got and len(got) * 2 >= len(r) else None)
+    if rings is None:                          # 한 장만 줬으면 그 장의 몸을 기준으로
+        rings = _rings(set(solid))
+        lit = _lit(rings, [frame])
+    halo = _outward(frame, rings, lit)
 
     def at(u: float, v: float) -> tuple:
         return fill[found[(round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))]]
@@ -437,9 +492,10 @@ def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
         if kind == "shadow":
             rgba = (0, 0, 0, round(a * 255))
         elif kind[0] == "h":                       # halo0 · halo1 · halo2
-            c = halo[int(kind[4])]
+            fn = halo[int(kind[4])]
+            c = fn(iu / UV, iv / UV) if fn else None
             if not c:
-                continue                           # 번짐이 없는 테마면 그 층은 비워 둔다
+                continue                           # 번짐이 없는 테마·자리면 그 층은 비워 둔다
             rgba = c[:3] + (round(a * c[3]),)
         elif kind in ("glow", "band"):
             rgba = gloss[:3] + (round(a * 255),)
@@ -533,7 +589,7 @@ def _fit(px: dict, size: int) -> dict:
 
 def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None) -> tuple[bytes, str]:
     """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다)"""
-    samplers = [sampler_of(f) for f in frames]
+    samplers = samplers_of(frames)
     memos = [{} for _ in frames]
     per_size = []
     for size in CUR_SIZES:
@@ -545,7 +601,7 @@ def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | Non
 
 def page(sid: str, rid: str, frames: list[dict], glyphs: list | None = None) -> tuple[list[bytes], tuple[int, int], tuple[int, int]]:
     """시안 페이지용 (프레임별 PNG, 핫스팟, 칸 수). 그림은 PAGE 판으로 크게 그린다"""
-    samplers = [sampler_of(f) for f in frames]
+    samplers = samplers_of(frames)
     memos = [{} for _ in frames]
     base, hot = draw(sid, rid, samplers, LIMIT, glyphs, memos)
     wide = max(x for px in base for x, _ in px) + 1
