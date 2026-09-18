@@ -8,9 +8,10 @@
   3. 색은 넣지 않고 칸마다 "어느 층이 얼마나 덮였는지"만 남긴다 — 이것을 스텐실이라 부른다
   4. 테마마다 그 테마 그림에서 색을 떠 스텐실의 층에 끼워 넣는다 (paint)
 
-색은 몇 개로 줄이지 않고 **자리대로** 떠 온다. 그래서 무늬(표범·아가일)도, 프레임마다
-무늬가 움직이는 테마(전기·글자비)도 모양만 바뀌고 성질은 남는다. 몸 바깥으로 번지는
-빛(네온·야광)도 층마다 다시 둘러 준다.
+색은 몇 개로 줄이지 않고 **자리대로** 떠 온다 — 몸도 외곽선도 그렇다. 그래서 무늬
+(표범·아가일)도, 프레임마다 무늬가 움직이는 테마(전기·글자비)도, 테두리를 타고 도는
+효과(전기의 전류·글리치의 빨강청록 어긋남)도 모양만 바뀌고 성질은 남는다. 몸 바깥으로
+번지는 빛(네온·야광)도 층마다 다시 둘러 준다.
 
 커서 파일에 담는 크기는 늘리지 않고 **크기마다 새로 그린다**. 안티에일리어싱된 그림을
 정수배로 늘리면 뭉개지기 때문이다. 담는 크기는 32·64·128 셋이고, 사이 크기(48·96)는
@@ -395,7 +396,7 @@ def specks_of(solid: dict) -> tuple[list, dict]:
 
 
 def sampler_of(frame: dict) -> tuple:
-    """테마 그림 한 장에서 색을 뜨는 도구 — 자리로 찾는 함수, 외곽선, 가장 밝은 색, 번짐 층, 불꽃"""
+    """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
     specks, solid = specks_of(solid)
     rim = {p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)}
@@ -416,12 +417,21 @@ def sampler_of(frame: dict) -> tuple:
     def at(u: float, v: float) -> tuple:
         return fill[found[(round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))]]
 
-    return at, edge, gloss, halo, specks
+    # 외곽선도 몸처럼 자리대로 뜬다. 한 색으로 묶으면 테두리를 타고 도는 무늬가 프레임마다
+    # 통째로 한 색이 되어 사라진다 (전기의 전류, 글리치의 빨강·청록 어긋남)
+    exs = [x for x, _ in rim]; eys = [y for _, y in rim]
+    ex0, ey0, ex1, ey1 = min(exs), min(eys), max(exs), max(eys)
+    efound = nearest(rim, (ex0, ey0, ex1, ey1))
+
+    def edge_at(u: float, v: float) -> tuple:
+        return solid[efound[(round(ex0 + u * (ex1 - ex0)), round(ey0 + v * (ey1 - ey0)))]]
+
+    return at, edge, gloss, halo, specks, edge_at
 
 
 def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
     """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다"""
-    at, edge, gloss, halo = sampler[:4]
+    at, edge, gloss, halo, _, edge_at = sampler
     col = None
     for kind, t, k2, a in layers:
         if kind == "shadow":
@@ -434,7 +444,8 @@ def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
         elif kind in ("glow", "band"):
             rgba = gloss[:3] + (round(a * 255),)
         elif kind == "edge":
-            rgba = edge[:3] + (round(a * edge[3]),)
+            c = edge_at(iu / UV, iv / UV)
+            rgba = c[:3] + (round(a * c[3]),)
         else:
             c = at(iu / UV, iv / UV)
             k = 1 - 0.15 * t                       # 아래로 갈수록 살짝 어둡게

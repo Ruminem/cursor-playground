@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Smooth shapes now take the outline colour from the scheme's own art spot by spot, the way the body already did. Effects that travel around the edge survive in every slot instead of only Link: Electric runs a current along the border, Glitch shakes its red/cyan fringe
+
+**한국어**
+
+- 매끈한 모양이 외곽선 색도 몸통처럼 구성표 그림에서 자리대로 떠 옴(전에는 대표색 한 개로 뭉갬). 테두리를 타고 도는 효과가 링크 칸만이 아니라 모든 칸에서 살아남음 — 전기는 테두리를 따라 전류가 흐르고, 글리치 떨림은 빨강·청록 어긋남이 떨림
+
 ## 1.1.0 — 2026-09-18
 
 - **121 pointer schemes** in 9 groups (up from 60), 20 of them animated. The newest is a neon-blue tube on a black body with a triple glow
