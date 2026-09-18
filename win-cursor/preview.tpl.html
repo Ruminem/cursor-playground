@@ -33,6 +33,17 @@ h1 em{font-style:normal;color:var(--accent)}
 .lede{margin:0;max-width:62ch;color:var(--muted)}
 h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
 
+.findbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 16px}
+.findbar input{flex:1 1 240px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 11px}
+.findbar input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ghost[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1E1A20}
+.find-note{font-size:13px;color:var(--muted)}
+.pick-wrap{position:relative}
+.pick-wrap[hidden],.group[hidden]{display:none}
+.star{position:absolute;top:4px;right:4px;font-size:15px;line-height:1;padding:2px 4px;border:0;border-radius:4px;background:none;color:var(--line)}
+.star[aria-pressed="true"],.star[aria-pressed="true"]:hover{color:#F5B301}
+.star:hover{color:var(--muted)}
+.star:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .groups{display:grid;gap:18px}
 .sizebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 .size-label{font:600 13px/1 var(--body);color:var(--muted)}
@@ -48,7 +59,7 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .huebar output{font:600 14px/1 var(--mono);min-width:3.5em}
 .group-name{margin:0 0 8px;font:600 13px/1 var(--body);color:var(--muted)}
 .picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-.pick{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
+.pick{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
 .pick:hover{border-color:var(--muted)}
 .pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -93,6 +104,16 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .extra{display:grid;justify-items:center;gap:4px;font-size:12px;color:var(--muted);text-align:center}
 .extra span.pic{width:64px;height:64px;background:repeating-conic-gradient(var(--check-a) 0 25%,var(--check-b) 0 50%) 0 0/8px 8px}
 .extra span.pic i{display:block;width:64px;height:64px;background-repeat:no-repeat;background-size:64px 64px;image-rendering:pixelated}
+.editor{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.editor canvas{width:min(384px,100%);height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:6px;background:var(--surface);touch-action:none}
+.tools{flex:1 1 260px;display:grid;gap:12px;align-content:start}
+.swatches{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;max-width:260px}
+.swatch{height:28px;border:1px solid var(--line);border-radius:4px}
+.swatch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pick-color{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.pick-color input{width:48px;height:28px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+.modes{align-self:start;width:max-content}
+.tool-row{display:flex;flex-wrap:wrap;gap:8px}
 .legend{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin:12px 0 0}
 .legend i{width:5px;height:5px;outline:2px solid var(--hot);outline-offset:1px;display:inline-block}
 
@@ -161,6 +182,12 @@ pre .c{color:var(--muted)}
         <button type="button" class="ghost c-hand" data-action="restore">원래대로</button>
       </div>
     </div>
+    <div class="findbar">
+      <input type="search" id="find" class="c-ibeam" placeholder="이름으로 찾기 (예: 네온, neon, 재질)" aria-label="구성표 찾기">
+      <button type="button" class="ghost c-hand" id="fav-only" aria-pressed="false">즐겨찾기만</button>
+      <button type="button" class="ghost c-hand" id="random">랜덤 적용</button>
+      <span class="find-note" id="find-note"></span>
+    </div>
     <div class="groups" role="group" aria-label="구성표"><!--PICKER--></div>
     <div class="sizebar">
       <span class="size-label" id="size-label">커서 크기</span>
@@ -206,6 +233,29 @@ pre .c{color:var(--muted)}
     </div>
   </section>
 
+
+  <section>
+    <h2>내 커서 그리기</h2>
+    <div class="editor">
+      <canvas id="draw" class="try-cursor" aria-label="커서를 그리는 32x32 격자"></canvas>
+      <div class="tools">
+        <div class="swatches"><button type="button" class="swatch c-hand" data-swatch="#000000" aria-label="#000000"></button><button type="button" class="swatch c-hand" data-swatch="#ffffff" aria-label="#ffffff"></button><button type="button" class="swatch c-hand" data-swatch="#7d7280" aria-label="#7d7280"></button><button type="button" class="swatch c-hand" data-swatch="#e84545" aria-label="#e84545"></button><button type="button" class="swatch c-hand" data-swatch="#f5902a" aria-label="#f5902a"></button><button type="button" class="swatch c-hand" data-swatch="#f5d22e" aria-label="#f5d22e"></button><button type="button" class="swatch c-hand" data-swatch="#4cb85a" aria-label="#4cb85a"></button><button type="button" class="swatch c-hand" data-swatch="#2a7de1" aria-label="#2a7de1"></button><button type="button" class="swatch c-hand" data-swatch="#8a4cd2" aria-label="#8a4cd2"></button><button type="button" class="swatch c-hand" data-swatch="#f078be" aria-label="#f078be"></button><button type="button" class="swatch c-hand" data-swatch="#8c5a2a" aria-label="#8c5a2a"></button><button type="button" class="swatch c-hand" data-swatch="#28e5ff" aria-label="#28e5ff"></button></div>
+        <label class="pick-color">색 직접 고르기 <input type="color" id="draw-color" class="c-hand" value="#f078be"></label>
+        <div class="sizes modes">
+          <button type="button" class="size c-hand" data-mode="pen" aria-pressed="true">그리기</button>
+          <button type="button" class="size c-hand" data-mode="erase" aria-pressed="false">지우개</button>
+          <button type="button" class="size c-hand" data-mode="hot" aria-pressed="false">클릭 지점</button>
+        </div>
+        <div class="tool-row">
+          <button type="button" class="ghost c-hand" id="draw-undo">되돌리기</button>
+          <button type="button" class="ghost c-hand" id="draw-clear">전부 지우기</button>
+          <button type="button" class="register c-hand" id="draw-save">.cur 내려받기</button>
+        </div>
+        <p class="note try-cursor">이 글 위에 마우스를 올리면 그린 커서가 나옴. 파란 칸이 클릭 지점.
+        내려받은 .cur 는 포인터 설정의 <b>찾아보기</b> 로 칸 하나에 지정하면 됨. 그림은 이 브라우저에 저장돼 다음에도 남음.</p>
+      </div>
+    </div>
+  </section>
   <section class="install">
     <h2>그 밖에</h2>
     <ul class="steps">
@@ -347,6 +397,7 @@ pre .c{color:var(--muted)}
   hueInput.addEventListener('input', function(){ chooseHue(parseInt(hueInput.value, 10)); });
   document.getElementById('hue-reset').addEventListener('click', function(){ chooseHue(0); });
   window.cpSize = function(){ return size; };
+  window.cpSetHue = chooseHue;
   window.cpHue = function(){ return hue; };
   chooseSize(size); chooseHue(hue);
 })();
@@ -397,6 +448,8 @@ pre .c{color:var(--muted)}
       if (ASK[action]) ask(action, ASK[action]); else send(action);
     });
   });
+  // 랜덤 버튼이 쓰는 입구: 그 구성표의 적용 버튼을 그대로 누른다
+  window.cpApply = function(sid){ var b = document.querySelector('[data-apply="' + sid + '"]'); if (b) b.click(); };
   document.getElementById('act-cancel').addEventListener('click', function(){ dlg.close(); });
   document.getElementById('act-ok').addEventListener('click', function(){ dlg.close(); send(pending); });
 
@@ -436,5 +489,162 @@ pre .c{color:var(--muted)}
     chip.style.transform = 'translate(' + pos.x + 'px,' + pos.y + 'px)';
   });
   zone.addEventListener('pointerup', function(){ start = null; });
+})();
+</script>
+
+<script>
+// 찾기·즐겨찾기·랜덤
+(function(){
+  var items = [].slice.call(document.querySelectorAll('[data-scheme-item]'));
+  var find = document.getElementById('find'), favOnly = document.getElementById('fav-only'), note = document.getElementById('find-note');
+  var favs = {};
+  try { favs = JSON.parse(localStorage.getItem('cp-favs') || '{}'); } catch (e) {}
+  function save(){ try { localStorage.setItem('cp-favs', JSON.stringify(favs)); } catch (e) {} }
+  function refresh(){
+    var q = find.value.trim().toLowerCase(), onlyFav = favOnly.getAttribute('aria-pressed') === 'true', shown = 0;
+    items.forEach(function(item){
+      var id = item.getAttribute('data-scheme-item');
+      var hit = (!q || item.getAttribute('data-search').indexOf(q) >= 0) && (!onlyFav || favs[id]);
+      item.hidden = !hit;
+      if (hit) shown++;
+    });
+    // 남은 것이 없는 갈래는 제목까지 숨김
+    document.querySelectorAll('.group').forEach(function(g){
+      g.hidden = ![].slice.call(g.querySelectorAll('[data-scheme-item]')).some(function(i){ return !i.hidden; });
+    });
+    note.textContent = shown === items.length ? '' : shown + '종 보임';
+  }
+  document.querySelectorAll('[data-star]').forEach(function(b){
+    var id = b.getAttribute('data-star');
+    b.setAttribute('aria-pressed', String(!!favs[id]));
+    b.addEventListener('click', function(){
+      if (favs[id]) { delete favs[id]; } else { favs[id] = 1; }
+      b.setAttribute('aria-pressed', String(!!favs[id]));
+      save(); refresh();
+    });
+  });
+  find.addEventListener('input', refresh);
+  favOnly.addEventListener('click', function(){
+    favOnly.setAttribute('aria-pressed', String(favOnly.getAttribute('aria-pressed') !== 'true'));
+    refresh();
+  });
+  document.getElementById('random').addEventListener('click', function(){
+    // 보이는 것 중에서 고름. 즐겨찾기만 켜 두면 그 안에서만 나옴
+    var pool = items.filter(function(i){ return !i.hidden; });
+    if (!pool.length) return;
+    var id = pool[Math.floor(Math.random() * pool.length)].getAttribute('data-scheme-item');
+    document.querySelector('[data-pick="' + id + '"]').click();
+    window.cpSetHue(Math.floor(Math.random() * 72) * 5);
+    window.cpApply(id);
+  });
+  refresh();
+})();
+
+// 내 커서 그리기: 32x32 격자에 찍어 그리고 페이지 커서로 써 보거나 .cur 로 내려받는다
+(function(){
+  var N = 32, cell = 12;
+  var canvas = document.getElementById('draw'), g = canvas.getContext('2d');
+  var pixels = [], hot = [0, 0], color = '#f078be', mode = 'pen', undo = [];
+  canvas.width = canvas.height = N * cell;
+  function blank(){ return Array.apply(null, Array(N * N)).map(function(){ return null; }); }
+  try {
+    var saved = JSON.parse(localStorage.getItem('cp-draw') || 'null');
+    if (saved && saved.pixels && saved.pixels.length === N * N) { pixels = saved.pixels; hot = saved.hot || [0, 0]; }
+  } catch (e) {}
+  if (!pixels.length) pixels = blank();
+
+  function store(){ try { localStorage.setItem('cp-draw', JSON.stringify({ pixels: pixels, hot: hot })); } catch (e) {} }
+  function draw(){
+    g.clearRect(0, 0, canvas.width, canvas.height);
+    for (var y = 0; y < N; y++) {
+      for (var x = 0; x < N; x++) {
+        g.fillStyle = (x + y) % 2 ? '#e8e4ea' : '#f8f6fa';
+        g.fillRect(x * cell, y * cell, cell, cell);
+        var c = pixels[y * N + x];
+        if (c) { g.fillStyle = c; g.fillRect(x * cell, y * cell, cell, cell); }
+      }
+    }
+    g.strokeStyle = 'rgba(0,0,0,.12)';
+    for (var i = 0; i <= N; i += 4) {
+      g.beginPath(); g.moveTo(i * cell, 0); g.lineTo(i * cell, N * cell); g.stroke();
+      g.beginPath(); g.moveTo(0, i * cell); g.lineTo(N * cell, i * cell); g.stroke();
+    }
+    g.strokeStyle = '#2a7de1'; g.lineWidth = 2;
+    g.strokeRect(hot[0] * cell + 1, hot[1] * cell + 1, cell - 2, cell - 2);
+    g.lineWidth = 1;
+    preview();
+  }
+  // 그린 그림을 size x size PNG 로 (픽셀 그대로 확대)
+  function png(size){
+    var c = document.createElement('canvas'); c.width = c.height = size;
+    var cg = c.getContext('2d'), k = size / N;
+    for (var y = 0; y < N; y++) {
+      for (var x = 0; x < N; x++) {
+        var col = pixels[y * N + x];
+        if (!col) continue;
+        cg.fillStyle = col;
+        cg.fillRect(Math.round(x * k), Math.round(y * k), Math.ceil(k), Math.ceil(k));
+      }
+    }
+    return c;
+  }
+  var style = document.createElement('style'); document.head.appendChild(style);
+  function preview(){
+    var uri = png(32).toDataURL('image/png');
+    style.textContent = '.try-cursor{cursor:url(' + uri + ') ' + hot[0] + ' ' + hot[1] + ',auto}';
+  }
+  function paint(e){
+    var r = canvas.getBoundingClientRect();
+    var x = Math.floor((e.clientX - r.left) / (r.width / N)), y = Math.floor((e.clientY - r.top) / (r.height / N));
+    if (x < 0 || y < 0 || x >= N || y >= N) return;
+    if (mode === 'hot') { hot = [x, y]; }
+    else { pixels[y * N + x] = mode === 'pen' ? color : null; }
+    draw(); store();
+  }
+  var painting = false;
+  canvas.addEventListener('pointerdown', function(e){ undo = pixels.slice(); painting = true; canvas.setPointerCapture(e.pointerId); paint(e); });
+  canvas.addEventListener('pointermove', function(e){ if (painting) paint(e); });
+  canvas.addEventListener('pointerup', function(){ painting = false; });
+
+  document.querySelectorAll('[data-swatch]').forEach(function(b){
+    b.style.background = b.getAttribute('data-swatch');
+    b.addEventListener('click', function(){
+      color = b.getAttribute('data-swatch');
+      document.getElementById('draw-color').value = color;
+      mode = 'pen'; setMode();
+    });
+  });
+  document.getElementById('draw-color').addEventListener('input', function(e){ color = e.target.value; mode = 'pen'; setMode(); });
+  function setMode(){
+    document.querySelectorAll('[data-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode)); });
+  }
+  document.querySelectorAll('[data-mode]').forEach(function(b){
+    b.addEventListener('click', function(){ mode = b.getAttribute('data-mode'); setMode(); });
+  });
+  document.getElementById('draw-clear').addEventListener('click', function(){ undo = pixels.slice(); pixels = blank(); draw(); store(); });
+  document.getElementById('draw-undo').addEventListener('click', function(){ if (undo.length) { pixels = undo.slice(); draw(); store(); } });
+
+  // .cur 만들기: 6바이트 머리 + 크기마다 16바이트 항목 + PNG (win-cursor 의 make_cur.py 와 같은 형식)
+  document.getElementById('draw-save').addEventListener('click', function(){
+    var sizes = [32, 48, 64, 96, 128];
+    Promise.all(sizes.map(function(s){
+      return new Promise(function(resolve){ png(s).toBlob(function(b){ b.arrayBuffer().then(function(a){ resolve(new Uint8Array(a)); }); }, 'image/png'); });
+    })).then(function(images){
+      var total = 6 + 16 * sizes.length + images.reduce(function(a, b){ return a + b.length; }, 0);
+      var out = new Uint8Array(total), view = new DataView(out.buffer), at = 6 + 16 * sizes.length;
+      view.setUint16(0, 0, true); view.setUint16(2, 2, true); view.setUint16(4, sizes.length, true);
+      sizes.forEach(function(s, i){
+        var e = 6 + 16 * i, k = s / N;
+        out[e] = s % 256; out[e + 1] = s % 256;
+        view.setUint16(e + 4, Math.floor(hot[0] * k), true); view.setUint16(e + 6, Math.floor(hot[1] * k), true);
+        view.setUint32(e + 8, images[i].length, true); view.setUint32(e + 12, at, true);
+        out.set(images[i], at); at += images[i].length;
+      });
+      var url = URL.createObjectURL(new Blob([out], { type: 'image/x-icon' }));
+      var a = document.createElement('a'); a.href = url; a.download = 'my-cursor.cur'; a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    });
+  });
+  setMode(); draw();
 })();
 </script>

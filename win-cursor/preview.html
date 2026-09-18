@@ -398,6 +398,17 @@ h1 em{font-style:normal;color:var(--accent)}
 .lede{margin:0;max-width:62ch;color:var(--muted)}
 h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
 
+.findbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 16px}
+.findbar input{flex:1 1 240px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 11px}
+.findbar input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ghost[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1E1A20}
+.find-note{font-size:13px;color:var(--muted)}
+.pick-wrap{position:relative}
+.pick-wrap[hidden],.group[hidden]{display:none}
+.star{position:absolute;top:4px;right:4px;font-size:15px;line-height:1;padding:2px 4px;border:0;border-radius:4px;background:none;color:var(--line)}
+.star[aria-pressed="true"],.star[aria-pressed="true"]:hover{color:#F5B301}
+.star:hover{color:var(--muted)}
+.star:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .groups{display:grid;gap:18px}
 .sizebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 .size-label{font:600 13px/1 var(--body);color:var(--muted)}
@@ -413,7 +424,7 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .huebar output{font:600 14px/1 var(--mono);min-width:3.5em}
 .group-name{margin:0 0 8px;font:600 13px/1 var(--body);color:var(--muted)}
 .picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-.pick{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
+.pick{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
 .pick:hover{border-color:var(--muted)}
 .pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -458,6 +469,16 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .extra{display:grid;justify-items:center;gap:4px;font-size:12px;color:var(--muted);text-align:center}
 .extra span.pic{width:64px;height:64px;background:repeating-conic-gradient(var(--check-a) 0 25%,var(--check-b) 0 50%) 0 0/8px 8px}
 .extra span.pic i{display:block;width:64px;height:64px;background-repeat:no-repeat;background-size:64px 64px;image-rendering:pixelated}
+.editor{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.editor canvas{width:min(384px,100%);height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:6px;background:var(--surface);touch-action:none}
+.tools{flex:1 1 260px;display:grid;gap:12px;align-content:start}
+.swatches{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;max-width:260px}
+.swatch{height:28px;border:1px solid var(--line);border-radius:4px}
+.swatch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pick-color{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.pick-color input{width:48px;height:28px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+.modes{align-self:start;width:max-content}
+.tool-row{display:flex;flex-wrap:wrap;gap:8px}
 .legend{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin:12px 0 0}
 .legend i{width:5px;height:5px;outline:2px solid var(--hot);outline-offset:1px;display:inline-block}
 
@@ -528,247 +549,433 @@ pre .c{color:var(--muted)}
         <button type="button" class="ghost c-hand" data-action="restore">원래대로</button>
       </div>
     </div>
+    <div class="findbar">
+      <input type="search" id="find" class="c-ibeam" placeholder="이름으로 찾기 (예: 네온, neon, 재질)" aria-label="구성표 찾기">
+      <button type="button" class="ghost c-hand" id="fav-only" aria-pressed="false">즐겨찾기만</button>
+      <button type="button" class="ghost c-hand" id="random">랜덤 적용</button>
+      <span class="find-note" id="find-note"></span>
+    </div>
     <div class="groups" role="group" aria-label="구성표"><div class="group"><h3 class="group-name">픽셀 클래식</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="pink" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR4nO3VsQ2AMAxE0Rs70zETGxiJAgkT0nGf4r6U2q+IbEkqwRWNqH1sKOIEkIgLQCFuAALxALgRU4AT8QpwIZYAB2I1tL9vAdRO6AP9n7ANQgD/Xc/okaLPdEoppZTk6ABNoNSkHgNMIgAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">분홍</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="onebit" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAb0lEQVR4nO3UMQ6AMAxDUZ+T+98jqAyopKFiiT3gL3XOa6gAgIC4UCNipERcACXiBqgQD4ACsQDYiBLARLwCWIgtgIHYDc2nF1D8E47i9ACmgfxHmG5bbaEdkNdL30K+JX0LXz6NJOlw55xzDr/oBJTzCAfffZBuAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">1비트</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="ink" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaklEQVR4nO3WMQrAIBBE0T2Ehfc/o0U6xSIQlkQr56eYD9Y+RFajtasH2QSgiLl5KZVD3AAM8QQgiAyQI94AUsQXQIZYASSIHeA4YnUH8joOQGZCnoRyRD5eBPDr8Yw+UvhfwTnnnHMhaADl6OnAkQDWyQAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">잉크</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="sticker" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAn0lEQVR4nO3V2w2AIAwF0LuHGzgFG7mio7iJxgSSppbHRx9+9Cb9MRGOUBA3CYBSyy/vxNu+xyEaIAzRAMd1xiAoIATBAe4ICeCK6AHcECOAC2IGMEesAEwRsx7gVQEwA/TuBPbPsAG0CSWE8KougH7tws2o3wM8g1XQP4Zsb+EKEAYsdBXYFpgBPtXpfBPACLX63BSh3/mZTCaTwY/yAJID/i6xe6cjAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">스티커</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="gameboy" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAg0lEQVR4nO3WwQmAMAwF0GzQVXp0HtdxBFfoCO6mRAiEknrLj4f/ofT4H6GEStvaLZVRQClCy49RiNDi8ypEeEAJYgbAEREAilgBYIgvAASxAvS9vycd4QFWqLctKH9SAVbqASmFEcCPGb6Y5vHCpxCV/GI9w99ChCj/KzAMwzAMI4A8R5mxFukcIHYAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">게임보이</span>
-      </button></div></div><div class="group"><h3 class="group-name">빛과 화면</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="neon" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nO3Wuw2AMAwE0ExAQc0ATML+ezBEaIgUGTtJge+aOym1X75OOe96tVEYeYtXGqIDcBANsG8HB9EDKAgLgCM8ABQRAWCIEQCCmAHSESuAVMTCGbAjFxC9CWk9I3gJP4hfi3oAM1v8LXCWGrMK3t7Ct2GAordp7m9JURRFUQogDyswZb16iNj+AAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">네온</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="glitch" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAe0lEQVR4nO3WwQmAMAyF4ayQRTpYp+0SzhERjJQQ7UVfPLwfPPcTSlKx1oeqmmw2pCIHlCEccFSCmAEliAiAIzIAFHEHgCGeABDECvA5IgW0jkOs7kD8XkdcgPOv4TNhBviBUETcBfDJmG3D343n0iVV+lZgjDHGmADaAejIaiHpkcI2AAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">글리치</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="crt" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAkUlEQVR4nO2Wuw2AMAxEbwamQEyRmoqaSTIOmwaBFOlk8SvIOYVPcu2XF+cDAFhKTvDK0XwpubhBEIAPRAWYttkHogIM63iWHIIN1JJCWANyE1cGpCbuDMhMPBmQmHgz0NzEhxmwlZrfA3bVXL82ZwDeazYiG0KzWv0p4CYuFrp6Hxiih7+C328pEolEIhEIsgPoZTaWXFAdYgAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">CRT</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="galaxy" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAoUlEQVR4nO2WsQ2AQAhFr3YAh7BylBvASZzBCZzGGVwIQ0HyQ7Dk0/ATah4fOG7ch0yLUSFN/FwiZRAGUAZhAOuy10AgwLZOPoQBaHKFoDuBDsh78iEQwMLcoEB4AGwFBcIPISanDGY0hJhclepENANYuY90AHQDq067GdFL6IEoW4DVRgDpW+BtjlqRBuArpLfhD6r8TJf/llqtVqvVGgR9iU915LhpK/UAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">은하</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="flame" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAt0lEQVR4nGP4XyW3gGEgQZQQ1/8BdwAID1hIgCy/YSQHdsSAOeChmxwYD4gjQJa+ipaDY7pHB8jCz/lyKJiuIQGy7E+zHAammyPAQT5VGSumiyPADlimhRPT3BFgB2wzwItp6giwA46bY2BYAYWMaeeAq65gjM6miYVYHXAnEW4hjI8sRnMHIFsEdsCTWjCmS6GEzZdgi9/MAOMBK57/f9kCxgNaSQ14W2EUjIJRMApGwShgGAkAABdF4XLVcXzSAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">불꽃</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="hologram" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAyElEQVR4nO3WIQ7DMAwFUB9sJxnaEQp3hILAHmAwsHAHyB1qacSwcGxlnibNkRWtQ41N/KXg/6LGaQAA4Hy6XcErn/JtY3ZDCMANIYAlreiCEAAPhJyKPaICUkHOGbkkW0QFfMuZBlxoskNUgCqf6Y4jPWwQFdCUX4hxLK/+iDoFP8rn/MTu0yGAvfLu0yGAvZ2363CEAPQ3l51LoV6HlmuAPnD6XjA7hHq3+l4wA+iSdjRNEP9G0/Un5f5WcH0tRSKRSCQCBnkD412fUM7esVwAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">홀로그램</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="laser" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAnUlEQVR4nO3Wuw3AIAwEUOahiJgss7IRSFEg2BhIgY/GJ7lJ48cngEveX7wcMm/TuyksogJCSEcQBHACQQAx4hEdAI3ggOcbEiEBoIgRAIaYASCIFUAd8RsgINQAZDOWA6otTUAdqTxqcmfoAEpDGbH/1hzeBZOTcUtjEcCneTALOgD2i6EBUn2zoLkEC1S389EPlbPvRYvFYrE4QDLc6LgHkdT00AAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">레이저</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="glowdark" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiElEQVR4nO3WwQ2AMAgF0E7iCA7Us2M5hsO4DcYDSUOg9SD/X/gJZ17TBtouObpWY+RtvPdNaAgF0BAKuOXkIEYABWEBcIQHgCIiAAwxA0AQK0A64gsgFbF6A7bSAdFMSNsZ3iT0EL829QDjaaGT0W7DGSINYE8Iv4YIRV/T9N9SpVKpVCoNkAcd5qbXGasiJAAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">야광</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="thermal" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAfklEQVR4nO3WsQ2AMAxEUY+QEdynyd7U9GmYggXYApTCknV9fBT3JWoeUeJgrflrzBaAilgv9zF5iADQEAHo18FBZAAFkQHn3esRCChHIOAZXovAPYCrsB2BpyAgMaDysxUQX1o+E3ASliNweSmA345n+iVF/1dQSimllBX0AU3Msbpg72ObAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">열화상</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="matrix" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAgUlEQVR4nO2WQQrAIAwEcyx9RN/Q9/TU/39CsZCyleCtu5cdEMRLhrgG42x3CyVDQCrxFN9CJ4ECEokUyEWXSIH9OjQSlcDY0yQ+IQQBWifmDKAMpRPVFVA7scrAvH4VeItIQ4ijmRlCLISh5L2C6kw1GVGAmoVKQv5XMMYYY0wQ6OiYsjb1RF1yAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">매트릭스</span>
-      </button></div></div><div class="group"><h3 class="group-name">재질</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="chrome" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAkklEQVR4nO3WsQmAQAwF0JvHwtJhrJzAcSydwEGsrF1EsDuJEPhKtMtPkw/h7P4jHHKlabtaIiOAUISUr9seh5Di46xxCASEIN4AOsICUBFfABriD0BBKGCal8f0w3iPfLsiEKCFcuoPCscVoKUIcCm0ALhm3AjtEmIRfQtWCX0LFoB+FyxE+Fshk8lkMplMIeQC3GTvsqMZYyQAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">크롬</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="gold" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAp0lEQVR4nO3UMQqAMAwF0M7OHsKTODk4eyZnj+PsKD2LglskQiBK0BbbdMmHoIPwHyHo2qYCFxHwXdT3n0FAKALL4VghKQLL96WPQiQrJwBscxQiG6DIJp6AEETSW5AAoYjf5W8AtZt4A6ggCOCn5jbjUF+D71kRHECF+KQfFJ+sACrlgCyFEoCvmW9E7Qh5kfoWpBL1LUgA9VuQEMXKLRaLxWKxOMWc6Qv8DYbh2NIAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">골드</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="glass" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeElEQVR4nO3WsQnAMAxEUQ2WSTxJRkyZKbyGgguBEZY736W4DwZ3erhQYle7uzEbACpiDHf3l4YIAA0RgKd7oyBmAAWRAXDECgBFVAAYYgeAICpALKj5HAfk+5GBFSAGwhdTfl74K6yG/Go9Uz9S9H8FpZRSShmgD8ROCtzKsi+hAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">유리</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="ice" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA2klEQVR4nO3WMQrCQBAF0DmOx/EknsTOzko7OxuxsrOzUxBSCAFBQRCMEaORaGQG/rImlslMsx8+u0kzb5tkiYholpRdsgoP7/RGpRkCADMEAMeitEEAEOcfqToCgCh7u6oiAFinxU/VEACsLq9aVRAAcJbnvNbWEQAsTk9B8FptqwgA5oeHlIO939YQAEz3mSuHV3yg/DaOAGAS36XYczDQb6PDfcB4d3MD8ewjGh9cBfin5f0wSqVqAH8I3g22V6kK4h+qv0mkpj8p87uC6W0pJCQkJCSEFPIFuRurPKZfotMAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">얼음</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="wood" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nO2WsQmAUAxEs4FriDNYWzuOtTO5n5LiJHwUq39ncQ9S3yMJIbGMwxlKUkAqkeH7OukkICCTyNBjm++iS1QBSSeeBKgS7Qjo46hLWMNpnfgS6C7xNgIcqFrdBSQ3AQIIhAR1CWtQ2xGKwC/Ps1QAEvJfwRhjjDFB4AJ367dv7ffKkQAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">나무</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="marble" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAfUlEQVR4nO3WMQqAQAwEwDzWysInXWnh2yzED5ykCIQQ7Ny12AWbazLkjkXb1mUaMw6gInz4fZ08RABoiAygICoAjugAxz5wiA4A3cQbALKJAPgwyibqBgISBZW/zwGUTqhNmK8E9gjzIAqgO4P3wa8AgaD/KyiKoiiKYoA8WZ0mN7K2cZMAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">대리석</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="stone" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlElEQVR4nO2WMQqAMBRDeyoH8ThODp7FycGzODp4KyVD4FOqW5PlPyh0y2v4LS3TODzFCQSsEgg/9s0ngeD7Op91mT0SbIBLLoFAnB4tWCTYQBSQStQCaEMqwSFkaL3vLhEb4OljC92baAkwtF7dBXgjLEPIwPguyIYwBlFA9jK2QuQSXwKSa/gnYf8rJEmSJElSBLw19d0471nkOAAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">돌</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="copper" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAnUlEQVR4nO2WsQmAMBBFM4AziHNYZQRHSe0klpaWjuAIjuEWkS+cHHKW+dfchyOkeo/PEZLGvqvJMxBwlQD8WoufBMD13PwktICLxFeALmEJTPvCk7AEqE38CaAFigQAgB0lv4P7nIdncG8qIQ0AJECc8kDpaSogUC3QBGgJ6Jp1I7Ql1CB6CxaE3oIlQN8FS8L9rxCJRCKRSCQRcgN9ZM/i8q4i8gAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">구리</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="leather" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nGOwUuD7zzCQAOSAAXUEyPKuIIOBcwTI4g83FvyvctMYGEfAQgCG6e4IWAgMmCPQQwCE6Rod2EKAriGBLQTo6gjkXIBuOSxkaOoIfGkAHdOlHID5nK6JEDmY6e4I9OCle8mIzZJBUzzTNS1gc8SAtxVGwSgYBaNgFIyCUcBABwAAm0K4mMFIdXAAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">가죽</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="denim" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAi0lEQVR4nGOQ0vL7zzCQAOSAAXUEyHKvrBUD5wiQxS8WOAycI0CW6nk1gB0wII6AhcCAOQKWBkB4QByBnAYGxBGwEEC2mK6OQA4BdEfQJXeg5wIYG1ZAIWOa5wJYdID4dE2EyMFMd0egBy/dS0Zslgya4pmuaQGbIwa8rTAKRsEoGAWjYBSMAgY6AAATfcKCBziCdgAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">데님</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="paper" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAe0lEQVR4nO3WsQmAUAyE4czpKI7gXE5iZeEANqKkCEjIs8udxf0QEJt8vtdoyzzdxswBVIQvv86dhwgADfEGUBAZAEdUAChiBIAhvgDHtvYjRgBfHtOKqACxNE87wJ8hX10BYiEckY+XAqjewa/iV4BA0P8VlFJKKWWAHu15MbJZ0eNAAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">종이</span>
-      </button></div></div><div class="group"><h3 class="group-name">색과 무늬</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="rainbow" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAkElEQVR4nGMQERH5zzCQAOSAAXUEyPIXDjYD5wiYAwbMEcgOGBBHgCz8OkELBdPVEdgcQFdHgB1wSQ8rposj8DmALo4AWeCzIwovpqkjcDkAVkAhY5o5wKbpGRijs2liIS4HwCykuyPQgxfE7vK5BMZ0cwA2Mbo6YtA5AOaIAW8rjIJRMApGwSgYBaOAgQ4AALOEwtZbXkYLAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">무지개</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="candy" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nO2WsQ2AMAwEPQRzMAjDUDO526BYOLKiiI5/ij/JtS+fV8CubW/GpAtQJfry5s6TCIHjjKFIDAF3ThJ5BTGMJIbAsxyeRO0AJYm5A/AkVh2AJvHWgXm+EygnTRl4CXNh7QSshHVR7QRM4NfPM/UjRf9XEEIIIYQBuAFPPPvAMYS9/wAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">캔디</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="popart" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeklEQVR4nO3WQQrAIAwEwDzH/7+nZ78RoUVRo+2pu6XsgmcHY6JmV9yI8W7RARTEubEfPEQDsBADgIEIADRiAOSU4IjlCSARtwAEYlsCVDm2J7AYUq8gwhx4AEAmYSsB7BLOC94F0yYUREDVLqA+Ul/5KyiKoiiK/TYFPE7va9K+/jcAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">팝아트</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="sunset" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsUlEQVR4nGPQEDH6zzCQAOSAAXUEyPL/l6IGzhFgB+yLAuMBcQTYASuj4JjujgA7YGoUCqarI8AOaIzCwHRzBMiirwVJWDFdHAGy5FlSLk5Mc0eALLgeUokX09QRIMNPuLVgYFgBhYxp5oBtVt1gjM6miYXYHDDHrA1uIYyPLEZzByBbBGI3GzaBMd0cgE0sU7cOjAeseA7QqALjAa2kBrytMApGwSgYBaNgFIwCBjoAAF2nzHbsZe1fAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">석양</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="checker" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAe0lEQVR4nO2WwQnAMAwDPYQH6Ajdf5pukuKHwISkfUX66CAQ8tEhm9J4rnuEkhKQSlR4IZOAQGZqJCq0wgFdYhagN9FHIGliJ0BrYjUCahN/Aseb+NqB+RwXwJ2+hL3mPhLaEvYgicDqDTsh/TzLBCAh/1cwxhhjTBB4AcVY7XToJBMJAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">체크</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="polka" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAcklEQVR4nO2WwQmAMBAErxJrshxrsB77OzlBiIf6c8fHDuSdYVk2iXWaM0hKAJWoy3PZOIlTAJMYBRCJQ6CgJHoCcomLAJHEUwIyibsOSJN460A/nwsgm9CXUC7R4x07IRP47zxnso8U/lcwxhhjTAjYARfgBFUpWhFoAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">물방울</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="zebra" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaklEQVR4nO3VMQ6AMAwEwXuE///OdEa4QFEQ6fCmuJUoUnmIEJakFFzSiBxjoIgCkIgHQCEyIlBEAUhEDSQRn4D73IHYAjoQu+tfn38A89Cut34BpoH9H+EyCAGc+3tGlxS9pp1zzjmnji5idNLQDx6yTgAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">얼룩말</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="leopard" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nGOwURH4zzCQAOSAAXUEzAED5giQxS92JIDxgDgC3QF0dwTMASB6QYIC/R2BHgJ0jw5kS9ExXRwBC3J0i+nmCOS4R08LdEmYuEIAGx7eiRBmId0dgR68dIt7ZAuxiQ1YyTgo6geYIwa8rTAKRsEoGAWjYBSMAgY6AABDp8VgARv2DgAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">표범</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="watermelon" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeklEQVR4nO3WsQ2AMBBD0Zskk1AwQmqmZBTGoMwGoBQnnSza2BT+EnWeUHJJtKM9oWwCpIi5eD93HSIBMkQCxrg0iAqQICrg3jofgQA64gtAReAeQMByBJ4C3Iz1WwrIBekzASchHYG/VwL47XiWX1Lyt4JzzjnngtALnALVLL3FgxkAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">수박</span>
-      </button></div></div><div class="group"><h3 class="group-name">손그림·미니멀</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="minimal" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUklEQVR4nO3RMQ7AIBADQf//004TJIQIVLGb3Q94dCdJsm21esddQwxADTEDKogVEEfsAFHEFyCGOAEiiBvgd8TtBZULRIZXxFxsmIiIiIhE0gP8MZln0b1ZIQAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">미니멀</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="dashed" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAcElEQVR4nO2UMQrAIBRDc3+ce6beKkWoUrR2a+KQN7n5CJ8HAISTUg66JUjytEnUBaqAU6ILWCSeC7gkJgGpxNsCaomlgETiawGVxPIGWqR+jdXYgfa+P7WUUCsxzusoI7fOs/IWJgnn5yGEEEKAigtJ7Q+ln19veQAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">점선</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="doodle" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiUlEQVR4nO2VsQ3AIAwEfzDXDJFpUCbMANklEQWSZRk63s2fFAXS+IwdDAAwax8qGQKlElPArPUyASfClxiBr/t93L7TSuKzDhK8nvDBSiRiCegSM0gmQWnMVQloJxG7PmTvnzN/R3YPDAlqE2ZvikR2tKv1UYndt5JB5e+GsklZPqaFEEIIAQI/tHd21tXIfJ4AAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">낙서</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="cloud" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlUlEQVR4nO3UwQ2AIAwFUIZhFs+encMJPDudC2lIaAI/gB7o78H+pAm3vhZC2I/rDpZJAFNEap5ihhCAGaIEmCAQQEe0AFRED0BDjAAUxBtAHTF6A1jqADyv27mUpQqQhnSErFcaNAARazoApoz077ls3gJMn7oDqNaLV6MKyIhqSnx86lv4cjV0QEbYNfd4PB5P+EMeL9uKu4cf5T8AAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">구름</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="longshadow" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAuklEQVR4nO2UOw4CMRBDcwTaNBTb0tLSUu85OQm3AiXKIGvkhGY+TZ7k2s+T1Zbr+fyUTJpAqkQrP9+vPAkRSJNAgRQJLRAuwQRCJWYCYRIrgRCJfwLuEqtvQMddgPwTHiQ+AlJIJO4ktgK4dnKFG4mdAJy3L5xc4SAx41fe1i2uUEnM6OUjh34auMKFxIxePlL108AVXJHyOtZhuQiarmZIuRRhuQi6o1diuQiGg+UpAiW7fLPZbIo1X1qk6/9RvbyrAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">롱섀도</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="crayon" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2VwQnAIBRDncsRevLcmTpOh+kIbmERGkiL0JP5HvLgg9KD+fmxplryUUveUxS15PZUjIh+eLu2M8wJCMBaLqJ33gWQCK0TcIBL6gSP4CNC48TIAakTyAD2nAd8nyqCR8ACZE78ZKBRzXGCM8Cdym4CMoAD0akyhK+3AGvZVRx1ucTvWTqGJZ9pY4wxxiQRN/GB+eNwM6v3AAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">크레용</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="blueprint" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAl0lEQVR4nO2WwQmAMBAErwJLsABL8WUJFpJiLMeulBMCyxHjJ+5+buBACJhhF5KYmdm07Jep8M0dmUQVkElUgXk7NBJVYC3nM3QJTMCHLtESoNYRK8ChSLwlQKvjS+D3OnoVUOroJdBiuEQUiN++jjN0cxTAmKkHU7wLMBGqAG6CKVAOpfhz+f2AEvK3gvS1lCRJkiRG4AZWi3HECto65wAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">청사진</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="pencil" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAfUlEQVR4nO2WMQrAMAwD/cTMfV3mvqS/avFgMCbuZmnRQUjI4kOCNrbW9RoTF6BK+PC974cmkQdTJCIBXxSJKgCvIw8LiXoPTwBax58ApI6uAlgdXQLxgcprXKCeRwaeBE47TKLGGylkmXGB7o72j4Cn0EnQ3wpCCCGEMAAfIrOlsEENNxkAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">연필</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="watercolor" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA3UlEQVR4nO2VsQrCMBCG85K+QEHwAXQpCE5OWRyaxVGUkLlDR8f4Bk6ONxSEPEL5Sw6O7rks+eAI3PJ/XC+p2R+fztQEAlUlEH57/amaxO7iXT8l6qcUr93d1RQIb/sL6hJyAhBQl8g7EFFf+yEuNQkhEHI4TkxCR4JvASqHr5OAgMrnEDuAQN4D4r3Acha9olkgbAQi+lxFHyshsL4DPAH0jQa+O7tkx4BTCFGyI3GvuIAMygJRShUX2PYgkewIiagisQUL54eZ/DDH0+FR5yeF4GrhjUaj0Wg0jCILtxD45Md64XYAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">수채화</span>
-      </button></div></div><div class="group"><h3 class="group-name">자연·계절</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="sakura" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAi0lEQVR4nO3Wuw2AMAwE0IzISEzCDIxAQUHJENSsYBSkoMOYkjsKn+SGxk/Oj2LjupS/pGIkoKnrDRESACIkANt2HeIEDLMO0SbQio7wADoiAlARuAduZcZBXBOogea0SbwtAW05HgA4kr6+A0BTzSaEhnSEH68EEH2T3YwSQPQfIH+mM5lMJpMphBxhg0scQKgLugAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">벚꽃</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="forest" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAgUlEQVR4nGOQshL5zzCQAOSAAXUEyPKoBQ4D5wiQxTZVRgPnCJgDBswRyA4YEEfA0sCAOQI5DQyII9DTAN0dAbJAK0oFjAfEEfjSADqmmQNAvodZCnME3RMhzEK6OwI9eAfEAdjE6B4VuBLmgFZSA95WGAWjYBSMglEwCkYBAx0AANxkp2hOJ53DAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">숲</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="snow" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAh0lEQVR4nO3VsQ2AIBCF4ZvXQZzHMRzC0toBbDBXEAncQeM9LN6fkFhxXyBBkaJl3ZLMTAFTETpc8xD7kRIE4CGggN5JwABwhAWAIjwADNEDQBAjQDhCNz+vu1n5gSpXOKD+DhnoAfJAOKI+3hHg85fRGjLlKn4FyIiw4dY9hv/1GGOMMSZvD1WKVqXOLJJqAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">눈</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="ocean" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAk0lEQVR4nGPg04r6zzCQAOSAAXUEyHK5lC0D5wiYAwbMESBLtZouwDHdHQGy0GvBAzimuyOQowCE6e4IdAfAHPHix3/6OAI9DaA7huaOQE4DIF+jO4Lm0YEvDaBjmjsAxqZb/MMcgBzMdC+Y0IN3QByATWzASkaYA0DpgK5pAZsjBrytMApGwSgYBaNgFIwCBjoAACnjy0vypeHiAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">바다</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="desert" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nO3WsQ2AMAwEQI/CSJmHiimYh5JR2ALk4qXISujy3/xLlhCNT5ZJiL1tbyiTACkimz/XoUMAcJ9Ng8im2TwRkklgAn1RESMAFTED0BD9EqKoiLqEwNAQfztQazmgPi9pOAOgIR1RxysBjN7JTkYA8CVILyn5v4LjOI7jOEHIB5BY+I4rLreAAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">사막</span>
-      </button></div></div><div class="group"><h3 class="group-name">움직이는</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="rainbowflow" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjklEQVR4nGMQERH5zzCQAOSAAXUEyPKvE7QGzhEwBwyYI8AOuKQHx3R3BLoD6O4IkGU+O6IwMN0cgcsBdHMEyBKbpmc4Mc0dQcgBNHcEyPAun0sYGFZAIWOaOwCdTRMLsTnghYMN3EIYH1mM5g5AtmhAHDA4i+eBdADMEQPeVhgFo2AUjIJRMApGAQMdAADpvMGyDJaNcwAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">무지개 흐름</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="neonpulse" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAnUlEQVR4nO3WsRGAIAwFUBbQwtoBmMSZHcFdHAIb8UJMgIJ8mvy71HmHkhDinRZeAZm3aSSFRWTAcV5pCoICpiAoYFt3PIID4AgJAEVoABiiBoAgWgBzRA/AFNELkBAQQB5QtMwBlZlQ7AwTQG6oIMZvTW0X1CbjkMYSgB+zdgomAH7F0ACpvlMw/QQN1O/PRz9U5r4XPR6PxxMAeQBqYueaqZiQKwAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">네온 맥박</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="flicker" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAs0lEQVR4nO3VIQ6EQAwF0NHIPcBYPJxjPeEoJCs4CZfAco7lAgg8BsWmDW0qFtmWhP6kGTLmvwxhSOnxaV/FcXR5dAXAuALWJvshCOCGgNL9k3HmygEhAS4ngV/BUOIQAlYzBAKmmgEwCJpqGwQDBIIAsKojEPB9cyGXiz3Vy4oBVHgOXVBy9ABLjwB+HeezSuEVgAoZJPbUAbKIAdtoB/i3BwAzxO0At/hNRyKRSCSSjPIDZEbfkv0IJtoAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">일렁이는 불꽃</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="twinkle" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA0ElEQVR4nO2VsQ3DMAwEVWcAD5EqA2iCVKkNTZAJgsyQCTSFR8gMWYgBgTzwIVhKtAs+wPpff6RdepO1N3n0JrXsITV/v0QQZI8AVQP8QlQNEh1gVfPldEGIWBxAoAHOy03CcQCBmmsIaiIGByPgCcPBCDBoIwQHEFhznft1m4+DEbC5E2IODiDwzJ3FHI8DCPSl1hwfKJ7hLdgrQBvyef7xB4Lhu8BXAEMbKOQK+LUIoAq7Als1L+bUFjy23l6E/6AO8ZuetvmpVCqVSpUD6QuUqnryF2fUswAAAABJRU5ErkJggg==)"></span>
-        <span class="pick-name">반짝이는 별</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="jitter" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAgUlEQVR4nO3VwQ2AIAyF4a7QRRiMaVnCOWowkkARveirh/cnnPulEhFxWcpFVU02K4KsDQ4Z3gNqoRuwlI8DR/QbaEERVwAoYgWAIe4AEMQAqBcRjZg2gEY83QF/XkcM/4FzaNglbAOhCP8W+E8CA/RD4IgVKgzwi2eaMcYYY/JxO+sFZ1WMb9GPAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">글리치 떨림</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="wave" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAApElEQVR4nO2WsQmAQBAEPzawBDG2BmMD67AIYyuxCAuxBEswNnlZYeARU++SG1gQkx3P8zFV7ZCTJxJwlVB5t+x+EgiM6+EjoVKVK+eV7SUQqPv5ifkkVEY5AqYSCDTT9gQJs8VUCeUIKNoHk0kgoCdWkEBA179K8BmWAgoHVJlfBRg3EqZLWL5rc4n3eF0Evu6xE27Hs6sAEu7/CkEQBEEQJANuAA/AQUjjBTgAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">파도</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="heartbeat" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAbklEQVR4nO3WwQmAMBBE0S3BUizASqzEEu3KICjIoslp53uYDznnEcImEe5qneYDB6CIc/N92TjEDcAQTwCCyAA54g0gRXwBZIgeQIIYAcoRvTuQVzkAmQl5EsoR+XgRwK/HM/pI4X8F55xzLgpr1CvKptTifDoAAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">두근두근</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="electric" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR4nO2WsRGAMAhFM4KlYziCozmK41g6Qjb5HlE8zEW7fCz4dxRpzOODkJT+IABYdmx+AHlGCWCTcAEYxkkAQL/cAhSIPPMhJHMFsE7QymEdcHGiBUDtiTcAmhN1D6wZJawTXefElwMK0s0JyeyrB+4hdQ6qPhDycZtpK+u+JcDzQj0LCKcJL4vtmfor6iKyNisEzwUzdq+t6Lsf6tLQ3wuuD5RQKBQKhRJRB4dMFQo/2hToAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">전기</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="barber" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiklEQVR4nO2WuwnAMBBDPYpH8AAZImNnlMxwTcIFBIcx6Sw1enC1nrH8ab33pylJAalEhkeETgICMgkIjPP6hi6RgQjPucfBlagCGY6hSUCghlM7kSGrcPRiu0QVmMMpxYTAauXzbBOoe04/jvNNWEtJK2ENqp2gCfz1Qno9yx8p+V/BGGOMMY3ACwd22Vqby3ZSAAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">이발소 기둥</span>
-      </button>
-      <button type="button" class="pick c-hand" data-pick="coderain" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeElEQVR4nO3WMQ7AIAwDwIx9Tp/UJ/OjVAyBCFF1is1gSywsPgVaYbc/bsx0ABURABpilF/GQawAOKIXNm9zAuhJRGkGQBG5NCYBRWTAbpUj/gDliC9A/j+Ufh3HXMIohCPW8VIA2z30URwFCAT9raAoiqIoigHyAk5ks61Zq6o5AAAAAElFTkSuQmCC)"></span>
-        <span class="pick-name">글자비</span>
-      </button></div></div><div class="group"><h3 class="group-name">게임 아이템</h3><div class="picker">
-      <button type="button" class="pick c-hand" data-pick="fantasy" aria-pressed="false">
-        <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nGNgYGD4j4QHBPwHgYF0CNhSEDhy6trAOSIvr2JAHQG2cNQRo44Yio6gucPwOQKMX2wwoHnI4HQEkuU0jxoMR9DTcgxHoFlOXwfALO+J0PkfYiRB3yhA9zk9HYEtzrE5gnYOwOFLuucGnI6jR3lA0BED6YBRMApGwSgYBQxDFgAASgrwSN5iId0AAAAASUVORK5CYII=)"></span>
-        <span class="pick-name">판타지</span>
-      </button></div></div></div>
+      <div class="pick-wrap" data-scheme-item="pink" data-search="pink 분홍 pink 픽셀 클래식 pixel classics">
+        <button type="button" class="pick c-hand" data-pick="pink" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR4nO3VsQ2AMAxE0Rs70zETGxiJAgkT0nGf4r6U2q+IbEkqwRWNqH1sKOIEkIgLQCFuAALxALgRU4AT8QpwIZYAB2I1tL9vAdRO6AP9n7ANQgD/Xc/okaLPdEoppZTk6ABNoNSkHgNMIgAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">분홍</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="pink" aria-pressed="false" title="즐겨찾기" aria-label="분홍 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="onebit" data-search="onebit 1비트 1-bit 픽셀 클래식 pixel classics">
+        <button type="button" class="pick c-hand" data-pick="onebit" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAb0lEQVR4nO3UMQ6AMAxDUZ+T+98jqAyopKFiiT3gL3XOa6gAgIC4UCNipERcACXiBqgQD4ACsQDYiBLARLwCWIgtgIHYDc2nF1D8E47i9ACmgfxHmG5bbaEdkNdL30K+JX0LXz6NJOlw55xzDr/oBJTzCAfffZBuAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">1비트</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="onebit" aria-pressed="false" title="즐겨찾기" aria-label="1비트 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="ink" data-search="ink 잉크 ink 픽셀 클래식 pixel classics">
+        <button type="button" class="pick c-hand" data-pick="ink" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaklEQVR4nO3WMQrAIBBE0T2Ehfc/o0U6xSIQlkQr56eYD9Y+RFajtasH2QSgiLl5KZVD3AAM8QQgiAyQI94AUsQXQIZYASSIHeA4YnUH8joOQGZCnoRyRD5eBPDr8Yw+UvhfwTnnnHMhaADl6OnAkQDWyQAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">잉크</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="ink" aria-pressed="false" title="즐겨찾기" aria-label="잉크 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="sticker" data-search="sticker 스티커 sticker 픽셀 클래식 pixel classics">
+        <button type="button" class="pick c-hand" data-pick="sticker" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAn0lEQVR4nO3V2w2AIAwF0LuHGzgFG7mio7iJxgSSppbHRx9+9Cb9MRGOUBA3CYBSyy/vxNu+xyEaIAzRAMd1xiAoIATBAe4ICeCK6AHcECOAC2IGMEesAEwRsx7gVQEwA/TuBPbPsAG0CSWE8KougH7tws2o3wM8g1XQP4Zsb+EKEAYsdBXYFpgBPtXpfBPACLX63BSh3/mZTCaTwY/yAJID/i6xe6cjAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">스티커</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="sticker" aria-pressed="false" title="즐겨찾기" aria-label="스티커 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="gameboy" data-search="gameboy 게임보이 game boy 픽셀 클래식 pixel classics">
+        <button type="button" class="pick c-hand" data-pick="gameboy" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAg0lEQVR4nO3WwQmAMAwF0GzQVXp0HtdxBFfoCO6mRAiEknrLj4f/ofT4H6GEStvaLZVRQClCy49RiNDi8ypEeEAJYgbAEREAilgBYIgvAASxAvS9vycd4QFWqLctKH9SAVbqASmFEcCPGb6Y5vHCpxCV/GI9w99ChCj/KzAMwzAMI4A8R5mxFukcIHYAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">게임보이</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="gameboy" aria-pressed="false" title="즐겨찾기" aria-label="게임보이 즐겨찾기">★</button>
+      </div></div></div><div class="group"><h3 class="group-name">빛과 화면</h3><div class="picker">
+      <div class="pick-wrap" data-scheme-item="neon" data-search="neon 네온 neon 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="neon" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nO3Wuw2AMAwE0ExAQc0ATML+ezBEaIgUGTtJge+aOym1X75OOe96tVEYeYtXGqIDcBANsG8HB9EDKAgLgCM8ABQRAWCIEQCCmAHSESuAVMTCGbAjFxC9CWk9I3gJP4hfi3oAM1v8LXCWGrMK3t7Ct2GAordp7m9JURRFUQogDyswZb16iNj+AAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">네온</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="neon" aria-pressed="false" title="즐겨찾기" aria-label="네온 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="glitch" data-search="glitch 글리치 glitch 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="glitch" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAe0lEQVR4nO3WwQmAMAyF4ayQRTpYp+0SzhERjJQQ7UVfPLwfPPcTSlKx1oeqmmw2pCIHlCEccFSCmAEliAiAIzIAFHEHgCGeABDECvA5IgW0jkOs7kD8XkdcgPOv4TNhBviBUETcBfDJmG3D343n0iVV+lZgjDHGmADaAejIaiHpkcI2AAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">글리치</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="glitch" aria-pressed="false" title="즐겨찾기" aria-label="글리치 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="crt" data-search="crt crt crt 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="crt" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAkUlEQVR4nO2Wuw2AMAxEbwamQEyRmoqaSTIOmwaBFOlk8SvIOYVPcu2XF+cDAFhKTvDK0XwpubhBEIAPRAWYttkHogIM63iWHIIN1JJCWANyE1cGpCbuDMhMPBmQmHgz0NzEhxmwlZrfA3bVXL82ZwDeazYiG0KzWv0p4CYuFrp6Hxiih7+C328pEolEIhEIsgPoZTaWXFAdYgAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">CRT</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="crt" aria-pressed="false" title="즐겨찾기" aria-label="CRT 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="galaxy" data-search="galaxy 은하 galaxy 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="galaxy" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAoUlEQVR4nO2WsQ2AQAhFr3YAh7BylBvASZzBCZzGGVwIQ0HyQ7Dk0/ATah4fOG7ch0yLUSFN/FwiZRAGUAZhAOuy10AgwLZOPoQBaHKFoDuBDsh78iEQwMLcoEB4AGwFBcIPISanDGY0hJhclepENANYuY90AHQDq067GdFL6IEoW4DVRgDpW+BtjlqRBuArpLfhD6r8TJf/llqtVqvVGgR9iU915LhpK/UAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">은하</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="galaxy" aria-pressed="false" title="즐겨찾기" aria-label="은하 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="flame" data-search="flame 불꽃 flame 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="flame" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAt0lEQVR4nGP4XyW3gGEgQZQQ1/8BdwAID1hIgCy/YSQHdsSAOeChmxwYD4gjQJa+ipaDY7pHB8jCz/lyKJiuIQGy7E+zHAammyPAQT5VGSumiyPADlimhRPT3BFgB2wzwItp6giwA46bY2BYAYWMaeeAq65gjM6miYVYHXAnEW4hjI8sRnMHIFsEdsCTWjCmS6GEzZdgi9/MAOMBK57/f9kCxgNaSQ14W2EUjIJRMApGwShgGAkAABdF4XLVcXzSAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">불꽃</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="flame" aria-pressed="false" title="즐겨찾기" aria-label="불꽃 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="hologram" data-search="hologram 홀로그램 hologram 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="hologram" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAyElEQVR4nO3WIQ7DMAwFUB9sJxnaEQp3hILAHmAwsHAHyB1qacSwcGxlnibNkRWtQ41N/KXg/6LGaQAA4Hy6XcErn/JtY3ZDCMANIYAlreiCEAAPhJyKPaICUkHOGbkkW0QFfMuZBlxoskNUgCqf6Y4jPWwQFdCUX4hxLK/+iDoFP8rn/MTu0yGAvfLu0yGAvZ2363CEAPQ3l51LoV6HlmuAPnD6XjA7hHq3+l4wA+iSdjRNEP9G0/Un5f5WcH0tRSKRSCQCBnkD412fUM7esVwAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">홀로그램</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="hologram" aria-pressed="false" title="즐겨찾기" aria-label="홀로그램 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="laser" data-search="laser 레이저 laser 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="laser" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAnUlEQVR4nO3Wuw3AIAwEUOahiJgss7IRSFEg2BhIgY/GJ7lJ48cngEveX7wcMm/TuyksogJCSEcQBHACQQAx4hEdAI3ggOcbEiEBoIgRAIaYASCIFUAd8RsgINQAZDOWA6otTUAdqTxqcmfoAEpDGbH/1hzeBZOTcUtjEcCneTALOgD2i6EBUn2zoLkEC1S389EPlbPvRYvFYrE4QDLc6LgHkdT00AAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">레이저</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="laser" aria-pressed="false" title="즐겨찾기" aria-label="레이저 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="glowdark" data-search="glowdark 야광 glow in the dark 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="glowdark" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiElEQVR4nO3WwQ2AMAgF0E7iCA7Us2M5hsO4DcYDSUOg9SD/X/gJZ17TBtouObpWY+RtvPdNaAgF0BAKuOXkIEYABWEBcIQHgCIiAAwxA0AQK0A64gsgFbF6A7bSAdFMSNsZ3iT0EL829QDjaaGT0W7DGSINYE8Iv4YIRV/T9N9SpVKpVCoNkAcd5qbXGasiJAAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">야광</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="glowdark" aria-pressed="false" title="즐겨찾기" aria-label="야광 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="thermal" data-search="thermal 열화상 thermal 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="thermal" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAfklEQVR4nO3WsQ2AMAxEUY+QEdynyd7U9GmYggXYApTCknV9fBT3JWoeUeJgrflrzBaAilgv9zF5iADQEAHo18FBZAAFkQHn3esRCChHIOAZXovAPYCrsB2BpyAgMaDysxUQX1o+E3ASliNweSmA345n+iVF/1dQSimllBX0AU3Msbpg72ObAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">열화상</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="thermal" aria-pressed="false" title="즐겨찾기" aria-label="열화상 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="matrix" data-search="matrix 매트릭스 matrix 빛과 화면 light and screens">
+        <button type="button" class="pick c-hand" data-pick="matrix" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAgUlEQVR4nO2WQQrAIAwEcyx9RN/Q9/TU/39CsZCyleCtu5cdEMRLhrgG42x3CyVDQCrxFN9CJ4ECEokUyEWXSIH9OjQSlcDY0yQ+IQQBWifmDKAMpRPVFVA7scrAvH4VeItIQ4ijmRlCLISh5L2C6kw1GVGAmoVKQv5XMMYYY0wQ6OiYsjb1RF1yAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">매트릭스</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="matrix" aria-pressed="false" title="즐겨찾기" aria-label="매트릭스 즐겨찾기">★</button>
+      </div></div></div><div class="group"><h3 class="group-name">재질</h3><div class="picker">
+      <div class="pick-wrap" data-scheme-item="chrome" data-search="chrome 크롬 chrome 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="chrome" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAkklEQVR4nO3WsQmAQAwF0JvHwtJhrJzAcSydwEGsrF1EsDuJEPhKtMtPkw/h7P4jHHKlabtaIiOAUISUr9seh5Di46xxCASEIN4AOsICUBFfABriD0BBKGCal8f0w3iPfLsiEKCFcuoPCscVoKUIcCm0ALhm3AjtEmIRfQtWCX0LFoB+FyxE+Fshk8lkMplMIeQC3GTvsqMZYyQAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">크롬</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="chrome" aria-pressed="false" title="즐겨찾기" aria-label="크롬 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="gold" data-search="gold 골드 gold 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="gold" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAp0lEQVR4nO3UMQqAMAwF0M7OHsKTODk4eyZnj+PsKD2LglskQiBK0BbbdMmHoIPwHyHo2qYCFxHwXdT3n0FAKALL4VghKQLL96WPQiQrJwBscxQiG6DIJp6AEETSW5AAoYjf5W8AtZt4A6ggCOCn5jbjUF+D71kRHECF+KQfFJ+sACrlgCyFEoCvmW9E7Qh5kfoWpBL1LUgA9VuQEMXKLRaLxWKxOMWc6Qv8DYbh2NIAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">골드</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="gold" aria-pressed="false" title="즐겨찾기" aria-label="골드 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="glass" data-search="glass 유리 glass 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="glass" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeElEQVR4nO3WsQnAMAxEUQ2WSTxJRkyZKbyGgguBEZY736W4DwZ3erhQYle7uzEbACpiDHf3l4YIAA0RgKd7oyBmAAWRAXDECgBFVAAYYgeAICpALKj5HAfk+5GBFSAGwhdTfl74K6yG/Go9Uz9S9H8FpZRSShmgD8ROCtzKsi+hAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">유리</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="glass" aria-pressed="false" title="즐겨찾기" aria-label="유리 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="ice" data-search="ice 얼음 ice 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="ice" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA2klEQVR4nO3WMQrCQBAF0DmOx/EknsTOzko7OxuxsrOzUxBSCAFBQRCMEaORaGQG/rImlslMsx8+u0kzb5tkiYholpRdsgoP7/RGpRkCADMEAMeitEEAEOcfqToCgCh7u6oiAFinxU/VEACsLq9aVRAAcJbnvNbWEQAsTk9B8FptqwgA5oeHlIO939YQAEz3mSuHV3yg/DaOAGAS36XYczDQb6PDfcB4d3MD8ewjGh9cBfin5f0wSqVqAH8I3g22V6kK4h+qv0mkpj8p87uC6W0pJCQkJCSEFPIFuRurPKZfotMAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">얼음</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="ice" aria-pressed="false" title="즐겨찾기" aria-label="얼음 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="wood" data-search="wood 나무 wood 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="wood" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nO2WsQmAUAxEs4FriDNYWzuOtTO5n5LiJHwUq39ncQ9S3yMJIbGMwxlKUkAqkeH7OukkICCTyNBjm++iS1QBSSeeBKgS7Qjo46hLWMNpnfgS6C7xNgIcqFrdBSQ3AQIIhAR1CWtQ2xGKwC/Ps1QAEvJfwRhjjDFB4AJ367dv7ffKkQAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">나무</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="wood" aria-pressed="false" title="즐겨찾기" aria-label="나무 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="marble" data-search="marble 대리석 marble 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="marble" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAfUlEQVR4nO3WMQqAQAwEwDzWysInXWnh2yzED5ykCIQQ7Ny12AWbazLkjkXb1mUaMw6gInz4fZ08RABoiAygICoAjugAxz5wiA4A3cQbALKJAPgwyibqBgISBZW/zwGUTqhNmK8E9gjzIAqgO4P3wa8AgaD/KyiKoiiKYoA8WZ0mN7K2cZMAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">대리석</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="marble" aria-pressed="false" title="즐겨찾기" aria-label="대리석 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="stone" data-search="stone 돌 stone 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="stone" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlElEQVR4nO2WMQqAMBRDeyoH8ThODp7FycGzODp4KyVD4FOqW5PlPyh0y2v4LS3TODzFCQSsEgg/9s0ngeD7Op91mT0SbIBLLoFAnB4tWCTYQBSQStQCaEMqwSFkaL3vLhEb4OljC92baAkwtF7dBXgjLEPIwPguyIYwBlFA9jK2QuQSXwKSa/gnYf8rJEmSJElSBLw19d0471nkOAAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">돌</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="stone" aria-pressed="false" title="즐겨찾기" aria-label="돌 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="copper" data-search="copper 구리 copper 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="copper" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAnUlEQVR4nO2WsQmAMBBFM4AziHNYZQRHSe0klpaWjuAIjuEWkS+cHHKW+dfchyOkeo/PEZLGvqvJMxBwlQD8WoufBMD13PwktICLxFeALmEJTPvCk7AEqE38CaAFigQAgB0lv4P7nIdncG8qIQ0AJECc8kDpaSogUC3QBGgJ6Jp1I7Ql1CB6CxaE3oIlQN8FS8L9rxCJRCKRSCQRcgN9ZM/i8q4i8gAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">구리</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="copper" aria-pressed="false" title="즐겨찾기" aria-label="구리 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="leather" data-search="leather 가죽 leather 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="leather" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nGOwUuD7zzCQAOSAAXUEyPKuIIOBcwTI4g83FvyvctMYGEfAQgCG6e4IWAgMmCPQQwCE6Rod2EKAriGBLQTo6gjkXIBuOSxkaOoIfGkAHdOlHID5nK6JEDmY6e4I9OCle8mIzZJBUzzTNS1gc8SAtxVGwSgYBaNgFIyCUcBABwAAm0K4mMFIdXAAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">가죽</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="leather" aria-pressed="false" title="즐겨찾기" aria-label="가죽 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="denim" data-search="denim 데님 denim 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="denim" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAi0lEQVR4nGOQ0vL7zzCQAOSAAXUEyHKvrBUD5wiQxS8WOAycI0CW6nk1gB0wII6AhcCAOQKWBkB4QByBnAYGxBGwEEC2mK6OQA4BdEfQJXeg5wIYG1ZAIWOa5wJYdID4dE2EyMFMd0egBy/dS0Zslgya4pmuaQGbIwa8rTAKRsEoGAWjYBSMAgY6AAATfcKCBziCdgAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">데님</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="denim" aria-pressed="false" title="즐겨찾기" aria-label="데님 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="paper" data-search="paper 종이 paper 재질 materials">
+        <button type="button" class="pick c-hand" data-pick="paper" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAe0lEQVR4nO3WsQmAUAyE4czpKI7gXE5iZeEANqKkCEjIs8udxf0QEJt8vtdoyzzdxswBVIQvv86dhwgADfEGUBAZAEdUAChiBIAhvgDHtvYjRgBfHtOKqACxNE87wJ8hX10BYiEckY+XAqjewa/iV4BA0P8VlFJKKWWAHu15MbJZ0eNAAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">종이</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="paper" aria-pressed="false" title="즐겨찾기" aria-label="종이 즐겨찾기">★</button>
+      </div></div></div><div class="group"><h3 class="group-name">색과 무늬</h3><div class="picker">
+      <div class="pick-wrap" data-scheme-item="rainbow" data-search="rainbow 무지개 rainbow 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="rainbow" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAkElEQVR4nGMQERH5zzCQAOSAAXUEyPIXDjYD5wiYAwbMEcgOGBBHgCz8OkELBdPVEdgcQFdHgB1wSQ8rposj8DmALo4AWeCzIwovpqkjcDkAVkAhY5o5wKbpGRijs2liIS4HwCykuyPQgxfE7vK5BMZ0cwA2Mbo6YtA5AOaIAW8rjIJRMApGwSgYBaOAgQ4AALOEwtZbXkYLAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">무지개</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="rainbow" aria-pressed="false" title="즐겨찾기" aria-label="무지개 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="candy" data-search="candy 캔디 candy 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="candy" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nO2WsQ2AMAwEPQRzMAjDUDO526BYOLKiiI5/ij/JtS+fV8CubW/GpAtQJfry5s6TCIHjjKFIDAF3ThJ5BTGMJIbAsxyeRO0AJYm5A/AkVh2AJvHWgXm+EygnTRl4CXNh7QSshHVR7QRM4NfPM/UjRf9XEEIIIYQBuAFPPPvAMYS9/wAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">캔디</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="candy" aria-pressed="false" title="즐겨찾기" aria-label="캔디 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="popart" data-search="popart 팝아트 pop art 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="popart" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeklEQVR4nO3WQQrAIAwEwDzH/7+nZ78RoUVRo+2pu6XsgmcHY6JmV9yI8W7RARTEubEfPEQDsBADgIEIADRiAOSU4IjlCSARtwAEYlsCVDm2J7AYUq8gwhx4AEAmYSsB7BLOC94F0yYUREDVLqA+Ul/5KyiKoiiK/TYFPE7va9K+/jcAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">팝아트</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="popart" aria-pressed="false" title="즐겨찾기" aria-label="팝아트 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="sunset" data-search="sunset 석양 sunset 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="sunset" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsUlEQVR4nGPQEDH6zzCQAOSAAXUEyPL/l6IGzhFgB+yLAuMBcQTYASuj4JjujgA7YGoUCqarI8AOaIzCwHRzBMiirwVJWDFdHAGy5FlSLk5Mc0eALLgeUokX09QRIMNPuLVgYFgBhYxp5oBtVt1gjM6miYXYHDDHrA1uIYyPLEZzByBbBGI3GzaBMd0cgE0sU7cOjAeseA7QqALjAa2kBrytMApGwSgYBaNgFIwCBjoAAF2nzHbsZe1fAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">석양</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="sunset" aria-pressed="false" title="즐겨찾기" aria-label="석양 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="checker" data-search="checker 체크 checker 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="checker" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAe0lEQVR4nO2WwQnAMAwDPYQH6Ajdf5pukuKHwISkfUX66CAQ8tEhm9J4rnuEkhKQSlR4IZOAQGZqJCq0wgFdYhagN9FHIGliJ0BrYjUCahN/Aseb+NqB+RwXwJ2+hL3mPhLaEvYgicDqDTsh/TzLBCAh/1cwxhhjTBB4AcVY7XToJBMJAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">체크</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="checker" aria-pressed="false" title="즐겨찾기" aria-label="체크 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="polka" data-search="polka 물방울 polka dot 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="polka" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAcklEQVR4nO2WwQmAMBAErxJrshxrsB77OzlBiIf6c8fHDuSdYVk2iXWaM0hKAJWoy3PZOIlTAJMYBRCJQ6CgJHoCcomLAJHEUwIyibsOSJN460A/nwsgm9CXUC7R4x07IRP47zxnso8U/lcwxhhjTAjYARfgBFUpWhFoAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">물방울</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="polka" aria-pressed="false" title="즐겨찾기" aria-label="물방울 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="zebra" data-search="zebra 얼룩말 zebra 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="zebra" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaklEQVR4nO3VMQ6AMAwEwXuE///OdEa4QFEQ6fCmuJUoUnmIEJakFFzSiBxjoIgCkIgHQCEyIlBEAUhEDSQRn4D73IHYAjoQu+tfn38A89Cut34BpoH9H+EyCAGc+3tGlxS9pp1zzjmnji5idNLQDx6yTgAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">얼룩말</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="zebra" aria-pressed="false" title="즐겨찾기" aria-label="얼룩말 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="leopard" data-search="leopard 표범 leopard 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="leopard" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nGOwURH4zzCQAOSAAXUEzAED5giQxS92JIDxgDgC3QF0dwTMASB6QYIC/R2BHgJ0jw5kS9ExXRwBC3J0i+nmCOS4R08LdEmYuEIAGx7eiRBmId0dgR68dIt7ZAuxiQ1YyTgo6geYIwa8rTAKRsEoGAWjYBSMAgY6AABDp8VgARv2DgAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">표범</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="leopard" aria-pressed="false" title="즐겨찾기" aria-label="표범 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="watermelon" data-search="watermelon 수박 watermelon 색과 무늬 colours and patterns">
+        <button type="button" class="pick c-hand" data-pick="watermelon" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeklEQVR4nO3WsQ2AMBBD0Zskk1AwQmqmZBTGoMwGoBQnnSza2BT+EnWeUHJJtKM9oWwCpIi5eD93HSIBMkQCxrg0iAqQICrg3jofgQA64gtAReAeQMByBJ4C3Iz1WwrIBekzASchHYG/VwL47XiWX1Lyt4JzzjnngtALnALVLL3FgxkAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">수박</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="watermelon" aria-pressed="false" title="즐겨찾기" aria-label="수박 즐겨찾기">★</button>
+      </div></div></div><div class="group"><h3 class="group-name">손그림·미니멀</h3><div class="picker">
+      <div class="pick-wrap" data-scheme-item="minimal" data-search="minimal 미니멀 minimal 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="minimal" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUklEQVR4nO3RMQ7AIBADQf//004TJIQIVLGb3Q94dCdJsm21esddQwxADTEDKogVEEfsAFHEFyCGOAEiiBvgd8TtBZULRIZXxFxsmIiIiIhE0gP8MZln0b1ZIQAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">미니멀</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="minimal" aria-pressed="false" title="즐겨찾기" aria-label="미니멀 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="dashed" data-search="dashed 점선 dashed 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="dashed" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAcElEQVR4nO2UMQrAIBRDc3+ce6beKkWoUrR2a+KQN7n5CJ8HAISTUg66JUjytEnUBaqAU6ILWCSeC7gkJgGpxNsCaomlgETiawGVxPIGWqR+jdXYgfa+P7WUUCsxzusoI7fOs/IWJgnn5yGEEEKAigtJ7Q+ln19veQAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">점선</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="dashed" aria-pressed="false" title="즐겨찾기" aria-label="점선 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="doodle" data-search="doodle 낙서 doodle 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="doodle" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiUlEQVR4nO2VsQ3AIAwEfzDXDJFpUCbMANklEQWSZRk63s2fFAXS+IwdDAAwax8qGQKlElPArPUyASfClxiBr/t93L7TSuKzDhK8nvDBSiRiCegSM0gmQWnMVQloJxG7PmTvnzN/R3YPDAlqE2ZvikR2tKv1UYndt5JB5e+GsklZPqaFEEIIAQI/tHd21tXIfJ4AAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">낙서</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="doodle" aria-pressed="false" title="즐겨찾기" aria-label="낙서 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="cloud" data-search="cloud 구름 cloud 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="cloud" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlUlEQVR4nO3UwQ2AIAwFUIZhFs+encMJPDudC2lIaAI/gB7o78H+pAm3vhZC2I/rDpZJAFNEap5ihhCAGaIEmCAQQEe0AFRED0BDjAAUxBtAHTF6A1jqADyv27mUpQqQhnSErFcaNAARazoApoz077ls3gJMn7oDqNaLV6MKyIhqSnx86lv4cjV0QEbYNfd4PB5P+EMeL9uKu4cf5T8AAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">구름</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="cloud" aria-pressed="false" title="즐겨찾기" aria-label="구름 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="longshadow" data-search="longshadow 롱섀도 long shadow 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="longshadow" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAuklEQVR4nO2UOw4CMRBDcwTaNBTb0tLSUu85OQm3AiXKIGvkhGY+TZ7k2s+T1Zbr+fyUTJpAqkQrP9+vPAkRSJNAgRQJLRAuwQRCJWYCYRIrgRCJfwLuEqtvQMddgPwTHiQ+AlJIJO4ktgK4dnKFG4mdAJy3L5xc4SAx41fe1i2uUEnM6OUjh34auMKFxIxePlL108AVXJHyOtZhuQiarmZIuRRhuQi6o1diuQiGg+UpAiW7fLPZbIo1X1qk6/9RvbyrAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">롱섀도</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="longshadow" aria-pressed="false" title="즐겨찾기" aria-label="롱섀도 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="crayon" data-search="crayon 크레용 crayon 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="crayon" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2VwQnAIBRDncsRevLcmTpOh+kIbmERGkiL0JP5HvLgg9KD+fmxplryUUveUxS15PZUjIh+eLu2M8wJCMBaLqJ33gWQCK0TcIBL6gSP4CNC48TIAakTyAD2nAd8nyqCR8ACZE78ZKBRzXGCM8Cdym4CMoAD0akyhK+3AGvZVRx1ucTvWTqGJZ9pY4wxxiQRN/GB+eNwM6v3AAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">크레용</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="crayon" aria-pressed="false" title="즐겨찾기" aria-label="크레용 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="blueprint" data-search="blueprint 청사진 blueprint 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="blueprint" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAl0lEQVR4nO2WwQmAMBAErwJLsABL8WUJFpJiLMeulBMCyxHjJ+5+buBACJhhF5KYmdm07Jep8M0dmUQVkElUgXk7NBJVYC3nM3QJTMCHLtESoNYRK8ChSLwlQKvjS+D3OnoVUOroJdBiuEQUiN++jjN0cxTAmKkHU7wLMBGqAG6CKVAOpfhz+f2AEvK3gvS1lCRJkiRG4AZWi3HECto65wAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">청사진</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="blueprint" aria-pressed="false" title="즐겨찾기" aria-label="청사진 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="pencil" data-search="pencil 연필 pencil 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="pencil" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAfUlEQVR4nO2WMQrAMAwD/cTMfV3mvqS/avFgMCbuZmnRQUjI4kOCNrbW9RoTF6BK+PC974cmkQdTJCIBXxSJKgCvIw8LiXoPTwBax58ApI6uAlgdXQLxgcprXKCeRwaeBE47TKLGGylkmXGB7o72j4Cn0EnQ3wpCCCGEMAAfIrOlsEENNxkAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">연필</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="pencil" aria-pressed="false" title="즐겨찾기" aria-label="연필 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="watercolor" data-search="watercolor 수채화 watercolour 손그림·미니멀 hand-drawn and minimal">
+        <button type="button" class="pick c-hand" data-pick="watercolor" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA3UlEQVR4nO2VsQrCMBCG85K+QEHwAXQpCE5OWRyaxVGUkLlDR8f4Bk6ONxSEPEL5Sw6O7rks+eAI3PJ/XC+p2R+fztQEAlUlEH57/amaxO7iXT8l6qcUr93d1RQIb/sL6hJyAhBQl8g7EFFf+yEuNQkhEHI4TkxCR4JvASqHr5OAgMrnEDuAQN4D4r3Acha9olkgbAQi+lxFHyshsL4DPAH0jQa+O7tkx4BTCFGyI3GvuIAMygJRShUX2PYgkewIiagisQUL54eZ/DDH0+FR5yeF4GrhjUaj0Wg0jCILtxD45Md64XYAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">수채화</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="watercolor" aria-pressed="false" title="즐겨찾기" aria-label="수채화 즐겨찾기">★</button>
+      </div></div></div><div class="group"><h3 class="group-name">자연·계절</h3><div class="picker">
+      <div class="pick-wrap" data-scheme-item="sakura" data-search="sakura 벚꽃 cherry blossom 자연·계절 nature and seasons">
+        <button type="button" class="pick c-hand" data-pick="sakura" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAi0lEQVR4nO3Wuw2AMAwE0IzISEzCDIxAQUHJENSsYBSkoMOYkjsKn+SGxk/Oj2LjupS/pGIkoKnrDRESACIkANt2HeIEDLMO0SbQio7wADoiAlARuAduZcZBXBOogea0SbwtAW05HgA4kr6+A0BTzSaEhnSEH68EEH2T3YwSQPQfIH+mM5lMJpMphBxhg0scQKgLugAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">벚꽃</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="sakura" aria-pressed="false" title="즐겨찾기" aria-label="벚꽃 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="forest" data-search="forest 숲 forest 자연·계절 nature and seasons">
+        <button type="button" class="pick c-hand" data-pick="forest" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAgUlEQVR4nGOQshL5zzCQAOSAAXUEyPKoBQ4D5wiQxTZVRgPnCJgDBswRyA4YEEfA0sCAOQI5DQyII9DTAN0dAbJAK0oFjAfEEfjSADqmmQNAvodZCnME3RMhzEK6OwI9eAfEAdjE6B4VuBLmgFZSA95WGAWjYBSMglEwCkYBAx0AANxkp2hOJ53DAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">숲</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="forest" aria-pressed="false" title="즐겨찾기" aria-label="숲 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="snow" data-search="snow 눈 snow 자연·계절 nature and seasons">
+        <button type="button" class="pick c-hand" data-pick="snow" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAh0lEQVR4nO3VsQ2AIBCF4ZvXQZzHMRzC0toBbDBXEAncQeM9LN6fkFhxXyBBkaJl3ZLMTAFTETpc8xD7kRIE4CGggN5JwABwhAWAIjwADNEDQBAjQDhCNz+vu1n5gSpXOKD+DhnoAfJAOKI+3hHg85fRGjLlKn4FyIiw4dY9hv/1GGOMMSZvD1WKVqXOLJJqAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">눈</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="snow" aria-pressed="false" title="즐겨찾기" aria-label="눈 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="ocean" data-search="ocean 바다 ocean 자연·계절 nature and seasons">
+        <button type="button" class="pick c-hand" data-pick="ocean" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAk0lEQVR4nGPg04r6zzCQAOSAAXUEyHK5lC0D5wiYAwbMESBLtZouwDHdHQGy0GvBAzimuyOQowCE6e4IdAfAHPHix3/6OAI9DaA7huaOQE4DIF+jO4Lm0YEvDaBjmjsAxqZb/MMcgBzMdC+Y0IN3QByATWzASkaYA0DpgK5pAZsjBrytMApGwSgYBaNgFIwCBjoAACnjy0vypeHiAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">바다</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="ocean" aria-pressed="false" title="즐겨찾기" aria-label="바다 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="desert" data-search="desert 사막 desert 자연·계절 nature and seasons">
+        <button type="button" class="pick c-hand" data-pick="desert" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nO3WsQ2AMAwEQI/CSJmHiimYh5JR2ALk4qXISujy3/xLlhCNT5ZJiL1tbyiTACkimz/XoUMAcJ9Ng8im2TwRkklgAn1RESMAFTED0BD9EqKoiLqEwNAQfztQazmgPi9pOAOgIR1RxysBjN7JTkYA8CVILyn5v4LjOI7jOEHIB5BY+I4rLreAAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">사막</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="desert" aria-pressed="false" title="즐겨찾기" aria-label="사막 즐겨찾기">★</button>
+      </div></div></div><div class="group"><h3 class="group-name">움직이는</h3><div class="picker">
+      <div class="pick-wrap" data-scheme-item="rainbowflow" data-search="rainbowflow 무지개 흐름 rainbow flow 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="rainbowflow" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjklEQVR4nGMQERH5zzCQAOSAAXUEyPKvE7QGzhEwBwyYI8AOuKQHx3R3BLoD6O4IkGU+O6IwMN0cgcsBdHMEyBKbpmc4Mc0dQcgBNHcEyPAun0sYGFZAIWOaOwCdTRMLsTnghYMN3EIYH1mM5g5AtmhAHDA4i+eBdADMEQPeVhgFo2AUjIJRMApGAQMdAADpvMGyDJaNcwAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">무지개 흐름</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="rainbowflow" aria-pressed="false" title="즐겨찾기" aria-label="무지개 흐름 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="neonpulse" data-search="neonpulse 네온 맥박 neon pulse 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="neonpulse" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAnUlEQVR4nO3WsRGAIAwFUBbQwtoBmMSZHcFdHAIb8UJMgIJ8mvy71HmHkhDinRZeAZm3aSSFRWTAcV5pCoICpiAoYFt3PIID4AgJAEVoABiiBoAgWgBzRA/AFNELkBAQQB5QtMwBlZlQ7AwTQG6oIMZvTW0X1CbjkMYSgB+zdgomAH7F0ACpvlMw/QQN1O/PRz9U5r4XPR6PxxMAeQBqYueaqZiQKwAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">네온 맥박</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="neonpulse" aria-pressed="false" title="즐겨찾기" aria-label="네온 맥박 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="flicker" data-search="flicker 일렁이는 불꽃 flickering flame 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="flicker" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAs0lEQVR4nO3VIQ6EQAwF0NHIPcBYPJxjPeEoJCs4CZfAco7lAgg8BsWmDW0qFtmWhP6kGTLmvwxhSOnxaV/FcXR5dAXAuALWJvshCOCGgNL9k3HmygEhAS4ngV/BUOIQAlYzBAKmmgEwCJpqGwQDBIIAsKojEPB9cyGXiz3Vy4oBVHgOXVBy9ABLjwB+HeezSuEVgAoZJPbUAbKIAdtoB/i3BwAzxO0At/hNRyKRSCSSjPIDZEbfkv0IJtoAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">일렁이는 불꽃</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="flicker" aria-pressed="false" title="즐겨찾기" aria-label="일렁이는 불꽃 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="twinkle" data-search="twinkle 반짝이는 별 twinkling stars 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="twinkle" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA0ElEQVR4nO2VsQ3DMAwEVWcAD5EqA2iCVKkNTZAJgsyQCTSFR8gMWYgBgTzwIVhKtAs+wPpff6RdepO1N3n0JrXsITV/v0QQZI8AVQP8QlQNEh1gVfPldEGIWBxAoAHOy03CcQCBmmsIaiIGByPgCcPBCDBoIwQHEFhznft1m4+DEbC5E2IODiDwzJ3FHI8DCPSl1hwfKJ7hLdgrQBvyef7xB4Lhu8BXAEMbKOQK+LUIoAq7Als1L+bUFjy23l6E/6AO8ZuetvmpVCqVSpUD6QuUqnryF2fUswAAAABJRU5ErkJggg==)"></span>
+          <span class="pick-name">반짝이는 별</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="twinkle" aria-pressed="false" title="즐겨찾기" aria-label="반짝이는 별 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="jitter" data-search="jitter 글리치 떨림 glitch jitter 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="jitter" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAgUlEQVR4nO3VwQ2AIAyF4a7QRRiMaVnCOWowkkARveirh/cnnPulEhFxWcpFVU02K4KsDQ4Z3gNqoRuwlI8DR/QbaEERVwAoYgWAIe4AEMQAqBcRjZg2gEY83QF/XkcM/4FzaNglbAOhCP8W+E8CA/RD4IgVKgzwi2eaMcYYY/JxO+sFZ1WMb9GPAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">글리치 떨림</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="jitter" aria-pressed="false" title="즐겨찾기" aria-label="글리치 떨림 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="wave" data-search="wave 파도 wave 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="wave" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAApElEQVR4nO2WsQmAQBAEPzawBDG2BmMD67AIYyuxCAuxBEswNnlZYeARU++SG1gQkx3P8zFV7ZCTJxJwlVB5t+x+EgiM6+EjoVKVK+eV7SUQqPv5ifkkVEY5AqYSCDTT9gQJs8VUCeUIKNoHk0kgoCdWkEBA179K8BmWAgoHVJlfBRg3EqZLWL5rc4n3eF0Evu6xE27Hs6sAEu7/CkEQBEEQJANuAA/AQUjjBTgAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">파도</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="wave" aria-pressed="false" title="즐겨찾기" aria-label="파도 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="heartbeat" data-search="heartbeat 두근두근 heartbeat 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="heartbeat" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAbklEQVR4nO3WwQmAMBBE0S3BUizASqzEEu3KICjIoslp53uYDznnEcImEe5qneYDB6CIc/N92TjEDcAQTwCCyAA54g0gRXwBZIgeQIIYAcoRvTuQVzkAmQl5EsoR+XgRwK/HM/pI4X8F55xzLgpr1CvKptTifDoAAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">두근두근</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="heartbeat" aria-pressed="false" title="즐겨찾기" aria-label="두근두근 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="electric" data-search="electric 전기 electric 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="electric" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR4nO2WsRGAMAhFM4KlYziCozmK41g6Qjb5HlE8zEW7fCz4dxRpzOODkJT+IABYdmx+AHlGCWCTcAEYxkkAQL/cAhSIPPMhJHMFsE7QymEdcHGiBUDtiTcAmhN1D6wZJawTXefElwMK0s0JyeyrB+4hdQ6qPhDycZtpK+u+JcDzQj0LCKcJL4vtmfor6iKyNisEzwUzdq+t6Lsf6tLQ3wuuD5RQKBQKhRJRB4dMFQo/2hToAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">전기</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="electric" aria-pressed="false" title="즐겨찾기" aria-label="전기 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="barber" data-search="barber 이발소 기둥 barber pole 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="barber" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiklEQVR4nO2WuwnAMBBDPYpH8AAZImNnlMxwTcIFBIcx6Sw1enC1nrH8ab33pylJAalEhkeETgICMgkIjPP6hi6RgQjPucfBlagCGY6hSUCghlM7kSGrcPRiu0QVmMMpxYTAauXzbBOoe04/jvNNWEtJK2ENqp2gCfz1Qno9yx8p+V/BGGOMMY3ACwd22Vqby3ZSAAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">이발소 기둥</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="barber" aria-pressed="false" title="즐겨찾기" aria-label="이발소 기둥 즐겨찾기">★</button>
+      </div>
+      <div class="pick-wrap" data-scheme-item="coderain" data-search="coderain 글자비 code rain 움직이는 animated">
+        <button type="button" class="pick c-hand" data-pick="coderain" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAeElEQVR4nO3WMQ7AIAwDwIx9Tp/UJ/OjVAyBCFF1is1gSywsPgVaYbc/bsx0ABURABpilF/GQawAOKIXNm9zAuhJRGkGQBG5NCYBRWTAbpUj/gDliC9A/j+Ufh3HXMIohCPW8VIA2z30URwFCAT9raAoiqIoigHyAk5ks61Zq6o5AAAAAElFTkSuQmCC)"></span>
+          <span class="pick-name">글자비</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="coderain" aria-pressed="false" title="즐겨찾기" aria-label="글자비 즐겨찾기">★</button>
+      </div></div></div><div class="group"><h3 class="group-name">게임 아이템</h3><div class="picker">
+      <div class="pick-wrap" data-scheme-item="fantasy" data-search="fantasy 판타지 fantasy 게임 아이템 game items">
+        <button type="button" class="pick c-hand" data-pick="fantasy" aria-pressed="false">
+          <span class="thumb" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhklEQVR4nGNgYGD4j4QHBPwHgYF0CNhSEDhy6trAOSIvr2JAHQG2cNQRo44Yio6gucPwOQKMX2wwoHnI4HQEkuU0jxoMR9DTcgxHoFlOXwfALO+J0PkfYiRB3yhA9zk9HYEtzrE5gnYOwOFLuucGnI6jR3lA0BED6YBRMApGwSgYBQxDFgAASgrwSN5iId0AAAAASUVORK5CYII=)"></span>
+          <span class="pick-name">판타지</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="fantasy" aria-pressed="false" title="즐겨찾기" aria-label="판타지 즐겨찾기">★</button>
+      </div></div></div></div>
     <div class="sizebar">
       <span class="size-label" id="size-label">커서 크기</span>
       <div class="sizes" role="group" aria-labelledby="size-label">
@@ -5253,6 +5460,29 @@ pre .c{color:var(--muted)}
     </div>
   </section>
 
+
+  <section>
+    <h2>내 커서 그리기</h2>
+    <div class="editor">
+      <canvas id="draw" class="try-cursor" aria-label="커서를 그리는 32x32 격자"></canvas>
+      <div class="tools">
+        <div class="swatches"><button type="button" class="swatch c-hand" data-swatch="#000000" aria-label="#000000"></button><button type="button" class="swatch c-hand" data-swatch="#ffffff" aria-label="#ffffff"></button><button type="button" class="swatch c-hand" data-swatch="#7d7280" aria-label="#7d7280"></button><button type="button" class="swatch c-hand" data-swatch="#e84545" aria-label="#e84545"></button><button type="button" class="swatch c-hand" data-swatch="#f5902a" aria-label="#f5902a"></button><button type="button" class="swatch c-hand" data-swatch="#f5d22e" aria-label="#f5d22e"></button><button type="button" class="swatch c-hand" data-swatch="#4cb85a" aria-label="#4cb85a"></button><button type="button" class="swatch c-hand" data-swatch="#2a7de1" aria-label="#2a7de1"></button><button type="button" class="swatch c-hand" data-swatch="#8a4cd2" aria-label="#8a4cd2"></button><button type="button" class="swatch c-hand" data-swatch="#f078be" aria-label="#f078be"></button><button type="button" class="swatch c-hand" data-swatch="#8c5a2a" aria-label="#8c5a2a"></button><button type="button" class="swatch c-hand" data-swatch="#28e5ff" aria-label="#28e5ff"></button></div>
+        <label class="pick-color">색 직접 고르기 <input type="color" id="draw-color" class="c-hand" value="#f078be"></label>
+        <div class="sizes modes">
+          <button type="button" class="size c-hand" data-mode="pen" aria-pressed="true">그리기</button>
+          <button type="button" class="size c-hand" data-mode="erase" aria-pressed="false">지우개</button>
+          <button type="button" class="size c-hand" data-mode="hot" aria-pressed="false">클릭 지점</button>
+        </div>
+        <div class="tool-row">
+          <button type="button" class="ghost c-hand" id="draw-undo">되돌리기</button>
+          <button type="button" class="ghost c-hand" id="draw-clear">전부 지우기</button>
+          <button type="button" class="register c-hand" id="draw-save">.cur 내려받기</button>
+        </div>
+        <p class="note try-cursor">이 글 위에 마우스를 올리면 그린 커서가 나옴. 파란 칸이 클릭 지점.
+        내려받은 .cur 는 포인터 설정의 <b>찾아보기</b> 로 칸 하나에 지정하면 됨. 그림은 이 브라우저에 저장돼 다음에도 남음.</p>
+      </div>
+    </div>
+  </section>
   <section class="install">
     <h2>그 밖에</h2>
     <ul class="steps">
@@ -5394,6 +5624,7 @@ pre .c{color:var(--muted)}
   hueInput.addEventListener('input', function(){ chooseHue(parseInt(hueInput.value, 10)); });
   document.getElementById('hue-reset').addEventListener('click', function(){ chooseHue(0); });
   window.cpSize = function(){ return size; };
+  window.cpSetHue = chooseHue;
   window.cpHue = function(){ return hue; };
   chooseSize(size); chooseHue(hue);
 })();
@@ -5444,6 +5675,8 @@ pre .c{color:var(--muted)}
       if (ASK[action]) ask(action, ASK[action]); else send(action);
     });
   });
+  // 랜덤 버튼이 쓰는 입구: 그 구성표의 적용 버튼을 그대로 누른다
+  window.cpApply = function(sid){ var b = document.querySelector('[data-apply="' + sid + '"]'); if (b) b.click(); };
   document.getElementById('act-cancel').addEventListener('click', function(){ dlg.close(); });
   document.getElementById('act-ok').addEventListener('click', function(){ dlg.close(); send(pending); });
 
@@ -5483,6 +5716,163 @@ pre .c{color:var(--muted)}
     chip.style.transform = 'translate(' + pos.x + 'px,' + pos.y + 'px)';
   });
   zone.addEventListener('pointerup', function(){ start = null; });
+})();
+</script>
+
+<script>
+// 찾기·즐겨찾기·랜덤
+(function(){
+  var items = [].slice.call(document.querySelectorAll('[data-scheme-item]'));
+  var find = document.getElementById('find'), favOnly = document.getElementById('fav-only'), note = document.getElementById('find-note');
+  var favs = {};
+  try { favs = JSON.parse(localStorage.getItem('cp-favs') || '{}'); } catch (e) {}
+  function save(){ try { localStorage.setItem('cp-favs', JSON.stringify(favs)); } catch (e) {} }
+  function refresh(){
+    var q = find.value.trim().toLowerCase(), onlyFav = favOnly.getAttribute('aria-pressed') === 'true', shown = 0;
+    items.forEach(function(item){
+      var id = item.getAttribute('data-scheme-item');
+      var hit = (!q || item.getAttribute('data-search').indexOf(q) >= 0) && (!onlyFav || favs[id]);
+      item.hidden = !hit;
+      if (hit) shown++;
+    });
+    // 남은 것이 없는 갈래는 제목까지 숨김
+    document.querySelectorAll('.group').forEach(function(g){
+      g.hidden = ![].slice.call(g.querySelectorAll('[data-scheme-item]')).some(function(i){ return !i.hidden; });
+    });
+    note.textContent = shown === items.length ? '' : shown + '종 보임';
+  }
+  document.querySelectorAll('[data-star]').forEach(function(b){
+    var id = b.getAttribute('data-star');
+    b.setAttribute('aria-pressed', String(!!favs[id]));
+    b.addEventListener('click', function(){
+      if (favs[id]) { delete favs[id]; } else { favs[id] = 1; }
+      b.setAttribute('aria-pressed', String(!!favs[id]));
+      save(); refresh();
+    });
+  });
+  find.addEventListener('input', refresh);
+  favOnly.addEventListener('click', function(){
+    favOnly.setAttribute('aria-pressed', String(favOnly.getAttribute('aria-pressed') !== 'true'));
+    refresh();
+  });
+  document.getElementById('random').addEventListener('click', function(){
+    // 보이는 것 중에서 고름. 즐겨찾기만 켜 두면 그 안에서만 나옴
+    var pool = items.filter(function(i){ return !i.hidden; });
+    if (!pool.length) return;
+    var id = pool[Math.floor(Math.random() * pool.length)].getAttribute('data-scheme-item');
+    document.querySelector('[data-pick="' + id + '"]').click();
+    window.cpSetHue(Math.floor(Math.random() * 72) * 5);
+    window.cpApply(id);
+  });
+  refresh();
+})();
+
+// 내 커서 그리기: 32x32 격자에 찍어 그리고 페이지 커서로 써 보거나 .cur 로 내려받는다
+(function(){
+  var N = 32, cell = 12;
+  var canvas = document.getElementById('draw'), g = canvas.getContext('2d');
+  var pixels = [], hot = [0, 0], color = '#f078be', mode = 'pen', undo = [];
+  canvas.width = canvas.height = N * cell;
+  function blank(){ return Array.apply(null, Array(N * N)).map(function(){ return null; }); }
+  try {
+    var saved = JSON.parse(localStorage.getItem('cp-draw') || 'null');
+    if (saved && saved.pixels && saved.pixels.length === N * N) { pixels = saved.pixels; hot = saved.hot || [0, 0]; }
+  } catch (e) {}
+  if (!pixels.length) pixels = blank();
+
+  function store(){ try { localStorage.setItem('cp-draw', JSON.stringify({ pixels: pixels, hot: hot })); } catch (e) {} }
+  function draw(){
+    g.clearRect(0, 0, canvas.width, canvas.height);
+    for (var y = 0; y < N; y++) {
+      for (var x = 0; x < N; x++) {
+        g.fillStyle = (x + y) % 2 ? '#e8e4ea' : '#f8f6fa';
+        g.fillRect(x * cell, y * cell, cell, cell);
+        var c = pixels[y * N + x];
+        if (c) { g.fillStyle = c; g.fillRect(x * cell, y * cell, cell, cell); }
+      }
+    }
+    g.strokeStyle = 'rgba(0,0,0,.12)';
+    for (var i = 0; i <= N; i += 4) {
+      g.beginPath(); g.moveTo(i * cell, 0); g.lineTo(i * cell, N * cell); g.stroke();
+      g.beginPath(); g.moveTo(0, i * cell); g.lineTo(N * cell, i * cell); g.stroke();
+    }
+    g.strokeStyle = '#2a7de1'; g.lineWidth = 2;
+    g.strokeRect(hot[0] * cell + 1, hot[1] * cell + 1, cell - 2, cell - 2);
+    g.lineWidth = 1;
+    preview();
+  }
+  // 그린 그림을 size x size PNG 로 (픽셀 그대로 확대)
+  function png(size){
+    var c = document.createElement('canvas'); c.width = c.height = size;
+    var cg = c.getContext('2d'), k = size / N;
+    for (var y = 0; y < N; y++) {
+      for (var x = 0; x < N; x++) {
+        var col = pixels[y * N + x];
+        if (!col) continue;
+        cg.fillStyle = col;
+        cg.fillRect(Math.round(x * k), Math.round(y * k), Math.ceil(k), Math.ceil(k));
+      }
+    }
+    return c;
+  }
+  var style = document.createElement('style'); document.head.appendChild(style);
+  function preview(){
+    var uri = png(32).toDataURL('image/png');
+    style.textContent = '.try-cursor{cursor:url(' + uri + ') ' + hot[0] + ' ' + hot[1] + ',auto}';
+  }
+  function paint(e){
+    var r = canvas.getBoundingClientRect();
+    var x = Math.floor((e.clientX - r.left) / (r.width / N)), y = Math.floor((e.clientY - r.top) / (r.height / N));
+    if (x < 0 || y < 0 || x >= N || y >= N) return;
+    if (mode === 'hot') { hot = [x, y]; }
+    else { pixels[y * N + x] = mode === 'pen' ? color : null; }
+    draw(); store();
+  }
+  var painting = false;
+  canvas.addEventListener('pointerdown', function(e){ undo = pixels.slice(); painting = true; canvas.setPointerCapture(e.pointerId); paint(e); });
+  canvas.addEventListener('pointermove', function(e){ if (painting) paint(e); });
+  canvas.addEventListener('pointerup', function(){ painting = false; });
+
+  document.querySelectorAll('[data-swatch]').forEach(function(b){
+    b.style.background = b.getAttribute('data-swatch');
+    b.addEventListener('click', function(){
+      color = b.getAttribute('data-swatch');
+      document.getElementById('draw-color').value = color;
+      mode = 'pen'; setMode();
+    });
+  });
+  document.getElementById('draw-color').addEventListener('input', function(e){ color = e.target.value; mode = 'pen'; setMode(); });
+  function setMode(){
+    document.querySelectorAll('[data-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode)); });
+  }
+  document.querySelectorAll('[data-mode]').forEach(function(b){
+    b.addEventListener('click', function(){ mode = b.getAttribute('data-mode'); setMode(); });
+  });
+  document.getElementById('draw-clear').addEventListener('click', function(){ undo = pixels.slice(); pixels = blank(); draw(); store(); });
+  document.getElementById('draw-undo').addEventListener('click', function(){ if (undo.length) { pixels = undo.slice(); draw(); store(); } });
+
+  // .cur 만들기: 6바이트 머리 + 크기마다 16바이트 항목 + PNG (win-cursor 의 make_cur.py 와 같은 형식)
+  document.getElementById('draw-save').addEventListener('click', function(){
+    var sizes = [32, 48, 64, 96, 128];
+    Promise.all(sizes.map(function(s){
+      return new Promise(function(resolve){ png(s).toBlob(function(b){ b.arrayBuffer().then(function(a){ resolve(new Uint8Array(a)); }); }, 'image/png'); });
+    })).then(function(images){
+      var total = 6 + 16 * sizes.length + images.reduce(function(a, b){ return a + b.length; }, 0);
+      var out = new Uint8Array(total), view = new DataView(out.buffer), at = 6 + 16 * sizes.length;
+      view.setUint16(0, 0, true); view.setUint16(2, 2, true); view.setUint16(4, sizes.length, true);
+      sizes.forEach(function(s, i){
+        var e = 6 + 16 * i, k = s / N;
+        out[e] = s % 256; out[e + 1] = s % 256;
+        view.setUint16(e + 4, Math.floor(hot[0] * k), true); view.setUint16(e + 6, Math.floor(hot[1] * k), true);
+        view.setUint32(e + 8, images[i].length, true); view.setUint32(e + 12, at, true);
+        out.set(images[i], at); at += images[i].length;
+      });
+      var url = URL.createObjectURL(new Blob([out], { type: 'image/x-icon' }));
+      var a = document.createElement('a'); a.href = url; a.download = 'my-cursor.cur'; a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    });
+  });
+  setMode(); draw();
 })();
 </script>
 </body>

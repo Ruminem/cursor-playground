@@ -98,11 +98,15 @@ def build() -> str:
             # 움직이거나 색조를 바꿀 때 페이지 스크립트가 프레임을 번갈아 끼울 수 있게 넘긴다
             extra_data.setdefault(sid, {})[rid] = [pics, read_rate(text) * 1000 // 60]
             extras.append(f'<div class="extra s-{sid} e-{rid}"><span class="pic"><i style="background-image:url({pics[0]})"></i></span>{rlabel}</div>')
+        search = " ".join((sid, sname, scheme["name_en"], scheme["category"], scheme["category_en"])).lower()
         groups.setdefault(scheme["category"], []).append(f"""
-      <button type="button" class="pick c-hand" data-pick="{sid}" aria-pressed="false">
-        <span class="thumb" style="background-image:url({thumb})"></span>
-        <span class="pick-name">{sname}</span>
-      </button>""")
+      <div class="pick-wrap" data-scheme-item="{sid}" data-search="{search}">
+        <button type="button" class="pick c-hand" data-pick="{sid}" aria-pressed="false">
+          <span class="thumb" style="background-image:url({thumb})"></span>
+          <span class="pick-name">{sname}</span>
+        </button>
+        <button type="button" class="star c-hand" data-star="{sid}" aria-pressed="false" title="즐겨찾기" aria-label="{sname} 즐겨찾기">★</button>
+      </div>""")
         panels.append(f"""
     <div class="panel" data-panel="{sid}" hidden>
       <div class="desc-row">
