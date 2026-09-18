@@ -25,6 +25,7 @@
   {"id": "xray", "name": "엑스레이", "category": "빛과 화면", "desc": "파란 반투명 몸체 속으로 밝은 뼈대가 비쳐 보임.", "name_en": "X-ray", "desc_en": "A bright skeleton showing through a translucent blue body.", "category_en": "Light and screens"},
   {"id": "noise", "name": "지지직", "category": "빛과 화면", "desc": "신호가 끊긴 화면처럼 흑백 잡음이 가득 낀 몸체.", "name_en": "Static", "desc_en": "Black-and-white noise, like a screen with no signal.", "category_en": "Light and screens"},
   {"id": "lavalamp", "name": "라바램프", "category": "빛과 화면", "desc": "보라색 액체 속을 주황 방울이 떠다니는 램프.", "name_en": "Lava lamp", "desc_en": "Orange blobs floating through purple liquid.", "category_en": "Light and screens"},
+  {"id": "neonblue", "name": "형광 파랑", "category": "빛과 화면", "desc": "거의 검은 몸체를 파란 형광 관이 두르고, 바깥으로 세 겹 번짐.", "name_en": "Neon blue", "desc_en": "A near-black body ringed by a blue neon tube with three layers of glow outside.", "category_en": "Light and screens"},
   {"id": "chrome", "name": "크롬", "category": "재질", "desc": "왼쪽 위에서 빛을 받는 네 단계 은빛 금속 입체.", "name_en": "Chrome", "desc_en": "Four shades of silver, lit from the top left.", "category_en": "Materials"},
   {"id": "gold", "name": "골드", "category": "재질", "desc": "금빛 입체에 반짝이 두 개. 링크는 금별.", "name_en": "Gold", "desc_en": "Gold bevel with two sparkles. The link is a gold star.", "category_en": "Materials"},
   {"id": "glass", "name": "유리", "category": "재질", "desc": "뒤가 비치는 반투명 몸체에 가장자리 하이라이트.", "name_en": "Glass", "desc_en": "See-through body with a highlight along the edge.", "category_en": "Materials"},

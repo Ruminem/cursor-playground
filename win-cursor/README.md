@@ -80,6 +80,7 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/xray` | X-ray | A bright skeleton showing through a translucent blue body. |
 | `art/noise` | Static | Black-and-white noise, like a screen with no signal. |
 | `art/lavalamp` | Lava lamp | Orange blobs floating through purple liquid. |
+| `art/neonblue` | Neon blue | A near-black body ringed by a blue neon tube with three layers of glow outside. |
 
 **Materials**
 
@@ -403,6 +404,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/xray` | 엑스레이 | 파란 반투명 몸체 속으로 밝은 뼈대가 비쳐 보임. |
 | `art/noise` | 지지직 | 신호가 끊긴 화면처럼 흑백 잡음이 가득 낀 몸체. |
 | `art/lavalamp` | 라바램프 | 보라색 액체 속을 주황 방울이 떠다니는 램프. |
+| `art/neonblue` | 형광 파랑 | 거의 검은 몸체를 파란 형광 관이 두르고, 바깥으로 세 겹 번짐. |
 
 **재질**
 
