@@ -1,0 +1,158 @@
+hotspot 9,9
+rate 6
+color 0 090959ff
+color 1 095909ff
+color 2 095959ff
+color 3 4040ffff
+color 4 4053ffff
+color 5 407effff
+color 6 40a9ffff
+color 7 40d4ffff
+color 8 40ff40ff
+color 9 40ff6bff
+color A 40ff96ff
+color B 40ffc1ff
+color C 40ffecff
+color D 40ffffff
+color E 53ff40ff
+color F 590909ff
+color G 590959ff
+color H 595909ff
+color I 6b40ffff
+color J 7eff40ff
+color K 9640ffff
+color L a9ff40ff
+color M c140ffff
+color N d4ff40ff
+color O ec40ffff
+color P ff4040ff
+color Q ff4053ff
+color R ff407eff
+color S ff40a9ff
+color T ff40d4ff
+color U ff40ffff
+color V ff6b40ff
+color W ff9640ff
+color X ffc140ff
+color Y ffec40ff
+color Z ffff40ff
+frame
+.........2
+........2P2
+.......2PPP2
+......2PPPPP2
+.......22V22
+........2V2
+...2....2V2....2
+..2W2...2W2...2W2
+.2WW22222W22222WW2
+2WWWWWWWWWWWWWWWWW2
+.2WW22222W22222WW2
+..2W2...2W2...2W2
+...2....2X2....2
+........2X2
+.......22X22
+......2YYYYY2
+.......2YYY2
+........2Y2
+.........2
+frame
+.........0
+........0Z0
+.......0ZZZ0
+......0ZZZZZ0
+.......00N00
+........0N0
+...0....0N0....0
+..0L0...0L0...0L0
+.0LL00000L00000LL0
+0LLLLLLLLLLLLLLLLL0
+.0LL00000L00000LL0
+..0L0...0L0...0L0
+...0....0J0....0
+........0J0
+.......00J00
+......0EEEEE0
+.......0EEE0
+........0E0
+.........0
+frame
+.........G
+........G8G
+.......G888G
+......G88888G
+.......GG9GG
+........G9G
+...G....G9G....G
+..GAG...GAG...GAG
+.GAAGGGGGAGGGGGAAG
+GAAAAAAAAAAAAAAAAAG
+.GAAGGGGGAGGGGGAAG
+..GAG...GAG...GAG
+...G....GBG....G
+........GBG
+.......GGBGG
+......GCCCCCG
+.......GCCCG
+........GCG
+.........G
+frame
+.........F
+........FDF
+.......FDDDF
+......FDDDDDF
+.......FF7FF
+........F7F
+...F....F7F....F
+..F6F...F6F...F6F
+.F66FFFFF6FFFFF66F
+F66666666666666666F
+.F66FFFFF6FFFFF66F
+..F6F...F6F...F6F
+...F....F5F....F
+........F5F
+.......FF5FF
+......F44444F
+.......F444F
+........F4F
+.........F
+frame
+.........H
+........H3H
+.......H333H
+......H33333H
+.......HHIHH
+........HIH
+...H....HIH....H
+..HKH...HKH...HKH
+.HKKHHHHHKHHHHHKKH
+HKKKKKKKKKKKKKKKKKH
+.HKKHHHHHKHHHHHKKH
+..HKH...HKH...HKH
+...H....HMH....H
+........HMH
+.......HHMHH
+......HOOOOOH
+.......HOOOH
+........HOH
+.........H
+frame
+.........1
+........1U1
+.......1UUU1
+......1UUUUU1
+.......11T11
+........1T1
+...1....1T1....1
+..1S1...1S1...1S1
+.1SS11111S11111SS1
+1SSSSSSSSSSSSSSSSS1
+.1SS11111S11111SS1
+..1S1...1S1...1S1
+...1....1R1....1
+........1R1
+.......11R11
+......1QQQQQ1
+.......1QQQ1
+........1Q1
+.........1

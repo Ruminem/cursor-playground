@@ -1,0 +1,146 @@
+hotspot 4,8
+rate 6
+color 0 090959ff
+color 1 095909ff
+color 2 095959ff
+color 3 4040ffff
+color 4 4053ffff
+color 5 407effff
+color 6 40a9ffff
+color 7 40d4ffff
+color 8 40ff40ff
+color 9 40ff6bff
+color A 40ff96ff
+color B 40ffc1ff
+color C 40ffecff
+color D 40ffffff
+color E 53ff40ff
+color F 590909ff
+color G 590959ff
+color H 595909ff
+color I 6b40ffff
+color J 7eff40ff
+color K 9640ffff
+color L a9ff40ff
+color M c140ffff
+color N d4ff40ff
+color O ec40ffff
+color P ff4040ff
+color Q ff4053ff
+color R ff407eff
+color S ff40a9ff
+color T ff40d4ff
+color U ff40ffff
+color V ff6b40ff
+color W ff9640ff
+color X ffc140ff
+color Y ffec40ff
+color Z ffff40ff
+frame
+222222222
+2PPPPPPP2
+2222P2222
+...2V2
+...2V2
+...2V2
+...2V2
+...2W2
+...2W2
+...2W2
+...2X2
+...2X2
+...2X2
+...2X2
+2222Y2222
+2YYYYYYY2
+222222222
+frame
+000000000
+0ZZZZZZZ0
+0000Z0000
+...0N0
+...0N0
+...0N0
+...0N0
+...0L0
+...0L0
+...0L0
+...0J0
+...0J0
+...0J0
+...0J0
+0000E0000
+0EEEEEEE0
+000000000
+frame
+GGGGGGGGG
+G8888888G
+GGGG8GGGG
+...G9G
+...G9G
+...G9G
+...G9G
+...GAG
+...GAG
+...GAG
+...GBG
+...GBG
+...GBG
+...GBG
+GGGGCGGGG
+GCCCCCCCG
+GGGGGGGGG
+frame
+FFFFFFFFF
+FDDDDDDDF
+FFFFDFFFF
+...F7F
+...F7F
+...F7F
+...F7F
+...F6F
+...F6F
+...F6F
+...F5F
+...F5F
+...F5F
+...F5F
+FFFF4FFFF
+F4444444F
+FFFFFFFFF
+frame
+HHHHHHHHH
+H3333333H
+HHHH3HHHH
+...HIH
+...HIH
+...HIH
+...HIH
+...HKH
+...HKH
+...HKH
+...HMH
+...HMH
+...HMH
+...HMH
+HHHHOHHHH
+HOOOOOOOH
+HHHHHHHHH
+frame
+111111111
+1UUUUUUU1
+1111U1111
+...1T1
+...1T1
+...1T1
+...1T1
+...1S1
+...1S1
+...1S1
+...1R1
+...1R1
+...1R1
+...1R1
+1111Q1111
+1QQQQQQQ1
+111111111

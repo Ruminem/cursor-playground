@@ -1,0 +1,17 @@
+hotspot 5,4
+color 0 1e3a14ff
+color 1 4a8a2aff
+color 2 62a83aff
+color 3 ff9ec4ff
+color 4 ffe24aff
+color 5 ffffffff
+.000...000
+02250.01210
+02512134110
+01211131140
+01122521110
+.042121210
+..0211110
+...02150
+....010
+.....0

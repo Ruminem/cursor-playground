@@ -419,7 +419,7 @@ pre .c{color:var(--muted)}
   var hueInput = document.getElementById('hue'), hueOut = document.getElementById('hue-out');
   function chooseHue(deg){
     hue = deg; hueInput.value = String(deg); hueOut.textContent = deg + '°';
-    // 목록 썸네일은 60장이라 CSS 필터로 비슷하게만 보여 줌
+    // 목록 썸네일은 120장이라 CSS 필터로 비슷하게만 보여 줌
     thumbStyle.textContent = deg ? '.thumb{filter:hue-rotate(' + deg + 'deg)}' : '';
     try { localStorage.setItem('cp-hue', String(deg)); } catch (e) {}
     tick();

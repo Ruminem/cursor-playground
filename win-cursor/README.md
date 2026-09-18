@@ -54,6 +54,10 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/ink` | Ink | A black body with a white outline — the usual white arrow turned inside out. |
 | `art/sticker` | Sticker | A mint body cut out with a thick white border and a faint shadow. |
 | `art/gameboy` | Game Boy | Light and shade drawn with just four greens, like an old handheld screen. |
+| `art/commodore` | Commodore | The blue-on-lavender palette of an 8-bit home computer. |
+| `art/terminal` | Amber terminal | Amber phosphor glowing on an old terminal screen. |
+| `art/dos` | DOS | Four hard steps of EGA blue from top to bottom. |
+| `art/arcade` | Arcade | Cabinet-sign colours from yellow to purple inside a double black line. |
 
 **Light and screens**
 
@@ -69,6 +73,13 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/glowdark` | Glow in the dark | A pale green body softly glowing like a glow-in-the-dark sticker. |
 | `art/thermal` | Thermal | Blue at the edges, turning yellow and red towards the middle like a thermal camera. |
 | `art/matrix` | Matrix | Green code rain falling down a black body. |
+| `art/plasma` | Plasma | Bright electric arcs reaching out inside a purple glass globe. |
+| `art/vhs` | VHS | Colour fringes offset left and right with bands of tape noise. |
+| `art/aurora` | Aurora | Curtains of light drifting from green through blue to violet. |
+| `art/sonar` | Sonar | Green concentric rings spreading across a dark screen. |
+| `art/xray` | X-ray | A bright skeleton showing through a translucent blue body. |
+| `art/noise` | Static | Black-and-white noise, like a screen with no signal. |
+| `art/lavalamp` | Lava lamp | Orange blobs floating through purple liquid. |
 
 **Materials**
 
@@ -85,6 +96,14 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/leather` | Leather | Dark brown leather with a line of stitches just inside the edge. |
 | `art/denim` | Denim | Twill denim weave with orange stitching. |
 | `art/paper` | Paper | Cream paper with one half shaded as if folded. |
+| `art/rust` | Rust | Iron gone red with rust, bare metal showing through. |
+| `art/velvet` | Velvet | Crimson pile that deepens towards the edges. |
+| `art/brick` | Brick | Red bricks in a running bond with pale mortar. |
+| `art/jade` | Jade | Clear green stone with a white sheen running through it. |
+| `art/amber` | Amber | Tiny bubbles trapped in hardened golden resin. |
+| `art/steel` | Brushed steel | Matte metal with a horizontal hairline grain. |
+| `art/wrap` | Bubble wrap | Rows of puffed-up air pockets in clear plastic. |
+| `art/rubber` | Rubber | Matte black rubber with a fine pebbled grain. |
 
 **Colours and patterns**
 
@@ -99,6 +118,14 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/zebra` | Zebra | Wavy black stripes. |
 | `art/leopard` | Leopard | Ring-shaped leopard spots on ochre. |
 | `art/watermelon` | Watermelon | Green rind, white inner rind, red flesh and black seeds. |
+| `art/argyle` | Argyle | Overlapping diamonds crossed by thin diagonal lines. |
+| `art/tartan` | Tartan | A green and red check crossed by white and yellow lines. |
+| `art/houndstooth` | Houndstooth | A tight black-and-white dogtooth weave. |
+| `art/tiedye` | Tie-dye | Six colours spiralling out from the centre. |
+| `art/camo` | Camo | Blotches of khaki and olive in a military pattern. |
+| `art/mosaic` | Mosaic | Coloured tile chips separated by grout lines. |
+| `art/gingham` | Gingham | Blue and white squares overlapping in a light check. |
+| `art/confetti` | Confetti | Scraps of coloured paper scattered over white. |
 
 **Hand-drawn and minimal**
 
@@ -113,6 +140,13 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/blueprint` | Blueprint | White lines on blue grid paper. |
 | `art/pencil` | Pencil | Grey pencil outline with cross-hatching inside. |
 | `art/watercolor` | Watercolour | Blotchy sky blue, violet and pink paint. |
+| `art/chalk` | Chalk | White chalk on a blackboard, dusty along the stroke. |
+| `art/marker` | Highlighter | Thick yellow ink bleeding past the outline. |
+| `art/stamp` | Rubber stamp | Red ink pressed unevenly from a rubber stamp. |
+| `art/sketch` | Sketch | Pencil lines gone over twice, left hollow inside. |
+| `art/wireframe` | Wireframe | Blue edges and grid dots, nothing filled in. |
+| `art/comic` | Comic | Heavy double ink lines, white fill and hatched shadow. |
+| `art/dotwork` | Dotwork | Shading made only from the density of dots. |
 
 **Nature and seasons**
 
@@ -123,6 +157,14 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/snow` | Snow | Pure white body with snowflakes floating around it. |
 | `art/ocean` | Ocean | Bands of blue waves with white foam. |
 | `art/desert` | Desert | Sand with the ripples of dunes. |
+| `art/autumn` | Autumn | Orange and red leaves layered over each other. |
+| `art/meadow` | Meadow | Yellow and pink wildflowers dotted through grass. |
+| `art/storm` | Storm | Yellow lightning splitting grey thunderclouds. |
+| `art/bamboo` | Bamboo | Green bamboo stalks with joints and a bright highlight. |
+| `art/coral` | Coral | Pink coral branches touched by blue water. |
+| `art/volcano` | Volcano | Red lava glowing through cracks in black rock. |
+| `art/leaf` | Leaf | Bright veins spreading through a green leaf. |
+| `art/rain` | Rain | Slanted streaks of rain against a grey sky. |
 
 **Animated**
 
@@ -138,12 +180,35 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/electric` | Electric | The yellow and white outline crackles while blue sparks jump around it. |
 | `art/barber` | Barber pole | Red, white and blue diagonal stripes keep spinning. |
 | `art/coderain` | Code rain | Streams of green code pour down inside a black body. |
+| `art/rainfall` | Rainfall | Raindrops falling without stop, each column at its own pace. |
+| `art/bubbles` | Bubbles | Bubbles rising through water and popping at the top. |
+| `art/lavaflow` | Lava flow | Molten rock rippling as it creeps downward. |
+| `art/spinner` | Spinner | Six coloured wedges turning around the centre. |
+| `art/scan` | Scan | A bright line sweeping from top to bottom. |
+| `art/firework` | Firework | Sparks spreading outward ring by ring and fading. |
+| `art/snowfall` | Snowfall | Snowflakes drifting down around a white body. |
+| `art/chameleon` | Chameleon | The whole body cycling slowly through the colour wheel. |
+| `art/ripple` | Ripple | Rings spreading out from the centre like water. |
+| `art/marquee` | Marquee | Border bulbs lighting one after another around the edge. |
 
 **Game items**
 
 | Folder | Name | Style |
 |---|---|---|
 | `art/fantasy` | Fantasy | A silver sword, wooden hourglass, shield, compass and magic wand. |
+
+**Food and drink**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/chocolate` | Chocolate | A bar of chocolate divided by moulded grooves. |
+| `art/strawberry` | Strawberry | Red flesh speckled with yellow seeds. |
+| `art/mintchoco` | Mint choc chip | Mint ice cream studded with chocolate chips. |
+| `art/coffee` | Coffee | Crema swirling on the surface of a cup. |
+| `art/soda` | Soda | Bubbles rising through pale blue fizz. |
+| `art/honey` | Honey | Golden honey filling a hexagonal comb. |
+| `art/matcha` | Matcha | Deep green matcha under a fine layer of foam. |
+| `art/cookie` | Cookie | Baked dough studded with chocolate chips. |
 
 <!-- /schemes:en -->
 
@@ -290,6 +355,10 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/ink` | 잉크 | 검은 몸체에 흰 외곽선. 흔한 흰 화살표를 뒤집은 모양. |
 | `art/sticker` | 스티커 | 민트색 몸체를 두꺼운 흰 테두리와 옅은 그림자로 오려 붙인 느낌. |
 | `art/gameboy` | 게임보이 | 초록 네 가지 색만으로 빛과 그늘을 넣은 휴대용 게임기 화면풍. |
+| `art/commodore` | 코모도어 | 파랑과 연보라 두 색만 쓰던 8비트 가정용 컴퓨터 화면. |
+| `art/terminal` | 터미널 | 검은 배경에 주황 인광이 번지는 옛 단말기 글자. |
+| `art/dos` | 도스 | 위에서 아래로 네 단계로 끊기는 EGA 파랑. |
+| `art/arcade` | 아케이드 | 노랑에서 보라로 떨어지는 오락실 간판 색에 두 겹 검정 선. |
 
 **빛과 화면**
 
@@ -305,6 +374,13 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/glowdark` | 야광 | 연둣빛 몸체가 어둠 속에서 은은하게 번지는 야광 스티커. |
 | `art/thermal` | 열화상 | 가장자리는 파랗고 안쪽으로 갈수록 노랗고 붉어지는 열화상 카메라. |
 | `art/matrix` | 매트릭스 | 검은 몸체 안으로 초록 글자비가 세로로 흘러내림. |
+| `art/plasma` | 플라즈마 | 보랏빛 유리구 속에서 밝은 전기 줄기가 뻗어 나감. |
+| `art/vhs` | VHS | 재생 중 색이 좌우로 어긋나고 가로 잡음 띠가 지나감. |
+| `art/aurora` | 오로라 | 초록에서 보라로 넘어가는 빛의 커튼이 비스듬히 흐름. |
+| `art/sonar` | 소나 | 검은 화면에 초록 동심원이 퍼지는 수중 음파 탐지기. |
+| `art/xray` | 엑스레이 | 파란 반투명 몸체 속으로 밝은 뼈대가 비쳐 보임. |
+| `art/noise` | 지지직 | 신호가 끊긴 화면처럼 흑백 잡음이 가득 낀 몸체. |
+| `art/lavalamp` | 라바램프 | 보라색 액체 속을 주황 방울이 떠다니는 램프. |
 
 **재질**
 
@@ -321,6 +397,14 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/leather` | 가죽 | 짙은 갈색 가죽 안쪽을 따라 한 땀씩 박음질. |
 | `art/denim` | 데님 | 청바지 능직 결에 주황 스티치. |
 | `art/paper` | 종이 | 크림색 종이를 반으로 접은 듯 한쪽에 그늘. |
+| `art/rust` | 녹 | 붉은 녹이 슬고 군데군데 쇳빛이 벗겨진 철판. |
+| `art/velvet` | 벨벳 | 가장자리로 갈수록 어두워지는 자주색 융단 결. |
+| `art/brick` | 벽돌 | 엇갈려 쌓은 붉은 벽돌과 밝은 줄눈. |
+| `art/jade` | 옥 | 맑은 초록 돌에 흰 광택과 결이 비침. |
+| `art/amber` | 호박 | 굳은 황금빛 수지 속에 작은 기포가 갇힘. |
+| `art/steel` | 강철 | 가로로 긁힌 헤어라인이 지나가는 무광 금속. |
+| `art/wrap` | 에어캡 | 볼록한 공기 방울이 줄지어 박힌 투명 포장 비닐. |
+| `art/rubber` | 고무 | 빛을 먹는 검은 무광 고무에 오돌토돌한 돌기. |
 
 **색과 무늬**
 
@@ -335,6 +419,14 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/zebra` | 얼룩말 | 구불구불한 검은 줄무늬. |
 | `art/leopard` | 표범 | 황토색 바탕에 고리 모양 표범 무늬. |
 | `art/watermelon` | 수박 | 초록 껍질, 흰 속껍질, 빨간 속살에 까만 씨. |
+| `art/argyle` | 아가일 | 마름모가 겹치고 가는 사선이 지나가는 니트 무늬. |
+| `art/tartan` | 타탄 | 초록·빨강 격자에 흰 줄과 노란 줄이 겹침. |
+| `art/houndstooth` | 하운드투스 | 흑백 새발 격자가 촘촘히 반복됨. |
+| `art/tiedye` | 타이다이 | 가운데에서 소용돌이치며 번지는 여섯 빛깔 염색. |
+| `art/camo` | 위장 | 카키와 올리브 얼룩이 뭉개져 섞인 군용 무늬. |
+| `art/mosaic` | 모자이크 | 줄눈으로 나뉜 색색의 타일 조각. |
+| `art/gingham` | 깅엄 | 파랑과 흰색이 겹쳐 짙어지는 반투명 체크. |
+| `art/confetti` | 색종이 | 흰 바탕에 알록달록한 종이 조각이 흩뿌려짐. |
 
 **손그림·미니멀**
 
@@ -349,6 +441,13 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/blueprint` | 청사진 | 파란 모눈종이 위에 흰 선으로 그린 설계도. |
 | `art/pencil` | 연필 | 회색 연필 외곽선에 엇갈린 빗금만 친 속. |
 | `art/watercolor` | 수채화 | 하늘·보라·분홍이 얼룩덜룩 번지는 물감. |
+| `art/chalk` | 분필 | 칠판 위에 흰 분필로 그어 가루가 날리는 선. |
+| `art/marker` | 형광펜 | 노란 형광 잉크가 선 밖으로 번진 굵은 칠. |
+| `art/stamp` | 도장 | 빨간 잉크가 듬성듬성 묻은 고무 도장 자국. |
+| `art/sketch` | 스케치 | 여러 번 겹쳐 그은 연필 선에 속은 비워 둠. |
+| `art/wireframe` | 와이어프레임 | 파란 선과 격자 점만 남긴 설계 도면. |
+| `art/comic` | 만화 | 두 겹 굵은 검정 선에 흰 속과 빗금 그림자. |
+| `art/dotwork` | 점묘 | 점의 촘촘한 정도만으로 음영을 낸 그림. |
 
 **자연·계절**
 
@@ -359,6 +458,14 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/snow` | 눈 | 새하얀 몸체 둘레로 눈송이가 떠 있음. |
 | `art/ocean` | 바다 | 파란 물결 띠와 하얀 포말. |
 | `art/desert` | 사막 | 모래색 바탕에 모래언덕 결. |
+| `art/autumn` | 단풍 | 주황과 빨강 낙엽이 겹쳐 쌓인 가을빛. |
+| `art/meadow` | 들꽃 | 풀밭 사이에 노랑·분홍 들꽃이 드문드문 핌. |
+| `art/storm` | 폭풍 | 잿빛 먹구름 사이로 노란 번개가 갈라짐. |
+| `art/bamboo` | 대나무 | 마디가 진 초록 대나무 줄기에 밝은 빛줄. |
+| `art/coral` | 산호 | 분홍 산호 가지에 푸른 바닷물이 섞임. |
+| `art/volcano` | 화산 | 검게 굳은 암석 틈으로 붉은 용암이 비침. |
+| `art/leaf` | 잎 | 초록 잎에 밝은 잎맥이 갈라져 뻗음. |
+| `art/rain` | 비 | 잿빛 하늘에 빗줄기가 비스듬히 내리꽂힘. |
 
 **움직이는**
 
@@ -374,12 +481,35 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/electric` | 전기 | 노랑·흰 외곽선이 번쩍이고 둘레로 푸른 불꽃이 튐. |
 | `art/barber` | 이발소 기둥 | 빨강·흰·파랑 사선 줄무늬가 쉬지 않고 돌아감. |
 | `art/coderain` | 글자비 | 검은 몸체 안에서 초록 글자 줄기가 위에서 아래로 쏟아짐. |
+| `art/rainfall` | 빗줄기 | 빗방울이 줄마다 다른 높이에서 쉬지 않고 떨어짐. |
+| `art/bubbles` | 기포 | 물속 기포가 위로 올라가 톡 터짐. |
+| `art/lavaflow` | 용암 | 붉은 용암이 일렁이며 천천히 흘러내림. |
+| `art/spinner` | 회전 | 여섯 빛깔 부채꼴이 가운데를 축으로 돌아감. |
+| `art/scan` | 스캔 | 밝은 가로줄이 위에서 아래로 훑고 지나감. |
+| `art/firework` | 폭죽 | 불꽃이 둘레로 한 겹씩 퍼지며 옅어짐. |
+| `art/snowfall` | 눈 내림 | 하얀 몸체 둘레로 눈송이가 계속 내려옴. |
+| `art/chameleon` | 카멜레온 | 몸 전체 색이 색상환을 따라 천천히 바뀜. |
+| `art/ripple` | 파문 | 물결 고리가 가운데에서 바깥으로 퍼짐. |
+| `art/marquee` | 전구 간판 | 테두리 전구가 한 칸씩 차례로 켜지며 흘러감. |
 
 **게임 아이템**
 
 | 폴더 | 이름 | 스타일 |
 |---|---|---|
 | `art/fantasy` | 판타지 | 은빛 칼, 나무 모래시계, 방패, 나침반, 마법 지팡이. |
+
+**음식**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/chocolate` | 초콜릿 | 홈으로 나뉜 판 초콜릿 조각. |
+| `art/strawberry` | 딸기 | 빨간 과육에 노란 씨가 박힌 딸기. |
+| `art/mintchoco` | 민트초코 | 민트색 아이스크림에 초코 조각이 섞임. |
+| `art/coffee` | 커피 | 잔 위에서 크레마가 소용돌이치는 커피. |
+| `art/soda` | 소다 | 하늘색 탄산 속에서 기포가 올라오는 음료. |
+| `art/honey` | 꿀 | 금빛 꿀이 들어찬 육각 벌집. |
+| `art/matcha` | 말차 | 진한 초록 말차에 거품이 곱게 올라옴. |
+| `art/cookie` | 쿠키 | 구운 반죽에 초코칩이 박힌 쿠키. |
 
 <!-- /schemes:ko -->
 

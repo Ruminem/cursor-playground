@@ -1,0 +1,25 @@
+hotspot 4,8
+color 0 2a1a3cff
+color 1 4a8affff
+color 2 4ad26aff
+color 3 b04affff
+color 4 ff4a4aff
+color 5 ff8ad2ff
+color 6 ffd24aff
+000000000
+012221110
+000020000
+...020
+...060
+...040
+...040
+...040
+...040
+...020
+...020
+...020
+...010
+...030
+000030000
+055533350
+000000000
