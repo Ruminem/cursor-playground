@@ -9,6 +9,8 @@ dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려
 """
 import base64
 import json
+import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import shape as shapelib
@@ -56,25 +58,53 @@ def shape_of(shape_id: str) -> str | None:
     return None if shape_id == SHAPES[0]["id"] else shape_id
 
 
-def art_text(sid: str, rid: str, shape: str | None, cache: dict) -> str:
-    """구성표 한 칸의 그림 txt. shape 이 있으면 그 모양을 테마 색으로 다시 그린다"""
-    raw = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
-    if shape is None or rid in KEEP:
-        return raw
-    frames, _, rate = shapelib.read_art(raw)
+def art_raw(sid: str, rid: str) -> str:
+    """구성표가 그린 그림 txt"""
+    return (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
+
+
+def smooth_parts(sid: str, rid: str, shape: str, cache: dict) -> tuple[list[dict], int, list | None]:
+    """매끈한 모양으로 이 칸을 그릴 재료 — (색을 뜰 프레임, rate, 얹을 기호)"""
+    frames, _, rate = shapelib.read_art(art_raw(sid, rid))
     if rid in smoothlib.ROLES:
-        new, hot = smoothlib.remake(shape, rid, frames)
-        return shapelib.to_text(new, hot, rate)
+        return frames, rate, None
     # 화살표에 기호를 얹어 만든 칸(도움말·백그라운드 작업·위치·사용자)은 새 화살표에 그 기호를 다시 붙인다
     if sid not in cache:
-        araw = (HERE / "art" / sid / "arrow.txt").read_text(encoding="utf-8")
-        aframes = shapelib.read_art(araw)[0]
-        cache[sid] = (aframes,) + smoothlib.remake(shape, "arrow", aframes)
-    aframes, new, hot = cache[sid]
-    glyphs = shapelib.place(shapelib.glyph_of(aframes, frames),
-                            shapelib.bbox([p for f in aframes for p in f]),
-                            shapelib.bbox([p for f in new for p in f]))
-    return shapelib.to_text([{**n, **g} for n, g in zip(new, glyphs)], hot, rate)
+        cache[sid] = shapelib.read_art(art_raw(sid, "arrow"))[0]
+    aframes = cache[sid]
+    use = [aframes[i % len(aframes)] for i in range(len(frames))]   # 프레임 수는 이 칸을 따른다
+    bx, by, bw, bh = smoothlib.base_box(shape, "arrow")
+    glyphs = shapelib.place(shapelib.glyph_of(use, frames),
+                            shapelib.bbox([p for f in use for p in f]),
+                            (bx, by, bx + bw - 1, by + bh - 1))
+    return use, rate, glyphs
+
+
+def page_bits(sid: str, rid: str, shape: str | None, cache: dict) -> tuple[list[str], int, int, int, int, int]:
+    """시안 페이지에 넣을 (프레임별 그림 주소, 핫스팟 x, y, rate(ms), 폭, 높이)"""
+    if shape is None or rid in KEEP:
+        raw = art_raw(sid, rid)
+        src = canvas_size(raw)
+        pngs = [txt_to_png(f, None, src) for f in split_frames(raw)]
+        hx, hy = read_hotspot(raw) or (0, 0)
+        rows = [r for r in split_frames(raw)[0].splitlines() if is_row(r)]
+        rate = read_rate(raw)
+        w, h = max(len(r) for r in rows), len(rows)
+    else:
+        frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
+        pngs, (hx, hy), (w, h) = smoothlib.page(shape, rid, frames, glyphs)
+    return (["data:image/png;base64," + base64.b64encode(p).decode() for p in pngs],
+            hx, hy, rate * 1000 // 60, w, h)
+
+
+def cursor_bytes(sid: str, rid: str, shape: str | None, cache: dict) -> tuple[bytes, str]:
+    """dist 에 넣을 커서 파일 하나와 확장자"""
+    if shape is None or rid in KEEP:
+        raw = art_raw(sid, rid)
+        hot = read_hotspot(raw) or (0, 0)
+        return (txt_to_ani(raw, hot), "ani") if is_animated(raw) else (txt_to_cur(raw, hot), "cur")
+    frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
+    return smoothlib.cursor(shape, rid, frames, rate, glyphs)
 
 
 def favicon() -> str:
@@ -99,19 +129,14 @@ def build() -> str:
         sid, sname, sdesc = scheme["id"], scheme["name"], scheme["desc"]
         cards, thumb = [], ""
         for rid, rlabel, fallback in ROLES:
-            text = art_text(sid, rid, None, {})
-            hx, hy = read_hotspot(text) or (0, 0)
-            frames, src = split_frames(text), canvas_size(text)
             # 움직이는 커서는 프레임마다 그림을 넣어 두고 페이지 스크립트가 번갈아 끼운다. CSS 기본값은 첫 프레임
-            uris = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in frames]
+            uris, hx, hy, rate, w, h = page_bits(sid, rid, None, {})
             uri = uris[0]
-            rows = [r for r in frames[0].splitlines() if is_row(r)]
-            w, h = max(len(r) for r in rows), len(rows)
             css.append(
                 f'[data-scheme="{sid}"] .c-{rid},[data-scheme="{sid}"].c-{rid},.card.s-{sid}.c-{rid}'
                 f"{{cursor:url({uri}) {hx} {hy},{fallback}}}"
             )
-            data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, read_rate(text) * 1000 // 60, w, h]
+            data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, rate, w, h]
             if rid == "arrow":
                 thumb = uri
             cards.append(f"""
@@ -128,11 +153,9 @@ def build() -> str:
         </article>""")
         extras = []
         for rid, rlabel, _ in EXTRA:
-            text = art_text(sid, rid, None, {})
-            src = canvas_size(text)
-            pics = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in split_frames(text)]
+            pics, _, _, rate, _, _ = page_bits(sid, rid, None, {})
             # 움직이거나 색조를 바꿀 때 페이지 스크립트가 프레임을 번갈아 끼울 수 있게 넘긴다
-            extra_data.setdefault(sid, {})[rid] = [pics, read_rate(text) * 1000 // 60]
+            extra_data.setdefault(sid, {})[rid] = [pics, rate]
             extras.append(f'<div class="extra s-{sid} e-{rid}"><span class="pic"><i style="background-image:url({pics[0]})"></i></span>{rlabel}</div>')
         search = " ".join((sid, sname, scheme["name_en"], scheme["category"], scheme["category_en"])).lower()
         groups.setdefault(scheme["category"], []).append(f"""
@@ -156,8 +179,7 @@ def build() -> str:
     # 모양 탭. 단추에 붙는 그림은 첫 구성표의 화살표를 그 모양으로 그린 것
     tabs = []
     for i, shp in enumerate(SHAPES):
-        text = art_text(SCHEMES[0]["id"], "arrow", shape_of(shp["id"]), {})
-        pic = "data:image/png;base64," + base64.b64encode(txt_to_png(split_frames(text)[0], None, canvas_size(text))).decode()
+        pic = page_bits(SCHEMES[0]["id"], "arrow", shape_of(shp["id"]), {})[0][0]
         tabs.append(f'<button type="button" class="shape c-hand{" smooth" if i else ""}" role="tab" data-shape="{shp["id"]}"'
                     f' aria-selected="{"true" if i == 0 else "false"}"><i style="background-image:url({pic})"></i>{shp["name"]}</button>')
 
@@ -194,46 +216,44 @@ def shape_data(shape_id: str) -> dict:
     for scheme in SCHEMES:
         sid = scheme["id"]
         for rid, _, fallback in ROLES:
-            text = art_text(sid, rid, shape, cache)
-            hx, hy = read_hotspot(text) or (0, 0)
-            frames, src = split_frames(text), canvas_size(text)
-            uris = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in frames]
-            rows = [r for r in frames[0].splitlines() if is_row(r)]
-            data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, read_rate(text) * 1000 // 60,
-                                             max(len(r) for r in rows), len(rows)]
+            uris, hx, hy, rate, w, h = page_bits(sid, rid, shape, cache)
+            data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, rate, w, h]
         for rid, _, _ in EXTRA:
-            text = art_text(sid, rid, shape, cache)
-            src = canvas_size(text)
-            pics = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in split_frames(text)]
-            extra.setdefault(sid, {})[rid] = [pics, read_rate(text) * 1000 // 60]
+            pics, _, _, rate, _, _ = page_bits(sid, rid, shape, cache)
+            extra.setdefault(sid, {})[rid] = [pics, rate]
         cache.pop(sid, None)
     return {"data": data, "extra": extra}
 
 
-def build_dist() -> int:
+def build_dist(job: tuple[str, int, int]) -> tuple[str, int]:
+    """모양 하나의 dist 커서. 구성표를 part/parts 로 나눠 맡는다 (프로세스를 나눠 돌리기 위함)"""
+    shape_id, part, parts = job
+    shape, cache = shape_of(shape_id), {}
+    # 기본 모양은 dist/<구성표>/ 그대로 둔다 (이미 깔린 처리 스크립트가 그 주소를 쓴다)
+    root = HERE / "dist" if shape is None else HERE / "dist" / shape_id
     count = 0
-    for shp in SHAPES:
-        shape, cache = shape_of(shp["id"]), {}
-        # 기본 모양은 dist/<구성표>/ 그대로 둔다 (이미 깔린 처리 스크립트가 그 주소를 쓴다)
-        root = HERE / "dist" if shape is None else HERE / "dist" / shp["id"]
-        for scheme in SCHEMES:
-            sid = scheme["id"]
-            out = root / sid
-            out.mkdir(parents=True, exist_ok=True)
-            for rid, _, _ in ROLES + EXTRA:
-                # 모양이 안 건드리는 칸은 기본 모양 파일과 바이트까지 같다. 두 번 쓰지 않고
-                # 받는 쪽(handler.ps1, install.ps1)이 dist/<구성표>/ 것으로 넘어간다
-                if shape is not None and rid in KEEP:
-                    continue
-                text = art_text(sid, rid, shape, cache)
-                hot = read_hotspot(text) or (0, 0)
-                if is_animated(text):
-                    (out / f"{rid}.ani").write_bytes(txt_to_ani(text, hot))
-                else:
-                    (out / f"{rid}.cur").write_bytes(txt_to_cur(text, hot))
-                count += 1
-            cache.pop(sid, None)
-    return count
+    for scheme in SCHEMES[part::parts]:
+        sid = scheme["id"]
+        out = root / sid
+        out.mkdir(parents=True, exist_ok=True)
+        for rid, _, _ in ROLES + EXTRA:
+            # 모양이 안 건드리는 칸은 기본 모양 파일과 바이트까지 같다. 두 번 쓰지 않고
+            # 받는 쪽(handler.ps1, install.ps1)이 dist/<구성표>/ 것으로 넘어간다
+            if shape is not None and rid in KEEP:
+                continue
+            blob, ext = cursor_bytes(sid, rid, shape, cache)
+            (out / f"{rid}.{ext}").write_bytes(blob)
+            count += 1
+        cache.pop(sid, None)
+    return f"dist {shape_id} {part + 1}/{parts}", count
+
+
+def build_data(shape_id: str) -> tuple[str, int]:
+    """모양 하나의 시안 페이지 데이터 data/<모양>.json"""
+    path = HERE / "data" / f"{shape_id}.json"
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(shape_data(shape_id), separators=(",", ":")), encoding="utf-8", newline="\n")
+    return f"data/{shape_id}.json", 0
 
 
 def update_readme() -> None:
@@ -271,14 +291,24 @@ if __name__ == "__main__":
     clash = {s["id"] for s in SHAPES} & {s["id"] for s in SCHEMES}
     if clash:  # dist/<모양>/ 과 dist/<구성표>/ 가 같은 자리를 쓰게 된다
         raise SystemExit(f"모양 이름이 구성표 이름과 겹침: {sorted(clash)}")
-    out = HERE / "preview.html"
-    out.write_text(build(), encoding="utf-8", newline="\n")
-    print(f"{out} 만듦")
-    for shp in SHAPES[1:]:
-        path = HERE / "data" / f"{shp['id']}.json"
-        path.parent.mkdir(exist_ok=True)
-        path.write_text(json.dumps(shape_data(shp["id"]), separators=(",", ":")), encoding="utf-8", newline="\n")
-        print(f"{path.name} 만듦")
-    print(f"dist/ 커서 {build_dist()}개 만듦")
+    t0 = time.time()
+    # 일을 프로세스로 나눠 한꺼번에 돌린다. 매끈한 모양은 크기마다 새로 그려서 혼자 돌리면 오래 걸린다.
+    # 나누는 단위는 넉넉히 잡는다 — 잘게 쪼개면 프로세스마다 스텐실을 다시 그린다
+    with ProcessPoolExecutor() as pool:
+        jobs = []
+        for shp in SHAPES:
+            parts = 4 if shp["id"] == SHAPES[0]["id"] else 2
+            jobs += [pool.submit(build_dist, (shp["id"], i, parts)) for i in range(parts)]
+            if shp["id"] != SHAPES[0]["id"]:
+                jobs.append(pool.submit(build_data, shp["id"]))
+        out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
+        out.write_text(build(), encoding="utf-8", newline="\n")
+        print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")
+        total = 0
+        for done in as_completed(jobs):
+            what, count = done.result()
+            total += count
+            print(f"[{time.time() - t0:5.1f}초] {what}" + (f" 커서 {count}개" if count else ""))
+    print(f"dist/ 커서 {total}개 만듦")
     update_readme()
-    print("README 구성표 표 갱신함")
+    print(f"README 구성표 표 갱신함 · 전부 {time.time() - t0:.1f}초")

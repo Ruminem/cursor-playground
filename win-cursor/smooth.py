@@ -1,25 +1,37 @@
 # SPDX-License-Identifier: Apache-2.0
-"""매끈한 커서 모양. 윤곽을 점으로 잡아 거리함수로 그리고, 테마 색을 끼워 넣는다.
+"""매끈한 커서 모양. 윤곽을 점으로 잡아 거리함수로 그리고, 테마 그림의 색을 입힌다.
 
 픽셀아트 테마와 달리 이쪽은 경계가 매끈하다. 만드는 순서는 이렇다.
 
   1. 꼭지점마다 진짜 원호를 끼워 넣어 윤곽을 둥글린다 (면취가 아니라 호여야 둥글어 보인다)
-  2. 3배 격자에 부호 있는 거리함수로 칠하고 평균으로 줄인다 (안티에일리어싱)
+  2. 부호 있는 거리함수로 칸마다 얼마나 덮였는지 재서 경계를 매끈하게 만든다
   3. 색은 넣지 않고 칸마다 "어느 층이 얼마나 덮였는지"만 남긴다 — 이것을 스텐실이라 부른다
-  4. 테마마다 그 테마 그림에서 뽑은 색을 스텐실의 층에 끼워 넣는다 (paint)
+  4. 테마마다 그 테마 그림에서 색을 떠 스텐실의 층에 끼워 넣는다 (paint)
 
-스텐실은 테마와 무관하므로 모양·칸마다 한 번만 그리면 되고, 색만 갈아 끼우는 일은 싸다.
-층은 여섯 가지다: 그림자 · 번지는 빛 · 흰 테두리 · 몸(위아래 그라데이션) · 밝은 면 · 어두운 면 · 외곽선.
+색은 몇 개로 줄이지 않고 **자리대로** 떠 온다. 그래서 무늬(표범·아가일)도, 프레임마다
+무늬가 움직이는 테마(전기·글자비)도 모양만 바뀌고 성질은 남는다. 몸 바깥으로 번지는
+빛(네온·야광)도 층마다 다시 둘러 준다.
+
+커서 파일에 담는 크기는 늘리지 않고 **크기마다 새로 그린다**. 안티에일리어싱된 그림을
+정수배로 늘리면 뭉개지기 때문이다. 담는 크기는 32·64·128 셋이고, 사이 크기(48·96)는
+윈도우가 늘려 쓴다 — 매끈한 그림은 그래도 티가 안 난다. 시안 페이지에 넣는 그림도 같은
+이유로 크게 그린다 (화살표 96칸, 나머지 64칸).
 """
 import math
 from collections import Counter
 
-SS = 3          # 몇 배로 그린 뒤 줄일지
-DESIGN = 26     # 설계 격자 높이. 실제 칸 수는 이 비율로 키워 맞춘다
-# 그림은 32칸 캔버스에 1:1 로 들어가고(작은 그림은 투명으로 채움) 윈도우가 그걸 커서 크기대로 늘린다.
-# 그래서 칸 수가 곧 기본 크기에서의 커서 크기다 — 테마 그림들(17~23칸)과 같은 범위로 맞춰야 한다.
-# 시안 페이지의 썸네일 창이 20칸까지 보여 주는 것도 같은 값이다
-LIMIT = 20
+from make_cur import MIN_SIZE, curs_to_ani, pixels_to_png, pngs_to_cur
+
+DESIGN = 26     # 설계 격자 높이. 실제 칸 수는 이 비율로 맞춘다
+LIMIT = 20      # 32칸 판에서 몸이 차지하는 칸 수 (테마 그림들이 17~23칸이라 거기에 맞춤)
+HALO = 3        # 테마의 몸 바깥 번짐을 다시 둘러 줄 층 수 (20칸 기준)
+# 커서 파일에 담는 판 크기. 픽셀아트는 다섯 크기를 다 담지만(늘리면 어긋난다) 매끈한 그림은
+# 윈도우가 사이 크기로 늘려도 티가 안 나서 셋만 담는다 — 파일이 38% 작아지고 빌드도 그만큼 빠르다
+CUR_SIZES = (32, 64, 128)
+PAGE = 96       # 시안 페이지의 화살표 판. 32칸 판의 3배라 썸네일이 1:1 로 쓴다
+PAGE_SMALL = 64  # 나머지 칸은 페이지에서 작게 보여 주므로 판도 작게 (데이터 파일이 절반으로)
+EDGE_W = 1.1    # 외곽선 두께 (설계 격자 기준)
+UV = 31         # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 둘지 (테마 그림이 32칸 안이라 이 정도면 충분)
 
 # ── 화살표 윤곽 (끝 · 어깨 · 오른쪽 홈 · 꼬리 둘 · 왼쪽 홈 · 굽) ──────────────
 ARROW = [(1.3, 0.4), (19.8, 15.9), (13.6, 18.4), (17.0, 26.6), (10.4, 25.6), (8.6, 19.5), (0.2, 23.4)]
@@ -61,33 +73,56 @@ SHAPES = {
     "glow": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid", glow=3.2),
     "bevel": dict(pts=ARROW, radii=ARROW_R, rscale=1.0, style="solid", bevel=3.0, ew=0.7),
 }
-ROLES = ("arrow",) + tuple(SLOTS)   # 모양이 바꾸는 칸
-EDGE_W = 1.1                        # 외곽선 두께 (설계 격자 기준)
+ROLES = ("arrow",) + tuple(SLOTS)   # 모양이 직접 그리는 칸
 # 층을 아래에서 위로 겹치는 순서. 한 칸 안에서 여러 층이 조금씩 겹칠 수 있다
-ORDER = ("shadow", "glow", "band", "body", "lit", "dark", "edge")
+ORDER = ("shadow", "halo0", "halo1", "halo2", "glow", "band", "body", "lit", "dark", "edge")
+N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
+N8 = N4 + ((1, 1), (-1, -1), (1, -1), (-1, 1))
 
 
-def inside(pts: list, px: float, py: float) -> bool:
-    c = False
+def cells_for(size: int) -> int:
+    """커서 판 크기에 맞는 몸의 칸 수. 32칸 판에서 LIMIT 칸을 차지하는 비율을 지킨다"""
+    return max(6, round(size * LIMIT / MIN_SIZE))
+
+
+def _ss(cells: int) -> int:
+    """몇 배 격자로 그릴지. 칸이 크면 거리함수만으로도 경계가 충분히 매끈하다"""
+    return 3 if cells <= 24 else (2 if cells <= 48 else 1)
+
+
+def edges_of(pts: list) -> list:
+    """변마다 (시작점, 방향, 길이제곱의 역수). 칸마다 다시 계산하면 느려서 미리 만들어 둔다"""
+    out = []
     for i in range(len(pts)):
         (x1, y1), (x2, y2) = pts[i], pts[(i + 1) % len(pts)]
-        if (y1 > py) != (y2 > py) and px < (x2 - x1) * (py - y1) / (y2 - y1) + x1:
+        dx, dy = x2 - x1, y2 - y1
+        out.append((x1, y1, dx, dy, 1.0 / (dx * dx + dy * dy or 1e-9)))
+    return out
+
+
+def inside(edges: list, px: float, py: float) -> bool:
+    c = False
+    for x1, y1, dx, dy, _ in edges:
+        if (y1 > py) != (y1 + dy > py) and px < dx * (py - y1) / dy + x1:
             c = not c
     return c
 
 
-def near(pts: list, px: float, py: float) -> tuple[float, float, float]:
-    """가장 가까운 윤곽선까지의 거리와 그 위의 점"""
-    best, bx, by = 1e9, px, py
-    for i in range(len(pts)):
-        (x1, y1), (x2, y2) = pts[i], pts[(i + 1) % len(pts)]
-        dx, dy = x2 - x1, y2 - y1
-        t = max(0.0, min(1.0, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
+def near(edges: list, px: float, py: float) -> tuple[float, float, float]:
+    """가장 가까운 윤곽선까지의 거리와 그 위의 점. 제곱으로 비교하고 뿌리는 한 번만 뽑는다"""
+    best, bx, by = 1e18, px, py
+    for x1, y1, dx, dy, inv in edges:
+        t = ((px - x1) * dx + (py - y1) * dy) * inv
+        if t < 0.0:
+            t = 0.0
+        elif t > 1.0:
+            t = 1.0
         cx, cy = x1 + t * dx, y1 + t * dy
-        d = math.hypot(px - cx, py - cy)
+        ex, ey = px - cx, py - cy
+        d = ex * ex + ey * ey
         if d < best:
             best, bx, by = d, cx, cy
-    return best, bx, by
+    return math.sqrt(best), bx, by
 
 
 def fillet(pts: list, radii: list, steps: int = 6) -> list:
@@ -125,20 +160,18 @@ def parts_of(sid: str, rid: str) -> list[dict]:
     spec = SHAPES[sid]
     raw = [dict(pts=spec["pts"], radii=spec["radii"], steps=6)] if rid == "arrow" else SLOTS[rid]
     parts = []
-    for i, part in enumerate(raw):
+    for part in raw:
         p = dict(part)
         p["radii"] = [r * spec["rscale"] for r in p["radii"]]
         # 금지 표시의 고리는 어느 모양에서든 비워야 금지 표시로 읽힌다
         if spec["style"] == "hollow" and "ring" not in p and rid != "no":
             p["ring"] = spec["thick"]
-        p["first"] = i == 0
         parts.append(p)
     return parts
 
 
-def extent(sid: str, rid: str, size: float) -> tuple[list, float, float]:
-    """이 크기로 그리면 몇 칸이 되는지 (긁지 않고 윤곽만 계산한다)"""
-    spec = SHAPES[sid]
+def outlines(sid: str, rid: str, size: float) -> tuple[list, float]:
+    """이 크기로 그린 윤곽선들과, 그것이 차지하는 칸 수 (긁지 않고 계산한다)"""
     k = size / DESIGN
     grown = []
     lo = [1e9, 1e9]
@@ -150,41 +183,48 @@ def extent(sid: str, rid: str, size: float) -> tuple[list, float, float]:
         for x, y in pts:
             lo[0], lo[1] = min(lo[0], x), min(lo[1], y)
             hi[0], hi[1] = max(hi[0], x), max(hi[1], y)
+    spec = SHAPES[sid]
     pad = k * max(spec.get("band", 0) + max(spec.get("shadow", (0, 0))), spec.get("glow", 0))
-    return grown, max(hi[0] - lo[0], hi[1] - lo[1]) + 2 * pad, pad
+    return grown, max(hi[0] - lo[0], hi[1] - lo[1]) + 2 * pad
 
 
 _cache: dict = {}
 
 
-def stencil(sid: str, rid: str) -> tuple[dict, tuple[int, int]]:
-    """모양·칸 하나의 스텐실과 핫스팟. 테마와 무관하므로 한 번만 그린다"""
-    if (sid, rid) not in _cache:
+def stencil(sid: str, rid: str, cells: int = LIMIT) -> tuple[tuple[dict, list], tuple[int, int], tuple]:
+    """모양·칸 하나의 (스텐실, 핫스팟, 몸이 놓인 자리). 테마와 무관해 한 번만 그린다"""
+    rid = rid if rid in ROLES else "arrow"   # 기호를 얹는 칸(도움말·백그라운드 작업 등)은 화살표를 쓴다
+    key = (sid, rid, cells)
+    if key not in _cache:
         size = DESIGN
         for _ in range(3):   # 한 번 재면 비례해서 맞출 수 있다. 반올림 때문에 여유를 조금 둔다
-            _, span, _ = extent(sid, rid, size)
-            size *= (LIMIT - 0.7) / span
-            if abs(span - (LIMIT - 0.7)) < 0.3:
+            _, span = outlines(sid, rid, size)
+            size *= (cells - 0.7) / span
+            if abs(span - (cells - 0.7)) < 0.3:
                 break
-        _cache[(sid, rid)] = _draw(sid, rid, size)
-    return _cache[(sid, rid)]
+        _cache[key] = _draw(sid, rid, size, cells)
+    return _cache[key]
 
 
-def _draw(sid: str, rid: str, size: float) -> tuple[dict, tuple[int, int]]:
+def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list], tuple[int, int], tuple]:
     spec = SHAPES[sid]
     k = size / DESIGN
-    parts, _, pad = extent(sid, rid, size)
+    ss = _ss(cells)
+    parts, _ = outlines(sid, rid, size)
     ew = EDGE_W * spec.get("ew", 1.0) * k
     bevel = spec.get("bevel", 0) * k
     band = spec.get("band", 0) * k
     glow = spec.get("glow", 0) * k
+    halo = HALO * cells / LIMIT                      # 테마 번짐 층도 크기에 맞춰 두꺼워진다
     sh_dx, sh_dy = (q * k for q in spec.get("shadow", (0, 0)))
+    pad = max(band + max(sh_dx, sh_dy), glow, halo) + 1
     x0 = min(x for _, pts in parts for x, _ in pts) - pad
     y0 = min(y for _, pts in parts for _, y in pts) - pad
     x1 = max(x for _, pts in parts for x, _ in pts) + pad
     y1 = max(y for _, pts in parts for _, y in pts) + pad
     W, H = math.ceil(x1 - x0), math.ceil(y1 - y0)
     acc: dict = {}
+    body_cells = set()
 
     def add(cell, kind, a, t=0.0, k2=0.0):
         got = acc.setdefault(cell, {}).setdefault(kind, [0.0, 0.0, 0.0])
@@ -193,32 +233,40 @@ def _draw(sid: str, rid: str, size: float) -> tuple[dict, tuple[int, int]]:
         got[2] += k2 * a
 
     for part, pts in parts:
-        pts = [(x - x0, y - y0) for x, y in pts]
+        edges = edges_of([(x - x0, y - y0) for x, y in pts])
         ring = part.get("ring", 0) * k
-        for sy in range(H * SS):
-            py = (sy + 0.5) / SS
-            for sx in range(W * SS):
-                px = (sx + 0.5) / SS
-                cell = (sx // SS, sy // SS)
-                w = 1 / (SS * SS)
-                d, cx, cy = near(pts, px, py)
-                sd = d if inside(pts, px, py) else -d
+        for sy in range(H * ss):
+            py = (sy + 0.5) / ss
+            for sx in range(W * ss):
+                px = (sx + 0.5) / ss
+                cell = (sx // ss, sy // ss)
+                w = 1 / (ss * ss)
+                d, cx, cy = near(edges, px, py)
+                sd = d if inside(edges, px, py) else -d
                 # 몸이 덮은 자리와, 거기서 얼마나 떨어졌는지. 고리면 안쪽 구멍도 바깥으로 센다
                 far = ring or 1e9
-                body_here = 0 <= sd <= far
-                gap = 0.0 if body_here else (-sd if sd < 0 else sd - far)
+                gap = 0.0 if 0 <= sd <= far else (-sd if sd < 0 else sd - far)
+                # 경계에 걸친 칸은 부호거리로 덮인 만큼만 센다 (이것이 안티에일리어싱)
+                frac = min(1.0, max(0.0, sd * ss + 0.5))
+                if ring:
+                    frac = min(frac, min(1.0, max(0.0, (far - sd) * ss + 0.5)))
+                if 0 < gap <= halo:
+                    add(cell, f"halo{min(HALO - 1, int(gap / halo * HALO))}", w)
                 if glow and 0 < gap < glow:
                     g = 1 - gap / glow
                     add(cell, "glow", w * g * g * 0.65)
                 if band and 0 < gap < band:
-                    add(cell, "band", w)
+                    add(cell, "band", w * min(1.0, max(0.0, (band - gap) * ss + 0.5)))
                 if sh_dx or sh_dy:
-                    dsh = near(pts, px - sh_dx, py - sh_dy)[0]
-                    sdsh = dsh if inside(pts, px - sh_dx, py - sh_dy) else -dsh
-                    if 0 <= sdsh <= far:
-                        add(cell, "shadow", w * 0.27)
-                if not body_here:
+                    dsh = near(edges, px - sh_dx, py - sh_dy)[0]
+                    sdsh = dsh if inside(edges, px - sh_dx, py - sh_dy) else -dsh
+                    if sdsh > -0.5 and (not ring or sdsh <= far):
+                        add(cell, "shadow", w * 0.27 * min(1.0, max(0.0, sdsh * ss + 0.5)))
+                if frac <= 0:
                     continue
+                w *= frac
+                if frac > 0.5:
+                    body_cells.add(cell)
                 t = min(1.0, py / H * 1.25 + px / W * 0.25)      # 빛은 왼쪽 위에서
                 if sd < ew or (ring and sd > far - ew):
                     add(cell, "edge", w)
@@ -232,7 +280,7 @@ def _draw(sid: str, rid: str, size: float) -> tuple[dict, tuple[int, int]]:
                 else:
                     add(cell, "body", w, t)
 
-    st = {}
+    made = {}
     for cell, kinds in acc.items():
         layers = []
         for kind in ORDER:
@@ -241,22 +289,35 @@ def _draw(sid: str, rid: str, size: float) -> tuple[dict, tuple[int, int]]:
             a, ta, ka = kinds[kind]
             if a < 0.02:
                 continue
-            # 계조를 잘게 쪼개면 프레임마다 색이 수백 개씩 생겨 팔레트가 터진다. 눈에 안 보일 만큼만 묶는다
+            # 계조를 잘게 쪼개면 색이 수백 개씩 생긴다. 눈에 안 보일 만큼만 묶는다
             layers.append((kind, round(ta / a * 12) / 12, round(ka / a * 8) / 8, round(min(1.0, a) * 24) / 24))
         if layers:
-            st[cell] = layers
-    return st, _hotspot(st, rid)
+            made[cell] = tuple(layers)
+    # 왼쪽 위를 (0,0) 으로 당긴다
+    ox = min(x for x, _ in made)
+    oy = min(y for _, y in made)
+    body = {(x - ox, y - oy) for x, y in body_cells}
+    bx0, by0 = min(x for x, _ in body), min(y for _, y in body)
+    box = (bx0, by0, max(x for x, _ in body) - bx0 + 1, max(y for _, y in body) - by0 + 1)
+    # 칸마다 (칠하는 방법 번호, 테마 그림에서 색을 뜰 자리)만 남긴다. 같은 값이면 색을 한 번만
+    # 계산하고 돌려 쓰므로, 큰 판에서도 색 계산이 몇백 번으로 끝난다
+    recipes: dict = {}
+    st = {}
+    for (x, y), layers in made.items():
+        cx, cy = x - ox, y - oy
+        iu = min(UV, max(0, round((cx - bx0) / max(1, box[2] - 1) * UV)))
+        iv = min(UV, max(0, round((cy - by0) / max(1, box[3] - 1) * UV)))
+        st[(cx, cy)] = (recipes.setdefault(layers, len(recipes)), iu, iv)
+    return (st, [k for k, _ in sorted(recipes.items(), key=lambda kv: kv[1])]), _hotspot(body, rid), box
 
 
-def _hotspot(st: dict, rid: str) -> tuple[int, int]:
+def _hotspot(body: set, rid: str) -> tuple[int, int]:
     """화살표는 끝, 나머지는 가운데"""
-    solid = [p for p, ls in st.items()
-             if sum(a for kind, _, _, a in ls if kind not in ("glow", "shadow", "band")) > 0.55]
     if rid != "arrow":
-        xs = [x for x, _ in solid]; ys = [y for _, y in solid]
+        xs = [x for x, _ in body]; ys = [y for _, y in body]
         return (min(xs) + max(xs)) // 2, (min(ys) + max(ys)) // 2
-    ty = min(y for _, y in solid)
-    return min(x for x, y in solid if y == ty), ty
+    ty = min(y for _, y in body)
+    return min(x for x, y in body if y == ty), ty
 
 
 def mix(a: tuple, b: tuple, t: float) -> tuple:
@@ -274,74 +335,179 @@ def over(bot: tuple | None, top: tuple) -> tuple:
     return tuple(round((top[i] * ta + bot[i] * ba * (1 - ta)) / outa) for i in range(3)) + (round(outa * 255),)
 
 
-N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
+def ring_of(mask) -> set:
+    return {(x + dx, y + dy) for (x, y) in mask for dx, dy in N8} - set(mask)
 
 
-def palette_of(frame: dict) -> tuple:
-    """테마 그림 한 장에서 (위쪽 색, 아래쪽 색, 외곽선, 밝은 색)을 뽑는다"""
+def nearest(points: set, box: tuple) -> dict:
+    """box 안 모든 칸에서 가장 가까운 points 원소 (가장자리에서 안쪽으로 번져 나가며 찾는다)"""
+    x0, y0, x1, y1 = box
+    best = {p: p for p in points}
+    frontier = list(points)
+    while frontier:
+        nxt = []
+        for p in frontier:
+            for dx, dy in N8:
+                q = (p[0] + dx, p[1] + dy)
+                if x0 - 1 <= q[0] <= x1 + 1 and y0 - 1 <= q[1] <= y1 + 1 and q not in best:
+                    best[q] = best[p]
+                    nxt.append(q)
+        frontier = nxt
+    return best
+
+
+def sampler_of(frame: dict) -> tuple:
+    """테마 그림 한 장에서 색을 뜨는 도구 — 자리로 찾는 함수, 외곽선, 가장 밝은 색, 번짐 층"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
     rim = {p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)}
     edge = Counter(solid[p] for p in rim).most_common(1)[0][0]
     fill = {p: c for p, c in solid.items() if p not in rim} or solid
-    ys = [y for _, y in fill]
-    mid = (min(ys) + max(ys)) / 2
-    up = [c for (_, y), c in fill.items() if y <= mid]
-    dn = [c for (_, y), c in fill.items() if y > mid]
-    top = Counter(up).most_common(1)[0][0] if up else edge
-    bot = Counter(dn).most_common(1)[0][0] if dn else top
-    gloss = max(frame.values(), key=lambda c: (c[0] + c[1] + c[2]) * (c[3] >= 200))
-    return top, bot, edge, gloss
+    xs = [x for x, _ in fill]; ys = [y for _, y in fill]
+    x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
+    found = nearest(set(fill), (x0, y0, x1, y1))
+    gloss = max(frame.values(), key=lambda c: (c[0] + c[1] + c[2]) * (1 if c[3] >= 200 else 0))
+    # 몸 바깥 번짐: 층마다 반 넘게 차 있으면 그 층의 가장 흔한 색을 번짐으로 본다
+    halo, grown = [], set(solid)
+    for _ in range(HALO):
+        r = ring_of(grown)
+        grown |= r
+        got = [frame[p] for p in r if p in frame]
+        halo.append(Counter(got).most_common(1)[0][0] if got and len(got) * 2 >= len(r) else None)
+
+    def at(u: float, v: float) -> tuple:
+        return fill[found[(round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))]]
+
+    return at, edge, gloss, halo
 
 
-def paint(st: dict, palette: tuple) -> dict:
-    """스텐실에 테마 색을 끼워 넣는다"""
-    top, bot, edge, gloss = palette
+def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
+    """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다"""
+    at, edge, gloss, halo = sampler
+    col = None
+    for kind, t, k2, a in layers:
+        if kind == "shadow":
+            rgba = (0, 0, 0, round(a * 255))
+        elif kind[0] == "h":                       # halo0 · halo1 · halo2
+            c = halo[int(kind[4])]
+            if not c:
+                continue                           # 번짐이 없는 테마면 그 층은 비워 둔다
+            rgba = c[:3] + (round(a * c[3]),)
+        elif kind in ("glow", "band"):
+            rgba = gloss[:3] + (round(a * 255),)
+        elif kind == "edge":
+            rgba = edge[:3] + (round(a * edge[3]),)
+        else:
+            c = at(iu / UV, iv / UV)
+            k = 1 - 0.15 * t                       # 아래로 갈수록 살짝 어둡게
+            body = (min(255, round(c[0] * k)), min(255, round(c[1] * k)), min(255, round(c[2] * k)))
+            if kind == "lit":
+                body = mix(body, gloss, k2)
+            elif kind == "dark":
+                body = mix(body, edge, k2)
+            rgba = body + (round(a * c[3]),)
+        if rgba[3] > 0:
+            col = over(col, rgba)
+    return col if col and col[3] > 3 else None
+
+
+MISS = object()
+
+
+def paint(stencil: tuple, sampler: tuple, memo: dict | None = None) -> dict:
+    """스텐실에 테마 색을 끼워 넣는다. 몸의 색은 테마 그림의 같은 비율 자리에서 뜬다.
+
+    memo 를 주면 칠하는 방법이 같은 칸의 색을 크기를 넘어서도 돌려 쓴다 (한 프레임 안에서)."""
+    st, recipes = stencil
+    if memo is None:
+        memo = {}
     out = {}
-    for cell, layers in st.items():
-        col = None
-        for kind, t, k2, a in layers:
-            if kind == "shadow":
-                rgba = (0, 0, 0, round(a * 255))
-            elif kind == "glow":
-                rgba = gloss[:3] + (round(a * 255),)
-            elif kind == "band":
-                rgba = gloss[:3] + (round(a * 255),)
-            elif kind == "edge":
-                rgba = edge[:3] + (round(a * edge[3]),)
-            else:
-                body = mix(top, bot, t)
-                if kind == "lit":
-                    body = mix(body, gloss, k2)
-                elif kind == "dark":
-                    body = mix(body, edge, k2)
-                rgba = body + (round(a * 255),)
-            if rgba[3] > 0:
-                col = over(col, rgba)
-        if col and col[3] > 3:
+    for cell, (n, iu, iv) in st.items():
+        layers = recipes[n]
+        key = (layers, iu, iv)
+        col = memo.get(key, MISS)
+        if col is MISS:
+            col = memo[key] = _color(layers, iu, iv, sampler)
+        if col:
             out[cell] = col
     return out
 
 
-def remake(sid: str, rid: str, frames: list[dict]) -> tuple[list[dict], tuple[int, int]]:
-    """테마 프레임들의 색으로 이 모양의 한 칸을 그린다 (프레임마다 색을 다시 뽑아 움직임을 살린다)"""
-    st, hot = stencil(sid, rid)
-    return [paint(st, palette_of(f)) for f in frames], hot
+def scale_up(px: dict, f: float) -> dict:
+    """픽셀 그림을 f 배로 키운다 (최근접). 테마 기호를 큰 판에 얹을 때 쓴다"""
+    if f <= 1.0:
+        return px
+    n = math.ceil(f)
+    big = {}
+    for (x, y), c in px.items():
+        bx, by = int(x * f), int(y * f)
+        for dy in range(n):
+            for dx in range(n):
+                big[(bx + dx, by + dy)] = c
+    return big
 
 
-if __name__ == "__main__":   # 자체 점검: 모든 모양·칸이 32칸 안에 들어오고 층이 제대로 쌓이는지
+def draw(sid: str, rid: str, samplers: list, cells: int, glyphs: list | None = None,
+         memos: list | None = None) -> tuple[list[dict], tuple[int, int]]:
+    """이 칸 수로 프레임들을 그린다. glyphs 를 주면 기본 칸 수 기준으로 잡은 기호를 같이 얹는다"""
+    st, hot, _ = stencil(sid, rid, cells)
+    out = [paint(st, s, memos[i] if memos else None) for i, s in enumerate(samplers)]
+    if glyphs:
+        f = cells / LIMIT
+        out = [{**px, **scale_up(g, f)} for px, g in zip(out, glyphs)]
+    # 프레임마다 자리가 어긋나면 커서가 떨린다. 모든 프레임을 같은 만큼 왼쪽 위로 당긴다
+    ox = min(x for px in out for x, _ in px)
+    oy = min(y for px in out for _, y in px)
+    out = [{(x - ox, y - oy): c for (x, y), c in px.items()} for px in out]
+    return out, (hot[0] - ox, hot[1] - oy)
+
+
+def _fit(px: dict, size: int) -> dict:
+    return {p: c for p, c in px.items() if 0 <= p[0] < size and 0 <= p[1] < size}
+
+
+def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None) -> tuple[bytes, str]:
+    """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다)"""
+    samplers = [sampler_of(f) for f in frames]
+    memos = [{} for _ in frames]
+    per_size = []
+    for size in CUR_SIZES:
+        pxs, hot = draw(sid, rid, samplers, cells_for(size), glyphs, memos)
+        per_size.append([(pixels_to_png(_fit(px, size), size), hot) for px in pxs])
+    curs = [pngs_to_cur([per_size[i][fi] for i in range(len(CUR_SIZES))]) for fi in range(len(frames))]
+    return (curs_to_ani(curs, rate), "ani") if len(frames) > 1 else (curs[0], "cur")
+
+
+def page(sid: str, rid: str, frames: list[dict], glyphs: list | None = None) -> tuple[list[bytes], tuple[int, int], tuple[int, int]]:
+    """시안 페이지용 (프레임별 PNG, 핫스팟, 칸 수). 그림은 PAGE 판으로 크게 그린다"""
+    samplers = [sampler_of(f) for f in frames]
+    memos = [{} for _ in frames]
+    base, hot = draw(sid, rid, samplers, LIMIT, glyphs, memos)
+    wide = max(x for px in base for x, _ in px) + 1
+    tall = max(y for px in base for _, y in px) + 1
+    board = PAGE if rid == "arrow" else PAGE_SMALL
+    pxs, _ = draw(sid, rid, samplers, cells_for(board), glyphs, memos)
+    return [pixels_to_png(_fit(px, board), board) for px in pxs], hot, (wide, tall)
+
+
+def base_box(sid: str, rid: str) -> tuple:
+    """기본 칸 수로 그린 몸의 자리. 테마 기호를 어디에 놓을지 계산할 때 쓴다"""
+    return stencil(sid, rid, LIMIT)[2]
+
+
+if __name__ == "__main__":   # 자체 점검: 모든 모양·칸이 판 안에 들어오고 층이 제대로 쌓이는지
     import time
 
     fake = {(x, y): ((250, 250, 255, 255) if 0 < x < 9 and 0 < y < 9 else (20, 20, 30, 255))
             for x in range(10) for y in range(10)}
+    moving = [fake, {p: (c[0], c[1] // 2, c[2], c[3]) for p, c in fake.items()}]
     for sid in SHAPES:
         t0 = time.time()
         line = []
         for rid in ROLES:
-            st, hot = stencil(sid, rid)
-            px = paint(st, palette_of(fake))
-            w = max(x for x, _ in px) - min(x for x, _ in px) + 1
-            h = max(y for _, y in px) - min(y for _, y in px) + 1
-            assert max(w, h) <= 32, f"{sid}/{rid} 가 32칸을 넘음: {w}x{h}"
-            assert px, f"{sid}/{rid} 가 비었음"
+            blob, ext = cursor(sid, rid, moving, 6)
+            assert ext == "ani" and blob[:4] == b"RIFF", f"{sid}/{rid} 움직이는 커서가 아님"
+            pngs, hot, (w, h) = page(sid, rid, [fake])
+            assert max(w, h) <= MIN_SIZE, f"{sid}/{rid} 가 {MIN_SIZE}칸을 넘음: {w}x{h}"
+            assert 0 <= hot[0] < w and 0 <= hot[1] < h, f"{sid}/{rid} 핫스팟이 그림 밖: {hot}"
             line.append(f"{rid} {w}x{h}")
         print(f"{sid:8} {' · '.join(line)} · {time.time() - t0:.1f}초")

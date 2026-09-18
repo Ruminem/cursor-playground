@@ -126,6 +126,24 @@ def txt_to_png(text: str, size: int | None = None, src: int | None = None) -> by
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(bytes(raw))) + chunk(b"IEND", b"")
 
 
+def pixels_to_png(px: dict, size: int) -> bytes:
+    """{(x,y): RGBA} → size x size PNG. 좌표 그대로 왼쪽 위에 놓고 나머지 자리는 투명.
+
+    빈 판을 먼저 만들고 칠한 칸만 덮는다. 칸마다 찾아보면 큰 판에서 느리다."""
+    stride = size * 4 + 1              # 행마다 맨 앞에 필터 바이트(0 = 없음)
+    raw = bytearray(stride * size)
+    for (x, y), c in px.items():
+        if 0 <= x < size and 0 <= y < size:
+            off = y * stride + 1 + x * 4
+            raw[off:off + 4] = bytes(c)
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+    ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)  # 8비트 RGBA
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(bytes(raw))) + chunk(b"IEND", b"")
+
+
 def png_to_cur(png: bytes, hotspot: tuple[int, int]) -> bytes:
     return pngs_to_cur([(png, hotspot)])
 
@@ -155,15 +173,19 @@ def txt_to_cur(text: str, hotspot: tuple[int, int], src: int | None = None) -> b
 
 
 def txt_to_ani(text: str, hotspot: tuple[int, int]) -> bytes:
-    """프레임마다 여러 크기 .cur 를 만들어 애니메이션 커서(.ani, RIFF ACON)로 묶는다."""
+    """프레임마다 여러 크기 .cur 를 만들어 애니메이션 커서로 묶는다."""
     src = canvas_size(text)
-    frames = [txt_to_cur(f, hotspot, src) for f in split_frames(text)]
+    return curs_to_ani([txt_to_cur(f, hotspot, src) for f in split_frames(text)], read_rate(text))
+
+
+def curs_to_ani(frames: list[bytes], rate: int) -> bytes:
+    """프레임별 .cur 를 애니메이션 커서(.ani, RIFF ACON)로 묶는다."""
 
     def chunk(kind: bytes, data: bytes) -> bytes:
         return kind + struct.pack("<I", len(data)) + data + (b"\0" if len(data) % 2 else b"")
 
     # anih: 크기, 프레임 수, 단계 수, 폭·높이·비트수·면 수(프레임 안에 있으므로 0), 표시 속도, 플래그(1 = 프레임이 아이콘·커서 데이터)
-    anih = struct.pack("<9I", 36, len(frames), len(frames), 0, 0, 0, 0, read_rate(text), 1)
+    anih = struct.pack("<9I", 36, len(frames), len(frames), 0, 0, 0, 0, rate, 1)
     fram = b"fram" + b"".join(chunk(b"icon", f) for f in frames)
     body = b"ACON" + chunk(b"anih", anih) + chunk(b"LIST", fram)
     return b"RIFF" + struct.pack("<I", len(body)) + body

@@ -31,7 +31,7 @@ How it works:
 
 - Cursor files come from [dist/](dist/) on GitHub Pages. `python build.py` makes `preview.html` and `dist/` from `art/`; both have to be committed to reach the web
 - Applying writes the 17 slots and the scheme name under `HKCU\Control Panel\Cursors` and reloads them with `SystemParametersInfo(SPI_SETCURSORS)`
-- Each cursor file holds 32, 48, 64, 96 and 128px images, so Windows picks a matching one when the size goes up and the pixels stay sharp. The size is set with `SystemParametersInfo(0x2029)`, the call the Settings app uses, and undo restores it
+- Each cursor file holds several sizes, so Windows picks a matching one when the size goes up and the pixels stay sharp (pixel art carries 32, 48, 64, 96 and 128px; the smooth shapes carry 32, 64 and 128 and let Windows stretch the rest). The size is set with `SystemParametersInfo(0x2029)`, the call the Settings app uses, and undo restores it
 - There are two backups. `backup-initial.json` is the state at setup (for remove everything); `backup-visit.json` is the state right before the first apply after opening the page (for undo)
 - Each time the page opens it makes a 16-character visit id, keeps it in `sessionStorage` and sends it with each request. An apply with a new visit id takes a fresh visit backup
 - After undo, every scheme except the one in use is removed along with its cursor files
@@ -248,13 +248,13 @@ The **Cursor shape** tabs at the top of the preview page change the silhouette w
 
 <!-- /shapes:en -->
 
-Every shape but Classic is drawn by [smooth.py](smooth.py) instead of being stored as pixel art. The outline is a handful of points; every corner gets a real circular arc (a chamfer looks pointed, an arc does not); the result is rasterised on a 3x grid through a signed distance field and averaged back down, so the edges come out anti-aliased. A `.cur` carries 32-bit alpha, so that smoothness survives into the cursor file.
+Every shape but Classic is drawn by [smooth.py](smooth.py) instead of being stored as pixel art. The outline is a handful of points; every corner gets a real circular arc (a chamfer looks pointed, an arc does not); a signed distance field then says how much of each cell the shape covers, which is what makes the edges anti-aliased. A `.cur` carries 32-bit alpha, so that smoothness survives into the cursor file. The sizes inside a cursor file are **drawn again at each size** instead of being scaled up, because an anti-aliased drawing falls apart when you enlarge it by a whole number. Smooth shapes carry 32, 64 and 128; Windows stretches those for the sizes in between.
 
-Colour is not baked in. Each shape and slot is drawn once into a *stencil* that records, per cell, which layer covers it and by how much: shadow, glow, bright band, body gradient, the lit and shaded bevel faces, outline. Then for every theme the colours are read out of that theme's own drawing of the same slot — the outline colour from the rim, the body colours from the upper and lower half of the inside, the brightest colour for glow and gloss — and dropped into the stencil. Animated themes keep their animation, because the colours are read again for every frame. That is why a rounded hourglass still has yellow sand and a rounded no sign is still red.
+Colour is not baked in. Each shape and slot is drawn once into a *stencil* that records, per cell, which layer covers it and by how much: shadow, the theme's outer glow, bright band, body, the lit and shaded bevel faces, outline. Then for every theme the colours are read out of that theme's own drawing of the same slot and dropped into the stencil. The body colour is taken **from the matching relative spot** in the theme's drawing rather than averaged down to one colour, so a leopard keeps its spots and an argyle keeps its diamonds; the outline colour comes from the rim, the brightest colour serves as gloss, and the rings outside the body are wrapped around the new shape again so a neon theme keeps its glow. Animated themes keep their animation, because the colours are read again for every frame — that is why lightning still crackles inside a rounded arrow, a rounded hourglass still has yellow sand and a rounded no sign is still red.
 
 A shape covers five slots: `arrow`, `ibeam`, `wait`, `no` and `move`. Help, background work, location select and user select are an arrow with a symbol on it, so the symbol is lifted off the theme's own drawing and placed beside the new arrow. The four resize arrows, precision select, handwriting and alternate select are symbols with no silhouette of their own, and link select is the theme's own face (a heart, a pointing hand, a star), so those stay exactly as the theme drew them.
 
-Cursor files land in `dist/<shape>/<scheme>/` (the first shape keeps `dist/<scheme>/`), and the preview page fetches `data/<shape>.json` the first time you pick a shape. The eight slots a shape does not touch would be byte-for-byte the Classic files, so they are not written again — the installer and the handler fall back to `dist/<scheme>/` for those.
+Cursor files land in `dist/<shape>/<scheme>/` (the first shape keeps `dist/<scheme>/`), and the preview page fetches `data/<shape>.json` the first time you pick a shape — those page drawings are rendered large for the same reason, so the previews are not a blur of enlarged pixels. The eight slots a shape does not touch would be byte-for-byte the Classic files, so they are not written again — the installer and the handler fall back to `dist/<scheme>/` for those.
 
 ## Installing from the repository
 
@@ -366,7 +366,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 - 커서 파일은 Pages 의 [dist/](dist/) 에서 받음. `python build.py` 가 `art/` 로 `preview.html` 과 `dist/` 를 같이 만들고, 둘 다 커밋해야 웹에 반영됨
 - 적용은 `HKCU\Control Panel\Cursors` 의 17칸과 구성표 이름을 바꾸고 `SystemParametersInfo(SPI_SETCURSORS)` 로 바로 다시 읽힘
-- 커서 파일 하나에 32·48·64·96·128px 이미지를 모두 넣어서, 크기를 키워도 윈도우가 맞는 이미지를 골라 픽셀이 뭉개지지 않음. 크기는 설정 앱이 쓰는 `SystemParametersInfo(0x2029)` 로 바꾸고 원래대로 때 같이 되돌림
+- 커서 파일 하나에 여러 크기 이미지를 넣어서, 크기를 키워도 윈도우가 맞는 이미지를 골라 픽셀이 뭉개지지 않음(픽셀아트는 32·48·64·96·128px, 매끈한 모양은 32·64·128 을 담고 사이 크기는 윈도우가 늘려 씀). 크기는 설정 앱이 쓰는 `SystemParametersInfo(0x2029)` 로 바꾸고 원래대로 때 같이 되돌림
 - 백업은 두 개. `backup-initial.json` 은 한 줄 설치할 때 상태(완전 제거용), `backup-visit.json` 은 페이지를 연 뒤 첫 적용 직전 상태(원래대로용)
 - 페이지는 열 때마다 16자리 방문 번호를 만들어 `sessionStorage` 에 두고 요청에 붙임. 새 방문 번호로 적용이 오면 그때 방문 백업을 새로 뜸
 - 원래대로 뒤에는 지금 쓰는 구성표를 뺀 나머지 구성표와 커서 파일을 지움
@@ -583,13 +583,13 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 <!-- /shapes:ko -->
 
-기본을 뺀 모양은 픽셀로 저장하지 않고 [smooth.py](smooth.py) 가 그림. 윤곽을 점 몇 개로 잡고, 꼭지점마다 진짜 원호를 끼워 넣고(면취로 깎으면 끝이 뾰족해 보임), 3배 격자에 부호 있는 거리함수로 칠한 뒤 평균으로 줄임 — 그래서 경계가 매끈함. `.cur` 는 32비트 알파를 담으므로 그 매끈함이 커서 파일까지 살아남음.
+기본을 뺀 모양은 픽셀로 저장하지 않고 [smooth.py](smooth.py) 가 그림. 윤곽을 점 몇 개로 잡고, 꼭지점마다 진짜 원호를 끼워 넣고(면취로 깎으면 끝이 뾰족해 보임), 부호 있는 거리함수로 칸마다 얼마나 덮였는지 재서 경계를 매끈하게 만듦. `.cur` 는 32비트 알파를 담으므로 그 매끈함이 커서 파일까지 살아남음. 커서 파일 안의 여러 크기는 늘리지 않고 **크기마다 새로 그림** — 안티에일리어싱된 그림은 정수배로 늘리면 뭉개짐. 매끈한 모양은 32·64·128 을 담고, 사이 크기는 윈도우가 늘려 씀.
 
-색은 박아 넣지 않음. 모양·칸마다 한 번만 그려 **스텐실**을 만드는데, 칸마다 어느 층이 얼마나 덮였는지만 적혀 있음 — 그림자·번지는 빛·밝은 테두리·몸의 그라데이션·빛 받는 면·그늘진 면·외곽선. 그다음 테마마다 그 테마가 그린 같은 칸에서 색을 뽑아(외곽선 색은 가장자리에서, 몸 색은 속의 위쪽·아래쪽 절반에서, 번짐과 광택은 가장 밝은 색) 스텐실에 끼워 넣음. 프레임마다 색을 다시 뽑으므로 움직이는 테마는 움직임이 그대로 남음. 둥근 모래시계에도 노란 모래가 있고 둥근 금지 표시가 여전히 빨간 이유가 이것임.
+색은 박아 넣지 않음. 모양·칸마다 한 번만 그려 **스텐실**을 만드는데, 칸마다 어느 층이 얼마나 덮였는지만 적혀 있음 — 그림자·테마의 번짐·밝은 테두리·몸·빛 받는 면·그늘진 면·외곽선. 그다음 테마마다 그 테마가 그린 같은 칸에서 색을 떠 스텐실에 끼워 넣음. 몸의 색은 하나로 뭉뚱그리지 않고 **같은 비율 자리에서** 떠 오므로 표범은 무늬가, 아가일은 마름모가 남음. 외곽선 색은 가장자리에서, 광택은 가장 밝은 색에서 가져오고, 몸 바깥 번짐은 층마다 새 모양 둘레에 다시 둘러서 네온 계열 테마는 빛도 그대로임. 프레임마다 색을 다시 뜨므로 움직이는 테마는 움직임이 남음 — 둥근 화살표 안에서도 번개가 치고, 둥근 모래시계에 노란 모래가 있고, 둥근 금지 표시가 여전히 빨간 이유가 이것임.
 
 모양이 바꾸는 칸은 다섯(`arrow`, `ibeam`, `wait`, `no`, `move`). 도움말·백그라운드 작업·위치 선택·사용자 선택은 화살표에 기호를 얹은 칸이라, 테마 그림에서 기호만 떼어 새 화살표 옆에 다시 놓음. 크기 조정 4종·정밀·필기·대체 선택은 실루엣이 따로 없는 기호이고, 링크 선택은 테마마다 다른 얼굴(하트·손가락·별)이라 그대로 둠.
 
-만들어진 커서는 `dist/<모양>/<구성표>/` 에 들어감(첫 모양은 `dist/<구성표>/` 그대로). 시안 페이지는 모양을 처음 고를 때 `data/<모양>.json` 을 받아 옴. 모양이 안 건드리는 여덟 칸은 기본 모양 파일과 바이트까지 같아서 다시 쓰지 않음 — 설치 스크립트와 처리 스크립트가 그 칸만 `dist/<구성표>/` 것으로 넘어감.
+만들어진 커서는 `dist/<모양>/<구성표>/` 에 들어감(첫 모양은 `dist/<구성표>/` 그대로). 시안 페이지는 모양을 처음 고를 때 `data/<모양>.json` 을 받아 옴 — 그 안의 그림도 같은 이유로 크게 그려서, 미리보기가 픽셀을 늘린 흐릿한 그림이 되지 않음. 모양이 안 건드리는 여덟 칸은 기본 모양 파일과 바이트까지 같아서 다시 쓰지 않음 — 설치 스크립트와 처리 스크립트가 그 칸만 `dist/<구성표>/` 것으로 넘어감.
 
 ### 저장소에서 직접 등록
 
