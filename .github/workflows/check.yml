@@ -39,7 +39,7 @@ jobs:
           }
 
       - name: 커서 파일을 윈도우가 읽는지
-        shell: powershell
+        shell: pwsh  # powershell(5.1) 은 한글이 든 임시 스크립트를 ANSI 로 읽어 깨진다
         run: |
           Add-Type @'
           using System; using System.Runtime.InteropServices;
