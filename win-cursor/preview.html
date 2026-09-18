@@ -5615,8 +5615,27 @@ pre .c{color:var(--muted)}
       lastKey = key;
     });
   }
+  // 목록 썸네일: 움직이는 구성표는 고르지 않아도 계속 움직인다. 색조는 .thumb 의 CSS 필터가 따로 입힌다
+  var MOVING = Object.keys(DATA).filter(function(sid){ return DATA[sid].arrow[0].length > 1; });
+  var thumbAnim = document.createElement('style'); document.head.appendChild(thumbAnim);
+  var lastThumbKey = '';
+  function tickThumbs(){
+    if (!motionOK || !MOVING.length) return;
+    var now = performance.now(), picks = MOVING.map(function(sid){
+      var d = DATA[sid].arrow;
+      return [sid, d, Math.floor(now / d[4]) % d[0].length];
+    });
+    var key = picks.map(function(p){ return p[2]; }).join(',');
+    if (key === lastThumbKey) return;
+    Promise.all(picks.map(function(p){ return paint(p[1][0][p[2]], 0, 0); })).then(function(images){
+      thumbAnim.textContent = picks.map(function(p, i){
+        return '[data-scheme-item="' + p[0] + '"] .thumb{background-image:url(' + images[i].uri + ')!important}';
+      }).join(' ');
+      lastThumbKey = key;
+    });
+  }
   var motionOK = !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  setInterval(tick, 50);
+  setInterval(function(){ tick(); tickThumbs(); }, 50);
 
   function chooseSize(px){
     size = px;
