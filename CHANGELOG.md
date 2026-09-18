@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-09-18
 
 - **121 pointer schemes** in 9 groups (up from 60), 20 of them animated. The newest is a neon-blue tube on a black body with a triple glow
 - **Eleven cursor shapes** — Classic, which is the scheme's own pixel art, plus ten smooth ones: Round, Outline, Sticker, Wedge, Comet, Needle, Paper plane, Droplet, Neon and Beveled. A tab on the preview page redraws the same scheme in the shape you pick
