@@ -48,7 +48,10 @@ jobs:
           7z a -tzip -mx=1 "cursor-playground-$env:TAG.zip" cursor-playground | Select-Object -Last 2
 
           $ver = [regex]::Escape(($env:TAG -replace '^v', ''))  # 괄호를 빼면 -replace 가 인자로 쪼개져 빈 버전이 된다
-          $md = Get-Content cursor-playground\CHANGELOG.md -Raw -Encoding UTF8
+          # 파일이 아예 없으면 Get-Content 가 먼저 죽어 아래 안내까지 못 간다
+          $cl = 'cursor-playground\CHANGELOG.md'
+          if (-not (Test-Path $cl)) { Write-Host "$cl 이 없음. 태그가 가리키는 커밋에 CHANGELOG 가 있어야 한다"; exit 1 }
+          $md = Get-Content $cl -Raw -Encoding UTF8
           $m = [regex]::Match($md, "(?ms)^## v?$ver\b[^\r\n]*\r?\n(.*?)(?=^## |\z)")
           if (-not $m.Success) { Write-Host "CHANGELOG.md 에 $env:TAG 절이 없음. 먼저 적고 태그를 다시 밀 것"; exit 1 }
           $m.Groups[1].Value.Trim() | Set-Content notes.md -Encoding utf8   # pwsh 의 utf8 은 BOM 없음
