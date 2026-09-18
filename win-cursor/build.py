@@ -175,12 +175,13 @@ def update_readme() -> None:
         before, rest = text.split(start, 1)
         _, after = rest.split(end, 1)
         text = before + start + "\n".join(rows) + "\n\n" + end + after
-    path.write_text(text, encoding="utf-8")
+    # 윈도우 기본값으로 쓰면 CRLF 가 되어 저장소(LF)와 매번 달라진다
+    path.write_text(text, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":
     out = HERE / "preview.html"
-    out.write_text(build(), encoding="utf-8")
+    out.write_text(build(), encoding="utf-8", newline="\n")
     print(f"{out} 만듦")
     print(f"dist/ 커서 {build_dist()}개 만듦")
     update_readme()

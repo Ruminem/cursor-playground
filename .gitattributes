@@ -2,3 +2,12 @@
 *.bat text eol=crlf
 *.ps1 text eol=crlf
 *.cur binary
+
+# 빌드 결과와 저장소가 줄바꿈 때문에 달라지지 않게 텍스트는 LF 로 고정
+*.py text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.ani binary

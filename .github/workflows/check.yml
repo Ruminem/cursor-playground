@@ -20,7 +20,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          # PNG 압축 결과가 파이썬(zlib) 버전마다 달라서 개발에 쓰는 버전과 맞춘다
+          python-version: '3.14'
 
       - name: 빌드 결과가 최신인지
         working-directory: win-cursor
