@@ -794,6 +794,9 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .shape i{width:22px;height:22px;background:50%/contain no-repeat;image-rendering:pixelated}
 /* 매끈한 모양은 픽셀을 각지게 키우면 오히려 거칠어 보여서 부드럽게 늘린다 */
 .shape.smooth i,body.smooth .thumb,body.smooth .sprite,body.smooth .extra span.pic i{image-rendering:auto}
+/* 단 모양이 안 바꾸는 칸은 테마가 그린 픽셀 그대로라 각지게 키운다 (build.py 의 KEEP 과 같은 목록) */
+body.smooth .c-hand .sprite,body.smooth .e-cross i,body.smooth .e-pen i,body.smooth .e-ns i,
+body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-up i{image-rendering:pixelated}
 .huebar{margin-top:10px;padding-top:0;border-top:0}
 .huebar input[type="range"]{width:220px;max-width:100%;accent-color:var(--accent)}
 .huebar input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
