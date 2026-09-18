@@ -233,14 +233,14 @@ The **Cursor shape** tabs at the top of the preview page change the silhouette w
 <!-- shapes:en -->
 | Folder | Name | Look |
 |---|---|---|
-| `art/` | Classic | The angular arrow and the per-theme link shape this project started with. |
-| `shapes/round` | Round | A smooth arrow with the corners shaved off. The link is a pointing hand. |
-| `shapes/chunky` | Chunky | A wide triangle with a thick tail, easy to spot at a glance. |
-| `shapes/sleek` | Sleek | A long, narrow triangle with a thin tail that covers less of the screen. |
+| `art/` | Classic | The shape this project started with: an angular arrow with a crisp notch and tail. |
+| `shapes/round` | Round | Tip and corners shaved smooth; the hourglass and the no sign are rounded too. |
+| `shapes/chunky` | Chunky | A wide head with a thick tail — easy to spot from a distance. |
+| `shapes/sleek` | Sleek | A long, narrow head with a thin tail that covers less of the screen. |
 
 <!-- /shapes:en -->
 
-A shape is six silhouettes in `shapes/<shape>/`: `arrow`, `ibeam`, `wait`, `no`, `move` and `hand`. They hold no colour — `#` is the outline (one pixel around the edge), `-` a line inside the body, `o` the inside, `.` empty. At build time [shape.py](shape.py) borrows each theme's colours: the outline colour goes on `#` and `-`, the inside is sampled from the same relative spot in the theme's own drawing, and any glow outside the body is wrapped around the new silhouette again. The four resize arrows, precision select, handwriting and alternate select are symbols with no silhouette of their own, so they stay as the theme drew them.
+A shape is five silhouettes in `shapes/<shape>/`: `arrow`, `ibeam`, `wait`, `no` and `move`. They hold no colour — `#` is the outline (one pixel around the edge), `-` a line inside the body, `o` the inside, `.` empty. At build time [shape.py](shape.py) borrows each theme's colours: the outline colour goes on `#` and `-`, the inside is sampled from the same relative spot in the theme's own drawing, and any glow outside the body is wrapped around the new silhouette again. The four resize arrows, precision select, handwriting and alternate select are symbols with no silhouette of their own, and link select is the theme's own face (a heart, a pointing hand, a star), so those stay exactly as the theme drew them.
 
 Cursor files land in `dist/<shape>/<scheme>/` (the first shape keeps `dist/<scheme>/`), and the preview page fetches `data/<shape>.json` the first time you pick a shape.
 
@@ -556,14 +556,14 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 <!-- shapes:ko -->
 | 폴더 | 이름 | 생김새 |
 |---|---|---|
-| `art/` | 기본 | 각진 화살표와 테마마다 다른 링크 그림. 지금까지의 모양. |
-| `shapes/round` | 둥근 | 모서리를 깎아 매끈한 화살표. 링크는 손가락을 세운 손. |
-| `shapes/chunky` | 두꺼운 | 넓은 삼각형에 굵은 꼬리. 굵은 선으로 또렷하게 보임. |
-| `shapes/sleek` | 날렵한 | 길고 가는 삼각형에 얇은 꼬리. 화면을 덜 가림. |
+| `art/` | 기본 | 지금까지의 모양. 각진 화살표에 또렷한 홈과 꼬리. |
+| `shapes/round` | 둥근 | 끝과 모서리를 깎아 매끈한 화살표. 모래시계와 금지 표시도 둥긂. |
+| `shapes/chunky` | 두꺼운 | 넓은 머리에 굵은 꼬리. 멀리서도 잘 보임. |
+| `shapes/sleek` | 날렵한 | 좁고 긴 머리에 얇은 꼬리. 화면을 덜 가림. |
 
 <!-- /shapes:ko -->
 
-모양 하나는 `shapes/<모양>/` 의 실루엣 여섯 개(`arrow`, `ibeam`, `wait`, `no`, `move`, `hand`)임. 색은 없음 — `#` 은 외곽선(가장자리 한 겹), `-` 는 속에 그은 선, `o` 는 속, `.` 는 빈칸. 빌드할 때 [shape.py](shape.py) 가 테마의 색을 빌려 옴: 외곽선 색을 `#` 과 `-` 에 넣고, 속은 테마 그림의 같은 비율 자리에서 색을 떠 오고, 몸 바깥으로 번지는 빛은 새 실루엣 둘레에 다시 두름. 크기 조정 4종·정밀·필기·대체 선택은 실루엣이 따로 없는 기호라 테마가 그린 그대로 둠.
+모양 하나는 `shapes/<모양>/` 의 실루엣 다섯 개(`arrow`, `ibeam`, `wait`, `no`, `move`)임. 색은 없음 — `#` 은 외곽선(가장자리 한 겹), `-` 는 속에 그은 선, `o` 는 속, `.` 는 빈칸. 빌드할 때 [shape.py](shape.py) 가 테마의 색을 빌려 옴: 외곽선 색을 `#` 과 `-` 에 넣고, 속은 테마 그림의 같은 비율 자리에서 색을 떠 오고, 몸 바깥으로 번지는 빛은 새 실루엣 둘레에 다시 두름. 크기 조정 4종·정밀·필기·대체 선택은 실루엣이 따로 없는 기호이고, 링크 선택은 테마마다 다른 얼굴(하트·손가락·별)이라 그대로 둠.
 
 만들어진 커서는 `dist/<모양>/<구성표>/` 에 들어감(첫 모양은 `dist/<구성표>/` 그대로). 시안 페이지는 모양을 처음 고를 때 `data/<모양>.json` 을 받아 옴.
 

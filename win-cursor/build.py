@@ -45,21 +45,23 @@ EXTRA = [
 ]
 
 
-# 모양과 상관없는 칸들. 테마 색으로만 그린 기호라 실루엣을 갈아 끼울 것이 없다
-GLYPH_ONLY = {"ns", "we", "nwse", "nesw", "up", "cross", "pen"}
+# 모양이 건드리지 않는 칸들. 테마 색으로만 그린 기호(크기 조정 4종 등)와, 테마마다
+# 하트·손가락·별로 다른 링크 칸. 링크는 테마의 표정이라 모양을 바꿀 때도 그대로 둔다
+KEEP = {"ns", "we", "nwse", "nesw", "up", "cross", "pen", "hand"}
 
 
 def masks_of(shape_id: str) -> dict | None:
-    """모양의 여섯 실루엣. 기본 모양이면 None (원래 그림을 그대로 쓴다)"""
+    """모양의 실루엣 다섯. 기본 모양이면 None (원래 그림을 그대로 쓴다)"""
     if shape_id == SHAPES[0]["id"]:
         return None
-    return {rid: shapelib.read_mask((HERE / "shapes" / shape_id / f"{rid}.txt").read_text(encoding="utf-8")) for rid, _, _ in ROLES}
+    return {rid: shapelib.read_mask((HERE / "shapes" / shape_id / f"{rid}.txt").read_text(encoding="utf-8"))
+            for rid, _, _ in ROLES if rid not in KEEP}
 
 
 def art_text(sid: str, rid: str, masks: dict | None, cache: dict) -> str:
     """구성표 한 칸의 그림 txt. masks 가 있으면 그 실루엣에 테마 색을 옮겨 담는다"""
     raw = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
-    if masks is None or rid in GLYPH_ONLY:
+    if masks is None or rid in KEEP:
         return raw
     frames, _, rate = shapelib.read_art(raw)
     if rid in masks:

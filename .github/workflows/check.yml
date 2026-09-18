@@ -75,7 +75,7 @@ jobs:
             # 기본 모양은 dist\<구성표>\, 나머지는 dist\<모양>\<구성표>\ 에 들어간다
             $root = if ($shape.id -eq $shapes[0].id) { 'dist' } else { "dist\$($shape.id)" }
             if ($shape.id -ne $shapes[0].id) {
-              foreach ($slot in 'arrow','ibeam','wait','no','move','hand') {
+              foreach ($slot in 'arrow','ibeam','wait','no','move') {
                 if (-not (Test-Path "shapes\$($shape.id)\$slot.txt")) { Write-Host "모양 그림 없음: $($shape.id)/$slot.txt"; $fail = 1 }
               }
               if (-not (Test-Path "data\$($shape.id).json")) { Write-Host "모양 데이터 없음: $($shape.id).json"; $fail = 1 }

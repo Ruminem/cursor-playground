@@ -469,7 +469,8 @@ pre .c{color:var(--muted)}
       var rid = (/(?:^| )c-([a-z]+)/.exec(card.className) || [])[1];
       var d = DATA[sid] && DATA[sid][rid];
       if (!d) return;
-      card.querySelector('code').textContent = plain ? 'art/' + sid + '/' + rid + '.txt' : 'art/' + sid + ' + shapes/' + shape + '/' + rid + '.txt';
+      var own = plain || rid === 'hand';  // 링크 칸은 테마가 그린 것을 그대로 쓴다
+      card.querySelector('code').textContent = own ? 'art/' + sid + '/' + rid + '.txt' : 'art/' + sid + ' + shapes/' + shape + '/' + rid + '.txt';
       card.querySelector('.coords').innerHTML = d[5] + '×' + d[6] + ' · hotspot <b>' + d[1] + ',' + d[2] + '</b>';
       var stage = card.querySelector('.stage');
       stage.style.setProperty('--hx', d[1]); stage.style.setProperty('--hy', d[2]);
