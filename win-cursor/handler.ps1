@@ -68,6 +68,29 @@ function Get-SchemeName($entry, [int]$hue, $shape) {
     $name
 }
 
+# 주소 형식이 늘어나면 예전에 설치한 이 파일은 새 주소를 못 알아본다. 그때 새 파일을 받아
+# 갈아 끼우고 같은 주소로 한 번만 다시 부른다 (설치할 때와 같은 곳에서 받는다)
+function Update-Self($url) {
+    if ($env:CURSOR_PLAYGROUND_RETRY) { return $false }   # 새 파일도 모르는 주소면 한 번으로 끝낸다
+    $new = Join-Path $root 'handler.new.ps1'
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -UseBasicParsing -Uri "$base/handler.ps1" -OutFile $new
+        $text = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($new))
+        $same = (Get-FileHash $new).Hash -eq (Get-FileHash $PSCommandPath).Hash
+        if ($same -or $text -notmatch 'cursor-playground://apply/') { Remove-Item $new -Force; return $false }
+        Move-Item $new $PSCommandPath -Force
+        $env:CURSOR_PLAYGROUND_RETRY = '1'
+        # 새 파일이 찍는 글은 콘솔로 보낸다. 그냥 두면 이 함수의 반환값에 섞인다
+        & "$PSHOME\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -Url $url |
+            ForEach-Object { Write-Host $_ }
+        return $true
+    } catch {
+        if (Test-Path $new) { Remove-Item $new -Force }
+        return $false
+    }
+}
+
 function Notify($text, [switch]$IsError) {
     if ($env:CURSOR_PLAYGROUND_NO_POPUP) { if ($IsError) { "오류: $text" } else { $text }; return }
     Add-Type -AssemblyName System.Windows.Forms
@@ -506,7 +529,7 @@ try {
         if (Test-Path $root) { Remove-Item $root -Recurse -Force }
         Notify '설치할 때 상태로 되돌리고 웹 버튼 연결과 설치 폴더를 지움. 다시 쓰려면 페이지의 한 줄 설치부터.'
     }
-    else {
+    elseif (-not (Update-Self $Url)) {
         Notify "알 수 없는 요청이라 무시함`n$Url" -IsError
     }
 } catch {

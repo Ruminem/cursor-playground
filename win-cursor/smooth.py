@@ -32,6 +32,7 @@ PAGE = 96       # 시안 페이지의 화살표 판. 32칸 판의 3배라 썸네
 PAGE_SMALL = 64  # 나머지 칸은 페이지에서 작게 보여 주므로 판도 작게 (데이터 파일이 절반으로)
 EDGE_W = 1.1    # 외곽선 두께 (설계 격자 기준)
 UV = 31         # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 둘지 (테마 그림이 32칸 안이라 이 정도면 충분)
+SPECK = 2       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다
 
 # ── 화살표 윤곽 (끝 · 어깨 · 오른쪽 홈 · 꼬리 둘 · 왼쪽 홈 · 굽) ──────────────
 ARROW = [(1.3, 0.4), (19.8, 15.9), (13.6, 18.4), (17.0, 26.6), (10.4, 25.6), (8.6, 19.5), (0.2, 23.4)]
@@ -191,8 +192,8 @@ def outlines(sid: str, rid: str, size: float) -> tuple[list, float]:
 _cache: dict = {}
 
 
-def stencil(sid: str, rid: str, cells: int = LIMIT) -> tuple[tuple[dict, list], tuple[int, int], tuple]:
-    """모양·칸 하나의 (스텐실, 핫스팟, 몸이 놓인 자리). 테마와 무관해 한 번만 그린다"""
+def stencil(sid: str, rid: str, cells: int = LIMIT) -> tuple[tuple[dict, list], tuple[int, int], tuple, set]:
+    """모양·칸 하나의 (스텐실, 핫스팟, 몸이 놓인 자리, 몸이 덮은 칸). 테마와 무관해 한 번만 그린다"""
     rid = rid if rid in ROLES else "arrow"   # 기호를 얹는 칸(도움말·백그라운드 작업 등)은 화살표를 쓴다
     key = (sid, rid, cells)
     if key not in _cache:
@@ -206,7 +207,7 @@ def stencil(sid: str, rid: str, cells: int = LIMIT) -> tuple[tuple[dict, list], 
     return _cache[key]
 
 
-def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list], tuple[int, int], tuple]:
+def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list], tuple[int, int], tuple, set]:
     spec = SHAPES[sid]
     k = size / DESIGN
     ss = _ss(cells)
@@ -308,7 +309,7 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
         iu = min(UV, max(0, round((cx - bx0) / max(1, box[2] - 1) * UV)))
         iv = min(UV, max(0, round((cy - by0) / max(1, box[3] - 1) * UV)))
         st[(cx, cy)] = (recipes.setdefault(layers, len(recipes)), iu, iv)
-    return (st, [k for k, _ in sorted(recipes.items(), key=lambda kv: kv[1])]), _hotspot(body, rid), box
+    return (st, [k for k, _ in sorted(recipes.items(), key=lambda kv: kv[1])]), _hotspot(body, rid), box, body
 
 
 def _hotspot(body: set, rid: str) -> tuple[int, int]:
@@ -356,9 +357,47 @@ def nearest(points: set, box: tuple) -> dict:
     return best
 
 
+def blobs_of(solid) -> list[set]:
+    """이어진 덩어리들 (큰 것부터). 대각선은 안 잇는다 — 이어 버리면 몸에 닿은 불꽃까지 몸이 된다"""
+    left, out = set(solid), []
+    while left:
+        cur = {left.pop()}
+        frontier = list(cur)
+        while frontier:
+            nxt = []
+            for x, y in frontier:
+                for dx, dy in N4:
+                    q = (x + dx, y + dy)
+                    if q in left:
+                        left.discard(q)
+                        cur.add(q)
+                        nxt.append(q)
+            frontier = nxt
+        out.append(cur)
+    return sorted(out, key=len, reverse=True)
+
+
+def specks_of(solid: dict) -> tuple[list, dict]:
+    """몸에서 떨어져 나온 작은 조각(전기 불꽃·눈송이·꽃잎)을 몸과 갈라 놓는다.
+
+    자리는 몸 테두리 기준 비율로 남긴다. 몸을 새로 그려도 같은 자리에 흩을 수 있다.
+    큰 조각이 하나라도 있으면 그 그림은 원래 끊어 그린 것(손그림·점선)이라 보고 건드리지 않는다."""
+    parts = blobs_of(solid)
+    rest = parts[1:]
+    if not rest or any(len(b) > SPECK for b in rest) or sum(len(b) for b in rest) * 8 > len(parts[0]):
+        return [], solid
+    body = parts[0]
+    xs = [x for x, _ in body]; ys = [y for _, y in body]
+    x0, y0 = min(xs), min(ys)
+    w, h = max(1, max(xs) - x0), max(1, max(ys) - y0)
+    specks = [((x - x0) / w, (y - y0) / h, solid[(x, y)]) for b in rest for x, y in b]
+    return specks, {p: solid[p] for p in body}
+
+
 def sampler_of(frame: dict) -> tuple:
-    """테마 그림 한 장에서 색을 뜨는 도구 — 자리로 찾는 함수, 외곽선, 가장 밝은 색, 번짐 층"""
+    """테마 그림 한 장에서 색을 뜨는 도구 — 자리로 찾는 함수, 외곽선, 가장 밝은 색, 번짐 층, 불꽃"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
+    specks, solid = specks_of(solid)
     rim = {p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)}
     edge = Counter(solid[p] for p in rim).most_common(1)[0][0]
     fill = {p: c for p, c in solid.items() if p not in rim} or solid
@@ -377,12 +416,12 @@ def sampler_of(frame: dict) -> tuple:
     def at(u: float, v: float) -> tuple:
         return fill[found[(round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))]]
 
-    return at, edge, gloss, halo
+    return at, edge, gloss, halo, specks
 
 
 def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
     """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다"""
-    at, edge, gloss, halo = sampler
+    at, edge, gloss, halo = sampler[:4]
     col = None
     for kind, t, k2, a in layers:
         if kind == "shadow":
@@ -446,11 +485,27 @@ def scale_up(px: dict, f: float) -> dict:
     return big
 
 
+def specks(marks: list, box: tuple, cells: int) -> dict:
+    """불꽃을 새 몸 테두리 기준 같은 비율 자리에 다시 흩는다 (칸이 크면 조각도 그만큼 커진다)"""
+    bx, by, bw, bh = box
+    n = max(1, round(cells / LIMIT))
+    out = {}
+    for u, v, c in marks:
+        px, py = bx + round(u * (bw - 1)), by + round(v * (bh - 1))
+        for dy in range(n):
+            for dx in range(n):
+                out[(px + dx, py + dy)] = c
+    return out
+
+
 def draw(sid: str, rid: str, samplers: list, cells: int, glyphs: list | None = None,
          memos: list | None = None) -> tuple[list[dict], tuple[int, int]]:
     """이 칸 수로 프레임들을 그린다. glyphs 를 주면 기본 칸 수 기준으로 잡은 기호를 같이 얹는다"""
-    st, hot, _ = stencil(sid, rid, cells)
+    st, hot, box, solid = stencil(sid, rid, cells)
     out = [paint(st, s, memos[i] if memos else None) for i, s in enumerate(samplers)]
+    # 불꽃은 번짐 위에 얹되 몸은 덮지 않는다 (덮으면 모양이 갉아먹힌다)
+    out = [{**px, **{p: c for p, c in specks(s[4], box, cells).items() if p not in solid}} if s[4] else px
+           for px, s in zip(out, samplers)]
     if glyphs:
         f = cells / LIMIT
         out = [{**px, **scale_up(g, f)} for px, g in zip(out, glyphs)]
@@ -499,7 +554,13 @@ if __name__ == "__main__":   # 자체 점검: 모든 모양·칸이 판 안에 �
 
     fake = {(x, y): ((250, 250, 255, 255) if 0 < x < 9 and 0 < y < 9 else (20, 20, 30, 255))
             for x in range(10) for y in range(10)}
+    SPARK = (255, 0, 0, 255)
+    fake[(12, 4)] = SPARK                                  # 몸에서 떨어져 나온 불꽃 한 점
     moving = [fake, {p: (c[0], c[1] // 2, c[2], c[3]) for p, c in fake.items()}]
+    marks, body = specks_of(fake)
+    assert len(marks) == 1 and (12, 4) not in body, f"불꽃을 몸과 못 갈랐다: {marks}"
+    got = draw("round", "arrow", [sampler_of(fake)], LIMIT)[0][0]
+    assert sum(1 for c in got.values() if c == SPARK) >= 1, "불꽃이 새 모양에서 사라졌다"
     for sid in SHAPES:
         t0 = time.time()
         line = []
