@@ -7,6 +7,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  # 러너 콘솔은 cp1252 라 파이썬이 한글을 찍다가 죽는다
+  PYTHONUTF8: '1'
+
 jobs:
   build:
     runs-on: windows-latest
