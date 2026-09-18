@@ -34,6 +34,10 @@ PAGE_SMALL = 64  # 나머지 칸은 페이지에서 작게 보여 주므로 판�
 EDGE_W = 1.1    # 외곽선 두께 (설계 격자 기준)
 UV = 31         # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 둘지 (테마 그림이 32칸 안이라 이 정도면 충분)
 SPECK = 2       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다
+GHOST_R = 4     # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
+GHOST_HIT = 0.75  # 옮긴 자리에서 몸과 이만큼 겹쳐야 유령으로 본다
+GHOST_MIN = 6   # 이 칸 수보다 적으면 유령이 아니라 반짝이로 본다
+GHOST_FILL = 0.30  # 옮겨서 드러난 칸을 평균 이만큼은 채워야 유령으로 본다
 
 # ── 화살표 윤곽 (끝 · 어깨 · 오른쪽 홈 · 꼬리 둘 · 왼쪽 홈 · 굽) ──────────────
 ARROW = [(1.3, 0.4), (19.8, 15.9), (13.6, 18.4), (17.0, 26.6), (10.4, 25.6), (8.6, 19.5), (0.2, 23.4)]
@@ -438,6 +442,64 @@ def _outward(frame: dict, rings: list[set], lit: list[bool]) -> list:
     return out
 
 
+def _slide(pts: set, core: set) -> tuple:
+    """이 색 칸들이 몸을 얼마나 옮긴 것에 가장 가까운지 — ((일치, dx, dy), 안 옮겼을 때의 일치)"""
+    n = len(pts)
+    at0 = sum(1 for p in pts if p in core) / n
+    best = (at0, 0, 0)
+    for dx in range(-GHOST_R, GHOST_R + 1):
+        for dy in range(-GHOST_R, GHOST_R + 1):
+            hit = sum(1 for x, y in pts if (x - dx, y - dy) in core) / n
+            if hit > best[0]:
+                best = (hit, dx, dy)
+    return best, at0
+
+
+def _steady(offs: list) -> bool:
+    """옮긴 방향의 부호가 한쪽으로만 가는지. 0 은 어느 쪽으로도 세지 않는다"""
+    return all(len({v > 0 for v in vals if v}) <= 1 for vals in zip(*offs))
+
+
+def ghosts_of(frames: list[dict], core: set) -> list[list]:
+    """프레임마다 '몸을 통째로 옮긴 복사본'인 색을 찾는다 — [(색, 가로 비율, 세로 비율), ...]
+
+    색맞춤 어긋남(글리치)처럼 같은 실루엣이 옆으로 밀리는 효과는 색을 자리대로 떠서는 살아나지
+    않는다. 효과가 색이 아니라 **옮김**이라, 고정된 스텐실에 칠하면 방향이 사라지고 번짐으로
+    뭉개진다. 잡으면 새 몸을 그만큼 옮겨 밑에 깔 수 있다.
+
+    불꽃·눈송이와 가르는 기준은 **과반 프레임에서 잡히고 방향의 부호가 일정한지**다. 반짝이는
+    한두 장에서 아무 쪽으로나 걸리므로 둘을 같이 보면 떨어진다 (121종에 돌려 글리치만 남았다)."""
+    if len(frames) < 2:
+        return [[] for _ in frames]
+    found: dict = {}                           # 색 → {프레임 번호: (dx, dy)}
+    for i, f in enumerate(frames):
+        groups: dict = {}
+        for p, c in f.items():
+            groups.setdefault(c, set()).add(p)
+        for c, pts in groups.items():
+            if len(pts) < GHOST_MIN or len(pts & core) * 10 >= len(pts) * 9:
+                continue                       # 이미 거의 다 몸 안이면 몸이지 유령이 아니다
+            (hit, dx, dy), at0 = _slide(pts, core)
+            if not ((dx or dy) and hit >= GHOST_HIT and hit - at0 >= 0.15):
+                continue
+            # 옮겨서 드러나는 초승달을 이 색이 실제로 채우는지. 불꽃 한 줌은 몸을 옮긴 자리에
+            # 얹히기만 할 뿐 초승달을 못 채운다 — 이걸 안 보면 불꽃이 몸만 한 모자가 된다
+            bare = {(x + dx, y + dy) for x, y in core} - core
+            found.setdefault(c, {})[i] = (dx, dy, len(pts & bare) / len(bare) if bare else 0.0)
+    out: list[list] = [[] for _ in frames]
+    xs = [x for x, _ in core]; ys = [y for _, y in core]
+    w = max(1, max(xs) - min(xs))
+    h = max(1, max(ys) - min(ys))
+    for c, per in found.items():
+        if len(per) * 2 < len(frames) or not _steady([v[:2] for v in per.values()]):
+            continue
+        if sum(v[2] for v in per.values()) < GHOST_FILL * len(per):
+            continue
+        for i, (dx, dy, _) in per.items():
+            out[i].append((c, dx / w, dy / h))
+    return out
+
+
 def samplers_of(frames: list[dict]) -> list[tuple]:
     """프레임 묶음의 색 뜨는 도구들. 번짐은 묶음 전체를 봐야 재므로 여기서 한 번에 만든다.
 
@@ -448,13 +510,18 @@ def samplers_of(frames: list[dict]) -> list[tuple]:
     core = set.intersection(*bodies)
     if not core:                               # 프레임끼리 겹치는 곳이 없으면 장마다 따로 잰다
         return [sampler_of(f) for f in frames]
+    ghosts = ghosts_of(frames, core)
+    # 유령은 몸을 옮겨 따로 그리므로 색 뜨는 재료에서는 뺀다. 안 빼면 번짐 층에도 같이 들어가
+    # 방향 없는 테를 한 겹 더 두른다
+    drop = [{c for c, _, _ in g} for g in ghosts]
+    clean = [{p: c for p, c in f.items() if c not in d} or dict(f) for f, d in zip(frames, drop)]
     rings = _rings(core)
-    lit = _lit(rings, frames)
-    return [sampler_of(f, rings, lit) for f in frames]
+    lit = _lit(rings, clean)
+    return [sampler_of(f, rings, lit)[:6] + (g,) for f, g in zip(clean, ghosts)]
 
 
 def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) -> tuple:
-    """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색"""
+    """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색, 유령"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
     specks, solid = specks_of(solid)
     rim = {p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)}
@@ -481,12 +548,12 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) 
     def edge_at(u: float, v: float) -> tuple:
         return solid[efound[(round(ex0 + u * (ex1 - ex0)), round(ey0 + v * (ey1 - ey0)))]]
 
-    return at, edge, gloss, halo, specks, edge_at
+    return at, edge, gloss, halo, specks, edge_at, []
 
 
 def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
     """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다"""
-    at, edge, gloss, halo, _, edge_at = sampler
+    at, edge, gloss, halo, _, edge_at = sampler[:6]
     col = None
     for kind, t, k2, a in layers:
         if kind == "shadow":
@@ -552,6 +619,22 @@ def scale_up(px: dict, f: float) -> dict:
     return big
 
 
+def _ghosts(px: dict, solid: set, box: tuple, ghosts: list) -> dict:
+    """유령을 새 몸으로 다시 그려 밑에 깐다. 위를 몸이 덮으므로 삐져나온 쪽만 보인다 —
+    테마 그림에서도 그렇게 보인다. 옮기는 양은 몸 크기에 대한 비율이라 칸 수를 타지 않는다"""
+    if not ghosts:
+        return px
+    _, _, bw, bh = box
+    under = {}
+    for c, u, v in ghosts:
+        ox, oy = round(u * bw), round(v * bh)
+        if not (ox or oy):
+            continue
+        for x, y in solid:
+            under[(x + ox, y + oy)] = c
+    return {**under, **px} if under else px
+
+
 def specks(marks: list, box: tuple, cells: int) -> dict:
     """불꽃을 새 몸 테두리 기준 같은 비율 자리에 다시 흩는다 (칸이 크면 조각도 그만큼 커진다)"""
     bx, by, bw, bh = box
@@ -570,6 +653,7 @@ def draw(sid: str, rid: str, samplers: list, cells: int, glyphs: list | None = N
     """이 칸 수로 프레임들을 그린다. glyphs 를 주면 기본 칸 수 기준으로 잡은 기호를 같이 얹는다"""
     st, hot, box, solid = stencil(sid, rid, cells)
     out = [paint(st, s, memos[i] if memos else None) for i, s in enumerate(samplers)]
+    out = [_ghosts(px, solid, box, s[6]) for px, s in zip(out, samplers)]
     # 불꽃은 번짐 위에 얹되 몸은 덮지 않는다 (덮으면 모양이 갉아먹힌다)
     out = [{**px, **{p: c for p, c in specks(s[4], box, cells).items() if p not in solid}} if s[4] else px
            for px, s in zip(out, samplers)]

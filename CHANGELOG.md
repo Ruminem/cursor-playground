@@ -4,11 +4,13 @@
 
 - Smooth shapes now take the outline colour from the scheme's own art spot by spot, the way the body already did, so a current runs along Electric's border in every slot instead of only Link
 - The outward bleed is measured against the part of the art that holds still across frames, and each ring is coloured spot by spot too. An afterimage that only reaches out on one side now survives on a smooth shape: Glitch's red and cyan fringes swing left and right again
+- A colour that is just the whole shape shoved to one side is now redrawn as the smooth shape shoved the same way, instead of being smeared into a bleed. Glitch's red and cyan afterimages read as offset copies of the pointer on every shape, the way they do on Classic
 
 **한국어**
 
 - 매끈한 모양이 외곽선 색도 몸통처럼 구성표 그림에서 자리대로 떠 옴(전에는 대표색 한 개로 뭉갬). 전기는 링크 칸만이 아니라 모든 칸에서 테두리를 따라 전류가 흐름
 - 몸 바깥 번짐을 프레임 전부에서 변치 않는 부분 기준으로 재고, 층마다 색도 자리대로 떠 옴. 한쪽으로만 뻗는 잔상이 매끈한 모양에서도 살아남음 — 글리치 떨림의 빨강·청록 잔상이 다시 좌우로 흔들림
+- 몸을 통째로 한쪽으로 민 색은 번짐으로 뭉개지 않고, 새 모양을 같은 비율만큼 밀어 다시 그림. 글리치 떨림의 빨강·청록 잔상이 어느 모양에서든 기본 모양처럼 포인터를 옆으로 민 복사본으로 보임
 
 ## 1.1.0 — 2026-09-18
 
