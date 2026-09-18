@@ -1,0 +1,17 @@
+hotspot 5,0
+.....###
+.....#o#
+.....#o#
+.....#o#
+.....#o#
+.....#o#
+.....#o#
+....#ooo#####
+.###ooooo-oo#
+#oooooooo-oo#
+#oooooooo-oo#
+#oooooooo-oo#
+.###ooooo-oo#
+....#ooooooo#
+....#ooooooo#
+....#########

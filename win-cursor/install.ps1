@@ -10,12 +10,21 @@
 # 등록만 하고 적용은 하지 않는다. 설정 → 마우스 → 추가 마우스 설정 → 포인터 → 구성표에서 고른다.
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
 [CmdletBinding(PositionalBinding = $false)]
-param([switch]$Install, [switch]$Uninstall, [switch]$Status, [string[]]$Scheme)
+param([switch]$Install, [switch]$Uninstall, [switch]$Status, [string[]]$Scheme, [string]$Shape)
 $ErrorActionPreference = 'Stop'
 
 # 폴더 이름 = 표시 이름. 목록은 schemes.json 한 곳에 둔다
 $schemes = [ordered]@{}
 Get-Content (Join-Path $PSScriptRoot 'schemes.json') -Raw -Encoding UTF8 | ConvertFrom-Json | ForEach-Object { $_ } | ForEach-Object { $schemes[$_.id] = $_.name }
+# 커서 모양. 첫 번째가 기본이고, 다른 모양은 미리 만들어 둔 dist\<모양>\<구성표>\ 의 커서를 그대로 쓴다
+$shapes = [ordered]@{}
+Get-Content (Join-Path $PSScriptRoot 'shapes.json') -Raw -Encoding UTF8 | ConvertFrom-Json | ForEach-Object { $_ } | ForEach-Object { $shapes[$_.id] = $_.name }
+$plain = @($shapes.Keys)[0]
+$shapeId = $plain
+if ($Shape) {
+    if (-not $shapes.Contains($Shape)) { throw "없는 모양: $Shape (가능: $($shapes.Keys -join ', '))" }
+    $shapeId = $Shape
+}
 $root = Join-Path $env:LOCALAPPDATA 'cursor-playground'
 $key = 'HKCU:\Control Panel\Cursors\Schemes'
 
@@ -26,7 +35,11 @@ $slots = [ordered]@{
     UpArrow = 'up'; Hand = 'hand'; Pin = 'pin'; Person = 'person'
 }
 
-function RegName($id) { "cursor-playground $($schemes[$id])" }
+function RegName($id) {
+    if ($shapeId -eq $plain) { "cursor-playground $($schemes[$id])" } else { "cursor-playground $($schemes[$id]) $($shapes[$shapeId])" }
+}
+
+function DestDir($id) { Join-Path $root $(if ($shapeId -eq $plain) { $id } else { "$shapeId-$id" }) }
 
 function Resolve-Ids($ids) {
     # powershell -File 로 실행하면 neon,pink 가 목록이 아니라 문자열 하나로 넘어오므로 쉼표로 나눈다
@@ -39,14 +52,26 @@ function Resolve-Ids($ids) {
 }
 
 function Install-Scheme($id) {
-    if (-not (Get-Command python -ErrorAction SilentlyContinue)) { throw 'python 을 찾을 수 없음. Python 3.10+ 를 설치할 것' }
     if (-not (Test-Path $key)) { New-Item $key | Out-Null }
     # 저장소 밖에 복사해 둬야 저장소를 옮기거나 지워도 커서가 안 풀린다
-    $dest = Join-Path $root $id
+    $dest = DestDir $id
     New-Item -ItemType Directory -Force $dest | Out-Null
+    if ($shapeId -eq $plain -and -not (Get-Command python -ErrorAction SilentlyContinue)) {
+        throw 'python 을 찾을 수 없음. Python 3.10+ 를 설치할 것'
+    }
     $paths = foreach ($slot in $slots.Keys) {
+        if (-not $slots[$slot]) { ''; continue }
+        if ($shapeId -ne $plain) {
+            # 다른 모양은 build.py 가 미리 만들어 둔 커서를 복사만 한다
+            $made = @(Get-ChildItem (Join-Path $PSScriptRoot "dist\$shapeId\$id") -Filter "$($slots[$slot]).*" -ErrorAction SilentlyContinue)
+            if (-not $made) { ''; continue }
+            $cur = Join-Path $dest $made[0].Name
+            Copy-Item $made[0].FullName $cur -Force
+            $cur
+            continue
+        }
         $src = Join-Path $PSScriptRoot "art\$id\$($slots[$slot]).txt"
-        if (-not $slots[$slot] -or -not (Test-Path $src)) { ''; continue }
+        if (-not (Test-Path $src)) { ''; continue }
         # 프레임이 여러 개인 그림은 움직이는 커서(.ani)로 만든다
         $ext = if (Select-String -Path $src -Pattern '^frame$' -Quiet) { 'ani' } else { 'cur' }
         $cur = Join-Path $dest "$($slots[$slot]).$ext"
@@ -63,7 +88,7 @@ function Remove-Scheme($id) {
         "주의: $(RegName $id) 는 지금 적용 중. 포인터 설정에서 다른 구성표를 골라야 기본 커서로 돌아감"
     }
     Remove-ItemProperty -Path $key -Name (RegName $id) -ErrorAction SilentlyContinue
-    $dest = Join-Path $root $id
+    $dest = DestDir $id
     if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
     if ((Test-Path $root) -and -not (Get-ChildItem $root)) { Remove-Item $root }
     "제거함: $(RegName $id)"
@@ -109,13 +134,27 @@ function Read-Ids($verb) {
     }
 }
 
+# 모양을 고르면 그다음 등록·제거·상태가 모두 그 모양을 가리킨다
+function Read-Shape {
+    $ids = @($shapes.Keys)
+    Write-Host ''
+    for ($i = 0; $i -lt $ids.Count; $i++) { Write-Host "  $($i + 1)) $($shapes[$ids[$i]])" }
+    $answer = Read-Host '  모양 번호 (취소는 그냥 엔터)'
+    $n = 0
+    if ([int]::TryParse($answer.Trim(), [ref]$n) -and $n -ge 1 -and $n -le $ids.Count) {
+        $script:shapeId = $ids[$n - 1]
+        "  커서 모양: $($shapes[$script:shapeId])"
+    }
+}
+
 function Show-Menu {
     while ($true) {
         Write-Host ''
         Write-Host '  cursor-playground 커서 구성표'
         Write-Host '  1) 전체 등록   2) 전체 제거'
         Write-Host '  3) 개별 등록   4) 개별 제거'
-        Write-Host '  5) 현재 상태   0) 끝내기'
+        Write-Host "  5) 현재 상태   6) 커서 모양 ($($shapes[$shapeId]))"
+        Write-Host '  0) 끝내기'
         $choice = Read-Host '  번호'
         try {
             $out = switch ($choice.Trim()) {
@@ -124,8 +163,9 @@ function Show-Menu {
                 '3' { Read-Ids '등록' | ForEach-Object { Install-Scheme $_ } }
                 '4' { Read-Ids '제거' | ForEach-Object { Remove-Scheme $_ } }
                 '5' { Show-Status }
+                '6' { Read-Shape }
                 { $_ -in '0', '' } { return }
-                default { '  1~5 또는 0 을 입력' }
+                default { '  1~6 또는 0 을 입력' }
             }
             $out | ForEach-Object { Write-Host "  $($_.TrimStart())" }
         } catch {

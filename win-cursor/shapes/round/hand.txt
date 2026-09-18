@@ -1,0 +1,17 @@
+hotspot 6,0
+......##
+.....#oo#
+.....#oo#
+.....#oo#
+.....#oo#
+.....#oo#
+.....#ooo#
+..#.#oooo-####
+.#o#oooooo-o-o#
+#ooooooooo-o-o#
+#ooooooooo-o-o#
+#ooooooooo-o-o#
+.#oooooooo-o-o#
+..#ooooooooooo#
+...#oooooooooo#
+....##########

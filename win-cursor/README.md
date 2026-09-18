@@ -36,7 +36,7 @@ How it works:
 - Each time the page opens it makes a 16-character visit id, keeps it in `sessionStorage` and sends it with each request. An apply with a new visit id takes a fresh visit backup
 - After undo, every scheme except the one in use is removed along with its cursor files
 - A hue other than 0 makes the handler recolour the PNGs inside the downloaded .cur/.ani files pixel by pixel (HSL, hue only) into `%LOCALAPPDATA%\cursor-playground\<id>-h<hue>`. PowerShell loops are too slow for that, so it compiles a small C# class with `Add-Type`, which ships with Windows. The formula matches the page's, so the colours agree
-- Any web page can call this address, so only `apply/<a scheme listed in schemes.json>/<visit>[/<size>[/<hue 0-359>]]`, `size/<size>/<visit>`, `schedule/<visit>/<hour>-<scheme>-<hue>...` (up to 6), `unschedule`, `restore/<visit>`, `status`, `settings` and `unlink` are accepted. Any other address or smuggled argument is ignored
+- Any web page can call this address, so only `apply/<a scheme listed in schemes.json>/<visit>[/<size>[/<hue 0-359>[/<a shape listed in shapes.json>]]]`, `size/<size>/<visit>`, `schedule/<visit>/<hour>-<scheme>-<hue>[-<shape>]...` (up to 6), `unschedule`, `restore/<visit>`, `status`, `settings` and `unlink` are accepted. Any other address or smuggled argument is ignored
 - The look lives in [preview.tpl.html](preview.tpl.html). Fonts come from Google Fonts (Silkscreen, IBM Plex Sans KR, IBM Plex Mono — all SIL OFL). The tab icon is the pink arrow drawn in this repository
 
 ## Schemes
@@ -226,6 +226,24 @@ Every scheme fills all 17 slots. Six are drawn per theme; the other 11 are made 
 | `no.txt` | Unavailable | `pin.txt` | Location select |
 |  |  | `person.txt` | Person select |
 
+## Shapes
+
+The **Cursor shape** tabs at the top of the preview page change the silhouette without touching the themes. Pick one and the same schemes are redrawn in that shape: each theme keeps its colours, pattern and animation, only the outline changes. Adding `?shape=round` to the page URL opens it that way.
+
+<!-- shapes:en -->
+| Folder | Name | Look |
+|---|---|---|
+| `art/` | Classic | The angular arrow and the per-theme link shape this project started with. |
+| `shapes/round` | Round | A smooth arrow with the corners shaved off. The link is a pointing hand. |
+| `shapes/chunky` | Chunky | A wide triangle with a thick tail, easy to spot at a glance. |
+| `shapes/sleek` | Sleek | A long, narrow triangle with a thin tail that covers less of the screen. |
+
+<!-- /shapes:en -->
+
+A shape is six silhouettes in `shapes/<shape>/`: `arrow`, `ibeam`, `wait`, `no`, `move` and `hand`. They hold no colour — `#` is the outline (one pixel around the edge), `-` a line inside the body, `o` the inside, `.` empty. At build time [shape.py](shape.py) borrows each theme's colours: the outline colour goes on `#` and `-`, the inside is sampled from the same relative spot in the theme's own drawing, and any glow outside the body is wrapped around the new silhouette again. The four resize arrows, precision select, handwriting and alternate select are symbols with no silhouette of their own, so they stay as the theme drew them.
+
+Cursor files land in `dist/<shape>/<scheme>/` (the first shape keeps `dist/<scheme>/`), and the preview page fetches `data/<shape>.json` the first time you pick a shape.
+
 ## Installing from the repository
 
 While editing the art, double-click **[cursors.bat](cursors.bat)** in a clone. Needs Python 3.10+. It only registers schemes; you pick one in the pointer settings. The menu is in Korean.
@@ -234,12 +252,16 @@ While editing the art, double-click **[cursors.bat](cursors.bat)** in a clone. N
   cursor-playground 커서 구성표
   1) 전체 등록   2) 전체 제거        (register all / remove all)
   3) 개별 등록   4) 개별 제거        (register some / remove some)
-  5) 현재 상태   0) 끝내기           (status / quit)
+  5) 현재 상태   6) 커서 모양 (기본)  (status / cursor shape)
+  0) 끝내기                            (quit)
 ```
+
+Menu item 6 switches the shape; everything after it registers, removes and reports that shape. A shape other than the first one copies the cursors `build.py` already made under `dist/`, so it needs no Python.
 
 ```bat
 cursors.bat -Install                    :: register all
 cursors.bat -Install -Scheme neon,pink  :: register some (comma-separated)
+cursors.bat -Install -Shape round       :: register all in the round shape
 cursors.bat -Uninstall                  :: remove all
 cursors.bat -Uninstall -Scheme neon     :: remove some
 cursors.bat -Status                     :: status
@@ -337,7 +359,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 - 페이지는 열 때마다 16자리 방문 번호를 만들어 `sessionStorage` 에 두고 요청에 붙임. 새 방문 번호로 적용이 오면 그때 방문 백업을 새로 뜸
 - 원래대로 뒤에는 지금 쓰는 구성표를 뺀 나머지 구성표와 커서 파일을 지움
 - 색조가 0 이 아니면 처리 스크립트가 받은 .cur/.ani 안의 PNG 를 픽셀마다 다시 칠해(HSL 에서 색상만) `%LOCALAPPDATA%\cursor-playground\<id>-h<색조>` 에 둠. PowerShell 반복문으로는 너무 느려서 윈도우에 들어 있는 `Add-Type` 으로 작은 C# 클래스를 컴파일해 씀. 식이 페이지와 같아서 색이 맞음
-- 아무 웹 페이지나 이 주소를 부를 수 있으므로, 받는 요청은 `apply/<schemes.json 에 있는 구성표>/<방문>[/<크기>[/<색조 0-359>]]`, `size/<크기>/<방문>`, `schedule/<방문>/<시>-<구성표>-<색조>...`(최대 6칸), `unschedule`, `restore/<방문>`, `status`, `settings`, `unlink` 뿐. 다른 주소나 끼워 넣은 인자는 전부 무시함
+- 아무 웹 페이지나 이 주소를 부를 수 있으므로, 받는 요청은 `apply/<schemes.json 에 있는 구성표>/<방문>[/<크기>[/<색조 0-359>[/<shapes.json 에 있는 모양>]]]`, `size/<크기>/<방문>`, `schedule/<방문>/<시>-<구성표>-<색조>[-<모양>]...`(최대 6칸), `unschedule`, `restore/<방문>`, `status`, `settings`, `unlink` 뿐. 다른 주소나 끼워 넣은 인자는 전부 무시함
 - 모양은 [preview.tpl.html](preview.tpl.html) 에서 고침. 글꼴은 Google Fonts (Silkscreen, IBM Plex Sans KR, IBM Plex Mono — 모두 SIL OFL). 탭 아이콘은 이 저장소에서 그린 분홍 화살표
 
 ### 구성표
@@ -527,6 +549,24 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `no.txt` | 사용할 수 없음 | `pin.txt` | 위치 선택 |
 |  |  | `person.txt` | 사용자 선택 |
 
+### 모양
+
+시안 페이지 위쪽 **커서 모양** 탭은 테마를 건드리지 않고 실루엣만 바꿈. 고르면 같은 구성표들이 그 모양으로 다시 그려짐 — 색·무늬·움직임은 그대로고 외곽선만 달라짐. 주소에 `?shape=round` 를 붙이면 그 모양으로 열림.
+
+<!-- shapes:ko -->
+| 폴더 | 이름 | 생김새 |
+|---|---|---|
+| `art/` | 기본 | 각진 화살표와 테마마다 다른 링크 그림. 지금까지의 모양. |
+| `shapes/round` | 둥근 | 모서리를 깎아 매끈한 화살표. 링크는 손가락을 세운 손. |
+| `shapes/chunky` | 두꺼운 | 넓은 삼각형에 굵은 꼬리. 굵은 선으로 또렷하게 보임. |
+| `shapes/sleek` | 날렵한 | 길고 가는 삼각형에 얇은 꼬리. 화면을 덜 가림. |
+
+<!-- /shapes:ko -->
+
+모양 하나는 `shapes/<모양>/` 의 실루엣 여섯 개(`arrow`, `ibeam`, `wait`, `no`, `move`, `hand`)임. 색은 없음 — `#` 은 외곽선(가장자리 한 겹), `-` 는 속에 그은 선, `o` 는 속, `.` 는 빈칸. 빌드할 때 [shape.py](shape.py) 가 테마의 색을 빌려 옴: 외곽선 색을 `#` 과 `-` 에 넣고, 속은 테마 그림의 같은 비율 자리에서 색을 떠 오고, 몸 바깥으로 번지는 빛은 새 실루엣 둘레에 다시 두름. 크기 조정 4종·정밀·필기·대체 선택은 실루엣이 따로 없는 기호라 테마가 그린 그대로 둠.
+
+만들어진 커서는 `dist/<모양>/<구성표>/` 에 들어감(첫 모양은 `dist/<구성표>/` 그대로). 시안 페이지는 모양을 처음 고를 때 `data/<모양>.json` 을 받아 옴.
+
 ### 저장소에서 직접 등록
 
 그림을 고치면서 볼 때는 클론한 폴더의 **[cursors.bat](cursors.bat)** 을 더블클릭. Python 3.10+ 필요. 등록만 하고 적용은 포인터 설정에서 고름.
@@ -535,12 +575,16 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
   cursor-playground 커서 구성표
   1) 전체 등록   2) 전체 제거
   3) 개별 등록   4) 개별 제거
-  5) 현재 상태   0) 끝내기
+  5) 현재 상태   6) 커서 모양 (기본)
+  0) 끝내기
 ```
+
+6번으로 모양을 바꾸면 그 뒤의 등록·제거·상태가 모두 그 모양을 가리킴. 첫 모양이 아닌 모양은 `build.py` 가 만들어 둔 `dist/` 의 커서를 복사만 하므로 Python 이 필요 없음.
 
 ```bat
 cursors.bat -Install                    :: 전체 등록
 cursors.bat -Install -Scheme neon,pink  :: 개별 등록 (쉼표로 여러 개)
+cursors.bat -Install -Shape round       :: 전체를 둥근 모양으로 등록
 cursors.bat -Uninstall                  :: 전체 제거
 cursors.bat -Uninstall -Scheme neon     :: 개별 제거
 cursors.bat -Status                     :: 현재 상태

@@ -1,0 +1,6 @@
+[
+  {"id": "classic", "name": "기본", "desc": "각진 화살표와 테마마다 다른 링크 그림. 지금까지의 모양.", "name_en": "Classic", "desc_en": "The angular arrow and the per-theme link shape this project started with."},
+  {"id": "round", "name": "둥근", "desc": "모서리를 깎아 매끈한 화살표. 링크는 손가락을 세운 손.", "name_en": "Round", "desc_en": "A smooth arrow with the corners shaved off. The link is a pointing hand."},
+  {"id": "chunky", "name": "두꺼운", "desc": "넓은 삼각형에 굵은 꼬리. 굵은 선으로 또렷하게 보임.", "name_en": "Chunky", "desc_en": "A wide triangle with a thick tail, easy to spot at a glance."},
+  {"id": "sleek", "name": "날렵한", "desc": "길고 가는 삼각형에 얇은 꼬리. 화면을 덜 가림.", "name_en": "Sleek", "desc_en": "A long, narrow triangle with a thin tail that covers less of the screen."}
+]

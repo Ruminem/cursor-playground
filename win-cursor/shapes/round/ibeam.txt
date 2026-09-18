@@ -1,0 +1,18 @@
+hotspot 3,8
+.######
+#oooooo#
+.#oooo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+..#oo#
+.#oooo#
+#oooooo#
+.######

@@ -63,14 +63,29 @@ jobs:
         working-directory: win-cursor
         run: |
           $schemes = Get-Content schemes.json -Raw -Encoding UTF8 | ConvertFrom-Json
+          $shapes = @(Get-Content shapes.json -Raw -Encoding UTF8 | ConvertFrom-Json)
           $slots = 'arrow','help','busy','wait','cross','ibeam','pen','no','ns','we','nwse','nesw','move','up','hand','pin','person'
           $fail = 0
           foreach ($s in $schemes) {
             foreach ($slot in $slots) {
               if (-not (Test-Path "art\$($s.id)\$slot.txt")) { Write-Host "그림 없음: $($s.id)/$slot.txt"; $fail = 1 }
-              $ext = if ($s.animated) { 'ani' } else { 'cur' }
-              if (-not (Test-Path "dist\$($s.id)\$slot.$ext")) { Write-Host "커서 없음: $($s.id)/$slot.$ext"; $fail = 1 }
             }
           }
-          "구성표 $($schemes.Count)종 x 17칸 확인"
+          foreach ($shape in $shapes) {
+            # 기본 모양은 dist\<구성표>\, 나머지는 dist\<모양>\<구성표>\ 에 들어간다
+            $root = if ($shape.id -eq $shapes[0].id) { 'dist' } else { "dist\$($shape.id)" }
+            if ($shape.id -ne $shapes[0].id) {
+              foreach ($slot in 'arrow','ibeam','wait','no','move','hand') {
+                if (-not (Test-Path "shapes\$($shape.id)\$slot.txt")) { Write-Host "모양 그림 없음: $($shape.id)/$slot.txt"; $fail = 1 }
+              }
+              if (-not (Test-Path "data\$($shape.id).json")) { Write-Host "모양 데이터 없음: $($shape.id).json"; $fail = 1 }
+            }
+            foreach ($s in $schemes) {
+              foreach ($slot in $slots) {
+                $ext = if ($s.animated) { 'ani' } else { 'cur' }
+                if (-not (Test-Path "$root\$($s.id)\$slot.$ext")) { Write-Host "커서 없음: $root/$($s.id)/$slot.$ext"; $fail = 1 }
+              }
+            }
+          }
+          "구성표 $($schemes.Count)종 x 17칸 x 모양 $($shapes.Count)가지 확인"
           exit $fail

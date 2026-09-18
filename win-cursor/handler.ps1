@@ -16,7 +16,7 @@
 #
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
 [CmdletBinding(PositionalBinding = $false)]
-param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue)  # -Apply 는 자동 전환 작업이 부른다
+param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue, [string]$Shape)  # -Apply 는 자동 전환 작업이 부른다
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # 내려받기 진행 표시가 꽤 느리게 만든다
 
@@ -46,6 +46,26 @@ function Get-Scheme($id) {
     $entry = [Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json | ForEach-Object { $_ } | Where-Object { $_.id -ceq $id } | Select-Object -First 1
     # 레지스트리 이름에 들어가므로 글자·숫자·공백만 허용
     if ($entry -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
+}
+
+# 커서 모양 목록도 Pages 에서 읽는다. 첫 번째가 기본 모양이고, 그때는 dist/<구성표>/ 를 그대로 쓴다
+function Get-Shape($id) {
+    if (-not $script:shapes) {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $bytes = (Invoke-WebRequest -UseBasicParsing -Uri "$base/shapes.json").RawContentStream.ToArray()
+        $script:shapes = @([Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json | ForEach-Object { $_ })
+    }
+    $entry = $script:shapes | Where-Object { $_.id -ceq $id } | Select-Object -First 1
+    # 기본 모양은 따로 받을 것이 없어 아무것도 돌려주지 않는다. 이름은 레지스트리에 들어가므로 글자·숫자·공백만
+    if ($entry -and $entry.id -cne $script:shapes[0].id -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
+}
+
+# 레지스트리에 들어갈 구성표 이름: 테마 + 모양 + 색조
+function Get-SchemeName($entry, [int]$hue, $shape) {
+    $name = $entry.name
+    if ($shape) { $name = "$name $($shape.name)" }
+    if ($hue) { $name = "$name 색조$hue" }
+    $name
 }
 
 function Notify($text, [switch]$IsError) {
@@ -248,8 +268,9 @@ namespace CursorPlayground {
 }
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
-function Install-Scheme($id, $name, $ext, [int]$hue) {
-    $dest = Join-Path $root $(if ($hue) { "$id-h$hue" } else { $id })
+function Install-Scheme($id, $name, $ext, [int]$hue, $shape) {
+    $key = if ($shape) { "$shape-$id" } else { $id }
+    $dest = Join-Path $root $(if ($hue) { "$key-h$hue" } else { $key })
     if ($hue) { Initialize-Recolor }
     New-Item -ItemType Directory -Force $dest | Out-Null
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -257,7 +278,8 @@ function Install-Scheme($id, $name, $ext, [int]$hue) {
         $file = $slots[$slot]
         if (-not $file) { ''; continue }
         $cur = Join-Path $dest "$file.$ext"
-        Invoke-WebRequest -UseBasicParsing -Uri "$base/dist/$id/$file.$ext" -OutFile $cur
+        $from = if ($shape) { "$base/dist/$shape/$id/$file.$ext" } else { "$base/dist/$id/$file.$ext" }
+        Invoke-WebRequest -UseBasicParsing -Uri $from -OutFile $cur
         $head = [IO.File]::ReadAllBytes($cur)
         $isCur = $head.Length -ge 22 -and $head[0] -eq 0 -and $head[1] -eq 0 -and $head[2] -eq 2 -and $head[3] -eq 0
         $isAni = $head.Length -ge 12 -and [Text.Encoding]::ASCII.GetString($head, 0, 4) -eq 'RIFF' -and [Text.Encoding]::ASCII.GetString($head, 8, 4) -eq 'ACON'
@@ -275,8 +297,8 @@ function Install-Scheme($id, $name, $ext, [int]$hue) {
     $paths
 }
 
-function Set-Scheme($id, $name, $ext, [int]$hue) {
-    $paths = @(Install-Scheme $id $name $ext $hue)
+function Set-Scheme($id, $name, $ext, [int]$hue, $shape) {
+    $paths = @(Install-Scheme $id $name $ext $hue $shape)
     $i = 0
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value $paths[$i] -PropertyType ExpandString -Force | Out-Null
@@ -361,6 +383,7 @@ function Set-Schedule($slots) {
     foreach ($slot in $slots) {
         $argument = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Apply $($slot.Id)"
         if ($slot.Hue) { $argument += " -Hue $($slot.Hue)" }
+        if ($slot.Shape) { $argument += " -Shape $($slot.Shape)" }
         $action = New-ScheduledTaskAction -Execute "$PSHOME\powershell.exe" -Argument $argument
         $trigger = New-ScheduledTaskTrigger -Daily -At ([datetime]::Today.AddHours($slot.Hour))
         # 배터리로 돌 때도, 컴퓨터가 꺼져 있어 놓친 시각도 켜지면 한 번 실행
@@ -397,8 +420,11 @@ if ($Setup) {
 if ($Apply) {
     $entry = Get-Scheme $Apply
     if (-not $entry) { return }
-    $name = if ($Hue) { "$($entry.name) 색조$Hue" } else { $entry.name }
-    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue
+    # $Shape 는 [string] 파라미터라 같은 이름(대소문자 무시)의 변수에 객체를 넣으면 문자열이 된다
+    $shapeEntry = if ($Shape) { Get-Shape $Shape } else { $null }
+    if ($Shape -and -not $shapeEntry) { return }
+    $name = Get-SchemeName $entry $Hue $shapeEntry
+    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue $(if ($shapeEntry) { $shapeEntry.id })
     return
 }
 
@@ -408,15 +434,17 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3}))?)?/?$' -and [int]('0' + $Matches[4]) -lt 360) {
-        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4])
+    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3})(?:/([a-z]{1,12}))?)?)?/?$' -and [int]('0' + $Matches[4]) -lt 360) {
+        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4]); $shapeId = $Matches[5]
         $entry = Get-Scheme $id
         if (-not $entry) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
-        $name = if ($hue) { "$($entry.name) 색조$hue" } else { $entry.name }
+        $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
+        if ($shapeId -and -not $shapeEntry) { Notify "알 수 없는 모양이라 무시함`n$shapeId" -IsError; return }
+        $name = Get-SchemeName $entry $hue $shapeEntry
         $ext = if ($entry.animated -eq $true) { 'ani' } else { 'cur' }
         Save-VisitBackup $visit
         if ($size) { Set-Size $size }
-        Set-Scheme $id $name $ext $hue
+        Set-Scheme $id $name $ext $hue $(if ($shapeEntry) { $shapeEntry.id })
         if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $prefix$name" }
     }
     elseif ($Url -cmatch '^cursor-playground://size/(32|48|64|96|128)/([a-z0-9]{16})/?$') {
@@ -443,13 +471,14 @@ try {
     elseif ($Url -cmatch '^cursor-playground://status/?$') {
         Notify (Get-StatusText)
     }
-    elseif ($Url -cmatch '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}){1,6})/?$') {
+    elseif ($Url -cmatch '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:-[a-z]{1,12})?){1,6})/?$') {
         $slots = @()
         foreach ($part in ($Matches[2] -split '/' | Where-Object { $_ })) {
-            $hour, $id, $hue = $part -split '-'
+            $hour, $id, $hue, $shapeId = $part -split '-'
             $entry = Get-Scheme $id
-            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
-            $slots += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Name = $(if ([int]$hue) { "$($entry.name) 색조$hue" } else { $entry.name }) }
+            $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
+            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359 -or ($shapeId -and -not $shapeEntry)) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
+            $slots += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Name = Get-SchemeName $entry ([int]$hue) $shapeEntry }
         }
         Set-Schedule $slots
         Notify "시간대별 자동 전환을 켬.`n`n$((Get-Schedule | ForEach-Object { $_.TaskName } | Sort-Object) -join "`n")"

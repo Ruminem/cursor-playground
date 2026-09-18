@@ -1,0 +1,20 @@
+hotspot 9,9
+.........#
+.....####o####
+....#ooooooooo#
+...#ooooo####oo#
+..#ooooo#....#oo#
+.#ooooo#......#oo#
+.#oooooo#......#o#
+.#ooo#ooo#.....#o#
+.#oo#.#ooo#....#o#
+#oo#...#ooo#...#oo#
+.#o#....#ooo#.#oo#
+.#o#.....#ooo#ooo#
+.#o#......#oooooo#
+.#oo#......#ooooo#
+..#oo#....#ooooo#
+...#oo####ooooo#
+....#ooooooooo#
+.....####o####
+.........#

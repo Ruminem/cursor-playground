@@ -1,0 +1,19 @@
+hotspot 0,0
+#
+##
+#o##
+#ooo#
+#oooo##
+#oooooo#
+#ooooooo##
+#ooooooooo#
+#ooooooo###
+#oooooo#
+#oooooo#
+###ooooo#
+#..#oooo#
+....#oooo#
+....#oooo#
+.....#ooo#
+.....#ooo#
+......###
