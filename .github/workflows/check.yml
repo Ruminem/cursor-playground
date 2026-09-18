@@ -1,11 +1,20 @@
 # SPDX-License-Identifier: Apache-2.0
-# 푸시할 때마다 빌드 결과가 최신인지, 커서 파일을 윈도우가 읽을 수 있는지 본다.
+# 푸시할 때마다 빌드해서 커서 파일이 성한지 보고, main 이면 그 결과를 GitHub Pages 에 올린다.
+# dist/·data/·preview.html 은 저장소에 커밋하지 않는다 — 여기서 만들어 바로 배포한다.
 name: check
 
 on:
   push:
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read      # 올릴 권한은 아래 deploy 잡에만 준다 (build 잡은 PR 코드를 돌린다)
+
+# 같은 브랜치에 연달아 밀면 나중 것만 하면 된다. 브랜치마다 따로 세서 서로 안 막게
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   # 러너 콘솔은 cp1252 라 파이썬이 한글을 찍다가 죽는다
@@ -15,24 +24,31 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      # 줄바꿈이 CRLF 로 바뀌면 build.py 결과와 달라져 아래 비교가 헛되이 실패한다
+      # 줄바꿈이 CRLF 로 바뀌면 build.py 결과와 달라져 아래 README 비교가 헛되이 실패한다
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           # PNG 압축 결과가 파이썬(zlib) 버전마다 달라서 개발에 쓰는 버전과 맞춘다
+          # (올라가는 커서가 러너 환경을 타지 않게. 커밋된 결과와 비교하지는 않는다)
           python-version: '3.14'
 
-      - name: 빌드 결과가 최신인지
+      # 부분 빌드는 아래 전체 빌드가 지나지 않는 길이라 따로 본다 (몇 초)
+      - name: 바뀐 자리만 갈아 끼우기가 통째로 만든 것과 같은지
+        working-directory: win-cursor
+        run: python test_stamp.py
+
+      - name: 빌드
         working-directory: win-cursor
         run: python build.py
 
-      - name: 커밋 안 된 변경이 있으면 실패
+      - name: build.py 가 고친 추적 파일을 커밋했는지
         shell: pwsh
         run: |
+          # dist/·data/·preview.html 은 .gitignore 라 여기 안 뜬다. README 구성표·모양 표만 남는다
           $changed = git status --porcelain
           if ($changed) {
-            Write-Host '빌드 결과를 커밋하지 않았음. win-cursor 에서 python build.py 를 돌리고 결과까지 커밋할 것:'
+            Write-Host 'build.py 가 고친 파일을 커밋하지 않았음. win-cursor 에서 python build.py 를 돌리고 결과까지 커밋할 것:'
             Write-Host $changed
             git --no-pager diff --stat
             exit 1
@@ -89,3 +105,31 @@ jobs:
           }
           "구성표 $($schemes.Count)종 x 모양 $($shapes.Count)가지 확인 (기본 17칸, 나머지 모양 9칸)"
           exit $fail
+
+      # 여기부터 배포. 주소를 지금 그대로 두려고 저장소째로 올린다 (.git 만 덜어낸다)
+      - name: .git 덜어내기
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: |
+          cmd /c rd /s /q .git                       # 읽기 전용 팩 파일이 있어도 지운다
+          if (Test-Path .git) { Write-Host '.git 을 못 지웠음'; exit 1 }
+          Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
+
+      - uses: actions/upload-pages-artifact@v5
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v5

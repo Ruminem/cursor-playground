@@ -8,7 +8,9 @@ dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려
 나머지는 dist/<모양>/<구성표>/). art/ 나 shapes/ 를 고치면 이걸 다시 돌리고 결과까지 커밋해야 웹에 반영된다.
 """
 import base64
+import hashlib
 import json
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -23,6 +25,28 @@ HERE = Path(__file__).parent
 SCHEMES = json.loads((HERE / "schemes.json").read_text(encoding="utf-8"))
 # 커서 모양 목록. 첫 번째가 기본(테마 그림 그대로)이고, 나머지는 smooth.py 가 그려 테마 색을 입힌다
 SHAPES = json.loads((HERE / "shapes.json").read_text(encoding="utf-8"))
+
+
+def _sha(*blobs) -> str:
+    h = hashlib.sha256()
+    for b in blobs:
+        h.update(b if isinstance(b, bytes) else b.encode())
+    return h.hexdigest()[:16]
+
+
+def _hashes() -> tuple[dict, str, str]:
+    """(구성표별 재료 해시, 전부 합친 해시, 시안 페이지 해시). 지난번과 같으면 그 산출물은 건너뛴다"""
+    code = _sha(*((HERE / n).read_bytes() for n in ("build.py", "make_cur.py", "shape.py", "smooth.py", "shapes.json")))
+    art = {s["id"]: _sha(code, json.dumps(s, sort_keys=True),
+                         *(f.read_bytes() for f in sorted((HERE / "art" / s["id"]).iterdir())))
+           for s in SCHEMES}
+    # 시안 페이지와 모양 데이터는 구성표 전부를 한 파일에 담아서 하나만 바뀌어도 다시 만든다
+    every = _sha(*(art[s["id"]] for s in SCHEMES))
+    return art, every, _sha(every, (HERE / "preview.tpl.html").read_bytes())
+
+
+# dist/ 안에 두면 CI 의 커서 파일 점검이 이걸 커서로 알고 열어 보다 실패한다
+STAMP = HERE / ".build-stamp.json"
 # 파일, 칸 이름, 브라우저가 이미지를 못 쓸 때의 기본 커서
 ROLES = [
     ("arrow", "일반 선택", "default"),
@@ -208,13 +232,18 @@ def build() -> str:
     )
 
 
-def shape_data(shape_id: str) -> dict:
-    """다른 모양의 페이지 데이터. 기본 모양이 preview.html 에 박혀 있는 것과 같은 구조"""
+def shape_data(shape_id: str, sids: list[str], old: dict | None) -> dict:
+    """다른 모양의 페이지 데이터. 기본 모양이 preview.html 에 박혀 있는 것과 같은 구조.
+
+    old 를 주면 sids 에 든 구성표만 새로 그리고 나머지는 지난번 것을 그대로 옮긴다."""
     shape, cache = shape_of(shape_id), {}
     data: dict[str, dict[str, list]] = {}
     extra: dict[str, dict[str, list]] = {}
     for scheme in SCHEMES:
         sid = scheme["id"]
+        if old is not None and sid not in sids:
+            data[sid], extra[sid] = old["data"][sid], old["extra"][sid]
+            continue
         for rid, _, fallback in ROLES:
             uris, hx, hy, rate, w, h = page_bits(sid, rid, shape, cache)
             data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, rate, w, h]
@@ -225,15 +254,14 @@ def shape_data(shape_id: str) -> dict:
     return {"data": data, "extra": extra}
 
 
-def build_dist(job: tuple[str, int, int]) -> tuple[str, int]:
-    """모양 하나의 dist 커서. 구성표를 part/parts 로 나눠 맡는다 (프로세스를 나눠 돌리기 위함)"""
-    shape_id, part, parts = job
+def build_dist(job: tuple[str, str, list[str]]) -> tuple[str, int]:
+    """모양 하나의 dist 커서. 맡은 구성표만 만든다 (프로세스를 나눠 돌리기 위함)"""
+    shape_id, label, sids = job
     shape, cache = shape_of(shape_id), {}
     # 기본 모양은 dist/<구성표>/ 그대로 둔다 (이미 깔린 처리 스크립트가 그 주소를 쓴다)
     root = HERE / "dist" if shape is None else HERE / "dist" / shape_id
     count = 0
-    for scheme in SCHEMES[part::parts]:
-        sid = scheme["id"]
+    for sid in sids:
         out = root / sid
         out.mkdir(parents=True, exist_ok=True)
         for rid, _, _ in ROLES + EXTRA:
@@ -245,15 +273,21 @@ def build_dist(job: tuple[str, int, int]) -> tuple[str, int]:
             (out / f"{rid}.{ext}").write_bytes(blob)
             count += 1
         cache.pop(sid, None)
-    return f"dist {shape_id} {part + 1}/{parts}", count
+    return f"dist {label}", count
 
 
-def build_data(shape_id: str) -> tuple[str, int]:
+def build_data(job: tuple[str, list[str]]) -> tuple[str, int]:
     """모양 하나의 시안 페이지 데이터 data/<모양>.json"""
+    shape_id, sids = job
     path = HERE / "data" / f"{shape_id}.json"
     path.parent.mkdir(exist_ok=True)
-    path.write_text(json.dumps(shape_data(shape_id), separators=(",", ":")), encoding="utf-8", newline="\n")
-    return f"data/{shape_id}.json", 0
+    # 한 파일에 구성표 121종이 다 들어 있다. 지난번 파일이 있으면 바뀐 자리만 갈아 끼운다.
+    # 코드가 바뀌면 모든 구성표가 sids 에 들어오므로(해시에 코드가 섞여 있다) 통째로 다시 그려진다
+    old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+    if old is not None and set(old.get("data", ())) != {s["id"] for s in SCHEMES}:
+        old = None                                   # 구성표가 늘거나 줄었으면 옮겨 쓸 수 없다
+    path.write_text(json.dumps(shape_data(shape_id, sids, old), separators=(",", ":")), encoding="utf-8", newline="\n")
+    return f"data/{shape_id}.json" + (f" (구성표 {len(sids)}종만)" if old is not None else ""), 0
 
 
 def update_readme() -> None:
@@ -292,23 +326,39 @@ if __name__ == "__main__":
     if clash:  # dist/<모양>/ 과 dist/<구성표>/ 가 같은 자리를 쓰게 된다
         raise SystemExit(f"모양 이름이 구성표 이름과 겹침: {sorted(clash)}")
     t0 = time.time()
-    # 일을 프로세스로 나눠 한꺼번에 돌린다. 매끈한 모양은 크기마다 새로 그려서 혼자 돌리면 오래 걸린다.
-    # 나누는 단위는 넉넉히 잡는다 — 잘게 쪼개면 프로세스마다 스텐실을 다시 그린다
+    # 지난번 빌드가 남긴 표식. 재료가 그대로인 산출물은 다시 그리지 않는다.
+    # CI 는 늘 빈 체크아웃이라 표식이 없어 전부 다시 만든다. 손으로 그러려면 --all
+    art, every, page_key = _hashes()
+    was = {} if "--all" in sys.argv else json.loads(STAMP.read_text()) if STAMP.exists() else {}
+
     with ProcessPoolExecutor() as pool:
-        jobs = []
+        # 재료가 바뀐 구성표. dist 는 여기에 "폴더가 없는 것"을 더하고, data 는 이 목록만 갈아 끼운다
+        changed = [s["id"] for s in SCHEMES if was.get(s["id"]) != art[s["id"]]]
+        jobs, skipped = [], 0
         for shp in SHAPES:
-            parts = 4 if shp["id"] == SHAPES[0]["id"] else 2
-            jobs += [pool.submit(build_dist, (shp["id"], i, parts)) for i in range(parts)]
-            if shp["id"] != SHAPES[0]["id"]:
-                jobs.append(pool.submit(build_data, shp["id"]))
+            base = shp["id"] == SHAPES[0]["id"]
+            root = HERE / "dist" if base else HERE / "dist" / shp["id"]
+            stale = [s["id"] for s in SCHEMES
+                     if s["id"] in changed or not (root / s["id"]).is_dir()]
+            skipped += len(SCHEMES) - len(stale)
+            if stale:
+                # 프로세스로 나눈다. 잘게 쪼개면 프로세스마다 매끈한 모양의 스텐실을 다시 그린다
+                parts = min(4 if base else 2, len(stale))
+                jobs += [pool.submit(build_dist, (shp["id"], f"{shp['id']} {i + 1}/{parts}", stale[i::parts]))
+                         for i in range(parts)]
+            if not base and (was.get("*") != every or not (HERE / "data" / f"{shp['id']}.json").exists()):
+                jobs.append(pool.submit(build_data, (shp["id"], changed or [s["id"] for s in SCHEMES])))
+
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
-        out.write_text(build(), encoding="utf-8", newline="\n")
-        print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")
+        if was.get("*page") != page_key or not out.exists():
+            out.write_text(build(), encoding="utf-8", newline="\n")
+            print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")
         total = 0
         for done in as_completed(jobs):
             what, count = done.result()
             total += count
             print(f"[{time.time() - t0:5.1f}초] {what}" + (f" 커서 {count}개" if count else ""))
-    print(f"dist/ 커서 {total}개 만듦")
+
+    STAMP.write_text(json.dumps({**art, "*": every, "*page": page_key}), encoding="utf-8", newline="\n")
     update_readme()
-    print(f"README 구성표 표 갱신함 · 전부 {time.time() - t0:.1f}초")
+    print(f"dist/ 커서 {total}개 만듦 (그대로 둔 구성표 {skipped}개) · 전부 {time.time() - t0:.1f}초")

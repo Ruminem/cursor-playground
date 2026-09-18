@@ -1,2 +1,9 @@
 win-cursor/out/
 __pycache__/
+# 아래는 build.py 가 만든다. 커밋하지 않고 CI 가 만들어 GitHub Pages 에 올린다
+# (한 번 고칠 때마다 수십 MB 씩 저장소가 영구히 불어나서 뺐다)
+win-cursor/dist/
+win-cursor/data/
+win-cursor/preview.html
+# 어디까지 그려 뒀는지 적어 두는 표식 (재료가 그대로면 건너뛴다)
+win-cursor/.build-stamp.json

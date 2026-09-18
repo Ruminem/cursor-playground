@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+"""build.py 가 바뀐 구성표 자리만 갈아 끼워 만든 data/<모양>.json 이,
+통째로 만든 것과 같은지 본다. 다르면 시안 페이지가 낡은 그림을 보여 준다.
+
+사용법: python test_stamp.py — 구성표 세 종·모양 하나로 줄여서 몇 초 안에 끝난다.
+"""
+import json
+
+import build
+
+# 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다
+build.SCHEMES = build.SCHEMES[:3]
+shape_id = build.SHAPES[1]["id"]                 # 매끈한 모양 하나 (기본 모양은 이 파일을 안 만든다)
+sids = [s["id"] for s in build.SCHEMES]
+
+whole = build.shape_data(shape_id, sids, None)
+# 파일로 나갔다 들어오는 길을 그대로 지나야 한다 (튜플이 리스트로 바뀌는 것 같은 어긋남을 잡는다)
+old = json.loads(json.dumps(whole, separators=(",", ":")))
+spliced = build.shape_data(shape_id, sids[1:2], old)   # 가운데 한 종만 다시 그렸다 치고
+
+dump = lambda d: json.dumps(d, separators=(",", ":"))
+assert dump(spliced) == dump(whole), "갈아 끼운 데이터가 통째로 만든 것과 다름"
+assert list(spliced["data"]) == sids, f"구성표 차례가 어긋남: {list(spliced['data'])}"
+print(f"갈아 끼우기 OK · {shape_id} · 구성표 {len(sids)}종 · {len(dump(whole))}바이트")
