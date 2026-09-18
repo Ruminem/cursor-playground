@@ -23,13 +23,20 @@
 `cat.py` (tkinter, `Cat` 클래스가 전부) + `art/*.txt` 그림. 본체와 아무 관계 없다.
 
 ## 고칠 때 순서
-- 그림·구성표·모양을 고쳤으면 **`win-cursor` 에서 `python build.py` 를 돌리고 결과까지 커밋한다.**
-  CI(`.github/workflows/check.yml`)가 빌드 결과가 최신인지, 커서 파일을 윈도우가 읽는지 본다
-- 빌드는 88초(프로세스 11개). 산출물은 `dist` 101MB + `data` 36MB
-- 파이썬 버전은 3.14 로 맞춘다. PNG 압축(zlib) 결과가 버전마다 달라 CI 비교가 헛되이 깨진다
+- 그림·구성표·모양을 고쳤으면 **`win-cursor` 에서 `python build.py` 를 돌린다.**
+  `dist/`·`data/`·`preview.html` 은 **커밋하지 않는다**(`.gitignore`) — 커밋마다 저장소가 수십 MB 씩
+  영구히 불어서 뺐다. CI 가 만들어 Pages 에 바로 올린다. `build.py` 가 같이 고치는 `win-cursor/README.md` 표는 커밋한다
+- CI(`.github/workflows/check.yml`)가 빌드해서 커서 파일을 윈도우가 읽는지 보고,
+  main 이면 그 결과를 GitHub Pages 에 올린다. **Pages 원본은 브랜치가 아니라 GitHub Actions** 여야 한다
+- 릴리스는 태그(`v*`)를 밀면 `.github/workflows/release.yml` 이 빌드·zip·릴리스까지 한다.
+  본문은 `CHANGELOG.md` 의 그 버전 절을 그대로 쓰므로 **CHANGELOG 를 먼저 쓰고 태그를 민다**
+- 전체 빌드는 100~200초(코어 수만큼 프로세스). 산출물은 `dist` 101MB + `data` 36MB.
+  재료가 그대로인 구성표는 `win-cursor/.build-stamp.json` 을 보고 건너뛰므로 두 번째부터는
+  고친 것만 다시 그린다 (아무것도 안 고쳤으면 1초, 구성표 하나면 17초). 전부 다시 그리려면 `python build.py --all`
+- 파이썬 버전은 3.14 로 맞춘다. PNG 압축(zlib) 결과가 버전마다 달라 올라가는 커서가 러너 환경을 타지 않게
 
 ## 읽지 말 것 (생성물)
-`win-cursor/preview.html`(2.8MB), `win-cursor/dist/`, `win-cursor/data/`, `win-cursor/out/`, `win-cursor/README.md` 의 구성표 표.
+`win-cursor/preview.html`(2.8MB), `win-cursor/dist/`, `win-cursor/data/`, `win-cursor/out/`, `win-cursor/.build-stamp.json`, `win-cursor/README.md` 의 구성표 표.
 전부 `build.py` 가 만든다. 궁금한 게 있으면 원본(`win-cursor/art/`, `*.json`, `win-cursor/preview.tpl.html`)을 본다.
 
 ## 이 저장소의 관례
