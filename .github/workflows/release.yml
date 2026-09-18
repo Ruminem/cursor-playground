@@ -56,5 +56,6 @@ jobs:
           if (-not $m.Success) { Write-Host "CHANGELOG.md 에 $env:TAG 절이 없음. 먼저 적고 태그를 다시 밀 것"; exit 1 }
           $m.Groups[1].Value.Trim() | Set-Content notes.md -Encoding utf8   # pwsh 의 utf8 은 BOM 없음
 
+          # --title 을 안 주면 이름이 빈 릴리스가 된다 (목록에서 제목 자리가 빈다)
           gh release create $env:TAG "cursor-playground-$env:TAG.zip" `
-            --repo $env:GITHUB_REPOSITORY --notes-file notes.md
+            --repo $env:GITHUB_REPOSITORY --title $env:TAG --notes-file notes.md
