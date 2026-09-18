@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: Apache-2.0
+# 푸시할 때마다 빌드 결과가 최신인지, 커서 파일을 윈도우가 읽을 수 있는지 본다.
+name: check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      # 줄바꿈이 CRLF 로 바뀌면 build.py 결과와 달라져 아래 비교가 헛되이 실패한다
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 빌드 결과가 최신인지
+        working-directory: win-cursor
+        run: python build.py
+
+      - name: 커밋 안 된 변경이 있으면 실패
+        shell: pwsh
+        run: |
+          $changed = git status --porcelain
+          if ($changed) {
+            Write-Host '빌드 결과를 커밋하지 않았음. win-cursor 에서 python build.py 를 돌리고 결과까지 커밋할 것:'
+            Write-Host $changed
+            git --no-pager diff --stat
+            exit 1
+          }
+
+      - name: 커서 파일을 윈도우가 읽는지
+        shell: powershell
+        run: |
+          Add-Type @'
+          using System; using System.Runtime.InteropServices;
+          public static class Ld {
+            [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr LoadCursorFromFile(string name);
+            [DllImport("user32.dll")] public static extern bool DestroyCursor(IntPtr h);
+          }
+          '@
+          $files = Get-ChildItem win-cursor\dist -Recurse -File
+          $bad = @()
+          foreach ($f in $files) {
+            $h = [Ld]::LoadCursorFromFile($f.FullName)
+            if ($h -eq [IntPtr]::Zero) { $bad += $f.FullName } else { [void][Ld]::DestroyCursor($h) }
+          }
+          "커서 파일 $($files.Count)개 / 못 읽은 파일 $($bad.Count)개"
+          if ($bad.Count) { $bad | ForEach-Object { Write-Host $_ }; exit 1 }
+          if ($files.Count -lt 100) { Write-Host '커서 파일이 너무 적음'; exit 1 }
+
+      - name: 구성표 목록과 그림·커서가 맞는지
+        shell: pwsh
+        working-directory: win-cursor
+        run: |
+          $schemes = Get-Content schemes.json -Raw -Encoding UTF8 | ConvertFrom-Json
+          $slots = 'arrow','help','busy','wait','cross','ibeam','pen','no','ns','we','nwse','nesw','move','up','hand','pin','person'
+          $fail = 0
+          foreach ($s in $schemes) {
+            foreach ($slot in $slots) {
+              if (-not (Test-Path "art\$($s.id)\$slot.txt")) { Write-Host "그림 없음: $($s.id)/$slot.txt"; $fail = 1 }
+              $ext = if ($s.animated) { 'ani' } else { 'cur' }
+              if (-not (Test-Path "dist\$($s.id)\$slot.$ext")) { Write-Host "커서 없음: $($s.id)/$slot.$ext"; $fail = 1 }
+            }
+          }
+          "구성표 $($schemes.Count)종 x 17칸 확인"
+          exit $fail

@@ -9,12 +9,14 @@
 #   cursor-playground://restore/<방문>          그 방문에서 처음 적용하기 직전 상태로 되돌림
 #   cursor-playground://status                  지금 상태를 알림 창으로 보여 줌
 #   cursor-playground://settings                마우스 속성 창을 포인터 탭으로 엶
+#   cursor-playground://schedule/<방문>/<시>-<구성표>-<색조>/...  정한 시각마다 그 구성표로 바꾸는 작업을 등록 (최대 6칸)
+#   cursor-playground://unschedule              등록한 자동 전환 작업을 지움
 #   cursor-playground://unlink                  설치할 때 상태로 되돌린 뒤 주소 연결과 설치 폴더까지 지움
 # <방문> 은 페이지를 열 때마다 새로 만드는 16자리 번호. 같은 방문 안에서 여러 번 적용해도 백업은 처음 한 번만 뜬다.
 #
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
 [CmdletBinding(PositionalBinding = $false)]
-param([string]$Url, [switch]$Setup)
+param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue)  # -Apply 는 자동 전환 작업이 부른다
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # 내려받기 진행 표시가 꽤 느리게 만든다
 
@@ -337,7 +339,34 @@ function Get-StatusText {
     $initialText = if (Test-Path $initialFile) { '있음' } else { '없음' }
     $size = (Get-ItemProperty $cursorsKey).CursorBaseSize
     if (-not $size) { $size = 32 }
-    "지금 적용된 구성표: $current`n포인터 크기: ${size}px`n받아 둔 구성표: $installedText`n원래대로 누르면 돌아갈 곳: $visitText`n설치할 때 상태 백업: $initialText"
+    $tasks = @(Get-Schedule | ForEach-Object { $_.TaskName } | Sort-Object)
+    $scheduleText = $(if ($tasks) { $tasks -join ', ' } else { '꺼짐' })
+    "지금 적용된 구성표: $current`n포인터 크기: ${size}px`n받아 둔 구성표: $installedText`n원래대로 누르면 돌아갈 곳: $visitText`n설치할 때 상태 백업: $initialText`n시간대별 자동 전환: $scheduleText"
+}
+
+# ── 시간대별 자동 전환 ──────────────────────────────────────────────────
+# 윈도우 작업 스케줄러에 하루 한 번짜리 작업을 만든다. 관리자 권한 없이 내 계정에만 등록됨
+$taskPath = '\cursor-playground\'
+
+function Get-Schedule {
+    @(Get-ScheduledTask -TaskPath $taskPath -ErrorAction SilentlyContinue)
+}
+
+function Clear-Schedule {
+    foreach ($task in Get-Schedule) { Unregister-ScheduledTask -InputObject $task -Confirm:$false }
+}
+
+function Set-Schedule($slots) {
+    Clear-Schedule
+    foreach ($slot in $slots) {
+        $argument = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Apply $($slot.Id)"
+        if ($slot.Hue) { $argument += " -Hue $($slot.Hue)" }
+        $action = New-ScheduledTaskAction -Execute "$PSHOME\powershell.exe" -Argument $argument
+        $trigger = New-ScheduledTaskTrigger -Daily -At ([datetime]::Today.AddHours($slot.Hour))
+        # 배터리로 돌 때도, 컴퓨터가 꺼져 있어 놓친 시각도 켜지면 한 번 실행
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+        Register-ScheduledTask -TaskName "$($slot.Hour)시 $($slot.Name)" -TaskPath $taskPath -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
+    }
 }
 
 # ── 진입점 ──────────────────────────────────────────────────────────────
@@ -361,6 +390,15 @@ if ($Setup) {
     else { '  설치할 때 만든 백업이 있어서 그대로 둠' }
     '  이제 시안 페이지에서 구성표의 [이 구성표 적용] 을 누르면 됨'
     ''
+    return
+}
+
+# 자동 전환 작업이 부르는 길. 되돌릴 자리(방문 백업)는 건드리지 않는다
+if ($Apply) {
+    $entry = Get-Scheme $Apply
+    if (-not $entry) { return }
+    $name = if ($Hue) { "$($entry.name) 색조$Hue" } else { $entry.name }
+    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue
     return
 }
 
@@ -405,6 +443,21 @@ try {
     elseif ($Url -cmatch '^cursor-playground://status/?$') {
         Notify (Get-StatusText)
     }
+    elseif ($Url -cmatch '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}){1,6})/?$') {
+        $slots = @()
+        foreach ($part in ($Matches[2] -split '/' | Where-Object { $_ })) {
+            $hour, $id, $hue = $part -split '-'
+            $entry = Get-Scheme $id
+            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
+            $slots += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Name = $(if ([int]$hue) { "$($entry.name) 색조$hue" } else { $entry.name }) }
+        }
+        Set-Schedule $slots
+        Notify "시간대별 자동 전환을 켬.`n`n$((Get-Schedule | ForEach-Object { $_.TaskName } | Sort-Object) -join "`n")"
+    }
+    elseif ($Url -cmatch '^cursor-playground://unschedule/?$') {
+        Clear-Schedule
+        Notify '시간대별 자동 전환을 끔.'
+    }
     elseif ($Url -cmatch '^cursor-playground://settings/?$') {
         # 마우스 속성 창의 두 번째 탭(포인터)
         Start-Process -FilePath "$env:SystemRoot\System32\control.exe" -ArgumentList 'main.cpl,,1'
@@ -416,6 +469,7 @@ try {
         # 설치할 때도 우리 구성표를 쓰고 있었다면 파일이 곧 사라지므로 윈도우 기본으로 돌린다
         if ((Get-ItemProperty $cursorsKey).'(default)' -like 'cursor-playground *') { Reset-ToDefault }
         foreach ($n in Get-OurSchemes) { Remove-ItemProperty -Path $schemesKey -Name $n }
+        Clear-Schedule
         if (Test-Path $linkKey) { Remove-Item $linkKey -Recurse -Force }
         if (Test-Path $root) { Remove-Item $root -Recurse -Force }
         Notify '설치할 때 상태로 되돌리고 웹 버튼 연결과 설치 폴더를 지움. 다시 쓰려면 페이지의 한 줄 설치부터.'
