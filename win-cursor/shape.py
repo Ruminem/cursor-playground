@@ -22,7 +22,6 @@ def read_art(text: str) -> tuple[list[dict], tuple[int, int], int]:
     return frames, read_hotspot(text) or (0, 0), read_rate(text)
 
 
-
 def to_text(frames: list[dict], hot: tuple[int, int], rate: int) -> str:
     """{좌표: RGBA} 프레임들 → art txt (make_cur 가 읽는 형식)"""
     allp = [p for f in frames for p in f]
@@ -49,10 +48,6 @@ def to_text(frames: list[dict], hot: tuple[int, int], rate: int) -> str:
 def bbox(points) -> tuple[int, int, int, int]:
     xs = [x for x, _ in points]; ys = [y for _, y in points]
     return min(xs), min(ys), max(xs), max(ys)
-
-
-
-
 
 
 def glyph_of(base: list[dict], over: list[dict]) -> list[dict]:
