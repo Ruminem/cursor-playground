@@ -278,8 +278,11 @@ function Install-Scheme($id, $name, $ext, [int]$hue, $shape) {
         $file = $slots[$slot]
         if (-not $file) { ''; continue }
         $cur = Join-Path $dest "$file.$ext"
-        $from = if ($shape) { "$base/dist/$shape/$id/$file.$ext" } else { "$base/dist/$id/$file.$ext" }
-        Invoke-WebRequest -UseBasicParsing -Uri $from -OutFile $cur
+        $plainFrom = "$base/dist/$id/$file.$ext"
+        $from = if ($shape) { "$base/dist/$shape/$id/$file.$ext" } else { $plainFrom }
+        # 모양이 안 바꾸는 칸(크기 조정·링크 등)은 모양 쪽에 파일을 두지 않았다. 없으면 기본 것을 받는다
+        try { Invoke-WebRequest -UseBasicParsing -Uri $from -OutFile $cur }
+        catch { if ($from -eq $plainFrom) { throw }; Invoke-WebRequest -UseBasicParsing -Uri $plainFrom -OutFile $cur }
         $head = [IO.File]::ReadAllBytes($cur)
         $isCur = $head.Length -ge 22 -and $head[0] -eq 0 -and $head[1] -eq 0 -and $head[2] -eq 2 -and $head[3] -eq 0
         $isAni = $head.Length -ge 12 -and [Text.Encoding]::ASCII.GetString($head, 0, 4) -eq 'RIFF' -and [Text.Encoding]::ASCII.GetString($head, 8, 4) -eq 'ACON'

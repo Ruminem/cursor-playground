@@ -75,17 +75,17 @@ jobs:
             # 기본 모양은 dist\<구성표>\, 나머지는 dist\<모양>\<구성표>\ 에 들어간다
             $root = if ($shape.id -eq $shapes[0].id) { 'dist' } else { "dist\$($shape.id)" }
             if ($shape.id -ne $shapes[0].id) {
-              foreach ($slot in 'arrow','ibeam','wait','no','move') {
-                if (-not (Test-Path "shapes\$($shape.id)\$slot.txt")) { Write-Host "모양 그림 없음: $($shape.id)/$slot.txt"; $fail = 1 }
-              }
               if (-not (Test-Path "data\$($shape.id).json")) { Write-Host "모양 데이터 없음: $($shape.id).json"; $fail = 1 }
             }
+            # 모양이 안 바꾸는 칸은 기본 모양 파일과 같아서 모양 쪽에 두지 않는다 (받을 때 기본 것으로 넘어간다)
+            $keep = 'ns','we','nwse','nesw','up','cross','pen','hand'
             foreach ($s in $schemes) {
               foreach ($slot in $slots) {
+                if ($shape.id -ne $shapes[0].id -and $keep -contains $slot) { continue }
                 $ext = if ($s.animated) { 'ani' } else { 'cur' }
                 if (-not (Test-Path "$root\$($s.id)\$slot.$ext")) { Write-Host "커서 없음: $root/$($s.id)/$slot.$ext"; $fail = 1 }
               }
             }
           }
-          "구성표 $($schemes.Count)종 x 17칸 x 모양 $($shapes.Count)가지 확인"
+          "구성표 $($schemes.Count)종 x 모양 $($shapes.Count)가지 확인 (기본 17칸, 나머지 모양 9칸)"
           exit $fail

@@ -12,13 +12,14 @@ import json
 from pathlib import Path
 
 import shape as shapelib
+import smooth as smoothlib
 from make_cur import canvas_size, is_animated, is_row, read_hotspot, read_rate, split_frames, txt_to_ani, txt_to_cur, txt_to_png
 
 HERE = Path(__file__).parent
 
 # 구성표 목록은 schemes.json 한 곳에 둔다 (install.ps1, handler.ps1 도 같은 파일을 읽음)
 SCHEMES = json.loads((HERE / "schemes.json").read_text(encoding="utf-8"))
-# 커서 모양(실루엣) 목록. 첫 번째가 기본이고, 나머지는 shapes/<모양>/ 의 실루엣에 테마 색을 입힌다
+# 커서 모양 목록. 첫 번째가 기본(테마 그림 그대로)이고, 나머지는 smooth.py 가 그려 테마 색을 입힌다
 SHAPES = json.loads((HERE / "shapes.json").read_text(encoding="utf-8"))
 # 파일, 칸 이름, 브라우저가 이미지를 못 쓸 때의 기본 커서
 ROLES = [
@@ -50,33 +51,30 @@ EXTRA = [
 KEEP = {"ns", "we", "nwse", "nesw", "up", "cross", "pen", "hand"}
 
 
-def masks_of(shape_id: str) -> dict | None:
-    """모양의 실루엣 다섯. 기본 모양이면 None (원래 그림을 그대로 쓴다)"""
-    if shape_id == SHAPES[0]["id"]:
-        return None
-    return {rid: shapelib.read_mask((HERE / "shapes" / shape_id / f"{rid}.txt").read_text(encoding="utf-8"))
-            for rid, _, _ in ROLES if rid not in KEEP}
+def shape_of(shape_id: str) -> str | None:
+    """기본 모양이면 None (테마 그림을 그대로 쓴다), 아니면 smooth.py 에 넘길 모양 이름"""
+    return None if shape_id == SHAPES[0]["id"] else shape_id
 
 
-def art_text(sid: str, rid: str, masks: dict | None, cache: dict) -> str:
-    """구성표 한 칸의 그림 txt. masks 가 있으면 그 실루엣에 테마 색을 옮겨 담는다"""
+def art_text(sid: str, rid: str, shape: str | None, cache: dict) -> str:
+    """구성표 한 칸의 그림 txt. shape 이 있으면 그 모양을 테마 색으로 다시 그린다"""
     raw = (HERE / "art" / sid / f"{rid}.txt").read_text(encoding="utf-8")
-    if masks is None or rid in KEEP:
+    if shape is None or rid in KEEP:
         return raw
     frames, _, rate = shapelib.read_art(raw)
-    if rid in masks:
-        mask, inner, mhot = masks[rid]
-        return shapelib.to_text(shapelib.reshape(frames, mask, inner), mhot, rate)
+    if rid in smoothlib.ROLES:
+        new, hot = smoothlib.remake(shape, rid, frames)
+        return shapelib.to_text(new, hot, rate)
     # 화살표에 기호를 얹어 만든 칸(도움말·백그라운드 작업·위치·사용자)은 새 화살표에 그 기호를 다시 붙인다
-    mask, inner, mhot = masks["arrow"]
     if sid not in cache:
         araw = (HERE / "art" / sid / "arrow.txt").read_text(encoding="utf-8")
         aframes = shapelib.read_art(araw)[0]
-        cache[sid] = (aframes, shapelib.reshape(aframes, mask, inner))
-    aframes, new = cache[sid]
+        cache[sid] = (aframes,) + smoothlib.remake(shape, "arrow", aframes)
+    aframes, new, hot = cache[sid]
     glyphs = shapelib.place(shapelib.glyph_of(aframes, frames),
-                            shapelib.bbox([p for f in aframes for p in f]), shapelib.bbox(mask))
-    return shapelib.to_text([{**n, **g} for n, g in zip(new, glyphs)], mhot, rate)
+                            shapelib.bbox([p for f in aframes for p in f]),
+                            shapelib.bbox([p for f in new for p in f]))
+    return shapelib.to_text([{**n, **g} for n, g in zip(new, glyphs)], hot, rate)
 
 
 def favicon() -> str:
@@ -158,9 +156,9 @@ def build() -> str:
     # 모양 탭. 단추에 붙는 그림은 첫 구성표의 화살표를 그 모양으로 그린 것
     tabs = []
     for i, shp in enumerate(SHAPES):
-        text = art_text(SCHEMES[0]["id"], "arrow", masks_of(shp["id"]), {})
+        text = art_text(SCHEMES[0]["id"], "arrow", shape_of(shp["id"]), {})
         pic = "data:image/png;base64," + base64.b64encode(txt_to_png(split_frames(text)[0], None, canvas_size(text))).decode()
-        tabs.append(f'<button type="button" class="shape c-hand" role="tab" data-shape="{shp["id"]}"'
+        tabs.append(f'<button type="button" class="shape c-hand{" smooth" if i else ""}" role="tab" data-shape="{shp["id"]}"'
                     f' aria-selected="{"true" if i == 0 else "false"}"><i style="background-image:url({pic})"></i>{shp["name"]}</button>')
 
     page = (
@@ -190,13 +188,13 @@ def build() -> str:
 
 def shape_data(shape_id: str) -> dict:
     """다른 모양의 페이지 데이터. 기본 모양이 preview.html 에 박혀 있는 것과 같은 구조"""
-    masks, cache = masks_of(shape_id), {}
+    shape, cache = shape_of(shape_id), {}
     data: dict[str, dict[str, list]] = {}
     extra: dict[str, dict[str, list]] = {}
     for scheme in SCHEMES:
         sid = scheme["id"]
         for rid, _, fallback in ROLES:
-            text = art_text(sid, rid, masks, cache)
+            text = art_text(sid, rid, shape, cache)
             hx, hy = read_hotspot(text) or (0, 0)
             frames, src = split_frames(text), canvas_size(text)
             uris = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in frames]
@@ -204,7 +202,7 @@ def shape_data(shape_id: str) -> dict:
             data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, read_rate(text) * 1000 // 60,
                                              max(len(r) for r in rows), len(rows)]
         for rid, _, _ in EXTRA:
-            text = art_text(sid, rid, masks, cache)
+            text = art_text(sid, rid, shape, cache)
             src = canvas_size(text)
             pics = ["data:image/png;base64," + base64.b64encode(txt_to_png(f, None, src)).decode() for f in split_frames(text)]
             extra.setdefault(sid, {})[rid] = [pics, read_rate(text) * 1000 // 60]
@@ -215,15 +213,19 @@ def shape_data(shape_id: str) -> dict:
 def build_dist() -> int:
     count = 0
     for shp in SHAPES:
-        masks, cache = masks_of(shp["id"]), {}
+        shape, cache = shape_of(shp["id"]), {}
         # 기본 모양은 dist/<구성표>/ 그대로 둔다 (이미 깔린 처리 스크립트가 그 주소를 쓴다)
-        root = HERE / "dist" if masks is None else HERE / "dist" / shp["id"]
+        root = HERE / "dist" if shape is None else HERE / "dist" / shp["id"]
         for scheme in SCHEMES:
             sid = scheme["id"]
             out = root / sid
             out.mkdir(parents=True, exist_ok=True)
             for rid, _, _ in ROLES + EXTRA:
-                text = art_text(sid, rid, masks, cache)
+                # 모양이 안 건드리는 칸은 기본 모양 파일과 바이트까지 같다. 두 번 쓰지 않고
+                # 받는 쪽(handler.ps1, install.ps1)이 dist/<구성표>/ 것으로 넘어간다
+                if shape is not None and rid in KEEP:
+                    continue
+                text = art_text(sid, rid, shape, cache)
                 hot = read_hotspot(text) or (0, 0)
                 if is_animated(text):
                     (out / f"{rid}.ani").write_bytes(txt_to_ani(text, hot))
@@ -239,8 +241,8 @@ def update_readme() -> None:
     path = HERE / "README.md"
     text = path.read_text(encoding="utf-8")
     for lang, name, desc, cat, head, shead in (
-        ("en", "name_en", "desc_en", "category_en", "| Folder | Name | Style |", "| Folder | Name | Look |"),
-        ("ko", "name", "desc", "category", "| 폴더 | 이름 | 스타일 |", "| 폴더 | 이름 | 생김새 |"),
+        ("en", "name_en", "desc_en", "category_en", "| Folder | Name | Style |", "| Id | Name | Look |"),
+        ("ko", "name", "desc", "category", "| 폴더 | 이름 | 스타일 |", "| 아이디 | 이름 | 생김새 |"),
     ):
         rows, current = [], None
         for s in SCHEMES:
@@ -255,7 +257,7 @@ def update_readme() -> None:
 
         rows = ["", shead, "|---|---|---|"]
         for i, s in enumerate(SHAPES):
-            where = "art/" if i == 0 else f"shapes/{s['id']}"
+            where = "art/" if i == 0 else s["id"]
             rows.append(f"| `{where}` | {s[name]} | {s[desc]} |")
         start, end = f"<!-- shapes:{lang} -->", f"<!-- /shapes:{lang} -->"
         before, rest = text.split(start, 1)

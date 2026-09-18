@@ -1,6 +1,13 @@
 [
-  {"id": "classic", "name": "기본", "desc": "지금까지의 모양. 각진 화살표에 또렷한 홈과 꼬리.", "name_en": "Classic", "desc_en": "The shape this project started with: an angular arrow with a crisp notch and tail."},
-  {"id": "round", "name": "둥근", "desc": "끝과 모서리를 깎아 매끈한 화살표. 모래시계와 금지 표시도 둥긂.", "name_en": "Round", "desc_en": "Tip and corners shaved smooth; the hourglass and the no sign are rounded too."},
-  {"id": "chunky", "name": "두꺼운", "desc": "넓은 머리에 굵은 꼬리. 멀리서도 잘 보임.", "name_en": "Chunky", "desc_en": "A wide head with a thick tail — easy to spot from a distance."},
-  {"id": "sleek", "name": "날렵한", "desc": "좁고 긴 머리에 얇은 꼬리. 화면을 덜 가림.", "name_en": "Sleek", "desc_en": "A long, narrow head with a thin tail that covers less of the screen."}
+  {"id": "classic", "name": "기본", "desc": "테마가 그린 픽셀 그림 그대로. 각진 화살표에 또렷한 홈과 꼬리.", "name_en": "Classic", "desc_en": "The theme's own pixel art: an angular arrow with a crisp notch and tail."},
+  {"id": "round", "name": "둥근", "desc": "모든 모서리를 큼직하게 둥글린 통통한 화살표. 끝 반지름이 가장 큼.", "name_en": "Round", "desc_en": "A chubby arrow with every corner rounded off; the tip has the largest radius."},
+  {"id": "hollow", "name": "테두리", "desc": "속을 비우고 두꺼운 테두리만 남김. 밑에 있는 글자가 보임.", "name_en": "Outline", "desc_en": "Hollowed out to a thick outline, so whatever is underneath stays readable."},
+  {"id": "cutout", "name": "스티커", "desc": "몸 바깥에 밝은 테두리를 두르고 오른쪽 아래로 그림자를 깖. 어떤 배경에서도 형태가 뜸.", "name_en": "Sticker", "desc_en": "A bright band around the body and a shadow below right, so the shape reads on any background."},
+  {"id": "blob", "name": "둥근 삼각", "desc": "꼬리와 홈 없이 세 점만. 끝은 살리고 나머지 두 모서리만 크게 둥글림.", "name_en": "Wedge", "desc_en": "Three points, no tail or notch: a sharp tip with the other two corners rounded wide."},
+  {"id": "comet", "name": "긴 꼬리", "desc": "꼬리가 오른쪽 아래로 길게 빠지며 한 점으로 모임. 방향이 확실히 읽힘.", "name_en": "Comet", "desc_en": "The tail stretches down and right into a single point, so the direction is unmistakable."},
+  {"id": "needle", "name": "바늘", "desc": "폭을 좁히고 꼬리를 길게 뺐음. 화면을 가장 덜 가림.", "name_en": "Needle", "desc_en": "Narrow body, long tail — the option that covers the least of the screen."},
+  {"id": "dart", "name": "종이비행기", "desc": "네 점만 쓰고 뒷면을 오목하게 팠음. 날개 두 장이 뒤로 젖혀진 형태.", "name_en": "Paper plane", "desc_en": "Four points with a concave back edge, like two wings swept backwards."},
+  {"id": "drop", "name": "물방울", "desc": "끝만 뾰족하고 몸통은 거의 원. 잉크 한 방울 같은 형태.", "name_en": "Droplet", "desc_en": "A pointed tip on an almost circular body, like a single drop of ink."},
+  {"id": "glow", "name": "네온", "desc": "몸 바깥으로 테마의 밝은 색이 번짐. 어두운 배경에서 특히 뜸.", "name_en": "Neon", "desc_en": "The theme's brightest colour bleeds out around the body; it glows on dark backgrounds."},
+  {"id": "bevel", "name": "입체", "desc": "테두리 안쪽에 빛과 그림자를 넣어 두께를 만들었음.", "name_en": "Beveled", "desc_en": "Light and shadow just inside the outline give the body some thickness."}
 ]

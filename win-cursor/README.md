@@ -229,21 +229,32 @@ Every scheme fills all 17 slots. Six are drawn per theme; the other 11 are made 
 
 ## Shapes
 
-The **Cursor shape** tabs at the top of the preview page change the silhouette without touching the themes. Pick one and the same schemes are redrawn in that shape: each theme keeps its colours, pattern and animation, only the outline changes. Adding `?shape=round` to the page URL opens it that way.
+The **Cursor shape** tabs at the top of the preview page change the silhouette without touching the themes. Pick one and the same schemes are redrawn in that shape: each theme keeps its colours, pattern and animation, only the outline changes. Classic is the theme's own pixel art; the other ten are drawn with smooth, anti-aliased curves. Adding `?shape=round` to the page URL opens it that way.
 
 <!-- shapes:en -->
-| Folder | Name | Look |
+| Id | Name | Look |
 |---|---|---|
-| `art/` | Classic | The shape this project started with: an angular arrow with a crisp notch and tail. |
-| `shapes/round` | Round | Tip and corners shaved smooth; the hourglass and the no sign are rounded too. |
-| `shapes/chunky` | Chunky | A wide head with a thick tail — easy to spot from a distance. |
-| `shapes/sleek` | Sleek | A long, narrow head with a thin tail that covers less of the screen. |
+| `art/` | Classic | The theme's own pixel art: an angular arrow with a crisp notch and tail. |
+| `round` | Round | A chubby arrow with every corner rounded off; the tip has the largest radius. |
+| `hollow` | Outline | Hollowed out to a thick outline, so whatever is underneath stays readable. |
+| `cutout` | Sticker | A bright band around the body and a shadow below right, so the shape reads on any background. |
+| `blob` | Wedge | Three points, no tail or notch: a sharp tip with the other two corners rounded wide. |
+| `comet` | Comet | The tail stretches down and right into a single point, so the direction is unmistakable. |
+| `needle` | Needle | Narrow body, long tail — the option that covers the least of the screen. |
+| `dart` | Paper plane | Four points with a concave back edge, like two wings swept backwards. |
+| `drop` | Droplet | A pointed tip on an almost circular body, like a single drop of ink. |
+| `glow` | Neon | The theme's brightest colour bleeds out around the body; it glows on dark backgrounds. |
+| `bevel` | Beveled | Light and shadow just inside the outline give the body some thickness. |
 
 <!-- /shapes:en -->
 
-A shape is five silhouettes in `shapes/<shape>/`: `arrow`, `ibeam`, `wait`, `no` and `move`. They hold no colour — `#` is the outline (one pixel around the edge), `-` a line inside the body, `o` the inside, `.` empty. At build time [shape.py](shape.py) borrows each theme's colours: the outline colour goes on `#` and `-`, the inside is sampled from the same relative spot in the theme's own drawing, and any glow outside the body is wrapped around the new silhouette again. The four resize arrows, precision select, handwriting and alternate select are symbols with no silhouette of their own, and link select is the theme's own face (a heart, a pointing hand, a star), so those stay exactly as the theme drew them.
+Every shape but Classic is drawn by [smooth.py](smooth.py) instead of being stored as pixel art. The outline is a handful of points; every corner gets a real circular arc (a chamfer looks pointed, an arc does not); the result is rasterised on a 3x grid through a signed distance field and averaged back down, so the edges come out anti-aliased. A `.cur` carries 32-bit alpha, so that smoothness survives into the cursor file.
 
-Cursor files land in `dist/<shape>/<scheme>/` (the first shape keeps `dist/<scheme>/`), and the preview page fetches `data/<shape>.json` the first time you pick a shape.
+Colour is not baked in. Each shape and slot is drawn once into a *stencil* that records, per cell, which layer covers it and by how much: shadow, glow, bright band, body gradient, the lit and shaded bevel faces, outline. Then for every theme the colours are read out of that theme's own drawing of the same slot — the outline colour from the rim, the body colours from the upper and lower half of the inside, the brightest colour for glow and gloss — and dropped into the stencil. Animated themes keep their animation, because the colours are read again for every frame. That is why a rounded hourglass still has yellow sand and a rounded no sign is still red.
+
+A shape covers five slots: `arrow`, `ibeam`, `wait`, `no` and `move`. Help, background work, location select and user select are an arrow with a symbol on it, so the symbol is lifted off the theme's own drawing and placed beside the new arrow. The four resize arrows, precision select, handwriting and alternate select are symbols with no silhouette of their own, and link select is the theme's own face (a heart, a pointing hand, a star), so those stay exactly as the theme drew them.
+
+Cursor files land in `dist/<shape>/<scheme>/` (the first shape keeps `dist/<scheme>/`), and the preview page fetches `data/<shape>.json` the first time you pick a shape. The eight slots a shape does not touch would be byte-for-byte the Classic files, so they are not written again — the installer and the handler fall back to `dist/<scheme>/` for those.
 
 ## Installing from the repository
 
@@ -553,21 +564,32 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 ### 모양
 
-시안 페이지 위쪽 **커서 모양** 탭은 테마를 건드리지 않고 실루엣만 바꿈. 고르면 같은 구성표들이 그 모양으로 다시 그려짐 — 색·무늬·움직임은 그대로고 외곽선만 달라짐. 주소에 `?shape=round` 를 붙이면 그 모양으로 열림.
+시안 페이지 위쪽 **커서 모양** 탭은 테마를 건드리지 않고 실루엣만 바꿈. 고르면 같은 구성표들이 그 모양으로 다시 그려짐 — 색·무늬·움직임은 그대로고 외곽선만 달라짐. 기본은 테마가 그린 픽셀 그림이고, 나머지 열 가지는 경계가 매끈하게 그려짐. 주소에 `?shape=round` 를 붙이면 그 모양으로 열림.
 
 <!-- shapes:ko -->
-| 폴더 | 이름 | 생김새 |
+| 아이디 | 이름 | 생김새 |
 |---|---|---|
-| `art/` | 기본 | 지금까지의 모양. 각진 화살표에 또렷한 홈과 꼬리. |
-| `shapes/round` | 둥근 | 끝과 모서리를 깎아 매끈한 화살표. 모래시계와 금지 표시도 둥긂. |
-| `shapes/chunky` | 두꺼운 | 넓은 머리에 굵은 꼬리. 멀리서도 잘 보임. |
-| `shapes/sleek` | 날렵한 | 좁고 긴 머리에 얇은 꼬리. 화면을 덜 가림. |
+| `art/` | 기본 | 테마가 그린 픽셀 그림 그대로. 각진 화살표에 또렷한 홈과 꼬리. |
+| `round` | 둥근 | 모든 모서리를 큼직하게 둥글린 통통한 화살표. 끝 반지름이 가장 큼. |
+| `hollow` | 테두리 | 속을 비우고 두꺼운 테두리만 남김. 밑에 있는 글자가 보임. |
+| `cutout` | 스티커 | 몸 바깥에 밝은 테두리를 두르고 오른쪽 아래로 그림자를 깖. 어떤 배경에서도 형태가 뜸. |
+| `blob` | 둥근 삼각 | 꼬리와 홈 없이 세 점만. 끝은 살리고 나머지 두 모서리만 크게 둥글림. |
+| `comet` | 긴 꼬리 | 꼬리가 오른쪽 아래로 길게 빠지며 한 점으로 모임. 방향이 확실히 읽힘. |
+| `needle` | 바늘 | 폭을 좁히고 꼬리를 길게 뺐음. 화면을 가장 덜 가림. |
+| `dart` | 종이비행기 | 네 점만 쓰고 뒷면을 오목하게 팠음. 날개 두 장이 뒤로 젖혀진 형태. |
+| `drop` | 물방울 | 끝만 뾰족하고 몸통은 거의 원. 잉크 한 방울 같은 형태. |
+| `glow` | 네온 | 몸 바깥으로 테마의 밝은 색이 번짐. 어두운 배경에서 특히 뜸. |
+| `bevel` | 입체 | 테두리 안쪽에 빛과 그림자를 넣어 두께를 만들었음. |
 
 <!-- /shapes:ko -->
 
-모양 하나는 `shapes/<모양>/` 의 실루엣 다섯 개(`arrow`, `ibeam`, `wait`, `no`, `move`)임. 색은 없음 — `#` 은 외곽선(가장자리 한 겹), `-` 는 속에 그은 선, `o` 는 속, `.` 는 빈칸. 빌드할 때 [shape.py](shape.py) 가 테마의 색을 빌려 옴: 외곽선 색을 `#` 과 `-` 에 넣고, 속은 테마 그림의 같은 비율 자리에서 색을 떠 오고, 몸 바깥으로 번지는 빛은 새 실루엣 둘레에 다시 두름. 크기 조정 4종·정밀·필기·대체 선택은 실루엣이 따로 없는 기호이고, 링크 선택은 테마마다 다른 얼굴(하트·손가락·별)이라 그대로 둠.
+기본을 뺀 모양은 픽셀로 저장하지 않고 [smooth.py](smooth.py) 가 그림. 윤곽을 점 몇 개로 잡고, 꼭지점마다 진짜 원호를 끼워 넣고(면취로 깎으면 끝이 뾰족해 보임), 3배 격자에 부호 있는 거리함수로 칠한 뒤 평균으로 줄임 — 그래서 경계가 매끈함. `.cur` 는 32비트 알파를 담으므로 그 매끈함이 커서 파일까지 살아남음.
 
-만들어진 커서는 `dist/<모양>/<구성표>/` 에 들어감(첫 모양은 `dist/<구성표>/` 그대로). 시안 페이지는 모양을 처음 고를 때 `data/<모양>.json` 을 받아 옴.
+색은 박아 넣지 않음. 모양·칸마다 한 번만 그려 **스텐실**을 만드는데, 칸마다 어느 층이 얼마나 덮였는지만 적혀 있음 — 그림자·번지는 빛·밝은 테두리·몸의 그라데이션·빛 받는 면·그늘진 면·외곽선. 그다음 테마마다 그 테마가 그린 같은 칸에서 색을 뽑아(외곽선 색은 가장자리에서, 몸 색은 속의 위쪽·아래쪽 절반에서, 번짐과 광택은 가장 밝은 색) 스텐실에 끼워 넣음. 프레임마다 색을 다시 뽑으므로 움직이는 테마는 움직임이 그대로 남음. 둥근 모래시계에도 노란 모래가 있고 둥근 금지 표시가 여전히 빨간 이유가 이것임.
+
+모양이 바꾸는 칸은 다섯(`arrow`, `ibeam`, `wait`, `no`, `move`). 도움말·백그라운드 작업·위치 선택·사용자 선택은 화살표에 기호를 얹은 칸이라, 테마 그림에서 기호만 떼어 새 화살표 옆에 다시 놓음. 크기 조정 4종·정밀·필기·대체 선택은 실루엣이 따로 없는 기호이고, 링크 선택은 테마마다 다른 얼굴(하트·손가락·별)이라 그대로 둠.
+
+만들어진 커서는 `dist/<모양>/<구성표>/` 에 들어감(첫 모양은 `dist/<구성표>/` 그대로). 시안 페이지는 모양을 처음 고를 때 `data/<모양>.json` 을 받아 옴. 모양이 안 건드리는 여덟 칸은 기본 모양 파일과 바이트까지 같아서 다시 쓰지 않음 — 설치 스크립트와 처리 스크립트가 그 칸만 `dist/<구성표>/` 것으로 넘어감.
 
 ### 저장소에서 직접 등록
 

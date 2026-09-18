@@ -64,6 +64,8 @@ function Install-Scheme($id) {
         if ($shapeId -ne $plain) {
             # 다른 모양은 build.py 가 미리 만들어 둔 커서를 복사만 한다
             $made = @(Get-ChildItem (Join-Path $PSScriptRoot "dist\$shapeId\$id") -Filter "$($slots[$slot]).*" -ErrorAction SilentlyContinue)
+            # 모양이 안 바꾸는 칸(크기 조정·링크 등)은 모양 쪽에 파일을 두지 않았다. 기본 모양의 것을 쓴다
+            if (-not $made) { $made = @(Get-ChildItem (Join-Path $PSScriptRoot "dist\$id") -Filter "$($slots[$slot]).*" -ErrorAction SilentlyContinue) }
             if (-not $made) { ''; continue }
             $cur = Join-Path $dest $made[0].Name
             Copy-Item $made[0].FullName $cur -Force
