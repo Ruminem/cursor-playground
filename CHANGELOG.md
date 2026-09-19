@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.0 — 2026-09-19
+
+- Smooth shapes have volume now. The body is read as a dome, so it is lit from the upper left, the ridge along the top catches a highlight, and a contact shadow sits under the lower right edge
+- Colours are lifted from the scheme's art by region instead of by square. Neighbouring squares that are close in colour are merged into one region and blended only within it, so the boundary follows a curve rather than the grid: Chrome reads as one continuous sheet of metal, Ocean's highlights are round dots, and the leopard's spots are organic blotches. Before this, patterns broke into visible squares on the larger sizes
+- The preview page prints its version and the 7-character commit next to the title, so you can tell at a glance whether the page you are looking at was built from the latest push
+- The **Current setting** bar at the bottom can be edited. Paste an address someone sent you and press **Apply** (or Enter) and the page switches to that scheme, shape, hue and size. The visit number inside the address belongs to the PC it came from, so it is discarded
+- For anyone working on the art: `python sheet.py <shapes> <schemes>` draws shapes × schemes into one PNG in about three seconds with no build, `--frames` lays out an animation, and `--set KEEP=40` changes a `smooth.py` constant for that sheet only
+
+**한국어**
+
+- 매끈한 모양에 입체감이 생김. 몸 안쪽을 돔으로 보고 왼쪽 위에서 빛이 드는 명암을 넣고, 위쪽 능선에 광택을, 오른쪽 아래 가장자리 밑에 접지 그림자를 깖
+- 구성표 그림의 색을 칸이 아니라 **영역**으로 떠 옴. 색이 가까운 이웃 칸을 한 영역으로 묶고 그 안에서만 섞으므로 색 경계가 격자 대신 곡선으로 남. 크롬은 이어진 금속 한 장으로, 오션의 하이라이트는 동그란 점으로, 표범 무늬는 유기적인 얼룩으로 보임. 전에는 큰 크기에서 무늬가 네모로 쪼개져 보였음
+- 시안 페이지 제목 오른쪽에 버전과 커밋 7자가 박힘. 지금 보고 있는 페이지가 최신으로 만든 것인지 한눈에 갈림
+- 맨 아래 **지금 설정** 줄을 고쳐 쓸 수 있음. 누가 보내 준 주소를 붙여넣고 **적용**(또는 Enter)을 누르면 그 구성표·모양·색조·크기로 바뀜. 주소 안의 방문 번호는 그 주소를 만든 PC 의 것이라 버리고 씀
+- 그림을 직접 고치는 사람용: `python sheet.py <모양들> <구성표들>` 이 빌드 없이 3초 만에 모양 × 구성표를 PNG 한 장으로 그림. `--frames` 는 움직임을 펼치고, `--set KEEP=40` 은 `smooth.py` 상수를 그 판에서만 바꿔 견주게 함
+
 ## 1.2.0 — 2026-09-19
 
 - A **My backups** row on the preview page keeps up to 20 combinations — scheme, shape, hue and size — in your browser. Press one to apply that combination again, or export them as a `.json` file and import it on another PC
