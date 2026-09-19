@@ -32,6 +32,11 @@
   영구히 불어서 뺐다. CI 가 만들어 Pages 에 바로 올린다. `build.py` 가 같이 고치는 `win-cursor/README.md` 표는 커밋한다
 - CI(`.github/workflows/check.yml`)가 빌드해서 커서 파일을 윈도우가 읽는지 보고,
   main 이면 그 결과를 GitHub Pages 에 올린다. **Pages 원본은 브랜치가 아니라 GitHub Actions** 여야 한다
+- **이 저장소에서 "올렸다 · 반영했다 · 릴리스했다"는 Pages 에 실제로 실린 것을 본 때다.**
+  커밋도 푸시도 CI 성공도 아니다 — 시안 페이지가 사람이 쓰는 물건이라 거기 안 실렸으면 아무것도 안 바뀐 것이다.
+  확인은 https://ruminem.github.io/cursor-playground/win-cursor/preview.html 를 받아 이번에 바뀐 내용이
+  들어 있는지 본다. **루트 URL 이 404 인 것은 정상이다** — 워크플로가 저장소 루트를 통째로 올려서 페이지가
+  `/win-cursor/` 아래에 산다. 2026-09-19 이걸 모르고 배포가 깨졌다고 보고했다
 - 릴리스는 태그(`v*`)를 밀면 `.github/workflows/release.yml` 이 빌드·zip·릴리스까지 한다.
   본문은 `CHANGELOG.md` 의 그 버전 절을 그대로 쓰므로 **CHANGELOG 를 먼저 쓰고 태그를 민다**
 - 전체 빌드는 185초 — 커서 12,947개(121종 × 모양 10가지 × 3크기), 코어 수만큼 프로세스,
