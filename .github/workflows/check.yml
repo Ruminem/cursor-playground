@@ -38,6 +38,19 @@ jobs:
         working-directory: win-cursor
         run: python test_stamp.py
 
+      # 러너는 체크아웃이 새것이라 표식이 없어 커서 12,947개를 매번 처음부터 그렸다.
+      # 산출물과 표식을 같이 캐시해 두면 재료가 그대로인 구성표는 건너뛴다. 키가 정확히
+      # 안 맞아도 restore-keys 로 옛 캐시를 받아 **바뀐 것만** 다시 그린다
+      # (2026-09-19 실측: 잡 10분 03초 → 50초, 그중 빌드 자체는 7초)
+      - uses: actions/cache@v6
+        with:
+          path: |
+            win-cursor/dist
+            win-cursor/data
+            win-cursor/.build-stamp.json
+          key: cursors-${{ runner.os }}-${{ hashFiles('win-cursor/art/**', 'win-cursor/*.py', 'win-cursor/*.json', 'win-cursor/preview.tpl.html') }}
+          restore-keys: cursors-${{ runner.os }}-
+
       - name: 빌드
         working-directory: win-cursor
         run: python build.py
