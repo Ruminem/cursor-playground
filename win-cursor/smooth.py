@@ -41,11 +41,13 @@ LIFT = 0.42     # 밝은 쪽에서 몸 색을 몇 배까지 올릴지 (1.42배)
 SINK = 0.42     # 어두운 쪽에서 몸 색을 얼마나 내릴지 (0.58배)
 QUANT = 8       # 명암·광택 계조를 몇 단계로 묶을지. 잘게 쪼갤수록 색과 파일이 는다
 SHADOW = (0.9, 1.3)  # 접지 그림자를 오른쪽 아래로 밀어 놓는 양 (설계 격자)
-PATTERN = 1.0   # 몸 색을 이웃 칸과 얼마나 섞을지. 0 이면 예전처럼 가까운 칸 하나를 그대로 쓴다
-KEEP = 115      # 이웃이 이만큼(0~255, 채널 최대 차이) 넘게 다르면 무늬로 보고 안 섞는다.
-                # 쿠키의 초코칩·민트초코의 체크는 대비가 커서 남고, 몸통 명암 계단만 펴진다.
-                # 115 는 눈으로 골랐다 — 60 은 색만 늘고 눈에는 아무 차이가 없었다
-UV = 31         # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 둘지 (테마 그림이 32칸 안이라 이 정도면 충분)
+PATTERN = 1.0   # 1 이면 칸을 영역으로 보고 섞는다. 0 이면 예전처럼 가까운 칸 하나를 그대로 쓴다
+KEEP = 115      # 이웃이 이만큼(0~255, 채널 최대 차이) 넘게 다르면 **다른 영역**으로 가른다.
+                # 크롬의 계조는 한 영역이라 이어 붙고, 쿠키의 초코칩·민트초코의 체크는 갈려서
+                # 경계에 날이 선다. 115 는 눈으로 골랐다 — 60 은 색만 늘고 눈에는 차이가 없었다
+UV = 127        # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 둘지. 영역 경계를 곡선으로 그려도
+                # 이게 낮으면 그 곡선이 다시 UV 격자로 계단진다 — 가장 큰 판(128칸)에 맞춰 127.
+                # 31 이던 것을 올렸고, 그리기가 30벌 기준 3.4 초에서 4.4 초가 됐다
 TT = 255        # 테두리를 한 바퀴 도는 좌표를 몇 단계로 쪼갤지 (테두리가 가장 길어야 250칸쯤)
 SPECK = 2       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다
 GHOST_R = 4     # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
@@ -399,6 +401,30 @@ def nearest(points: set, box: tuple) -> dict:
     return best
 
 
+def _regions(fill: dict) -> dict:
+    """대비가 KEEP 아래인 이웃끼리 묶은 영역 번호.
+
+    크롬의 계조는 전부 한 덩어리가 되고(가운데를 부드럽게 이어도 되는 자리), 쿠키의 초코칩과
+    민트초코의 체크는 따로 떨어진다(날을 세워야 하는 자리). 칸을 네모로 두지 않고 영역으로
+    보면 경계를 칸 모서리가 아니라 곡선으로 다시 그릴 수 있다."""
+    reg: dict = {}
+    n = 0
+    for start in fill:
+        if start in reg:
+            continue
+        reg[start] = n
+        stack = [start]
+        while stack:
+            p = stack.pop()
+            for dx, dy in N4:
+                q = (p[0] + dx, p[1] + dy)
+                if q in fill and q not in reg and max(abs(fill[p][i] - fill[q][i]) for i in range(3)) <= KEEP:
+                    reg[q] = n
+                    stack.append(q)
+        n += 1
+    return reg
+
+
 def biggest(body: set) -> set:
     """8-이웃으로 이어진 조각 중 가장 큰 것. 떨어진 꽃잎 한 점에서 테두리를 돌지 않게"""
     rest, best = set(body), set()
@@ -641,8 +667,13 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) 
         lit = _lit(rings, [frame])
     halo = _outward(frame, rings, lit)
 
-    def cell(cx: int, cy: int) -> tuple:       # found 는 상자 바깥 한 칸까지만 안다
-        return fill[found[(min(max(cx, x0 - 1), x1 + 1), min(max(cy, y0 - 1), y1 + 1))]]
+    region = _regions(fill)
+
+    def src(cx: int, cy: int) -> tuple:        # found 는 상자 바깥 한 칸까지만 안다
+        return found[(min(max(cx, x0 - 1), x1 + 1), min(max(cy, y0 - 1), y1 + 1))]
+
+    def cell(cx: int, cy: int) -> tuple:
+        return fill[src(cx, cy)]
 
     blend: dict = {}
 
@@ -656,29 +687,31 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) 
 
     def _mix(u: float, v: float) -> tuple:
         fx, fy = x0 + u * (x1 - x0), y0 + v * (y1 - y0)
-        base = cell(round(fx), round(fy))
         if not PATTERN:
-            return base
-        # 둘러싼 네 칸을 거리로 섞는다. 그림이 17x11 칸뿐이라 칸 하나를 그대로 쓰면
-        # 어느 크기로 그려도 무늬 한 칸이 폭의 9% 를 차지해 네모로 보인다.
-        # 다만 **대비가 큰 이웃은 빼고 섞는다** — 초코칩이나 체크무늬는 저해상도가 아니라
-        # 그 구성표의 무늬라서, 펴면 정체성이 죽는다. 그 자리는 경계가 그대로 남는다
+            return cell(round(fx), round(fy))
+        # 둘러싼 네 칸을 **영역별로** 모아 소속도가 큰 영역을 고르고, 그 영역 안에서만 섞는다.
+        # 칸을 네모로 두면 그림이 11x17 뿐이라 256px 로 그릴 때 한 칸이 23픽셀짜리 네모가 된다.
+        # 영역 사이는 소속도가 뒤집히는 자리가 경계라 칸 모서리를 안 따라가고 곡선이 되고,
+        # 영역 안(크롬의 계조)은 이웃을 다 섞어 띠가 아니라 이어진 그라데이션이 된다
         ix, iy = math.floor(fx), math.floor(fy)
         tx, ty = fx - ix, fy - iy
-        acc, tot = [0.0, 0.0, 0.0], 0.0
+        acc: dict = {}
         for dx, wx in ((0, 1 - tx), (1, tx)):
             for dy, wy in ((0, 1 - ty), (1, ty)):
                 w = wx * wy
                 if w <= 0:
                     continue
-                c = cell(ix + dx, iy + dy)
-                if max(abs(c[i] - base[i]) for i in range(3)) > KEEP:
-                    c = base                   # 무늬 경계 — 이웃 대신 제 색을 넣어 날을 세운다
-                for i in range(3):
-                    acc[i] += c[i] * w
-                tot += w
-        k = PATTERN / tot
-        return tuple(min(255, round(base[i] + (acc[i] - base[i] * tot) * k)) for i in range(3)) + (base[3],)
+                p = src(ix + dx, iy + dy)
+                c = fill[p]
+                e = acc.get(region[p])
+                if e is None:
+                    e = acc[region[p]] = [0.0, 0.0, 0.0, 0.0, c[3]]
+                e[0] += w
+                e[1] += c[0] * w
+                e[2] += c[1] * w
+                e[3] += c[2] * w
+        e = max(acc.values(), key=lambda e: e[0])
+        return (round(e[1] / e[0]), round(e[2] / e[0]), round(e[3] / e[0]), e[4])
 
     # 외곽선은 네모 안 자리가 아니라 **테두리를 한 바퀴 도는 자리**로 뜬다. 네모 자리로 뜨면
     # 윤곽이 다른 모양에서 테두리 길이가 안 맞아 어떤 칸은 여러 번 뽑히고 어떤 칸은 빠진다 —
