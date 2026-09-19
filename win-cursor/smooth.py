@@ -7,6 +7,11 @@
   2. 부호 있는 거리함수로 칸마다 얼마나 덮였는지 재서 경계를 매끈하게 만든다
   3. 색은 넣지 않고 칸마다 "어느 층이 얼마나 덮였는지"만 남긴다 — 이것을 스텐실이라 부른다
   4. 테마마다 그 테마 그림에서 색을 떠 스텐실의 층에 끼워 넣는다 (paint)
+  5. 높이장을 뭉개 기울기를 내고 그 법선으로 음영·광택·테빛을 얹는다. 세기는 구성표가 고른
+     **재질**(MATERIALS)이 정한다 — 금속은 광택이 몸 색을 띠고, 유리는 속이 밝고 테가 빛난다
+
+재질은 스텐실이 아니라 paint 쪽에 있다. 스텐실은 테마와 무관해야 121종이 한 벌을 나눠 쓰는데,
+재질은 구성표마다 다르기 때문이다 (schemes.json 의 "material", 없으면 DEFAULT_MAT).
 
 색은 몇 개로 줄이지 않고 **자리대로** 떠 온다 — 몸도 외곽선도 그렇다. 그래서 무늬
 (표범·아가일)도, 프레임마다 무늬가 움직이는 테마(전기·글자비)도, 테두리를 타고 도는
@@ -65,7 +70,12 @@ UV = 127        # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 
                 # 이게 낮으면 그 곡선이 다시 UV 격자로 계단진다 — 가장 큰 판(128칸)에 맞춰 127.
                 # 31 이던 것을 올렸고, 그리기가 30벌 기준 3.4 초에서 4.4 초가 됐다
 TT = 255        # 테두리를 한 바퀴 도는 좌표를 몇 단계로 쪼갤지 (테두리가 가장 길어야 250칸쯤)
-SPECK = 2       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다
+SPECK = 5       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다.
+                # 2 였을 때 골드의 반짝이(5칸)가 몸에 합쳐져 옆구리에 혹 두 개가 났다. 5 는
+                # 눈이 아니라 분포에서 골랐다 — 떨어진 덩어리 2,472개 중 97%가 5칸 이하이고
+                # 6칸 위로는 73개뿐이다. 6 이상으로 올려도 `sum(조각)*8 > 몸` 마개가 나머지를
+                # 잡아서 그림이 더 달라지지 않는다. 2 → 5 로 바뀌는 것은 gold 9칸 · sakura 5칸 ·
+                # pencil 1칸, 121종 중 3종뿐 (2026-09-19 전수로 셈)
 GHOST_R = 4     # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
 GHOST_HIT = 0.75  # 옮긴 자리에서 몸과 이만큼 겹쳐야 유령으로 본다
 GHOST_MIN = 6   # 이 칸 수보다 적으면 유령이 아니라 반짝이로 본다
@@ -758,7 +768,10 @@ def samplers_of(frames: list[dict], mat: str | None = None) -> list[tuple]:
 
 def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
                mat: str | None = None) -> tuple:
-    """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색, 유령"""
+    """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색, 유령
+
+    mat 은 이 구성표의 재질 이름(MATERIALS 의 키). 색을 뜨는 데는 안 쓰이고 뒤에서 음영을
+    얹을 때 그대로 넘어간다 — 여기 들고 다니는 이유는 색과 재질이 같은 구성표에서 나오기 때문이다"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
     specks, solid = specks_of(solid)
     rim = {p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)}
@@ -935,15 +948,25 @@ def _ghosts(px: dict, solid: set, box: tuple, ghosts: list) -> dict:
 
 
 def specks(marks: list, box: tuple, cells: int) -> dict:
-    """불꽃을 새 몸 테두리 기준 같은 비율 자리에 다시 흩는다 (칸이 크면 조각도 그만큼 커진다)"""
+    """불꽃을 새 몸 테두리 기준 같은 비율 자리에 다시 흩는다 (칸이 크면 조각도 그만큼 커진다).
+
+    **네모가 아니라 둥근 점으로 찍는다.** 원본 한 칸을 n×n 네모로 늘리면 160px 판에서
+    9×9 짜리 각진 딱지가 되어, 매끈해진 몸 위에 혼자 픽셀로 남는다 (골드의 반짝이 둘,
+    바다의 포말, 은하의 별이 다 그랬다). 가장자리 한 칸은 덮은 넓이만큼 흐려 끊는다."""
     bx, by, bw, bh = box
     n = max(1, round(cells / LIMIT))
+    r = n / 2
     out = {}
     for u, v, c in marks:
         px, py = bx + round(u * (bw - 1)), by + round(v * (bh - 1))
-        for dy in range(n):
-            for dx in range(n):
-                out[(px + dx, py + dy)] = c
+        cx, cy = px + r, py + r                            # 그 n칸 네모의 한가운데
+        for dy in range(-1, n + 1):
+            for dx in range(-1, n + 1):
+                d = math.hypot(px + dx + 0.5 - cx, py + dy + 0.5 - cy)
+                a = round(c[3] * min(1.0, max(0.0, r + 0.5 - d)))
+                q = (px + dx, py + dy)
+                if a > 4 and a > out.get(q, (0, 0, 0, 0))[3]:   # 겹치면 진한 쪽을 남긴다
+                    out[q] = c[:3] + (a,)
     return out
 
 

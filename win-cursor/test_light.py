@@ -204,3 +204,16 @@ for m, q in best.items():
         fails.append(f"{m}: 32px 에서 어느 구성표로도 플라스틱과 구분이 안 됨 (95분위 {q:.1f})")
 assert not fails, "재질이 작은 판에서 사라짐 — " + " · ".join(fails)
 print("재질 OK — 32px 에서도 다섯 가지가 플라스틱과 갈린다")
+
+
+# ── 불꽃이 네모인가 둥근 점인가 ─────────────────────────────────────────────
+# 원본 그림 한 칸을 n×n 네모로 늘려 찍으면 큰 판에서 9×9 각진 딱지가 되어, 매끈해진 몸 옆에
+# 혼자 픽셀로 남는다. 판이 커져도 둥글어야 한다 — 가운데는 진하고 네 모서리는 비어야 한다.
+dot = sm.specks([(0.5, 0.5, (255, 255, 255, 255))], (0, 0, 40, 40), sm.LIMIT * 9)
+xs = [x for x, _ in dot]; ys = [y for _, y in dot]
+x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
+mid = dot[((x0 + x1) // 2, (y0 + y1) // 2)][3]
+corner = max(dot.get(p, (0, 0, 0, 0))[3] for p in ((x0, y0), (x1, y0), (x0, y1), (x1, y1)))
+print(f"불꽃 {x1 - x0 + 1}칸 · 가운데 {mid} · 모서리 {corner}")
+assert mid > 240 and corner < 40, f"불꽃이 둥글지 않음 (가운데 {mid} · 모서리 {corner})"
+print("불꽃 OK — 네모가 아니라 둥근 점이다")
