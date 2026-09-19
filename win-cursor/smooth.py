@@ -32,7 +32,17 @@ CUR_SIZES = (32, 64, 128)
 PAGE = 96       # 시안 페이지의 화살표 판. 32칸 판의 3배라 썸네일이 1:1 로 쓴다
 PAGE_SMALL = 64  # 나머지 칸은 페이지에서 작게 보여 주므로 판도 작게 (데이터 파일이 절반으로)
 EDGE_W = 1.1    # 외곽선 두께 (설계 격자 기준)
+# 몸 안쪽을 돔으로 보고 그 기울기로 음영을 낸다. 반지름이 클수록 완만하고 통통해진다 (설계 격자)
+DOME = 7.0
+LIGHT = (0.6, 0.8)  # 빛이 오는 쪽. 길이가 1 이라야 세기가 아래 상수대로 나온다 (왼쪽 위)
+SHADE = 0.46    # 램버트 음영 세기. 아래 LIFT·SINK 와 곱해져 몸 색을 얼마나 올리고 내릴지 정한다
+SPEC = 0.65     # 광택 세기. 능선에만 얹히게 세제곱으로 좁힌다
+LIFT = 0.42     # 밝은 쪽에서 몸 색을 몇 배까지 올릴지 (1.42배)
+SINK = 0.42     # 어두운 쪽에서 몸 색을 얼마나 내릴지 (0.58배)
+QUANT = 8       # 명암·광택 계조를 몇 단계로 묶을지. 잘게 쪼갤수록 색과 파일이 는다
+SHADOW = (0.9, 1.3)  # 접지 그림자를 오른쪽 아래로 밀어 놓는 양 (설계 격자)
 UV = 31         # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 둘지 (테마 그림이 32칸 안이라 이 정도면 충분)
+TT = 255        # 테두리를 한 바퀴 도는 좌표를 몇 단계로 쪼갤지 (테두리가 가장 길어야 250칸쯤)
 SPECK = 2       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다
 GHOST_R = 4     # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
 GHOST_HIT = 0.75  # 옮긴 자리에서 몸과 이만큼 겹쳐야 유령으로 본다
@@ -63,9 +73,12 @@ SLOTS = {
 }
 
 # ── 모양 열 가지. 윤곽이 다른 것 여섯, 칠하는 방식이 다른 것 넷 ───────────────
+# dome·shade·spec·shadow 를 안 적으면 위 기본값을 쓴다. 속이 비거나(hollow) 바깥으로
+# 번지는(glow) 모양만 돔을 줄이고 그림자를 뺀다 — 얇은 테를 돔으로 깎으면 색이 남지 않고,
+# 번짐 아래에 그림자를 깔면 둘이 섞여 탁해진다
 SHAPES = {
     "round": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid"),
-    "hollow": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="hollow", thick=3.4),
+    "hollow": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="hollow", thick=3.4, dome=1.5, spec=0.6),
     "cutout": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="sticker", band=1.8, shadow=(1.4, 2.0)),
     "blob": dict(pts=[(1.2, 0.3), (19.4, 15.8), (1.8, 25.0)], radii=[1.4, 3.0, 3.4], rscale=1.0, style="solid"),
     "comet": dict(pts=[(1.2, 0.4), (17.8, 14.2), (12.0, 16.2), (19.4, 27.4), (7.6, 18.2), (0.2, 21.6)],
@@ -76,14 +89,17 @@ SHAPES = {
                  radii=[1.6, 1.6, 1.4, 1.6], rscale=1.15, style="solid"),
     "drop": dict(pts=[(1.2, 0.6), (17.0, 9.0), (19.0, 19.0), (11.0, 25.5), (2.0, 17.0)],
                  radii=[1.2, 6.0, 6.0, 6.0, 6.0], rscale=1.0, style="solid"),
-    "glow": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid", glow=3.2),
-    "bevel": dict(pts=ARROW, radii=ARROW_R, rscale=1.0, style="solid", bevel=3.0, ew=0.7),
+    "glow": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid", glow=3.2, shadow=(0, 0), spec=0.6),
+    # 돔을 좁게 잡으면 완만한 언덕이 아니라 면취처럼 꺾여 보인다 — 이 모양은 그 꺾임이 요점이다
+    "bevel": dict(pts=ARROW, radii=ARROW_R, rscale=1.0, style="solid", dome=2.6, shade=1.0, spec=1.0, ew=0.7),
 }
 ROLES = ("arrow",) + tuple(SLOTS)   # 모양이 직접 그리는 칸
 # 층을 아래에서 위로 겹치는 순서. 한 칸 안에서 여러 층이 조금씩 겹칠 수 있다
 ORDER = ("shadow", "halo0", "halo1", "halo2", "glow", "band", "body", "lit", "dark", "edge")
 N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
 N8 = N4 + ((1, 1), (-1, -1), (1, -1), (-1, 1))
+# 테두리를 돌 때 쓰는 여덟 이웃. N8 과 달리 **도는 차례**라야 한 바퀴를 놓치지 않는다
+RING = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
 
 
 def cells_for(size: int) -> int:
@@ -218,11 +234,14 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
     ss = _ss(cells)
     parts, _ = outlines(sid, rid, size)
     ew = EDGE_W * spec.get("ew", 1.0) * k
-    bevel = spec.get("bevel", 0) * k
+    dome = spec.get("dome", DOME) * k
+    shade = spec.get("shade", SHADE)
+    gloss_k = spec.get("spec", SPEC)
+    lx, ly = LIGHT
     band = spec.get("band", 0) * k
     glow = spec.get("glow", 0) * k
     halo = HALO * cells / LIMIT                      # 테마 번짐 층도 크기에 맞춰 두꺼워진다
-    sh_dx, sh_dy = (q * k for q in spec.get("shadow", (0, 0)))
+    sh_dx, sh_dy = (q * k for q in spec.get("shadow", SHADOW))
     pad = max(band + max(sh_dx, sh_dy), glow, halo) + 1
     x0 = min(x for _, pts in parts for x, _ in pts) - pad
     y0 = min(y for _, pts in parts for _, y in pts) - pad
@@ -232,11 +251,12 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
     acc: dict = {}
     body_cells = set()
 
-    def add(cell, kind, a, t=0.0, k2=0.0):
-        got = acc.setdefault(cell, {}).setdefault(kind, [0.0, 0.0, 0.0])
+    def add(cell, kind, a, t=0.0, k2=0.0, k3=0.0):
+        got = acc.setdefault(cell, {}).setdefault(kind, [0.0, 0.0, 0.0, 0.0])
         got[0] += a
         got[1] += t * a
         got[2] += k2 * a
+        got[3] += k3 * a
 
     for part, pts in parts:
         edges = edges_of([(x - x0, y - y0) for x, y in pts])
@@ -276,15 +296,24 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
                 t = min(1.0, py / H * 1.25 + px / W * 0.25)      # 빛은 왼쪽 위에서
                 if sd < ew or (ring and sd > far - ew):
                     add(cell, "edge", w)
-                elif bevel and sd < ew + bevel:
-                    nx, ny = (cx - px) / (d or 1), (cy - py) / (d or 1)
-                    lit = -(nx * 0.6 + ny * 0.8)                  # 바깥 법선이 빛을 보는지
-                    amt = 0.8 * abs(lit) * (1 - (sd - ew) / bevel)
-                    add(cell, "lit" if lit > 0 else "dark", w, t, amt)
-                elif not ring and sd < ew * 1.6 and py > H * 0.62 and px > W * 0.45:
-                    add(cell, "lit", w, t, 0.45)                  # 아래쪽 안쪽 광택
                 else:
-                    add(cell, "body", w, t)
+                    # 외곽선 안쪽을 돔으로 본다. 높이는 h = sin(q·π/2) 이고 그 기울기가 cos(q·π/2) —
+                    # 테두리에서 가장 가파르고 한가운데서 0 이라 평평한 판이 아니라 통통해 보인다.
+                    # 고리는 안쪽 구멍 쪽에서도 다시 떨어지므로 가까운 쪽 벽까지의 거리를 쓴다
+                    inner = min(sd - ew, far - ew - sd) if ring else sd - ew
+                    q = min(1.0, inner / dome) if dome > 0 else 1.0
+                    slope = math.cos(q * math.pi / 2)
+                    nx, ny = (cx - px) / (d or 1), (cy - py) / (d or 1)
+                    face = -(nx * lx + ny * ly)                   # 바깥 법선이 빛을 보는지
+                    amt = shade * abs(face) * slope
+                    # 광택은 세제곱으로 좁혀 능선에만 얹는다. 넓게 깔면 몸 색이 날아간다.
+                    # 명암과 따로 담는 이유는 칠하는 방식이 달라서다 — 명암은 몸 색을 곱하고
+                    # 광택은 테마의 가장 밝은 색을 덧댄다
+                    hi = gloss_k * face ** 3 * slope if face > 0 else 0.0
+                    if amt < 0.04 and hi < 0.04:
+                        add(cell, "body", w, t)                   # 가운데 평평한 곳은 한 가지로 묶는다
+                    else:
+                        add(cell, "lit" if face > 0 else "dark", w, t, min(1.0, amt), min(1.0, hi))
 
     made = {}
     for cell, kinds in acc.items():
@@ -292,11 +321,12 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
         for kind in ORDER:
             if kind not in kinds:
                 continue
-            a, ta, ka = kinds[kind]
+            a, ta, ka, ha = kinds[kind]
             if a < 0.02:
                 continue
             # 계조를 잘게 쪼개면 색이 수백 개씩 생긴다. 눈에 안 보일 만큼만 묶는다
-            layers.append((kind, round(ta / a * 12) / 12, round(ka / a * 8) / 8, round(min(1.0, a) * 24) / 24))
+            layers.append((kind, round(ta / a * 12) / 12, round(ka / a * QUANT) / QUANT,
+                           round(ha / a * QUANT) / QUANT, round(min(1.0, a) * 24) / 24))
         if layers:
             made[cell] = tuple(layers)
     # 왼쪽 위를 (0,0) 으로 당긴다
@@ -309,11 +339,14 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
     # 계산하고 돌려 쓰므로, 큰 판에서도 색 계산이 몇백 번으로 끝난다
     recipes: dict = {}
     st = {}
+    cells = [(x - ox, y - oy) for x, y in made]
+    arc = arc_of(body, (min(x for x, _ in cells), min(y for _, y in cells),
+                        max(x for x, _ in cells), max(y for _, y in cells)))
     for (x, y), layers in made.items():
         cx, cy = x - ox, y - oy
         iu = min(UV, max(0, round((cx - bx0) / max(1, box[2] - 1) * UV)))
         iv = min(UV, max(0, round((cy - by0) / max(1, box[3] - 1) * UV)))
-        st[(cx, cy)] = (recipes.setdefault(layers, len(recipes)), iu, iv)
+        st[(cx, cy)] = (recipes.setdefault(layers, len(recipes)), iu, iv, arc.get((cx, cy), 0))
     return (st, [k for k, _ in sorted(recipes.items(), key=lambda kv: kv[1])]), _hotspot(body, rid), box, body
 
 
@@ -360,6 +393,74 @@ def nearest(points: set, box: tuple) -> dict:
                     nxt.append(q)
         frontier = nxt
     return best
+
+
+def biggest(body: set) -> set:
+    """8-이웃으로 이어진 조각 중 가장 큰 것. 떨어진 꽃잎 한 점에서 테두리를 돌지 않게"""
+    rest, best = set(body), set()
+    while rest and len(rest) > len(best):
+        blob, stack = set(), [rest.pop()]
+        while stack:
+            x, y = stack.pop()
+            blob.add((x, y))
+            for dx, dy in N8:
+                q = (x + dx, y + dy)
+                if q in rest:
+                    rest.discard(q)
+                    stack.append(q)
+        if len(blob) > len(best):
+            best = blob
+    return best
+
+
+def cycle_of(body: set) -> list:
+    """몸 테두리를 한 바퀴 도는 차례. 가장 큰 조각의 윗줄 왼쪽 칸에서 시작해 늘 같은 쪽으로 돈다.
+
+    네모 안의 상대 위치로 외곽선 색을 뜨면 테두리 길이가 보존되지 않아, 원본 테두리의 어떤 칸은
+    여러 번 뽑히고 어떤 칸은 한 번도 안 뽑힌다. 테두리를 타고 도는 무늬(전기의 전류)가 그래서
+    빠진다. 한 바퀴 도는 차례를 매겨 같은 비율 자리끼리 맞추면 빠지는 칸이 없다.
+
+    도는 차례는 **순서**만 쓴다. 대각선 계단에서는 한 칸씩 건너뛰므로 여기서 나온 칸만 색 재료로
+    쓰면 테두리의 1/3 이 빠진다 — 색은 테두리 전체에서 뜨고 순서만 이걸로 물려준다."""
+    body = biggest(body)
+    if not body:
+        return []
+    start = min(body, key=lambda p: (p[1], p[0]))
+    out, cur, d = [start], start, 0
+    for _ in range(8 * len(body)):
+        for k in range(8):
+            i = (d + 5 + k) % 8                # 직전에 온 쪽부터 한 바퀴 훑어 처음 만나는 몸으로
+            nxt = (cur[0] + RING[i][0], cur[1] + RING[i][1])
+            if nxt in body:
+                cur, d = nxt, i
+                break
+        else:
+            break
+        if cur == start:
+            break
+        out.append(cur)
+    return out
+
+
+def around(body: set, rim: set) -> list:
+    """테두리 칸 전부를 한 바퀴 도는 차례로 늘어놓는다. 도는 차례가 건너뛴 칸은 가장 가까운
+    돈 칸의 자리를 물려받는다 — 색 재료가 테두리 전체라서 빠지는 색이 없다"""
+    order = cycle_of(body)
+    if not order:
+        return sorted(rim)
+    at = {p: i for i, p in enumerate(order)}
+    xs = [x for x, _ in rim]; ys = [y for _, y in rim]
+    near = nearest(set(order), (min(xs), min(ys), max(xs), max(ys)))
+    return sorted(rim, key=lambda p: (at[near[p]], p))
+
+
+def arc_of(body: set, box: tuple) -> dict:
+    """box 안 모든 칸에 '테두리 한 바퀴 중 어디쯤'(0~TT)을 매긴다. 테두리에서 떨어진 칸은
+    가장 가까운 테두리 칸의 값을 쓴다 — 조각이 여럿인 그림에서도 빈 칸이 안 남는다"""
+    order = cycle_of(body)
+    n = len(order)
+    t = {p: round(i / n * TT) % (TT + 1) for i, p in enumerate(order)}
+    return {q: t[p] for q, p in nearest(set(order), box).items()}
 
 
 def blobs_of(solid) -> list[set]:
@@ -539,23 +640,22 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) 
     def at(u: float, v: float) -> tuple:
         return fill[found[(round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))]]
 
-    # 외곽선도 몸처럼 자리대로 뜬다. 한 색으로 묶으면 테두리를 타고 도는 무늬가 프레임마다
-    # 통째로 한 색이 되어 사라진다 (전기의 전류, 글리치의 빨강·청록 어긋남)
-    exs = [x for x, _ in rim]; eys = [y for _, y in rim]
-    ex0, ey0, ex1, ey1 = min(exs), min(eys), max(exs), max(eys)
-    efound = nearest(rim, (ex0, ey0, ex1, ey1))
+    # 외곽선은 네모 안 자리가 아니라 **테두리를 한 바퀴 도는 자리**로 뜬다. 네모 자리로 뜨면
+    # 윤곽이 다른 모양에서 테두리 길이가 안 맞아 어떤 칸은 여러 번 뽑히고 어떤 칸은 빠진다 —
+    # 테두리를 타고 도는 무늬(전기의 전류)가 그래서 사라진다
+    ring = [solid[p] for p in around(set(solid), rim)]
 
-    def edge_at(u: float, v: float) -> tuple:
-        return solid[efound[(round(ex0 + u * (ex1 - ex0)), round(ey0 + v * (ey1 - ey0)))]]
+    def edge_at(t: int) -> tuple:
+        return ring[round(t / TT * len(ring)) % len(ring)]
 
     return at, edge, gloss, halo, specks, edge_at, []
 
 
-def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
+def _color(layers: tuple, iu: int, iv: int, it: int, sampler: tuple) -> tuple | None:
     """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다"""
-    at, edge, gloss, halo, _, edge_at = sampler[:6]
+    at, _, gloss, halo, _, edge_at = sampler[:6]
     col = None
-    for kind, t, k2, a in layers:
+    for kind, t, k2, k3, a in layers:
         if kind == "shadow":
             rgba = (0, 0, 0, round(a * 255))
         elif kind[0] == "h":                       # halo0 · halo1 · halo2
@@ -567,16 +667,20 @@ def _color(layers: tuple, iu: int, iv: int, sampler: tuple) -> tuple | None:
         elif kind in ("glow", "band"):
             rgba = gloss[:3] + (round(a * 255),)
         elif kind == "edge":
-            c = edge_at(iu / UV, iv / UV)
+            c = edge_at(it)
             rgba = c[:3] + (round(a * c[3]),)
         else:
             c = at(iu / UV, iv / UV)
             k = 1 - 0.15 * t                       # 아래로 갈수록 살짝 어둡게
-            body = (min(255, round(c[0] * k)), min(255, round(c[1] * k)), min(255, round(c[2] * k)))
+            # 명암은 몸 색에 **곱한다**. 테마의 밝은 색으로 섞으면 2색 테마(분홍·잉크)에서는
+            # 그 밝은 색이 곧 몸 색이라 아무 일도 일어나지 않는다 — 곱셈은 팔레트를 안 탄다
             if kind == "lit":
-                body = mix(body, gloss, k2)
+                k *= 1 + LIFT * k2
             elif kind == "dark":
-                body = mix(body, edge, k2)
+                k *= 1 - SINK * k2
+            body = (min(255, round(c[0] * k)), min(255, round(c[1] * k)), min(255, round(c[2] * k)))
+            if k3:                                 # 광택만 테마의 가장 밝은 색을 덧댄다
+                body = mix(body, gloss, k3)
             rgba = body + (round(a * c[3]),)
         if rgba[3] > 0:
             col = over(col, rgba)
@@ -594,12 +698,12 @@ def paint(stencil: tuple, sampler: tuple, memo: dict | None = None) -> dict:
     if memo is None:
         memo = {}
     out = {}
-    for cell, (n, iu, iv) in st.items():
+    for cell, (n, iu, iv, it) in st.items():
         layers = recipes[n]
-        key = (layers, iu, iv)
+        key = (layers, iu, iv, it)
         col = memo.get(key, MISS)
         if col is MISS:
-            col = memo[key] = _color(layers, iu, iv, sampler)
+            col = memo[key] = _color(layers, iu, iv, it, sampler)
         if col:
             out[cell] = col
     return out

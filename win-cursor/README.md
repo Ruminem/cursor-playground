@@ -244,7 +244,7 @@ The **Cursor shape** tabs at the top of the preview page change the silhouette w
 | `dart` | Paper plane | Four points with a concave back edge, like two wings swept backwards. |
 | `drop` | Droplet | A pointed tip on an almost circular body, like a single drop of ink. |
 | `glow` | Neon | The theme's brightest colour bleeds out around the body; it glows on dark backgrounds. |
-| `bevel` | Beveled | Light and shadow just inside the outline give the body some thickness. |
+| `bevel` | Beveled | Where the others round off gently, this one breaks like a chamfered edge. |
 
 <!-- /shapes:en -->
 
@@ -579,7 +579,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `dart` | 종이비행기 | 네 점만 쓰고 뒷면을 오목하게 팠음. 날개 두 장이 뒤로 젖혀진 형태. |
 | `drop` | 물방울 | 끝만 뾰족하고 몸통은 거의 원. 잉크 한 방울 같은 형태. |
 | `glow` | 네온 | 몸 바깥으로 테마의 밝은 색이 번짐. 어두운 배경에서 특히 뜸. |
-| `bevel` | 입체 | 테두리 안쪽에 빛과 그림자를 넣어 두께를 만들었음. |
+| `bevel` | 입체 | 다른 모양이 완만한 언덕이라면 이건 모서리를 깎아낸 것처럼 꺾임. |
 
 <!-- /shapes:ko -->
 
