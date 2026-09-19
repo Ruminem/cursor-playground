@@ -128,18 +128,14 @@ def edges_of(pts: list) -> list:
     return out
 
 
-def inside(edges: list, px: float, py: float) -> bool:
-    c = False
-    for x1, y1, dx, dy, _ in edges:
-        if (y1 > py) != (y1 + dy > py) and px < dx * (py - y1) / dy + x1:
-            c = not c
-    return c
-
-
-def near(edges: list, px: float, py: float) -> tuple[float, float, float]:
-    """가장 가까운 윤곽선까지의 거리와 그 위의 점. 제곱으로 비교하고 뿌리는 한 번만 뽑는다"""
-    best, bx, by = 1e18, px, py
+def sdist(edges: list, px: float, py: float) -> tuple[float, float, float]:
+    """윤곽선까지의 부호거리(안이 +)와 윤곽선 위의 가장 가까운 점.
+    최근접 찾기와 안팎 판정이 같은 변 목록을 도므로 한 루프에서 같이 한다.
+    제곱으로 비교하고 뿌리는 한 번만 뽑는다"""
+    best, bx, by, ins = 1e18, px, py, False
     for x1, y1, dx, dy, inv in edges:
+        if (y1 > py) != (y1 + dy > py) and px < dx * (py - y1) / dy + x1:
+            ins = not ins
         t = ((px - x1) * dx + (py - y1) * dy) * inv
         if t < 0.0:
             t = 0.0
@@ -150,7 +146,8 @@ def near(edges: list, px: float, py: float) -> tuple[float, float, float]:
         d = ex * ex + ey * ey
         if d < best:
             best, bx, by = d, cx, cy
-    return math.sqrt(best), bx, by
+    d = math.sqrt(best)
+    return (d if ins else -d), bx, by
 
 
 def fillet(pts: list, radii: list, steps: int = 6) -> list:
@@ -273,8 +270,8 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
                 px = (sx + 0.5) / ss
                 cell = (sx // ss, sy // ss)
                 w = 1 / (ss * ss)
-                d, cx, cy = near(edges, px, py)
-                sd = d if inside(edges, px, py) else -d
+                sd, cx, cy = sdist(edges, px, py)
+                d = sd if sd > 0 else -sd
                 # 몸이 덮은 자리와, 거기서 얼마나 떨어졌는지. 고리면 안쪽 구멍도 바깥으로 센다
                 far = ring or 1e9
                 gap = 0.0 if 0 <= sd <= far else (-sd if sd < 0 else sd - far)
@@ -290,8 +287,7 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
                 if band and 0 < gap < band:
                     add(cell, "band", w * min(1.0, max(0.0, (band - gap) * ss + 0.5)))
                 if sh_dx or sh_dy:
-                    dsh = near(edges, px - sh_dx, py - sh_dy)[0]
-                    sdsh = dsh if inside(edges, px - sh_dx, py - sh_dy) else -dsh
+                    sdsh = sdist(edges, px - sh_dx, py - sh_dy)[0]
                     if sdsh > -0.5 and (not ring or sdsh <= far):
                         add(cell, "shadow", w * 0.27 * min(1.0, max(0.0, sdsh * ss + 0.5)))
                 if frac <= 0:
@@ -366,18 +362,30 @@ def _hotspot(body: set, rid: str) -> tuple[int, int]:
 
 
 def mix(a: tuple, b: tuple, t: float) -> tuple:
-    t = max(0.0, min(1.0, t))
-    return tuple(round(p + (q - p) * t) for p, q in zip(a[:3], b[:3]))
+    if t < 0.0:
+        t = 0.0
+    elif t > 1.0:
+        t = 1.0
+    return (round(a[0] + (b[0] - a[0]) * t),
+            round(a[1] + (b[1] - a[1]) * t),
+            round(a[2] + (b[2] - a[2]) * t))
 
 
 def over(bot: tuple | None, top: tuple) -> tuple:
+    # 칸마다 층마다 불리는 자리라 제너레이터를 펴 뒀다 (300만 번에 57% 차이가 났다).
+    # 곱셈 차례와 나눗셈은 건드리지 않는다 — bot*ba*f 를 bot*(ba*f) 로 묶거나 /outa 를
+    # 역수 곱셈으로 바꾸면 반올림 경계에서 값이 갈려 실제로 그림이 달라졌다
     if bot is None:
         return top
     ta, ba = top[3] / 255, bot[3] / 255
     outa = ta + ba * (1 - ta)
     if outa <= 0:
         return (0, 0, 0, 0)
-    return tuple(round((top[i] * ta + bot[i] * ba * (1 - ta)) / outa) for i in range(3)) + (round(outa * 255),)
+    f = 1 - ta
+    return (round((top[0] * ta + bot[0] * ba * f) / outa),
+            round((top[1] * ta + bot[1] * ba * f) / outa),
+            round((top[2] * ta + bot[2] * ba * f) / outa),
+            round(outa * 255))
 
 
 def ring_of(mask) -> set:

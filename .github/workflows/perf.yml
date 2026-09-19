@@ -1,0 +1,33 @@
+# 측정용 임시 워크플로. 러너 OS 에 따라 빌드가 얼마나 걸리는지와,
+# 같은 커서가 나오는지(PNG 압축 결과가 OS 를 타는지)를 본다. 재고 나면 지운다.
+name: perf 측정
+
+# workflow_dispatch 는 기본 브랜치에 있어야 목록에 떠서, 측정 브랜치 푸시로 돌게 해 둔다
+on:
+  push:
+    branches: ['perf/**']
+
+env:
+  PYTHONUTF8: '1'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: 러너가 몇 코어인지
+        run: python -c "import os;print('cpu_count',os.cpu_count(),'process_cpu_count',os.process_cpu_count())"
+      - name: 빌드
+        working-directory: win-cursor
+        run: python build.py
+      - name: dist 해시
+        working-directory: win-cursor
+        run: python hashdist.py
