@@ -37,6 +37,11 @@
   확인은 https://ruminem.github.io/cursor-playground/win-cursor/preview.html 를 받아 이번에 바뀐 내용이
   들어 있는지 본다. **루트 URL 이 404 인 것은 정상이다** — 워크플로가 저장소 루트를 통째로 올려서 페이지가
   `/win-cursor/` 아래에 산다. 2026-09-19 이걸 모르고 배포가 깨졌다고 보고했다
+- **시안 페이지 제목 오른쪽에는 버전과 커밋 7자가 늘 박혀 있어야 한다** — `v1.2.0 · f0cca36` 꼴.
+  `build.py` 의 `version()` 이 `CHANGELOG.md` 맨 위 절과 `git rev-parse` 에서 뽑아 `preview.tpl.html` 의
+  `<!--VERSION-->` 자리에 끼운다. 위의 Pages 확인이 여기에 기댄다 — 이게 있어야 지금 보고 있는 페이지가
+  방금 민 커밋으로 만든 것인지 새로고침 한 번으로 갈린다. 버전 표시는 페이지 해시에도 들어가서
+  그림이 그대로여도 커밋이 바뀌면 `preview.html` 을 다시 만든다. 형식이 깨지면 `test_stamp.py` 가 실패한다
 - 릴리스는 태그(`v*`)를 밀면 `.github/workflows/release.yml` 이 빌드·zip·릴리스까지 한다.
   본문은 `CHANGELOG.md` 의 그 버전 절을 그대로 쓰므로 **CHANGELOG 를 먼저 쓰고 태그를 민다**
 - 전체 빌드는 209초 — 커서 12,947개(121종 × 모양 10가지 × 3크기), 코어 수만큼 프로세스,

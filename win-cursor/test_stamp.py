@@ -5,8 +5,13 @@
 사용법: python test_stamp.py — 구성표 세 종·모양 하나로 줄여서 몇 초 안에 끝난다.
 """
 import json
+import re
 
 import build
+
+# 제목 옆 버전 표시. 여기가 비거나 형식이 깨지면 Pages 에 실렸는지 볼 자가 없어진다
+ver = build.version()
+assert re.fullmatch(r"v\d+\.\d+\.\d+( · [0-9a-f]{7,})?", ver), f"버전 표시가 이상함: {ver!r}"
 
 # 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다
 build.SCHEMES = build.SCHEMES[:3]

@@ -28,8 +28,10 @@ body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding
 .wrap{max-width:980px;margin:0 auto;display:grid;gap:36px}
 header{display:grid;gap:10px}
 .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-h1{font:700 clamp(28px,6vw,44px)/1.05 var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h1{font:700 clamp(28px,6vw,44px)/1.05 var(--display);margin:0;letter-spacing:.01em;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 10px}
 h1 em{font-style:normal;color:var(--accent)}
+/* 버전은 제목 오른쪽 끝에. 좁은 화면에서는 줄이 넘어가 제목 아래로 내려간다 */
+h1 .ver{margin-left:auto;font:600 12px/1 var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap}
 .lede{margin:0;max-width:62ch;color:var(--muted)}
 h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
 
@@ -189,7 +191,7 @@ pre .c{color:var(--muted)}
 <div class="wrap c-arrow" id="app" data-scheme="pink">
   <header>
     <span class="eyebrow">win-cursor · 포인터 구성표 <!--COUNT-->종</span>
-    <h1>cursor-playground <em>schemes</em></h1>
+    <h1>cursor-playground <em>schemes</em><span class="ver"><!--VERSION--></span></h1>
     <p class="lede">텍스트 픽셀아트로 그린 윈도우 커서 구성표 <!--COUNT-->가지를 <!--GROUPS-->갈래로 묶음. 구성표를 고르면 이 페이지의 커서가 먼저 바뀌고, 마음에 들면 버튼 하나로 윈도우에 바로 적용함. 이것저것 적용해 보다 질리면 원래대로 누르면 페이지를 열기 전 커서로 돌아감. <b>커서 모양</b> 에서 화살표 모양을 바꾸면 같은 구성표가 그 모양으로 다시 그려짐.</p>
   </header>
 

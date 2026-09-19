@@ -10,6 +10,7 @@ dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려
 import base64
 import hashlib
 import json
+import subprocess
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -34,6 +35,21 @@ def _sha(*blobs) -> str:
     return h.hexdigest()[:16]
 
 
+def version() -> str:
+    """시안 페이지 제목 옆에 박는 표시. CHANGELOG 맨 위 버전 + 지금 커밋 7자.
+
+    커밋이 같이 있어야 Pages 에 실린 것이 방금 민 것인지 눈으로 갈린다 — 버전만 적으면
+    배포해도 글자가 그대로라 반영됐는지 알 수 없다"""
+    ver = next((ln.split()[1] for ln in (HERE.parent / "CHANGELOG.md").read_text(encoding="utf-8").splitlines()
+                if ln.startswith("## ")), "?")
+    try:
+        sha = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], cwd=HERE,
+                             capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        sha = ""                      # git 없이 받은 사본. 버전만 적고 넘어간다
+    return f"v{ver} · {sha}" if sha else f"v{ver}"
+
+
 def _hashes() -> tuple[dict, str, str]:
     """(구성표별 재료 해시, 전부 합친 해시, 시안 페이지 해시). 지난번과 같으면 그 산출물은 건너뛴다"""
     code = _sha(*((HERE / n).read_bytes() for n in ("build.py", "make_cur.py", "shape.py", "smooth.py", "shapes.json")))
@@ -42,7 +58,8 @@ def _hashes() -> tuple[dict, str, str]:
            for s in SCHEMES}
     # 시안 페이지와 모양 데이터는 구성표 전부를 한 파일에 담아서 하나만 바뀌어도 다시 만든다
     every = _sha(*(art[s["id"]] for s in SCHEMES))
-    return art, every, _sha(every, (HERE / "preview.tpl.html").read_bytes())
+    # 버전 표시를 해시에 넣는다 — 커밋이 바뀌면 그림이 그대로여도 페이지를 다시 만들어야 한다
+    return art, every, _sha(every, (HERE / "preview.tpl.html").read_bytes(), version())
 
 
 # dist/ 안에 두면 CI 의 커서 파일 점검이 이걸 커서로 알고 열어 보다 실패한다
@@ -216,6 +233,7 @@ def build() -> str:
         .replace("/*EXTRA_DATA*/", json.dumps(extra_data, separators=(",", ":")))
         .replace("<!--FAVICON-->", favicon())
         .replace("<!--COUNT-->", str(len(SCHEMES)))
+        .replace("<!--VERSION-->", version())
         .replace("<!--GROUPS-->", str(len(groups)))
         .replace("<!--PICKER-->", "".join(
             f'<div class="group"><h3 class="group-name">{cat}</h3><div class="picker">{"".join(items)}</div></div>'
