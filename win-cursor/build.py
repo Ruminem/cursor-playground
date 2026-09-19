@@ -26,6 +26,8 @@ HERE = Path(__file__).parent
 SCHEMES = json.loads((HERE / "schemes.json").read_text(encoding="utf-8"))
 # 커서 모양 목록. 첫 번째가 기본(테마 그림 그대로)이고, 나머지는 smooth.py 가 그려 테마 색을 입힌다
 SHAPES = json.loads((HERE / "shapes.json").read_text(encoding="utf-8"))
+# 구성표 → 재질. 빛을 어떻게 되받는지만 정하고 색은 그대로다 (smooth.MATERIALS)
+MAT = {s["id"]: s.get("material") for s in SCHEMES}
 
 
 def _sha(*blobs) -> str:
@@ -133,7 +135,7 @@ def page_bits(sid: str, rid: str, shape: str | None, cache: dict) -> tuple[list[
         w, h = max(len(r) for r in rows), len(rows)
     else:
         frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
-        pngs, (hx, hy), (w, h) = smoothlib.page(shape, rid, frames, glyphs)
+        pngs, (hx, hy), (w, h) = smoothlib.page(shape, rid, frames, glyphs, MAT.get(sid))
     return (["data:image/png;base64," + base64.b64encode(p).decode() for p in pngs],
             hx, hy, rate * 1000 // 60, w, h)
 
@@ -145,7 +147,7 @@ def cursor_bytes(sid: str, rid: str, shape: str | None, cache: dict) -> tuple[by
         hot = read_hotspot(raw) or (0, 0)
         return (txt_to_ani(raw, hot), "ani") if is_animated(raw) else (txt_to_cur(raw, hot), "cur")
     frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
-    return smoothlib.cursor(shape, rid, frames, rate, glyphs)
+    return smoothlib.cursor(shape, rid, frames, rate, glyphs, MAT.get(sid))
 
 
 def favicon() -> str:

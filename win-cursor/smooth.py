@@ -31,16 +31,32 @@ HALO = 3        # 테마의 몸 바깥 번짐을 다시 둘러 줄 층 수 (20�
 CUR_SIZES = (32, 64, 128)
 PAGE = 96       # 시안 페이지의 화살표 판. 32칸 판의 3배라 썸네일이 1:1 로 쓴다
 PAGE_SMALL = 64  # 나머지 칸은 페이지에서 작게 보여 주므로 판도 작게 (데이터 파일이 절반으로)
-EDGE_W = 1.1    # 외곽선 두께 (설계 격자 기준)
-# 몸 안쪽을 돔으로 보고 그 기울기로 음영을 낸다. 반지름이 클수록 완만하고 통통해진다 (설계 격자)
+EDGE_W = 1.1    # 외곽선 두께 (설계 격자 기준, 32칸 판에서의 값)
+EDGE_P = 0.72   # 외곽선이 판 크기를 따라 굵어지는 정도. 1 이면 비례해서 128px 에서 3.4px 가 되는데
+                # 그러면 스티커 테처럼 보인다. 0.72 면 32px 0.9px · 128px 2.4px 로 큰 판에서 가늘어진다
+# 몸 안쪽을 돔으로 보고 그 **높이장의 기울기**로 법선을 뽑는다. 반지름이 클수록 완만하고 통통해진다
 DOME = 7.0
-LIGHT = (0.6, 0.8)  # 빛이 오는 쪽. 길이가 1 이라야 세기가 아래 상수대로 나온다 (왼쪽 위)
+RELIEF = 1.0    # 돔이 얼마나 솟는지 (1 이면 꼭대기 높이 = DOME). 키우면 기울기가 서 음영이 깊어진다
+BLUR = 0.30     # 높이장을 뭉갤 반지름 — **돔 반지름의 몇 배인지**로 적는다. **이 값이 접힘을 없앤다**:
+                # 거리함수는 두 변이 똑같이 가까운 중심축에서 기울기가 뚝 끊기는데, 뭉갠 장의
+                # 기울기는 이어진다. 출력 픽셀 기준으로 잡으면 큰 판에서 지붕이 그대로 남아
+                # 능선에 1칸짜리 하이라이트 줄이 생긴다 (실측: 128칸에서 라플라시안 138).
+                # 0 이면 예전처럼 접힌다. 크면 가장자리 각이 뭉개진다 (test_light.py 가 쌍으로 잰다)
+LIGHT = (-0.42, -0.56, 0.71)   # 면에서 빛으로 가는 방향 (왼쪽 위에서 46° 로 비친다). 길이 1
+SHINE = 28      # 하이라이트가 얼마나 좁은지 (블린퐁 지수). 재질은 세기만 바꾸고 이 값은 같이 쓴다 —
+                # 좁기까지 재질마다 달리하면 스텐실을 재질 수만큼 구워야 한다
+LAMB = 1.25     # 램버트를 평평한 면(0) 기준 -1..1 로 펼치는 배율. 크면 기울자마자 세게 갈린다
 SHADE = 0.46    # 램버트 음영 세기. 아래 LIFT·SINK 와 곱해져 몸 색을 얼마나 올리고 내릴지 정한다
-SPEC = 0.65     # 광택 세기. 능선에만 얹히게 세제곱으로 좁힌다
+SPEC = 0.65     # 광택 세기. 재질의 spec 과 곱해진다
+RIM = 0.55      # 테두리 빛 세기. 면이 눈에서 돌아선 만큼 밝아져 외곽선 바로 안쪽에 가는 띠가 생긴다
+EDGE_LIT = 0.22   # 빛을 보는 쪽 외곽선을 하이라이트 색으로 얼마나 밀지
+EDGE_LAMB = 0.35  # 빛을 등진 쪽 외곽선을 얼마나 누를지. 검은 테는 눌러도 그대로라 위쪽만 일한다
 LIFT = 0.42     # 밝은 쪽에서 몸 색을 몇 배까지 올릴지 (1.42배)
 SINK = 0.42     # 어두운 쪽에서 몸 색을 얼마나 내릴지 (0.58배)
 QUANT = 8       # 명암·광택 계조를 몇 단계로 묶을지. 잘게 쪼갤수록 색과 파일이 는다
-SHADOW = (0.9, 1.3)  # 접지 그림자를 오른쪽 아래로 밀어 놓는 양 (설계 격자)
+SHADOW = (0.6, 0.9)  # 접지 그림자를 오른쪽 아래로 밀어 놓는 양 (설계 격자)
+SHADOW_A = 0.40  # 닿는 자리의 그림자 진하기. 멀어지면 아래 폭만큼 걸쳐 0 으로 사라진다
+SHADOW_B = 2.2   # 그림자가 번지는 폭 (밀어 놓은 양의 배수). 크면 흐리고 멀리 퍼진다
 PATTERN = 1.0   # 1 이면 칸을 영역으로 보고 섞는다. 0 이면 예전처럼 가까운 칸 하나를 그대로 쓴다
 KEEP = 115      # 이웃이 이만큼(0~255, 채널 최대 차이) 넘게 다르면 **다른 영역**으로 가른다.
                 # 크롬의 계조는 한 영역이라 이어 붙고, 쿠키의 초코칩·민트초코의 체크는 갈려서
@@ -54,6 +70,30 @@ GHOST_R = 4     # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리�
 GHOST_HIT = 0.75  # 옮긴 자리에서 몸과 이만큼 겹쳐야 유령으로 본다
 GHOST_MIN = 6   # 이 칸 수보다 적으면 유령이 아니라 반짝이로 본다
 GHOST_FILL = 0.30  # 옮겨서 드러난 칸을 평균 이만큼은 채워야 유령으로 본다
+
+# 반각 벡터 (빛 + 시선). 시선은 화면 정면이라 (0,0,1) — 블린퐁 하이라이트가 이쪽을 본다
+HALF = tuple(v / math.sqrt(sum(q * q for q in (LIGHT[0], LIGHT[1], LIGHT[2] + 1)))
+             for v in (LIGHT[0], LIGHT[1], LIGHT[2] + 1))
+
+# ── 재질 ─────────────────────────────────────────────────────────────────────
+# 몸에 무슨 색이 오는지는 테마가 정하고, 여기서는 **빛을 어떻게 되받는지**만 정한다. 같은
+# 크롬 그림이라도 금속이면 하이라이트가 좁고 세며 몸 색으로 물들고, 천이면 거의 안 번들거린다.
+#   shade 음영 깊이 · spec 하이라이트 세기 · rim 테두리 빛 세기 · ambi 하늘빛 반사
+#   ambi 는 빛을 보는 면에 넓게 얹는 옅은 빛이다. 검은 몸(잉크·게임보이)은 곱셈으로는 아무리
+#   눌러도 검은색이라 이것이 없으면 납작해진다 — 실제로도 어두운 표면일수록 하늘빛이 눈에 띈다
+#   tint  하이라이트 색을 테마의 가장 밝은 색(1) 과 흰색(0) 중 어디로 밀지.
+#         흰색 쪽이라야 2색 테마(분홍·잉크)에서도 광택이 산다 — 거기선 '가장 밝은 색' 이 곧 몸 색이다
+MATERIALS = {
+    "plastic": dict(shade=1.00, spec=0.60, rim=0.30, tint=0.30, ambi=0.13),   # 기본. 매끈한 비닐·유광 플라스틱
+    "metal":   dict(shade=1.25, spec=1.20, rim=0.75, tint=0.95, ambi=0.26),   # 크롬·금·은. 금속은 하이라이트가 몸 색을 띤다
+    "glass":   dict(shade=0.55, spec=1.35, rim=1.00, tint=0.10, ambi=0.30),   # 유리·얼음·물. 속이 밝고 테가 빛난다
+    "glow":    dict(shade=0.40, spec=0.30, rim=0.70, tint=1.00, ambi=0.16),   # 네온·야광·화면. 스스로 빛나 음영이 얕다
+    "cloth":   dict(shade=0.85, spec=0.05, rim=0.55, tint=0.55, ambi=0.09),   # 천·털·종이. 번들거리지 않고 가장자리만 보송
+}
+# 무광(matte)은 뒀다가 뺐다. 플라스틱에서 광택만 죽인 것이라 차이의 천장이 플라스틱의 광택량인데,
+# 재 보니 32px 에서 95분위 2.3~6.3 · 최대 10.0~14.7 로 눈에 안 걸렸다 (test_light.py 의 문턱은 8).
+# 다시 넣으려면 광택이 아니라 **명암 곡선**이 달라야 한다 — shade 를 낮추고 ambi 를 올리는 쪽
+DEFAULT_MAT = "plastic"
 
 # ── 화살표 윤곽 (끝 · 어깨 · 오른쪽 홈 · 꼬리 둘 · 왼쪽 홈 · 굽) ──────────────
 ARROW = [(1.3, 0.4), (19.8, 15.9), (13.6, 18.4), (17.0, 26.6), (10.4, 25.6), (8.6, 19.5), (0.2, 23.4)]
@@ -101,7 +141,7 @@ SHAPES = {
 }
 ROLES = ("arrow",) + tuple(SLOTS)   # 모양이 직접 그리는 칸
 # 층을 아래에서 위로 겹치는 순서. 한 칸 안에서 여러 층이 조금씩 겹칠 수 있다
-ORDER = ("shadow", "halo0", "halo1", "halo2", "glow", "band", "body", "lit", "dark", "edge")
+ORDER = ("shadow", "halo0", "halo1", "halo2", "glow", "band", "body", "vol", "edge")
 N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
 N8 = N4 + ((1, 1), (-1, -1), (1, -1), (-1, 1))
 # 테두리를 돌 때 쓰는 여덟 이웃. N8 과 달리 **도는 차례**라야 한 바퀴를 놓치지 않는다
@@ -148,6 +188,29 @@ def sdist(edges: list, px: float, py: float) -> tuple[float, float, float]:
             best, bx, by = d, cx, cy
     d = math.sqrt(best)
     return (d if ins else -d), bx, by
+
+
+def _blur(g: list, w: int, h: int, r: int) -> list:
+    """높이장을 가로·세로로 한 번씩 뭉갠다. 가장자리는 바깥 값을 그대로 늘려 쓴다.
+
+    **이 한 번이 접힘을 없앤다.** 거리함수는 두 변이 똑같이 가까운 자리(중심축)에서 기울기가
+    뚝 끊겨, 거기서 뽑은 법선이 화살표 꼭지점마다 종이접기 같은 금을 냈다. 뭉갠 장은 그 끊김이
+    2r 칸에 걸쳐 이어지므로 기울기가 연속이 된다. 누적합으로 밀어서 칸당 상수 시간이다"""
+    n = 2 * r + 1
+    tmp = [0.0] * (w * h)
+    for y in range(h):
+        row = y * w
+        s = sum(g[row + min(w - 1, max(0, x))] for x in range(-r, r + 1))
+        for x in range(w):
+            tmp[row + x] = s / n
+            s += g[row + min(w - 1, x + r + 1)] - g[row + max(0, x - r)]
+    out = [0.0] * (w * h)
+    for x in range(w):
+        s = sum(tmp[min(h - 1, max(0, y)) * w + x] for y in range(-r, r + 1))
+        for y in range(h):
+            out[y * w + x] = s / n
+            s += tmp[min(h - 1, y + r + 1) * w + x] - tmp[max(0, y - r) * w + x]
+    return out
 
 
 def fillet(pts: list, radii: list, steps: int = 6) -> list:
@@ -236,11 +299,11 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
     k = size / DESIGN
     ss = _ss(cells)
     parts, _ = outlines(sid, rid, size)
-    ew = EDGE_W * spec.get("ew", 1.0) * k
+    # 외곽선은 판 크기를 따라 **덜** 굵어진다 (EDGE_P). 비례해서 굵히면 큰 판에서 스티커 테가 된다
+    ew = EDGE_W * spec.get("ew", 1.0) * k ** EDGE_P
     dome = spec.get("dome", DOME) * k
-    shade = spec.get("shade", SHADE)
-    gloss_k = spec.get("spec", SPEC)
-    lx, ly = LIGHT
+    shade = spec.get("shade", 1.0)
+    gloss_k = spec.get("spec", 1.0)
     band = spec.get("band", 0) * k
     glow = spec.get("glow", 0) * k
     halo = HALO * cells / LIMIT                      # 테마 번짐 층도 크기에 맞춰 두꺼워진다
@@ -251,27 +314,31 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
     x1 = max(x for _, pts in parts for x, _ in pts) + pad
     y1 = max(y for _, pts in parts for _, y in pts) + pad
     W, H = math.ceil(x1 - x0), math.ceil(y1 - y0)
+    sblur = max(sh_dx, sh_dy) * SHADOW_B + 0.5 * k   # 그림자가 번지는 폭
     acc: dict = {}
     body_cells = set()
+    SW, SH = W * ss, H * ss
+    hgt = [0.0] * (SW * SH)                          # 돔의 높이장. 여기서 기울기로 법선을 뽑는다
+    faces: list = []                                 # (격자 번호, 칸, 무게, 세로 위치, 외곽선인가)
 
-    def add(cell, kind, a, t=0.0, k2=0.0, k3=0.0):
-        got = acc.setdefault(cell, {}).setdefault(kind, [0.0, 0.0, 0.0, 0.0])
+    def add(cell, kind, a, t=0.0, k2=0.0, k3=0.0, k4=0.0):
+        got = acc.setdefault(cell, {}).setdefault(kind, [0.0, 0.0, 0.0, 0.0, 0.0])
         got[0] += a
         got[1] += t * a
         got[2] += k2 * a
         got[3] += k3 * a
+        got[4] += k4 * a
 
     for part, pts in parts:
         edges = edges_of([(x - x0, y - y0) for x, y in pts])
         ring = part.get("ring", 0) * k
-        for sy in range(H * ss):
+        for sy in range(SH):
             py = (sy + 0.5) / ss
-            for sx in range(W * ss):
+            for sx in range(SW):
                 px = (sx + 0.5) / ss
                 cell = (sx // ss, sy // ss)
                 w = 1 / (ss * ss)
-                sd, cx, cy = sdist(edges, px, py)
-                d = sd if sd > 0 else -sd
+                sd = sdist(edges, px, py)[0]
                 # 몸이 덮은 자리와, 거기서 얼마나 떨어졌는지. 고리면 안쪽 구멍도 바깥으로 센다
                 far = ring or 1e9
                 gap = 0.0 if 0 <= sd <= far else (-sd if sd < 0 else sd - far)
@@ -288,34 +355,63 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
                     add(cell, "band", w * min(1.0, max(0.0, (band - gap) * ss + 0.5)))
                 if sh_dx or sh_dy:
                     sdsh = sdist(edges, px - sh_dx, py - sh_dy)[0]
-                    if sdsh > -0.5 and (not ring or sdsh <= far):
-                        add(cell, "shadow", w * 0.27 * min(1.0, max(0.0, sdsh * ss + 0.5)))
+                    if sdsh > -0.55 * sblur and (not ring or sdsh <= far):
+                        # 밀어 놓은 실루엣을 한 가지 농도로 통째로 깔면 오려 붙인 그림자가 된다.
+                        # 경계를 sblur 폭에 걸쳐 풀어 반그림자를 만들고, 닿는 쪽이 제일 진하다
+                        add(cell, "shadow", w * SHADOW_A * min(1.0, sdsh / sblur + 0.55) ** 1.7)
                 if frac <= 0:
                     continue
                 w *= frac
                 if frac > 0.5:
                     body_cells.add(cell)
                 t = min(1.0, py / H * 1.25 + px / W * 0.25)      # 빛은 왼쪽 위에서
+                idx = sy * SW + sx
                 if sd < ew or (ring and sd > far - ew):
-                    add(cell, "edge", w)
+                    faces.append((idx, cell, w, t, True))         # 외곽선도 벽이라 빛을 받는다
                 else:
-                    # 외곽선 안쪽을 돔으로 본다. 높이는 h = sin(q·π/2) 이고 그 기울기가 cos(q·π/2) —
-                    # 테두리에서 가장 가파르고 한가운데서 0 이라 평평한 판이 아니라 통통해 보인다.
+                    # 외곽선 안쪽을 돔으로 본다. 꼭대기가 dome 만큼 솟은 언덕을 높이장에 쌓아 두고,
+                    # 법선은 그 장을 뭉갠 뒤 **기울기로** 뽑는다 (아래 두 번째 바퀴).
                     # 고리는 안쪽 구멍 쪽에서도 다시 떨어지므로 가까운 쪽 벽까지의 거리를 쓴다
                     inner = min(sd - ew, far - ew - sd) if ring else sd - ew
                     q = min(1.0, inner / dome) if dome > 0 else 1.0
-                    slope = math.cos(q * math.pi / 2)
-                    nx, ny = (cx - px) / (d or 1), (cy - py) / (d or 1)
-                    face = -(nx * lx + ny * ly)                   # 바깥 법선이 빛을 보는지
-                    amt = shade * abs(face) * slope
-                    # 광택은 세제곱으로 좁혀 능선에만 얹는다. 넓게 깔면 몸 색이 날아간다.
-                    # 명암과 따로 담는 이유는 칠하는 방식이 달라서다 — 명암은 몸 색을 곱하고
-                    # 광택은 테마의 가장 밝은 색을 덧댄다
-                    hi = gloss_k * face ** 3 * slope if face > 0 else 0.0
-                    if amt < 0.04 and hi < 0.04:
-                        add(cell, "body", w, t)                   # 가운데 평평한 곳은 한 가지로 묶는다
-                    else:
-                        add(cell, "lit" if face > 0 else "dark", w, t, min(1.0, amt), min(1.0, hi))
+                    h = RELIEF * dome * math.sin(q * math.pi / 2)
+                    if h > hgt[idx]:                              # 부품이 겹치면 높은 쪽이 이긴다
+                        hgt[idx] = h
+                    faces.append((idx, cell, w, t, False))
+
+    # ── 두 번째 바퀴: 높이장 → 법선 → 빛 ────────────────────────────────────
+    # 높이장을 한 번 뭉개고 중앙차분으로 기울기를 잡는다. 예전에는 '가장 가까운 윤곽선 점을 향한
+    # 방향' 을 법선으로 썼는데, 그 방향은 두 변이 똑같이 가까운 자리에서 뚝 끊겨 꼭지점마다
+    # 종이접기 같은 금이 갔다. 뭉갠 장의 기울기는 이어져 있어 금이 원리적으로 안 생긴다
+    if faces:
+        rb = round(BLUR * dome * ss)
+        hg = _blur(hgt, SW, SH, rb) if rb >= 1 else hgt      # BLUR=0 이면 예전처럼 접힌다 (견주려고 둔 길)
+        gs = ss / 2.0                                    # 한 칸이 1/ss 이라 중앙차분의 분모가 2/ss
+        lx, ly, lz = LIGHT
+        hx, hy, hz = HALF
+        for idx, cell, w, t, is_edge in faces:
+            sx, sy = idx % SW, idx // SW
+            gx = (hg[idx + 1] if sx + 1 < SW else hg[idx]) - (hg[idx - 1] if sx else hg[idx])
+            gy = (hg[idx + SW] if sy + 1 < SH else hg[idx]) - (hg[idx - SW] if sy else hg[idx])
+            nx, ny = -gx * gs, -gy * gs
+            nn = math.sqrt(nx * nx + ny * ny + 1.0)
+            nx, ny, nz = nx / nn, ny / nn, 1.0 / nn
+            # 램버트는 평평한 면이 0 이 되게 옮기고, 위아래를 **따로** 1 에 맞춘다. 그냥 빼기만
+            # 하면 빛 쪽으로는 1-lz 만큼밖에 못 가고 등지는 쪽으로는 1+lz 만큼 가서, 어두운 쪽만
+            # 포화되고 밝은 쪽은 거의 안 움직인다 (실측: 왼쪽 위 +0.3 대 오른쪽 아래 -20)
+            dv = nx * lx + ny * ly + nz * lz - lz
+            dl = dv / (1 - lz) if dv > 0 else dv / (1 + lz)
+            dl = max(-1.0, min(1.0, dl * LAMB * shade))
+            ndh = nx * hx + ny * hy + nz * hz             # 블린퐁: 좁은 하이라이트
+            hi = (ndh ** SHINE if ndh > 0 else 0.0) * gloss_k
+            # 테두리 빛은 면이 눈에서 돌아선 만큼. 빛을 등진 쪽을 더 세게 해야 테를 돌려 준다
+            rm = (1.0 - nz) ** 3 * (0.35 + 0.65 * max(0.0, -dl)) * gloss_k
+            if is_edge:
+                add(cell, "edge", w, 0.0, (dl + 1) / 2)
+            elif abs(dl) < 0.03 and hi < 0.02 and rm < 0.02:
+                add(cell, "body", w, t)                   # 가운데 평평한 곳은 한 가지로 묶는다
+            else:
+                add(cell, "vol", w, t, (dl + 1) / 2, min(1.0, hi), min(1.0, rm))
 
     made = {}
     for cell, kinds in acc.items():
@@ -323,12 +419,13 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
         for kind in ORDER:
             if kind not in kinds:
                 continue
-            a, ta, ka, ha = kinds[kind]
+            a, ta, ka, ha, ra = kinds[kind]
             if a < 0.02:
                 continue
             # 계조를 잘게 쪼개면 색이 수백 개씩 생긴다. 눈에 안 보일 만큼만 묶는다
             layers.append((kind, round(ta / a * 12) / 12, round(ka / a * QUANT) / QUANT,
-                           round(ha / a * QUANT) / QUANT, round(min(1.0, a) * 24) / 24))
+                           round(ha / a * QUANT) / QUANT, round(ra / a * QUANT) / QUANT,
+                           round(min(1.0, a) * 24) / 24))
         if layers:
             made[cell] = tuple(layers)
     # 왼쪽 위를 (0,0) 으로 당긴다
@@ -639,7 +736,7 @@ def ghosts_of(frames: list[dict], core: set) -> list[list]:
     return out
 
 
-def samplers_of(frames: list[dict]) -> list[tuple]:
+def samplers_of(frames: list[dict], mat: str | None = None) -> list[tuple]:
     """프레임 묶음의 색 뜨는 도구들. 번짐은 묶음 전체를 봐야 재므로 여기서 한 번에 만든다.
 
     층 자리는 이 프레임의 몸이 아니라 **프레임 전부에서 변치 않는 부분** 바깥으로 잡는다.
@@ -648,7 +745,7 @@ def samplers_of(frames: list[dict]) -> list[tuple]:
     bodies = [set(specks_of({p: c for p, c in f.items() if c[3] >= 200} or dict(f))[1]) for f in frames]
     core = set.intersection(*bodies)
     if not core:                               # 프레임끼리 겹치는 곳이 없으면 장마다 따로 잰다
-        return [sampler_of(f) for f in frames]
+        return [sampler_of(f, mat=mat) for f in frames]
     ghosts = ghosts_of(frames, core)
     # 유령은 몸을 옮겨 따로 그리므로 색 뜨는 재료에서는 뺀다. 안 빼면 번짐 층에도 같이 들어가
     # 방향 없는 테를 한 겹 더 두른다
@@ -656,10 +753,11 @@ def samplers_of(frames: list[dict]) -> list[tuple]:
     clean = [{p: c for p, c in f.items() if c not in d} or dict(f) for f, d in zip(frames, drop)]
     rings = _rings(core)
     lit = _lit(rings, clean)
-    return [sampler_of(f, rings, lit)[:6] + (g,) for f, g in zip(clean, ghosts)]
+    return [sampler_of(f, rings, lit, mat)[:6] + (g, mat) for f, g in zip(clean, ghosts)]
 
 
-def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) -> tuple:
+def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
+               mat: str | None = None) -> tuple:
     """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색, 유령"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
     specks, solid = specks_of(solid)
@@ -729,14 +827,22 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) 
     def edge_at(t: int) -> tuple:
         return ring[round(t / TT * len(ring)) % len(ring)]
 
-    return at, edge, gloss, halo, specks, edge_at, []
+    return at, edge, gloss, halo, specks, edge_at, [], mat
 
 
 def _color(layers: tuple, iu: int, iv: int, it: int, sampler: tuple) -> tuple | None:
-    """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다"""
+    """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다.
+
+    스텐실에는 **빛의 기하**(램버트·하이라이트·테두리 빛)만 들어 있고 재질은 여기서 입힌다.
+    재질마다 스텐실을 따로 구우면 굽는 비용이 재질 수만큼 늘어난다 — 스텐실은 테마와 무관해야
+    121종이 한 벌을 돌려 쓴다"""
     at, _, gloss, halo, _, edge_at = sampler[:6]
+    mat = MATERIALS[sampler[7] if len(sampler) > 7 and sampler[7] else DEFAULT_MAT]
+    # 하이라이트 색. 흰색 쪽으로 밀어야 2색 테마(분홍·잉크)에서도 광택이 산다 —
+    # 거기선 '테마의 가장 밝은 색' 이 곧 몸 색이라 덧대도 아무 일이 안 일어난다
+    hl = mix((255, 255, 255), gloss[:3], mat["tint"])
     col = None
-    for kind, t, k2, k3, a in layers:
+    for kind, t, k2, k3, k4, a in layers:
         if kind == "shadow":
             rgba = (0, 0, 0, round(a * 255))
         elif kind[0] == "h":                       # halo0 · halo1 · halo2
@@ -749,19 +855,27 @@ def _color(layers: tuple, iu: int, iv: int, it: int, sampler: tuple) -> tuple | 
             rgba = gloss[:3] + (round(a * 255),)
         elif kind == "edge":
             c = edge_at(it)
-            rgba = c[:3] + (round(a * c[3]),)
+            # 외곽선도 벽이라 빛을 받는다. 평평한 검은 테를 한 가지 색으로 두르면 스티커가 된다 —
+            # 빛을 보는 쪽은 하이라이트 쪽으로 살짝 밀고 등진 쪽은 눌러서 둥근 입술로 읽히게
+            d = k2 * 2 - 1
+            e = mix(c[:3], hl, d * EDGE_LIT) if d > 0 else \
+                tuple(round(v * (1 + EDGE_LAMB * d)) for v in c[:3])
+            rgba = tuple(e) + (round(a * c[3]),)
         else:
             c = at(iu / UV, iv / UV)
             k = 1 - 0.15 * t                       # 아래로 갈수록 살짝 어둡게
-            # 명암은 몸 색에 **곱한다**. 테마의 밝은 색으로 섞으면 2색 테마(분홍·잉크)에서는
-            # 그 밝은 색이 곧 몸 색이라 아무 일도 일어나지 않는다 — 곱셈은 팔레트를 안 탄다
-            if kind == "lit":
-                k *= 1 + LIFT * k2
-            elif kind == "dark":
-                k *= 1 - SINK * k2
+            g = 0.0
+            if kind == "vol":
+                # 명암은 몸 색에 **곱한다**. 테마의 밝은 색으로 섞으면 2색 테마(분홍·잉크)에서는
+                # 그 밝은 색이 곧 몸 색이라 아무 일도 일어나지 않는다 — 곱셈은 팔레트를 안 탄다
+                dl = k2 * 2 - 1
+                d = dl * SHADE * mat["shade"]
+                k *= 1 + (LIFT if d > 0 else SINK) * d
+                g = min(1.0, SPEC * mat["spec"] * k3 + RIM * mat["rim"] * k4
+                        + mat["ambi"] * max(0.0, dl))
             body = (min(255, round(c[0] * k)), min(255, round(c[1] * k)), min(255, round(c[2] * k)))
-            if k3:                                 # 광택만 테마의 가장 밝은 색을 덧댄다
-                body = mix(body, gloss, k3)
+            if g > 0.004:                          # 하이라이트와 테두리 빛만 덧댄다
+                body = mix(body, hl, g)
             rgba = body + (round(a * c[3]),)
         if rgba[3] > 0:
             col = over(col, rgba)
@@ -856,9 +970,10 @@ def _fit(px: dict, size: int) -> dict:
     return {p: c for p, c in px.items() if 0 <= p[0] < size and 0 <= p[1] < size}
 
 
-def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None) -> tuple[bytes, str]:
+def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None,
+           mat: str | None = None) -> tuple[bytes, str]:
     """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다)"""
-    samplers = samplers_of(frames)
+    samplers = samplers_of(frames, mat)
     memos = [{} for _ in frames]
     per_size = []
     for size in CUR_SIZES:
@@ -868,9 +983,10 @@ def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | Non
     return (curs_to_ani(curs, rate), "ani") if len(frames) > 1 else (curs[0], "cur")
 
 
-def page(sid: str, rid: str, frames: list[dict], glyphs: list | None = None) -> tuple[list[bytes], tuple[int, int], tuple[int, int]]:
+def page(sid: str, rid: str, frames: list[dict], glyphs: list | None = None,
+         mat: str | None = None) -> tuple[list[bytes], tuple[int, int], tuple[int, int]]:
     """시안 페이지용 (프레임별 PNG, 핫스팟, 칸 수). 그림은 PAGE 판으로 크게 그린다"""
-    samplers = samplers_of(frames)
+    samplers = samplers_of(frames, mat)
     memos = [{} for _ in frames]
     base, hot = draw(sid, rid, samplers, LIMIT, glyphs, memos)
     wide = max(x for px in base for x, _ in px) + 1
