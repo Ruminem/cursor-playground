@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""매끈한 모양의 돔 음영이 실제로 몸을 부풀리는지 본다.
+"""매끈한 모양의 돔 음영과 무늬 섞기가 실제로 일하는지 본다.
 
 **음영을 끈 같은 그림과 견준다.** 그냥 "왼쪽 위가 오른쪽 아래보다 밝다"만 보면 안 된다 —
 테마 그림 자체가 위쪽이 밝고 `_color` 에도 세로 그라데이션이 따로 있어서, 빛을 반대로
@@ -68,3 +68,39 @@ for sid in ("pink", "ink", "chrome", "gameboy", "candy"):   # 2색 둘·5색·4�
             fails.append(f"{shape}/{sid}: 명암 폭이 너무 좁음 ({du - dd:.1f})")
 assert not fails, "돔 음영이 몸을 부풀리지 않음 — " + " · ".join(fails)
 print("돔 음영 OK — 켠 쪽이 왼쪽 위는 밝고 오른쪽 아래는 어둡다")
+
+
+# ── 무늬 섞기 ────────────────────────────────────────────────────────────────
+# 그림이 17x11 칸뿐이라 칸 하나를 그대로 쓰면 어느 크기로 그려도 무늬 한 칸이 폭의 9% 를
+# 차지해 네모로 보인다. 둘러싼 네 칸을 섞되 **대비가 큰 이웃은 빼고** 섞는 것이 요점이다 —
+# 쿠키의 초코칩이나 민트초코의 체크는 저해상도가 아니라 그 구성표의 무늬라서 펴면 죽는다.
+# 그래서 "색이 늘었나" 하나만 보면 안 되고, 계조 쪽과 무늬 쪽의 늘어난 정도를 견줘야 한다.
+
+def colors(sid: str, pat: float) -> set:
+    """이 구성표를 그렸을 때 몸에 나온 색들. PATTERN 만 바꿔 두 번 부른다"""
+    keep = sm.PATTERN
+    sm.PATTERN = pat
+    sm._cache.clear()
+    try:
+        frames = shapelib.read_art(open(f"art/{sid}/arrow.txt", encoding="utf-8").read())[0]
+        px = sm.draw("drop", "arrow", sm.samplers_of(frames), CELLS)[0][0]
+        return {c for c in px.values() if c[3] > 240}
+    finally:
+        sm.PATTERN = keep
+        sm._cache.clear()
+
+
+off = {sid: colors(sid, 0.0) for sid in ("chrome", "mintchoco", "pink")}
+on = {sid: colors(sid, sm.PATTERN) for sid in off}
+rate = {sid: len(on[sid]) / len(off[sid]) for sid in off}
+for sid in off:
+    print(f"{sid:10} 섞기 끔 {len(off[sid]):4} → 켬 {len(on[sid]):4} · {rate[sid]:.2f}배")
+
+# 1. 계조가 있는 구성표는 중간색이 실제로 생겨야 한다 (PATTERN=0 으로 돌리면 1.00 배라 걸린다)
+assert rate["chrome"] > 2.0, f"크롬의 명암 계단이 안 펴짐 ({rate['chrome']:.2f}배)"
+# 2. 대비가 큰 두 색짜리는 한 색도 늘면 안 된다 — KEEP 이 너무 크면 여기서 걸린다
+assert on["pink"] == off["pink"], f"분홍의 두 색이 섞임 ({len(on['pink']) - len(off['pink'])}색 늘어남)"
+# 3. 무늬가 있는 쪽은 계조 쪽보다 덜 건드려져야 한다. 체크무늬가 펴지면 이 비가 뒤집힌다
+assert rate["mintchoco"] < rate["chrome"], \
+    f"민트초코의 체크가 크롬만큼 펴짐 ({rate['mintchoco']:.2f} vs {rate['chrome']:.2f})"
+print("무늬 섞기 OK — 계조는 펴지고 무늬와 2색 구성표는 그대로다")

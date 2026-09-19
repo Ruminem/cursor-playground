@@ -41,6 +41,10 @@ LIFT = 0.42     # 밝은 쪽에서 몸 색을 몇 배까지 올릴지 (1.42배)
 SINK = 0.42     # 어두운 쪽에서 몸 색을 얼마나 내릴지 (0.58배)
 QUANT = 8       # 명암·광택 계조를 몇 단계로 묶을지. 잘게 쪼갤수록 색과 파일이 는다
 SHADOW = (0.9, 1.3)  # 접지 그림자를 오른쪽 아래로 밀어 놓는 양 (설계 격자)
+PATTERN = 1.0   # 몸 색을 이웃 칸과 얼마나 섞을지. 0 이면 예전처럼 가까운 칸 하나를 그대로 쓴다
+KEEP = 115      # 이웃이 이만큼(0~255, 채널 최대 차이) 넘게 다르면 무늬로 보고 안 섞는다.
+                # 쿠키의 초코칩·민트초코의 체크는 대비가 커서 남고, 몸통 명암 계단만 펴진다.
+                # 115 는 눈으로 골랐다 — 60 은 색만 늘고 눈에는 아무 차이가 없었다
 UV = 31         # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 둘지 (테마 그림이 32칸 안이라 이 정도면 충분)
 TT = 255        # 테두리를 한 바퀴 도는 좌표를 몇 단계로 쪼갤지 (테두리가 가장 길어야 250칸쯤)
 SPECK = 2       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다
@@ -637,8 +641,44 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None) 
         lit = _lit(rings, [frame])
     halo = _outward(frame, rings, lit)
 
+    def cell(cx: int, cy: int) -> tuple:       # found 는 상자 바깥 한 칸까지만 안다
+        return fill[found[(min(max(cx, x0 - 1), x1 + 1), min(max(cy, y0 - 1), y1 + 1))]]
+
+    blend: dict = {}
+
     def at(u: float, v: float) -> tuple:
-        return fill[found[(round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))]]
+        """색을 뜬다. 자리는 UV 단계로 쪼개져 있고 층(body·lit·dark)마다 같은 자리가 다시
+        오므로 한 번 섞은 것을 돌려 쓴다 — 프레임당 많아야 (UV+1)² 가지다"""
+        got = blend.get((u, v))
+        if got is None:
+            got = blend[(u, v)] = _mix(u, v)
+        return got
+
+    def _mix(u: float, v: float) -> tuple:
+        fx, fy = x0 + u * (x1 - x0), y0 + v * (y1 - y0)
+        base = cell(round(fx), round(fy))
+        if not PATTERN:
+            return base
+        # 둘러싼 네 칸을 거리로 섞는다. 그림이 17x11 칸뿐이라 칸 하나를 그대로 쓰면
+        # 어느 크기로 그려도 무늬 한 칸이 폭의 9% 를 차지해 네모로 보인다.
+        # 다만 **대비가 큰 이웃은 빼고 섞는다** — 초코칩이나 체크무늬는 저해상도가 아니라
+        # 그 구성표의 무늬라서, 펴면 정체성이 죽는다. 그 자리는 경계가 그대로 남는다
+        ix, iy = math.floor(fx), math.floor(fy)
+        tx, ty = fx - ix, fy - iy
+        acc, tot = [0.0, 0.0, 0.0], 0.0
+        for dx, wx in ((0, 1 - tx), (1, tx)):
+            for dy, wy in ((0, 1 - ty), (1, ty)):
+                w = wx * wy
+                if w <= 0:
+                    continue
+                c = cell(ix + dx, iy + dy)
+                if max(abs(c[i] - base[i]) for i in range(3)) > KEEP:
+                    c = base                   # 무늬 경계 — 이웃 대신 제 색을 넣어 날을 세운다
+                for i in range(3):
+                    acc[i] += c[i] * w
+                tot += w
+        k = PATTERN / tot
+        return tuple(min(255, round(base[i] + (acc[i] - base[i] * tot) * k)) for i in range(3)) + (base[3],)
 
     # 외곽선은 네모 안 자리가 아니라 **테두리를 한 바퀴 도는 자리**로 뜬다. 네모 자리로 뜨면
     # 윤곽이 다른 모양에서 테두리 길이가 안 맞아 어떤 칸은 여러 번 뽑히고 어떤 칸은 빠진다 —
