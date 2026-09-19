@@ -14,6 +14,7 @@
 2026-09-19 에 세어 보니 그런 스크립트를 세션마다 39번 다시 짜고 있었다.
 """
 import argparse
+import ast
 import tempfile
 import time
 from pathlib import Path
@@ -70,8 +71,17 @@ def main(argv: list[str] | None = None) -> Path:
     ap.add_argument("--role", default="arrow")
     ap.add_argument("--size", type=int, default=sm.PAGE)
     ap.add_argument("--frames", action="store_true", help="열을 첫 모양의 프레임으로")
+    ap.add_argument("--set", action="append", default=[], metavar="이름=값",
+                    help="smooth.py 상수를 이 판에서만 바꾼다 (예: --set PATTERN=0 --set KEEP=40)")
     ap.add_argument("-o", "--out", type=Path, default=Path(tempfile.gettempdir()) / "cursor-sheet.png")
     a = ap.parse_args(argv)
+
+    for one in a.set:                                # 값을 바꿔 두 장 뽑아 견주라고 둔 것
+        name, _, val = one.partition("=")
+        if not hasattr(sm, name):
+            raise SystemExit(f"smooth.py 에 없는 상수: {name}")
+        setattr(sm, name, ast.literal_eval(val))
+    sm._cache.clear()                                # 스텐실 캐시가 옛 값으로 그린 것을 들고 있다
 
     t0 = time.time()
     shapes = pick(a.shapes, [s["id"] for s in build.SHAPES], "모양")
