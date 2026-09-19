@@ -15,6 +15,7 @@
 | `smooth.py` | 거리함수로 매끈한 모양을 그리고(`stencil`) 테마 색을 자리대로 떠 넣는다(`paint`) |
 | `make_cur.py` | `.txt` → PNG → `.cur`/`.ani` 변환만 담당. 그림을 해석하는 곳 |
 | `shape.py` | `.txt` 읽고 쓰기, 글리프 자리 옮기기 |
+| `sheet.py` | 모양 × 구성표(또는 프레임)를 PNG 한 장에 그려 눈으로 견주는 도구. 빌드 없이 3초. 빌드 해시에 안 들어가서 고쳐도 다시 그리지 않는다 |
 | `preview.tpl.html` | 시안 페이지 틀. `build.py` 가 여기에 데이터를 끼워 `preview.html` 을 뱉는다 |
 | `handler.ps1` | `cursor-playground://` 주소를 받아 실제로 커서를 적용/되돌림. 받는 주소 목록은 파일 머리에 |
 | `install.ps1` / `setup.ps1` | 주소 연결 등록과 설치 |
@@ -23,6 +24,9 @@
 `cat.py` (tkinter, `Cat` 클래스가 전부) + `art/*.txt` 그림. 본체와 아무 관계 없다.
 
 ## 고칠 때 순서
+- **그림이 어떻게 나오는지는 빌드 전에 `python sheet.py <모양들> <구성표들>` 로 본다** (`--frames` 는 움직임,
+  `all` 은 전부). 나온 PNG 를 Read 로 연다. 그려서 재 보는 임시 스크립트를 새로 짜지 않는다 — 모자라면
+  `sheet.py` 에 옵션을 더한다. 2026-09-19 에 세어 보니 그런 스크립트를 39번 다시 짰고 출력 5만 자가 거기로 갔다
 - 그림·구성표·모양을 고쳤으면 **`win-cursor` 에서 `python build.py` 를 돌린다.**
   `dist/`·`data/`·`preview.html` 은 **커밋하지 않는다**(`.gitignore`) — 커밋마다 저장소가 수십 MB 씩
   영구히 불어서 뺐다. CI 가 만들어 Pages 에 바로 올린다. `build.py` 가 같이 고치는 `win-cursor/README.md` 표는 커밋한다
