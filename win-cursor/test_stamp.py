@@ -13,6 +13,22 @@ import build
 ver = build.version()
 assert re.fullmatch(r"v\d+\.\d+\.\d+( · [0-9a-f]{7,})?", ver), f"버전 표시가 이상함: {ver!r}"
 
+# 주소 줄에 붙여넣은 주소를 읽는 정규식이, 그 줄이 스스로 뱉는 주소를 도로 읽는지.
+# 둘이 갈리면 복사한 주소를 다시 붙여넣었을 때 "못 읽음" 이 된다
+tpl = open("preview.tpl.html", encoding="utf-8").read()
+src = re.search(r"var m = /(\^\(\?:cursor-playground.+?)/\.exec", tpl)
+assert src, "preview.tpl.html 에서 주소를 읽는 정규식을 못 찾음"
+parse = re.compile(src.group(1).replace(r"\/", "/"))
+visit = "a1b2c3d4e5f60789"
+for url, want in [
+    (f"cursor-playground://apply/electric/{visit}/48/270", ("electric", "48", "270", None)),
+    (f"apply/electric/{visit}/48/270/cutout", ("electric", "48", "270", "cutout")),
+]:
+    m = parse.fullmatch(url)
+    assert m and m.groups() == want, f"주소를 못 읽음: {url}"
+for bad in ["cursor-playground://restore/" + visit, "apply/electric", "https://example.com"]:
+    assert not parse.fullmatch(bad), f"엉뚱한 주소를 읽어 버림: {bad}"
+
 # 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다
 build.SCHEMES = build.SCHEMES[:3]
 shape_id = build.SHAPES[1]["id"]                 # 매끈한 모양 하나 (기본 모양은 이 파일을 안 만든다)

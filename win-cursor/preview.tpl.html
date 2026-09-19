@@ -313,6 +313,7 @@ pre .c{color:var(--muted)}
     <h2>그 밖에</h2>
     <ul class="steps">
       <li><b>원래대로</b> 는 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감. 페이지를 닫았다 다시 열면 그때부터 새로 셈 (같은 탭 새로고침은 이어짐).</li>
+      <li>맨 아래 <b>지금 설정</b> 줄은 고쳐 쓸 수 있음. 어디서 받은 주소를 붙여넣고 <b>적용</b>(또는 Enter)을 누르면 그 구성표·모양·색조·크기로 바뀜. 주소 안의 방문 번호는 그 PC 의 것이라 버리고 씀.</li>
       <li><b>포인터 설정 열기</b> 는 윈도우 마우스 속성 창을 포인터 탭으로 엶. 칸 하나만 바꾸거나 구성표를 직접 고를 때.</li>
       <li>버튼을 눌렀는데 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 위의 한 줄부터.</li>
       <li>그림을 직접 고치려면 <a href="https://github.com/Ruminem/cursor-playground">저장소</a>를 받아 <code>art/</code> 를 고치고 <code>python build.py</code>. 로컬 메뉴는 <code>win-cursor/cursors.bat</code>.</li>
@@ -323,7 +324,7 @@ pre .c{color:var(--muted)}
 
 <div class="urlbar cmd" role="group" aria-label="지금 설정 주소">
   <span>지금 설정</span>
-  <code id="urlbar-url"></code>
+  <code id="urlbar-url" contenteditable="true" spellcheck="false" aria-label="지금 설정 주소. 다른 주소를 붙여넣고 적용을 누르면 그 설정으로 바뀜"></code>
   <button type="button" class="ghost c-hand" id="urlbar-copy">복사</button>
   <button type="button" class="ghost c-hand" data-action="restore">원래대로</button>
   <button type="button" class="register c-hand" id="urlbar-apply">적용</button>
@@ -852,11 +853,31 @@ pre .c{color:var(--muted)}
   var out = document.getElementById('urlbar-url'), last = '';
   function picked(){ return document.querySelector('[data-pick][aria-pressed="true"]'); }
   window.cpCopy(document.getElementById('urlbar-copy'), out);
+  // 붙여넣은 주소 읽기: 방문 번호는 그 PC 의 것이라 버리고 구성표·크기·색조·모양만 가져온다.
+  // 값이 실재하는지는 cpUse 가 백업과 같은 검사로 본다
+  function parse(text){
+    var m = /^(?:cursor-playground:\/\/)?apply\/([a-z]+)\/[a-z0-9]+\/([0-9]+)\/([0-9]+)(?:\/([a-z]+))?$/.exec(text.trim());
+    return m && { id: m[1], size: +m[2], hue: +m[3], shape: m[4] || window.cpShapes()[0].id };
+  }
+  var apply = document.getElementById('urlbar-apply');
+  function nope(){ apply.textContent = '못 읽음'; setTimeout(function(){ apply.textContent = '적용'; }, 1600); }
   // 적용은 그 구성표 카드의 적용 버튼을 그대로 누른다 (확인 창과 검사를 같이 지나가게)
-  document.getElementById('urlbar-apply').addEventListener('click', function(){
+  apply.addEventListener('click', function(){
+    var text = out.textContent.trim();
+    if (text !== last) {  // 손으로 고치거나 붙여넣은 주소
+      var b = parse(text);
+      if (!b || !window.cpUse(b)) nope();
+      return;
+    }
     var pick = picked();
     if (pick) window.cpApply(pick.getAttribute('data-pick'));
   });
+  // 붙여넣기는 글자만 받는다 (contenteditable 이 서식째 넣지 않게)
+  out.addEventListener('paste', function(e){
+    e.preventDefault();
+    out.textContent = (e.clipboardData || window.clipboardData).getData('text').trim();
+  });
+  out.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); apply.click(); } });
   // ponytail: 200ms 폴링. 값이 바뀌는 자리가 구성표·모양·색조·크기 네 군데라 훅을 네 개 박는 대신 한 곳에서 본다.
   // 바뀐 게 없으면 DOM 을 안 건드린다. 갱신이 굼떠 보이면 그때 각 자리에서 부르게 고치면 됨
   setInterval(function(){
@@ -926,6 +947,8 @@ pre .c{color:var(--muted)}
     window.cpSetSize(b.size);
     window.cpSetShape(b.shape, function(){ window.cpApply(b.id); });
   }
+  // 아래 주소 줄에 붙여넣은 설정도 같은 검사를 거쳐 같은 길로 간다
+  window.cpUse = function(b){ if (!ok(b)) return false; use(b); return true; };
   try { list = clean(JSON.parse(localStorage.getItem('cp-baks') || '[]')); } catch (e) {}
   refresh();
 
