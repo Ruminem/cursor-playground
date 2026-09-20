@@ -8,7 +8,7 @@
 ### win-cursor — 본체
 | 파일 | 하는 일 |
 |---|---|
-| `schemes.json` | 구성표 121종 목록. `build.py`·`install.ps1`·`handler.ps1` 이 다 같은 파일을 읽는다 |
+| `schemes.json` | 구성표 57종 목록. `build.py`·`install.ps1`·`handler.ps1` 이 다 같은 파일을 읽는다 |
 | `shapes.json` | 커서 모양 목록. **첫 번째가 기본**(테마 그림 그대로), 나머지는 `smooth.py` 가 그린다 |
 | `art/<구성표>/<칸>.txt` | 픽셀 그림 원본. 글자 한 자 = 한 칸, 머리에 `hotspot`/`color`/`rate` 줄 |
 | `build.py` | 전부를 다시 만드는 입구. `python build.py` 하나로 `preview.html`·`win-cursor/dist/`·`win-cursor/data/`·README 표까지 |
@@ -44,18 +44,20 @@
   그림이 그대로여도 커밋이 바뀌면 `preview.html` 을 다시 만든다. 형식이 깨지면 `test_stamp.py` 가 실패한다
 - 릴리스는 태그(`v*`)를 밀면 `.github/workflows/release.yml` 이 빌드·zip·릴리스까지 한다.
   본문은 `CHANGELOG.md` 의 그 버전 절을 그대로 쓰므로 **CHANGELOG 를 먼저 쓰고 태그를 민다**
-- 전체 빌드는 263초 — 커서 12,947개(121종 × 모양 10가지 × 3크기), 코어 수만큼 프로세스,
-  2026-09-19 점검 (높이장 음영·재질이 붙기 전에는 209초였다). 산출물은 `dist` 150MB + `data` 52MB.
+- 전체 빌드는 147–161초 — 커서 6,099개(57종 × 107칸 = 기본 17 + 매끈한 모양 10가지 × 9, 각각 3크기),
+  코어 수만큼 프로세스, 2026-09-20 점검 (121종이던 때는 224–268초였고 그중 146초가 순수 규모였다.
+  57종에서 순수 규모는 그 값을 비례로 줄인 어림 70초 — 따로 재지는 않았다). 산출물은 `dist` 121MB + `data` 45MB.
+  매끈한 모양의 스텐실 160벌은 테마와 무관해서 `win-cursor/.stencils.pkl` 에 먼저 구워 워커들이 나눠 쓴다.
   재료가 그대로인 구성표는 `win-cursor/.build-stamp.json` 을 보고 건너뛰므로 두 번째부터는
-  고친 것만 다시 그린다 (아무것도 안 고쳤으면 1초, 구성표 하나면 17초). 전부 다시 그리려면 `python build.py --all`
-- CI 도 `dist`·`data`·`.build-stamp.json` 을 캐시해 같은 수를 쓴다 — 히트면 잡 51초(빌드 8초),
-  미스면 12분 (2026-09-19 실측). **캐시는 브랜치마다 따로 저장되고**, 다른 브랜치가 받아 쓸 수 있는 것은
+  고친 것만 다시 그린다 (아무것도 안 고쳤으면 0.1초, 구성표 하나면 12초). 전부 다시 그리려면 `python build.py --all`
+- CI 도 `dist`·`data`·`.build-stamp.json`·`.stencils.pkl` 을 캐시해 같은 수를 쓴다 — 히트면 잡 51초(빌드 8초),
+  미스면 12분 (2026-09-19 실측, 121종 때). **캐시는 브랜치마다 따로 저장되고**, 다른 브랜치가 받아 쓸 수 있는 것은
   main 이 저장한 것뿐이다. 그래서 브랜치를 새로 딴 직후 한 번은 12분이 걸릴 수 있다 — 고장이 아니다.
   캐시 키는 `win-cursor` 의 `art/**`·`*.py`·`*.json`·`preview.tpl.html` 이라 문서만 고치면 히트한다
 - 파이썬 버전은 3.14 로 맞춘다. PNG 압축(zlib) 결과가 버전마다 달라 올라가는 커서가 러너 환경을 타지 않게
 
 ## 읽지 말 것 (생성물)
-`win-cursor/preview.html`(2.8MB), `win-cursor/dist/`, `win-cursor/data/`, `win-cursor/out/`, `win-cursor/.build-stamp.json`, `win-cursor/README.md` 의 구성표 표.
+`win-cursor/preview.html`(2.8MB), `win-cursor/dist/`, `win-cursor/data/`, `win-cursor/out/`, `win-cursor/.build-stamp.json`, `win-cursor/.stencils.pkl`, `win-cursor/README.md` 의 구성표 표.
 전부 `build.py` 가 만든다. 궁금한 게 있으면 원본(`win-cursor/art/`, `*.json`, `win-cursor/preview.tpl.html`)을 본다.
 
 ## 이 저장소의 관례
