@@ -220,7 +220,7 @@ pre .c{color:var(--muted)}
       <span class="size-note" id="shape-note"></span>
     </div>
     <div class="findbar">
-      <input type="search" id="find" class="c-ibeam" placeholder="이름으로 찾기 (예: 네온, neon, 재질)" aria-label="구성표 찾기">
+      <input type="search" id="find" class="c-ibeam" placeholder="이름으로 찾기 (예: 크롬, chrome, 재질)" aria-label="구성표 찾기">
       <button type="button" class="ghost c-hand" id="fav-only" aria-pressed="false">즐겨찾기만</button>
       <button type="button" class="ghost c-hand" id="random">랜덤 적용</button>
       <span class="find-note" id="find-note"></span>
@@ -807,7 +807,7 @@ pre .c{color:var(--muted)}
 
 // 시간대별 자동 전환: 시각과 구성표를 정해 두면 처리 스크립트가 윈도우 작업으로 등록한다
 (function(){
-  var DEFAULTS = [[7, 'sakura'], [12, 'pink'], [18, 'sunset'], [22, 'neon']];
+  var DEFAULTS = [[7, 'honey'], [12, 'pink'], [18, 'amber'], [22, 'terminal']];
   var box = document.getElementById('sched');
   var schemes = [].slice.call(document.querySelectorAll('[data-scheme-item]')).map(function(el){
     return { id: el.getAttribute('data-scheme-item'), name: el.querySelector('.pick-name').textContent };

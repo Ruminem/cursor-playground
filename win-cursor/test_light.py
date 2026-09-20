@@ -45,7 +45,7 @@ def mean(px: dict, cells: set) -> float:
 
 
 fails = []
-for sid in ("pink", "ink", "chrome", "gameboy", "candy"):   # 2색 둘·5색·4색·무늬
+for sid in ("pink", "ink", "chrome", "gameboy", "ice"):   # 2색 둘·5색·4색·17색
     for shape in ("round", "bevel", "drop"):
         lit, flat = render(shape, sid, False), render(shape, sid, True)
         # 자리는 **그린 그림에서** 잡는다. stencil 의 body 는 원점이 draw() 와 달라 어긋난다

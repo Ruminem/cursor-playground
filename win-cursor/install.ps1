@@ -2,9 +2,9 @@
 # art/<구성표>/*.txt 로 커서를 만들어 윈도우 포인터 구성표로 등록·제거한다.
 #   메뉴:       cursors.bat 더블클릭 (또는 인자 없이 이 스크립트 실행)
 #   전체 등록:  install.ps1 -Install
-#   개별 등록:  install.ps1 -Install -Scheme neon,fantasy
+#   개별 등록:  install.ps1 -Install -Scheme chrome,fantasy
 #   전체 제거:  install.ps1 -Uninstall
-#   개별 제거:  install.ps1 -Uninstall -Scheme neon
+#   개별 제거:  install.ps1 -Uninstall -Scheme chrome
 #   상태:       install.ps1 -Status
 # 시안 페이지 버튼으로 바로 적용하는 쪽은 setup.ps1 / handler.ps1 이 맡는다 (클론·Python 필요 없음).
 # 등록만 하고 적용은 하지 않는다. 설정 → 마우스 → 추가 마우스 설정 → 포인터 → 구성표에서 고른다.
@@ -42,7 +42,7 @@ function RegName($id) {
 function DestDir($id) { Join-Path $root $(if ($shapeId -eq $plain) { $id } else { "$shapeId-$id" }) }
 
 function Resolve-Ids($ids) {
-    # powershell -File 로 실행하면 neon,pink 가 목록이 아니라 문자열 하나로 넘어오므로 쉼표로 나눈다
+    # powershell -File 로 실행하면 chrome,pink 가 목록이 아니라 문자열 하나로 넘어오므로 쉼표로 나눈다
     $ids = @($ids | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
     if (-not $ids) { return @($schemes.Keys) }
     foreach ($id in $ids) {

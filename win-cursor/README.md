@@ -59,29 +59,6 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/dos` | DOS | Four hard steps of EGA blue from top to bottom. |
 | `art/arcade` | Arcade | Cabinet-sign colours from yellow to purple inside a double black line. |
 
-**Light and screens**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/neon` | Neon | Hollow dark body with cyan and magenta tubes and a translucent glow outside. |
-| `art/glitch` | Glitch | A white body with red and cyan copies slipping out on either side. |
-| `art/crt` | CRT | Green phosphor outline with darker scanlines on every other row. |
-| `art/galaxy` | Galaxy | Deep space dotted with stars inside a violet rim. The link is a star. |
-| `art/flame` | Flame | Yellow at the bottom turning red towards the top, with sparks along the edge. |
-| `art/hologram` | Hologram | Translucent body with diagonal cyan, magenta and yellow sheen and a white outline. |
-| `art/laser` | Laser | No body at all — just a red beam and a double glow. |
-| `art/glowdark` | Glow in the dark | A pale green body softly glowing like a glow-in-the-dark sticker. |
-| `art/thermal` | Thermal | Blue at the edges, turning yellow and red towards the middle like a thermal camera. |
-| `art/matrix` | Matrix | Green code rain falling down a black body. |
-| `art/plasma` | Plasma | Bright electric arcs reaching out inside a purple glass globe. |
-| `art/vhs` | VHS | Colour fringes offset left and right with bands of tape noise. |
-| `art/aurora` | Aurora | Curtains of light drifting from green through blue to violet. |
-| `art/sonar` | Sonar | Green concentric rings spreading across a dark screen. |
-| `art/xray` | X-ray | A bright skeleton showing through a translucent blue body. |
-| `art/noise` | Static | Black-and-white noise, like a screen with no signal. |
-| `art/lavalamp` | Lava lamp | Orange blobs floating through purple liquid. |
-| `art/neonblue` | Neon blue | A near-black body ringed by a blue neon tube with three layers of glow outside. |
-
 **Materials**
 
 | Folder | Name | Style |
@@ -105,67 +82,6 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/steel` | Brushed steel | Matte metal with a horizontal hairline grain. |
 | `art/wrap` | Bubble wrap | Rows of puffed-up air pockets in clear plastic. |
 | `art/rubber` | Rubber | Matte black rubber with a fine pebbled grain. |
-
-**Colours and patterns**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/rainbow` | Rainbow | Six horizontal bands of red, orange, yellow, green, blue and purple. |
-| `art/candy` | Candy | Red and white diagonal candy stripes. |
-| `art/popart` | Pop art | Red halftone dots on yellow with a double black outline. |
-| `art/sunset` | Sunset | A gradient from sunset yellow down to purple. |
-| `art/checker` | Checker | Black and white checks inside a red outline. |
-| `art/polka` | Polka dot | White polka dots on pink. |
-| `art/zebra` | Zebra | Wavy black stripes. |
-| `art/leopard` | Leopard | Ring-shaped leopard spots on ochre. |
-| `art/watermelon` | Watermelon | Green rind, white inner rind, red flesh and black seeds. |
-| `art/argyle` | Argyle | Overlapping diamonds crossed by thin diagonal lines. |
-| `art/tartan` | Tartan | A green and red check crossed by white and yellow lines. |
-| `art/houndstooth` | Houndstooth | A tight black-and-white dogtooth weave. |
-| `art/tiedye` | Tie-dye | Six colours spiralling out from the centre. |
-| `art/camo` | Camo | Blotches of khaki and olive in a military pattern. |
-| `art/mosaic` | Mosaic | Coloured tile chips separated by grout lines. |
-| `art/gingham` | Gingham | Blue and white squares overlapping in a light check. |
-| `art/confetti` | Confetti | Scraps of coloured paper scattered over white. |
-
-**Hand-drawn and minimal**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/minimal` | Minimal | A thin black silhouette at half size with a white border. The link is a single dot. |
-| `art/dashed` | Dashed | Marching-ants border in alternating black and grey around a translucent body. |
-| `art/doodle` | Doodle | Wobbly pencil lines with blue crayon hatching. |
-| `art/cloud` | Cloud | Pure white body with a pastel outline and a soft double shadow. |
-| `art/longshadow` | Long shadow | Flat teal shape casting a long diagonal shadow. |
-| `art/crayon` | Crayon | A red crayon line drawn twice, with patchy yellow colouring. |
-| `art/blueprint` | Blueprint | White lines on blue grid paper. |
-| `art/pencil` | Pencil | Grey pencil outline with cross-hatching inside. |
-| `art/watercolor` | Watercolour | Blotchy sky blue, violet and pink paint. |
-| `art/chalk` | Chalk | White chalk on a blackboard, dusty along the stroke. |
-| `art/marker` | Highlighter | Thick yellow ink bleeding past the outline. |
-| `art/stamp` | Rubber stamp | Red ink pressed unevenly from a rubber stamp. |
-| `art/sketch` | Sketch | Pencil lines gone over twice, left hollow inside. |
-| `art/wireframe` | Wireframe | Blue edges and grid dots, nothing filled in. |
-| `art/comic` | Comic | Heavy double ink lines, white fill and hatched shadow. |
-| `art/dotwork` | Dotwork | Shading made only from the density of dots. |
-
-**Nature and seasons**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/sakura` | Cherry blossom | Pale pink body scattered with petals, some drifting outside. |
-| `art/forest` | Forest | Dark green moss mixed with brighter leaves. |
-| `art/snow` | Snow | Pure white body with snowflakes floating around it. |
-| `art/ocean` | Ocean | Bands of blue waves with white foam. |
-| `art/desert` | Desert | Sand with the ripples of dunes. |
-| `art/autumn` | Autumn | Orange and red leaves layered over each other. |
-| `art/meadow` | Meadow | Yellow and pink wildflowers dotted through grass. |
-| `art/storm` | Storm | Yellow lightning splitting grey thunderclouds. |
-| `art/bamboo` | Bamboo | Green bamboo stalks with joints and a bright highlight. |
-| `art/coral` | Coral | Pink coral branches touched by blue water. |
-| `art/volcano` | Volcano | Red lava glowing through cracks in black rock. |
-| `art/leaf` | Leaf | Bright veins spreading through a green leaf. |
-| `art/rain` | Rain | Slanted streaks of rain against a grey sky. |
 
 **Animated**
 
@@ -394,29 +310,6 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/dos` | 도스 | 위에서 아래로 네 단계로 끊기는 EGA 파랑. |
 | `art/arcade` | 아케이드 | 노랑에서 보라로 떨어지는 오락실 간판 색에 두 겹 검정 선. |
 
-**빛과 화면**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/neon` | 네온 | 속이 빈 어두운 몸체에 청록·자홍 관, 바깥으로 반투명 번짐. |
-| `art/glitch` | 글리치 | 흰 몸체 양옆으로 빨강·청록이 어긋나 번진 화면 오류. |
-| `art/crt` | CRT | 초록 형광 외곽선과 한 줄씩 어두운 주사선이 지나가는 옛 모니터. |
-| `art/galaxy` | 은하 | 보랏빛 테두리 안에 별이 박힌 짙은 우주. 링크는 별. |
-| `art/flame` | 불꽃 | 아래는 노랗고 위로 갈수록 붉어지며 가장자리에 불티가 튐. |
-| `art/hologram` | 홀로그램 | 비스듬히 흐르는 청록·자홍·노랑 무지갯빛 반투명 몸체에 흰 선. |
-| `art/laser` | 레이저 | 몸체 없이 빨간 빛줄기와 두 겹 번짐만 남긴 선. |
-| `art/glowdark` | 야광 | 연둣빛 몸체가 어둠 속에서 은은하게 번지는 야광 스티커. |
-| `art/thermal` | 열화상 | 가장자리는 파랗고 안쪽으로 갈수록 노랗고 붉어지는 열화상 카메라. |
-| `art/matrix` | 매트릭스 | 검은 몸체 안으로 초록 글자비가 세로로 흘러내림. |
-| `art/plasma` | 플라즈마 | 보랏빛 유리구 속에서 밝은 전기 줄기가 뻗어 나감. |
-| `art/vhs` | VHS | 재생 중 색이 좌우로 어긋나고 가로 잡음 띠가 지나감. |
-| `art/aurora` | 오로라 | 초록에서 보라로 넘어가는 빛의 커튼이 비스듬히 흐름. |
-| `art/sonar` | 소나 | 검은 화면에 초록 동심원이 퍼지는 수중 음파 탐지기. |
-| `art/xray` | 엑스레이 | 파란 반투명 몸체 속으로 밝은 뼈대가 비쳐 보임. |
-| `art/noise` | 지지직 | 신호가 끊긴 화면처럼 흑백 잡음이 가득 낀 몸체. |
-| `art/lavalamp` | 라바램프 | 보라색 액체 속을 주황 방울이 떠다니는 램프. |
-| `art/neonblue` | 형광 파랑 | 거의 검은 몸체를 파란 형광 관이 두르고, 바깥으로 세 겹 번짐. |
-
 **재질**
 
 | 폴더 | 이름 | 스타일 |
@@ -440,67 +333,6 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/steel` | 강철 | 가로로 긁힌 헤어라인이 지나가는 무광 금속. |
 | `art/wrap` | 에어캡 | 볼록한 공기 방울이 줄지어 박힌 투명 포장 비닐. |
 | `art/rubber` | 고무 | 빛을 먹는 검은 무광 고무에 오돌토돌한 돌기. |
-
-**색과 무늬**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/rainbow` | 무지개 | 빨주노초파보 여섯 줄 가로 띠. |
-| `art/candy` | 캔디 | 빨강·흰색 사선 줄무늬 사탕. |
-| `art/popart` | 팝아트 | 노란 바탕에 빨간 망점, 두 겹 굵은 검정 선. |
-| `art/sunset` | 석양 | 노을빛 노랑에서 보라로 내려가는 그라데이션. |
-| `art/checker` | 체크 | 빨간 테두리 안에 흑백 체크무늬. |
-| `art/polka` | 물방울 | 분홍 바탕에 흰 물방울무늬. |
-| `art/zebra` | 얼룩말 | 구불구불한 검은 줄무늬. |
-| `art/leopard` | 표범 | 황토색 바탕에 고리 모양 표범 무늬. |
-| `art/watermelon` | 수박 | 초록 껍질, 흰 속껍질, 빨간 속살에 까만 씨. |
-| `art/argyle` | 아가일 | 마름모가 겹치고 가는 사선이 지나가는 니트 무늬. |
-| `art/tartan` | 타탄 | 초록·빨강 격자에 흰 줄과 노란 줄이 겹침. |
-| `art/houndstooth` | 하운드투스 | 흑백 새발 격자가 촘촘히 반복됨. |
-| `art/tiedye` | 타이다이 | 가운데에서 소용돌이치며 번지는 여섯 빛깔 염색. |
-| `art/camo` | 위장 | 카키와 올리브 얼룩이 뭉개져 섞인 군용 무늬. |
-| `art/mosaic` | 모자이크 | 줄눈으로 나뉜 색색의 타일 조각. |
-| `art/gingham` | 깅엄 | 파랑과 흰색이 겹쳐 짙어지는 반투명 체크. |
-| `art/confetti` | 색종이 | 흰 바탕에 알록달록한 종이 조각이 흩뿌려짐. |
-
-**손그림·미니멀**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/minimal` | 미니멀 | 절반 크기의 가는 검정 실루엣과 흰 테두리. 점 하나짜리 링크. |
-| `art/dashed` | 점선 | 흑백이 번갈아 가는 개미 행렬 테두리에 반투명 속. |
-| `art/doodle` | 낙서 | 삐뚤빼뚤한 연필 선에 파란 크레용 빗금. |
-| `art/cloud` | 구름 | 새하얀 몸체에 파스텔 테두리와 두 겹 흐린 그림자. |
-| `art/longshadow` | 롱섀도 | 청록 평면 도형 뒤로 길게 늘어지는 대각선 그림자. |
-| `art/crayon` | 크레용 | 빨간 크레용으로 두 번 그은 선에 듬성듬성 칠한 노랑. |
-| `art/blueprint` | 청사진 | 파란 모눈종이 위에 흰 선으로 그린 설계도. |
-| `art/pencil` | 연필 | 회색 연필 외곽선에 엇갈린 빗금만 친 속. |
-| `art/watercolor` | 수채화 | 하늘·보라·분홍이 얼룩덜룩 번지는 물감. |
-| `art/chalk` | 분필 | 칠판 위에 흰 분필로 그어 가루가 날리는 선. |
-| `art/marker` | 형광펜 | 노란 형광 잉크가 선 밖으로 번진 굵은 칠. |
-| `art/stamp` | 도장 | 빨간 잉크가 듬성듬성 묻은 고무 도장 자국. |
-| `art/sketch` | 스케치 | 여러 번 겹쳐 그은 연필 선에 속은 비워 둠. |
-| `art/wireframe` | 와이어프레임 | 파란 선과 격자 점만 남긴 설계 도면. |
-| `art/comic` | 만화 | 두 겹 굵은 검정 선에 흰 속과 빗금 그림자. |
-| `art/dotwork` | 점묘 | 점의 촘촘한 정도만으로 음영을 낸 그림. |
-
-**자연·계절**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/sakura` | 벚꽃 | 연분홍 몸체에 꽃잎이 박히고 주변으로 흩날림. |
-| `art/forest` | 숲 | 짙은 초록 이끼에 밝은 잎이 섞인 숲. |
-| `art/snow` | 눈 | 새하얀 몸체 둘레로 눈송이가 떠 있음. |
-| `art/ocean` | 바다 | 파란 물결 띠와 하얀 포말. |
-| `art/desert` | 사막 | 모래색 바탕에 모래언덕 결. |
-| `art/autumn` | 단풍 | 주황과 빨강 낙엽이 겹쳐 쌓인 가을빛. |
-| `art/meadow` | 들꽃 | 풀밭 사이에 노랑·분홍 들꽃이 드문드문 핌. |
-| `art/storm` | 폭풍 | 잿빛 먹구름 사이로 노란 번개가 갈라짐. |
-| `art/bamboo` | 대나무 | 마디가 진 초록 대나무 줄기에 밝은 빛줄. |
-| `art/coral` | 산호 | 분홍 산호 가지에 푸른 바닷물이 섞임. |
-| `art/volcano` | 화산 | 검게 굳은 암석 틈으로 붉은 용암이 비침. |
-| `art/leaf` | 잎 | 초록 잎에 밝은 잎맥이 갈라져 뻗음. |
-| `art/rain` | 비 | 잿빛 하늘에 빗줄기가 비스듬히 내리꽂힘. |
 
 **움직이는**
 
