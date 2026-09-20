@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.4.0 — 2026-09-20
+
+- Smooth shapes are lit from a height field. The body's height is blurred, the surface normal is read from its gradient, and the shading is a diffuse term plus a specular highlight and a rim light — so the creases that used to survive along the edges at the larger sizes are gone
+- Every scheme now has a **material**: plastic, metal, glass, glow or cloth. Metal tints its highlight with the body colour, glass is bright through the middle with a lit edge, glow lifts the whole body, and cloth kills the gloss. 39 of the schemes carry one; the rest stay plastic
+- Detached bits — Gold's sparkles, snowflakes, petals — are scattered as round dots around the new body instead of being welded into it. Gold used to grow two lumps on its side
+- The scheme list is 57, down from 121. Four groups (hand-drawn and minimal, colour and pattern, nature and seasons, light and screen) were dropped because a full build had grown past four minutes
+- Animated cursors on the smooth shapes run at about 30 frames per second instead of 8 to 15. In-between frames are blended from the ones on either side, and **the loop takes exactly as long as before** — a frame's time is split rather than shortened, so a 5-tick frame becomes 3 + 2 and the animation is smoother, not faster
+- Glitch and Rainfall got their in-between frames drawn rather than blended. Glitch tears along a scanline, the way a real one does, and Rainfall's droplets step down one row at a time — for Rainfall this costs nothing, because three of its six frames were duplicates
+
+**한국어**
+
+- 매끈한 모양의 음영을 높이장으로 바꿈. 몸의 높이를 뭉갠 뒤 그 기울기로 법선을 내고 그 위에 확산광·광택·테빛을 얹음 — 큰 크기에서 가장자리를 따라 남던 접힌 자국이 없어짐
+- 구성표마다 **재질**이 생김: 플라스틱·금속·유리·발광·천. 금속은 광택이 몸 색을 띠고, 유리는 속이 밝고 테가 빛나고, 발광은 몸 전체가 뜨고, 천은 광택이 죽음. 39종에 붙어 있고 나머지는 플라스틱임
+- 몸에서 떨어져 나온 조각(골드의 반짝이·눈송이·꽃잎)을 몸에 붙이지 않고 새 몸 둘레에 둥근 점으로 다시 흩음. 전에는 골드 옆구리에 혹이 두 개 났음
+- 구성표가 121종에서 57종이 됨. 전체 빌드가 4분을 넘겨서 네 갈래(손그림·미니멀, 색과 무늬, 자연·계절, 빛과 화면)를 뺌
+- 매끈한 모양의 움직이는 커서가 8~15fps 에서 30fps 안팎으로 촘촘해짐. 사이 프레임을 양옆에서 섞어 넣고, **한 바퀴 도는 시간은 그대로임** — 한 프레임이 머무는 시간을 줄이는 게 아니라 쪼개므로 5틱짜리는 3+2 가 됨. 빨라진 게 아니라 부드러워진 것임
+- 글리치와 빗줄기는 사이 프레임을 섞지 않고 그림으로 그림. 글리치는 실제 글리치처럼 가로줄을 따라 찢어지고, 빗줄기는 물방울이 한 줄씩 내려옴 — 빗줄기는 여섯 장 중 셋이 복사본이었던 자리를 채운 것이라 용량이 안 늚
+
 ## 1.3.0 — 2026-09-19
 
 - Smooth shapes have volume now. The body is read as a dome, so it is lit from the upper left, the ridge along the top catches a highlight, and a contact shadow sits under the lower right edge

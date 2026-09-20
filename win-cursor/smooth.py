@@ -70,6 +70,9 @@ UV = 127        # 테마 그림에서 색을 뜰 자리를 몇 단계로 쪼개 
                 # 이게 낮으면 그 곡선이 다시 UV 격자로 계단진다 — 가장 큰 판(128칸)에 맞춰 127.
                 # 31 이던 것을 올렸고, 그리기가 30벌 기준 3.4 초에서 4.4 초가 됐다
 TT = 255        # 테두리를 한 바퀴 도는 좌표를 몇 단계로 쪼갤지 (테두리가 가장 길어야 250칸쯤)
+FPS = 30        # 0 이면 그림이 가진 프레임 그대로. >0 이면 프레임 사이를 섞어 이 fps 에 가깝게 늘린다.
+                # 한 바퀴 도는 시간은 안 변한다 — 한 프레임이 머무는 틱을 쪼개 나눌 뿐이다 (steps 를 보라).
+                # 프레임 수와 파일 크기는 그만큼 는다 (rate 4·5 면 2배, 6·7 이면 3배, 8 이면 4배)
 SPECK = 5       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불꽃으로 보고 새 몸 둘레에 다시 흩는다.
                 # 2 였을 때 골드의 반짝이(5칸)가 몸에 합쳐져 옆구리에 혹 두 개가 났다. 5 는
                 # 눈이 아니라 분포에서 골랐다 — 떨어진 덩어리 2,472개 중 97%가 5칸 이하이고
@@ -1001,17 +1004,66 @@ def _fit(px: dict, size: int) -> dict:
     return {p: c for p, c in px.items() if 0 <= p[0] < size and 0 <= p[1] < size}
 
 
+def _between(a: dict, b: dict, t: float) -> dict:
+    """두 프레임 사이 t 자리의 그림. 없는 칸은 완전 투명으로 본다.
+
+    알파를 곱한 값으로 섞는다 — 그냥 섞으면 투명한 칸의 색(보통 0,0,0)이 같이 들어가
+    나타나고 사라지는 자리마다 검은 테가 난다"""
+    out = {}
+    for p in a.keys() | b.keys():
+        ca = a.get(p, (0, 0, 0, 0))
+        cb = b.get(p, (0, 0, 0, 0))
+        wa, wb = ca[3] * (1.0 - t), cb[3] * t
+        s = wa + wb
+        if s < 0.5:                       # 반올림하면 0 이 되는 칸은 안 넣는다
+            continue
+        out[p] = (round((ca[0] * wa + cb[0] * wb) / s),
+                  round((ca[1] * wa + cb[1] * wb) / s),
+                  round((ca[2] * wa + cb[2] * wb) / s),
+                  round(s))
+    return out
+
+
+def steps(rate: int, fps: int) -> list[int]:
+    """한 프레임이 머무는 rate 틱을 fps 에 맞춰 몇 조각으로 나눌지. 합이 rate 라 한 바퀴 시간이 안 변한다.
+
+    rate 가 홀수면 고르게 못 나눈다 (5 틱을 반으로 자르면 한 바퀴가 20% 빨라진다). [3,2] 처럼
+    들쭉날쭉하게 나누고 .ani 의 프레임별 rate 칸으로 그 시간을 적어 준다.
+    조각 수는 내림으로 잡는다 — 올림하면 rate 7 이 4조각(34fps)이 되어 파일만 커진다"""
+    k = max(1, min(rate, rate * fps // 60))
+    return [rate // k + (i < rate % k) for i in range(k)]
+
+
+def tween(pxs: list[dict], parts: list[int]) -> list[dict]:
+    """프레임마다 parts 조각으로 쪼개고 첫 조각 뒤에 사이 그림을 끼운다.
+    커서는 한 바퀴 돌므로 마지막 프레임은 첫 프레임으로 이어진다"""
+    if len(parts) < 2 or len(pxs) < 2:
+        return pxs
+    total = sum(parts)
+    at = [sum(parts[:j]) / total for j in range(1, len(parts))]   # 조각이 시작하는 자리 (0 은 원본이라 뺀다)
+    out = []
+    for i, cur in enumerate(pxs):
+        out.append(cur)
+        nxt = pxs[(i + 1) % len(pxs)]
+        out += [_between(cur, nxt, t) for t in at]
+    return out
+
+
 def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None,
            mat: str | None = None) -> tuple[bytes, str]:
     """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다)"""
     samplers = samplers_of(frames, mat)
     memos = [{} for _ in frames]
+    # FPS 가 켜져 있으면 다 그린 뒤에 사이를 섞는다 — 그리는 값은 그대로 두고 프레임만 는다
+    parts = steps(rate, FPS) if FPS and len(frames) > 1 else [rate]
     per_size = []
     for size in CUR_SIZES:
         pxs, hot = draw(sid, rid, samplers, cells_for(size), glyphs, memos)
-        per_size.append([(pixels_to_png(_fit(px, size), size), hot) for px in pxs])
-    curs = [pngs_to_cur([per_size[i][fi] for i in range(len(CUR_SIZES))]) for fi in range(len(frames))]
-    return (curs_to_ani(curs, rate), "ani") if len(frames) > 1 else (curs[0], "cur")
+        per_size.append([(pixels_to_png(_fit(px, size), size), hot) for px in tween(pxs, parts)])
+    n = len(per_size[0])
+    curs = [pngs_to_cur([per_size[i][fi] for i in range(len(CUR_SIZES))]) for fi in range(n)]
+    return (curs_to_ani(curs, parts * (n // len(parts)) if len(parts) > 1 else rate), "ani") if n > 1 \
+        else (curs[0], "cur")
 
 
 def page(sid: str, rid: str, frames: list[dict], glyphs: list | None = None,

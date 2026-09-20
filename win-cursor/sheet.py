@@ -36,14 +36,15 @@ def pick(arg: str, known: list[str], what: str) -> list[str]:
     return ids
 
 
-def frames_of(shape: str, sid: str, role: str, size: int, cache: dict, mat: str | None = None) -> list[dict]:
+def frames_of(shape: str, sid: str, role: str, size: int, cache: dict, mat: str | None = None,
+              k: int = 1) -> list[dict]:
     """이 모양·구성표·칸의 프레임별 {좌표: RGBA}. build.py 가 커서를 만들 때와 같은 길을 지난다"""
     if build.shape_of(shape) is None or role in build.KEEP:     # 테마 그림 그대로 쓰는 자리
         raw = build.art_raw(sid, role)
-        return [sm.scale_up(f, size / canvas_size(raw)) for f in shapelib.read_art(raw)[0]]
+        return sm.tween([sm.scale_up(f, size / canvas_size(raw)) for f in shapelib.read_art(raw)[0]], [1] * k)
     frames, _, glyphs = build.smooth_parts(sid, role, shape, cache)
-    return sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid)),
-                   sm.cells_for(size), glyphs)[0]
+    return sm.tween(sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid)),
+                            sm.cells_for(size), glyphs)[0], [1] * k)
 
 
 def compose(rows: list[list[dict]], size: int) -> tuple[dict, int, int]:
@@ -73,6 +74,9 @@ def main(argv: list[str] | None = None) -> Path:
     ap.add_argument("--size", type=int, default=sm.PAGE)
     ap.add_argument("--frames", action="store_true", help="열을 첫 모양의 프레임으로")
     ap.add_argument("--mat", help="재질을 이 판에서만 이걸로 (metal·glass·glow·cloth·plastic)")
+    ap.add_argument("--tween", type=int, default=1, metavar="배수",
+                    help="프레임 사이를 섞어 이 배수로 늘려 본다 (--frames 와 같이 쓴다)")
+    ap.add_argument("--range", metavar="처음:끝", help="프레임을 이 구간만 (60fps 판은 한 줄이 너무 길다)")
     ap.add_argument("--set", action="append", default=[], metavar="이름=값",
                     help="smooth.py 상수를 이 판에서만 바꾼다 (예: --set PATTERN=0 --set KEEP=40)")
     ap.add_argument("-o", "--out", type=Path, default=Path(tempfile.gettempdir()) / "cursor-sheet.png")
@@ -92,7 +96,10 @@ def main(argv: list[str] | None = None) -> Path:
         raise SystemExit(f"모르는 칸: {a.role}")
     cache: dict = {}
     if a.frames:
-        rows = [frames_of(shapes[0], sid, a.role, a.size, cache, a.mat) for sid in schemes]
+        rows = [frames_of(shapes[0], sid, a.role, a.size, cache, a.mat, a.tween) for sid in schemes]
+        if a.range:
+            lo, _, hi = a.range.partition(":")
+            rows = [r[int(lo or 0):int(hi or len(r))] for r in rows]
         cols = f"{shapes[0]} 의 프레임 (많은 쪽 {max(len(r) for r in rows)}장)"
     else:
         rows = [[frames_of(shp, sid, a.role, a.size, cache, a.mat)[0] for shp in shapes] for sid in schemes]

@@ -10,6 +10,9 @@
 
 사용법: python test_light.py — 몇 초 안에 끝난다.
 """
+import struct
+
+import make_cur
 import shape as shapelib
 import smooth as sm
 
@@ -217,3 +220,39 @@ corner = max(dot.get(p, (0, 0, 0, 0))[3] for p in ((x0, y0), (x1, y0), (x0, y1),
 print(f"불꽃 {x1 - x0 + 1}칸 · 가운데 {mid} · 모서리 {corner}")
 assert mid > 240 and corner < 40, f"불꽃이 둥글지 않음 (가운데 {mid} · 모서리 {corner})"
 print("불꽃 OK — 네모가 아니라 둥근 점이다")
+
+
+# ── 프레임 사이를 섞은 것이 양끝 사이에 있는가 ──────────────────────────────
+# 60fps 로 늘릴 때 쓰는 길이다. 섞은 프레임이 양끝 사이 값이 아니면 움직임이 튀고,
+# 알파를 안 곱하고 섞으면 나타나고 사라지는 자리에 검은 테가 난다 (투명한 칸의 색이 섞여 들어와서).
+a = {(0, 0): (200, 40, 40, 255), (1, 0): (0, 0, 0, 0)}
+b = {(0, 0): (40, 40, 200, 255), (1, 0): (250, 250, 250, 255)}
+mid = sm._between(a, b, 0.5)
+print(f"섞은 칸 {mid[(0, 0)]} · 나타나는 칸 {mid[(1, 0)]}")
+assert mid[(0, 0)] == (120, 40, 120, 255), f"양끝 사이가 아님: {mid[(0, 0)]}"
+assert mid[(1, 0)][:3] == (250, 250, 250) and mid[(1, 0)][3] == 128, \
+    f"투명에서 나타나는 칸에 검은 테가 섞임: {mid[(1, 0)]}"
+four = sm.tween([a, b], [1, 1, 1, 1])
+assert len(four) == 8, f"4배로 안 늘어남: {len(four)}장"
+assert four[0] is a and four[4] is b, "원래 프레임이 제자리에 없음"
+assert sm.tween([a], [1, 1]) == [a] and sm.tween([a, b], [4]) == [a, b], "안 늘려야 할 때 늘림"
+print("프레임 섞기 OK — 양끝 사이 값이고 투명 쪽에 검은 테가 없다")
+
+# ── 늘려도 한 바퀴 도는 시간이 그대로인가 ──────────────────────────────────
+# 여기가 깨지면 부드러워진 게 아니라 그냥 빨리 재생된 것이다. rate 5 를 반으로 자르면
+# 2+2=4 라 20% 빨라지므로, 고르게 못 나누는 rate 는 [3,2] 처럼 들쭉날쭉 쪼개야 한다.
+for rate in range(1, 13):
+    part = sm.steps(rate, 30)
+    assert sum(part) == rate, f"rate {rate} 를 {part} 로 쪼개 합이 {sum(part)} 가 됐다"
+    assert all(p >= 1 for p in part), f"rate {rate} → {part} 에 0 틱짜리 프레임이 있다"
+    # rate 1 은 이미 60fps 라 못 쪼갠다
+    assert len(part) == 1 or rate / len(part) >= 1.9, f"rate {rate} → {part} 는 30fps 를 넘겨 파일만 키운다"
+print("틱 쪼개기 OK — " + " · ".join(f"{r}→{sm.steps(r, 30)}" for r in (4, 5, 6, 7, 8)))
+
+# 쪼갠 시간이 실제로 .ani 에 적히는가 (안 적히면 윈도우가 anih 의 한 값으로 고르게 돌린다)
+ani = make_cur.curs_to_ani([bytes(4)] * 4, [3, 2, 3, 2])
+assert b"rate" in ani, "프레임마다 다른 시간을 줬는데 rate 칸이 안 들어갔다"
+got = struct.unpack("<4I", ani[ani.index(b"rate") + 8:ani.index(b"rate") + 24])
+assert got == (3, 2, 3, 2), f"rate 칸에 엉뚱한 값: {got}"
+assert b"rate" not in make_cur.curs_to_ani([bytes(4)] * 4, 6), "고른 rate 인데 칸을 넣었다"
+print("rate 칸 OK — 프레임마다 머무는 시간이 파일에 적힌다")

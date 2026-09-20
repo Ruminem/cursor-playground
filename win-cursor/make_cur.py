@@ -178,16 +178,25 @@ def txt_to_ani(text: str, hotspot: tuple[int, int]) -> bytes:
     return curs_to_ani([txt_to_cur(f, hotspot, src) for f in split_frames(text)], read_rate(text))
 
 
-def curs_to_ani(frames: list[bytes], rate: int) -> bytes:
-    """프레임별 .cur 를 애니메이션 커서(.ani, RIFF ACON)로 묶는다."""
+def curs_to_ani(frames: list[bytes], rate: int | list[int]) -> bytes:
+    """프레임별 .cur 를 애니메이션 커서(.ani, RIFF ACON)로 묶는다.
+
+    rate 가 목록이면 프레임마다 머무는 시간이 다르다는 뜻이라 `rate` 칸을 같이 넣는다. rate 5 처럼
+    고르게 못 쪼개는 칸을 [3,2] 로 나눠도 한 바퀴 시간이 그대로이게 하려고 쓴다 (smooth.steps)."""
 
     def chunk(kind: bytes, data: bytes) -> bytes:
         return kind + struct.pack("<I", len(data)) + data + (b"\0" if len(data) % 2 else b"")
 
+    rates = rate if isinstance(rate, list) else None
+    if rates is not None and len(rates) != len(frames):
+        raise SystemExit(f"rate 목록이 {len(rates)}개인데 프레임은 {len(frames)}개")
     # anih: 크기, 프레임 수, 단계 수, 폭·높이·비트수·면 수(프레임 안에 있으므로 0), 표시 속도, 플래그(1 = 프레임이 아이콘·커서 데이터)
-    anih = struct.pack("<9I", 36, len(frames), len(frames), 0, 0, 0, 0, rate, 1)
+    # rate 칸을 못 읽는 프로그램은 anih 의 값을 쓰므로 거기엔 첫 조각을 적어 둔다
+    anih = struct.pack("<9I", 36, len(frames), len(frames), 0, 0, 0, 0, rates[0] if rates else rate, 1)
     fram = b"fram" + b"".join(chunk(b"icon", f) for f in frames)
-    body = b"ACON" + chunk(b"anih", anih) + chunk(b"LIST", fram)
+    body = (b"ACON" + chunk(b"anih", anih)
+            + (chunk(b"rate", struct.pack(f"<{len(rates)}I", *rates)) if rates else b"")
+            + chunk(b"LIST", fram))
     return b"RIFF" + struct.pack("<I", len(body)) + body
 
 
