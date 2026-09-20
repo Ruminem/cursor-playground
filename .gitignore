@@ -7,3 +7,5 @@ win-cursor/data/
 win-cursor/preview.html
 # 어디까지 그려 뒀는지 적어 두는 표식 (재료가 그대로면 건너뛴다)
 win-cursor/.build-stamp.json
+# 매끈한 모양의 스텐실. 빌드가 먼저 구워 워커들이 나눠 쓴다 (코드가 바뀌면 다시 굽는다)
+win-cursor/.stencils.pkl

@@ -10,7 +10,7 @@
   5. 높이장을 뭉개 기울기를 내고 그 법선으로 음영·광택·테빛을 얹는다. 세기는 구성표가 고른
      **재질**(MATERIALS)이 정한다 — 금속은 광택이 몸 색을 띠고, 유리는 속이 밝고 테가 빛난다
 
-재질은 스텐실이 아니라 paint 쪽에 있다. 스텐실은 테마와 무관해야 121종이 한 벌을 나눠 쓰는데,
+재질은 스텐실이 아니라 paint 쪽에 있다. 스텐실은 테마와 무관해야 구성표 전부가 한 벌을 나눠 쓰는데,
 재질은 구성표마다 다르기 때문이다 (schemes.json 의 "material", 없으면 DEFAULT_MAT).
 
 색은 몇 개로 줄이지 않고 **자리대로** 떠 온다 — 몸도 외곽선도 그렇다. 그래서 무늬
@@ -287,6 +287,14 @@ def outlines(sid: str, rid: str, size: float) -> tuple[list, float]:
 
 
 _cache: dict = {}
+
+
+def stencil_keys() -> list[tuple[str, str, int]]:
+    """빌드가 쓰는 스텐실 전부의 키 — 커서 세 크기·기본 칸 수·시안 판. build.py 가 이걸 먼저 병렬로
+    굽고 워커들이 나눠 쓴다 (2026-09-20: 워커마다 굽던 때는 430번 중 270번이 같은 것을 다시 굽는 것이었다)"""
+    common = {cells_for(s) for s in CUR_SIZES} | {LIMIT}
+    return [(sid, rid, c) for sid in SHAPES for rid in ROLES
+            for c in sorted(common | {cells_for(PAGE if rid == "arrow" else PAGE_SMALL)})]
 
 
 def stencil(sid: str, rid: str, cells: int = LIMIT) -> tuple[tuple[dict, list], tuple[int, int], tuple, set]:
@@ -848,7 +856,7 @@ def _color(layers: tuple, iu: int, iv: int, it: int, sampler: tuple) -> tuple | 
 
     스텐실에는 **빛의 기하**(램버트·하이라이트·테두리 빛)만 들어 있고 재질은 여기서 입힌다.
     재질마다 스텐실을 따로 구우면 굽는 비용이 재질 수만큼 늘어난다 — 스텐실은 테마와 무관해야
-    121종이 한 벌을 돌려 쓴다"""
+    구성표 전부가 한 벌을 돌려 쓴다"""
     at, _, gloss, halo, _, edge_at = sampler[:6]
     mat = MATERIALS[sampler[7] if len(sampler) > 7 and sampler[7] else DEFAULT_MAT]
     # 하이라이트 색. 흰색 쪽으로 밀어야 2색 테마(분홍·잉크)에서도 광택이 산다 —

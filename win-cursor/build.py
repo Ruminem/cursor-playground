@@ -10,6 +10,7 @@ dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려
 import base64
 import hashlib
 import json
+import pickle
 import subprocess
 import sys
 import time
@@ -21,6 +22,7 @@ import smooth as smoothlib
 from make_cur import canvas_size, is_animated, is_row, read_hotspot, read_rate, split_frames, txt_to_ani, txt_to_cur, txt_to_png
 
 HERE = Path(__file__).parent
+STENCILS = HERE / ".stencils.pkl"   # 매끈한 모양의 스텐실. 빌드가 먼저 구워 두고 워커들이 읽어 나눠 쓴다
 
 # 구성표 목록은 schemes.json 한 곳에 둔다 (install.ps1, handler.ps1 도 같은 파일을 읽음)
 SCHEMES = json.loads((HERE / "schemes.json").read_text(encoding="utf-8"))
@@ -274,10 +276,29 @@ def shape_data(shape_id: str, sids: list[str], old: dict | None) -> dict:
     return {"data": data, "extra": extra}
 
 
+def bake(key: tuple) -> tuple:
+    """스텐실 하나를 굽는다 (워커에서). 값을 돌려보내 부모가 한 파일로 모은다"""
+    return key, smoothlib.stencil(*key)
+
+
+_stencils_loaded = False
+
+
+def _load_stencils() -> None:
+    """부모가 구워 둔 스텐실을 이 프로세스에 들인다. 프로세스마다 처음 한 번 (7ms).
+    파일이 없으면 예전처럼 필요할 때 굽는다"""
+    global _stencils_loaded
+    if not _stencils_loaded and STENCILS.exists():
+        smoothlib._cache.update(pickle.loads(STENCILS.read_bytes()))
+        _stencils_loaded = True
+
+
 def build_dist(job: tuple[str, str, list[str]]) -> tuple[str, int]:
     """모양 하나의 dist 커서. 맡은 구성표만 만든다 (프로세스를 나눠 돌리기 위함)"""
     shape_id, label, sids = job
     shape, cache = shape_of(shape_id), {}
+    if shape is not None:
+        _load_stencils()
     # 기본 모양은 dist/<구성표>/ 그대로 둔다 (이미 깔린 처리 스크립트가 그 주소를 쓴다)
     root = HERE / "dist" if shape is None else HERE / "dist" / shape_id
     count = 0
@@ -299,9 +320,10 @@ def build_dist(job: tuple[str, str, list[str]]) -> tuple[str, int]:
 def build_data(job: tuple[str, list[str]]) -> tuple[str, int]:
     """모양 하나의 시안 페이지 데이터 data/<모양>.json"""
     shape_id, sids = job
+    _load_stencils()
     path = HERE / "data" / f"{shape_id}.json"
     path.parent.mkdir(exist_ok=True)
-    # 한 파일에 구성표 121종이 다 들어 있다. 지난번 파일이 있으면 바뀐 자리만 갈아 끼운다.
+    # 한 파일에 구성표 전부가 다 들어 있다. 지난번 파일이 있으면 바뀐 자리만 갈아 끼운다.
     # 코드가 바뀌면 모든 구성표가 sids 에 들어오므로(해시에 코드가 섞여 있다) 통째로 다시 그려진다
     old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
     if old is not None and set(old.get("data", ())) != {s["id"] for s in SCHEMES}:
@@ -354,7 +376,7 @@ if __name__ == "__main__":
     with ProcessPoolExecutor() as pool:
         # 재료가 바뀐 구성표. dist 는 여기에 "폴더가 없는 것"을 더하고, data 는 이 목록만 갈아 끼운다
         changed = [s["id"] for s in SCHEMES if was.get(s["id"]) != art[s["id"]]]
-        jobs, skipped = [], 0
+        dist_jobs, data_jobs, skipped = [], [], 0
         for shp in SHAPES:
             base = shp["id"] == SHAPES[0]["id"]
             root = HERE / "dist" if base else HERE / "dist" / shp["id"]
@@ -362,15 +384,25 @@ if __name__ == "__main__":
                      if s["id"] in changed or not (root / s["id"]).is_dir()]
             skipped += len(SCHEMES) - len(stale)
             if stale:
-                # 프로세스로 나눈다. 잘게 쪼개면 프로세스마다 매끈한 모양의 스텐실을 다시 그린다
-                parts = min(4 if base else 2, len(stale))
-                jobs += [pool.submit(build_dist, (shp["id"], f"{shp['id']} {i + 1}/{parts}", stale[i::parts]))
-                         for i in range(parts)]
+                # 프로세스로 나눈다. 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다
+                parts = min(4, len(stale))
+                dist_jobs += [(shp["id"], f"{shp['id']} {i + 1}/{parts}", stale[i::parts]) for i in range(parts)]
             if not base and (was.get("*") != every or not (HERE / "data" / f"{shp['id']}.json").exists()):
-                jobs.append(pool.submit(build_data, (shp["id"], changed or [s["id"] for s in SCHEMES])))
+                data_jobs.append((shp["id"], changed or [s["id"] for s in SCHEMES]))
+
+        # 매끈한 모양의 스텐실(테마와 무관한 160벌)을 먼저 병렬로 구워 한 파일에 모은다. 워커마다 굽게 두면
+        # 같은 것을 2.7배 다시 굽고, 그 값은 구성표 수와 무관해서 구성표를 줄여도 안 줄었다 (2026-09-20)
+        if (data_jobs or any(shape_of(s) is not None for s, _, _ in dist_jobs)) \
+                and (was.get("*") != every or not STENCILS.exists()):
+            baked = dict(pool.map(bake, smoothlib.stencil_keys()))
+            STENCILS.write_bytes(pickle.dumps(baked, protocol=pickle.HIGHEST_PROTOCOL))
+            print(f"[{time.time() - t0:5.1f}초] 스텐실 {len(baked)}벌 구움")
+        # 오래 걸리는 data 를 먼저 넣는다 — 긴 것이 맨 뒤에 오면 그 하나가 꼬리가 된다
+        jobs = [pool.submit(build_data, j) for j in data_jobs] + [pool.submit(build_dist, j) for j in dist_jobs]
 
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
         if was.get("*page") != page_key or not out.exists():
+            _load_stencils()                             # 모양 탭 아이콘도 매끈한 모양이다
             out.write_text(build(), encoding="utf-8", newline="\n")
             print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")
         total = 0
