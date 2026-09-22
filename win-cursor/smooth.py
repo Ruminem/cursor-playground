@@ -643,7 +643,10 @@ def specks_of(solid: dict) -> tuple[list, dict]:
     """몸에서 떨어져 나온 작은 조각(전기 불꽃·눈송이·꽃잎)을 몸과 갈라 놓는다.
 
     자리는 몸 테두리 기준 비율로 남긴다. 몸을 새로 그려도 같은 자리에 흩을 수 있다.
-    큰 조각이 하나라도 있으면 그 그림은 원래 끊어 그린 것(손그림·점선)이라 보고 건드리지 않는다."""
+    큰 조각이 하나라도 있으면 그 그림은 원래 끊어 그린 것(손그림·점선)이라 보고 건드리지 않는다.
+
+    **조각마다 따로 묶어 넘긴다.** 여러 칸이 이어진 조각(전기의 가닥)은 그릴 때 점 사이를
+    채워야 선으로 보이는데, 한 줄로 쏟아 놓으면 어느 칸이 같은 조각이었는지 알 수 없다."""
     parts = blobs_of(solid)
     rest = parts[1:]
     if not rest or any(len(b) > SPECK for b in rest) or sum(len(b) for b in rest) * 8 > len(parts[0]):
@@ -652,7 +655,7 @@ def specks_of(solid: dict) -> tuple[list, dict]:
     xs = [x for x, _ in body]; ys = [y for _, y in body]
     x0, y0 = min(xs), min(ys)
     w, h = max(1, max(xs) - x0), max(1, max(ys) - y0)
-    specks = [((x - x0) / w, (y - y0) / h, solid[(x, y)]) for b in rest for x, y in b]
+    specks = [[((x - x0) / w, (y - y0) / h, solid[(x, y)]) for x, y in b] for b in rest]
     return specks, {p: solid[p] for p in body}
 
 
@@ -958,26 +961,47 @@ def _ghosts(px: dict, solid: set, box: tuple, ghosts: list) -> dict:
     return {**under, **px} if under else px
 
 
+def _dot(out: dict, cx: float, cy: float, r: float, c: tuple) -> None:
+    """가운데가 (cx, cy) 인 반지름 r 짜리 둥근 점 하나. 가장자리 한 칸은 덮은 넓이만큼 흐려 끊는다"""
+    for py in range(math.floor(cy - r) - 1, math.ceil(cy + r) + 1):
+        for px in range(math.floor(cx - r) - 1, math.ceil(cx + r) + 1):
+            a = round(c[3] * min(1.0, max(0.0, r + 0.5 - math.hypot(px + 0.5 - cx, py + 0.5 - cy))))
+            if a > 4 and a > out.get((px, py), (0, 0, 0, 0))[3]:   # 겹치면 진한 쪽을 남긴다
+                out[(px, py)] = c[:3] + (a,)
+
+
 def specks(marks: list, box: tuple, cells: int) -> dict:
     """불꽃을 새 몸 테두리 기준 같은 비율 자리에 다시 흩는다 (칸이 크면 조각도 그만큼 커진다).
 
     **네모가 아니라 둥근 점으로 찍는다.** 원본 한 칸을 n×n 네모로 늘리면 160px 판에서
     9×9 짜리 각진 딱지가 되어, 매끈해진 몸 위에 혼자 픽셀로 남는다 (골드의 반짝이 둘,
-    바다의 포말, 은하의 별이 다 그랬다). 가장자리 한 칸은 덮은 넓이만큼 흐려 끊는다."""
+    바다의 포말, 은하의 별이 다 그랬다). 가장자리 한 칸은 덮은 넓이만큼 흐려 끊는다.
+
+    **한 조각 안에서 이웃이던 칸 사이는 채운다.** 몸이 20칸으로 펴지면서 원본에서 붙어
+    있던 두 칸이 점 지름보다 멀어져, 전기의 가닥이 이어진 선이 아니라 점선으로 찍혔다.
+    이웃인지는 그 조각에서 가장 가까운 두 점 사이 거리로 잰다 — 원본 한 칸이 그 거리다."""
     bx, by, bw, bh = box
     n = max(1, round(cells / LIMIT))
     r = n / 2
-    out = {}
-    for u, v, c in marks:
-        px, py = bx + round(u * (bw - 1)), by + round(v * (bh - 1))
-        cx, cy = px + r, py + r                            # 그 n칸 네모의 한가운데
-        for dy in range(-1, n + 1):
-            for dx in range(-1, n + 1):
-                d = math.hypot(px + dx + 0.5 - cx, py + dy + 0.5 - cy)
-                a = round(c[3] * min(1.0, max(0.0, r + 0.5 - d)))
-                q = (px + dx, py + dy)
-                if a > 4 and a > out.get(q, (0, 0, 0, 0))[3]:   # 겹치면 진한 쪽을 남긴다
-                    out[q] = c[:3] + (a,)
+    out: dict = {}
+    for group in marks:
+        # 원본 한 칸을 덮는 n칸 네모의 한가운데
+        pts = [(bx + round(u * (bw - 1)) + r, by + round(v * (bh - 1)) + r, c) for u, v, c in group]
+        for cx, cy, c in pts:
+            _dot(out, cx, cy, r, c)
+        if len(pts) < 2:
+            continue
+        gap = min(math.hypot(a[0] - b[0], a[1] - b[1]) for i, a in enumerate(pts) for b in pts[i + 1:])
+        for i, a in enumerate(pts):
+            for b in pts[i + 1:]:
+                d = math.hypot(b[0] - a[0], b[1] - a[1])
+                if d <= r or d > gap * 1.45:        # 원본에서 붙어 있던 쌍만 (대각까지)
+                    continue
+                k = math.ceil(d / r)
+                for j in range(1, k):
+                    t = j / k
+                    _dot(out, a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, r,
+                         a[2] if t < 0.5 else b[2])
     return out
 
 
