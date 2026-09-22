@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0 — 2026-09-20
+## 1.4.0 — 2026-09-22
 
 - Smooth shapes are lit from a height field. The body's height is blurred, the surface normal is read from its gradient, and the shading is a diffuse term plus a specular highlight and a rim light — so the creases that used to survive along the edges at the larger sizes are gone
 - Every scheme now has a **material**: plastic, metal, glass, glow or cloth. Metal tints its highlight with the body colour, glass is bright through the middle with a lit edge, glow lifts the whole body, and cloth kills the gloss. 39 of the schemes carry one; the rest stay plastic
