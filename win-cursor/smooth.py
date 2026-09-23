@@ -710,16 +710,21 @@ class Bunch(list):
 
 def _ring_at(got: dict, n: int):
     """번짐 층 하나에서 자리로 색을 뜨는 함수. 그 자리 가까이에 아무것도 없으면 비워 둔다 —
-    이 마개가 없으면 한쪽에만 번진 층이 nearest 를 타고 반대쪽까지 칠해진다"""
+    이 마개가 없으면 한쪽에만 번진 층이 nearest 를 타고 반대쪽까지 칠해진다.
+
+    마개는 **대각선도 한 칸으로 세는 거리**(체비쇼프)로 잰다. 층(ring_of)도 nearest 도 8방향으로
+    번지니 같은 자로 재야 한다. 예전엔 여기만 유클리드라, 매끈한 대각선이 원본의 계단을 가로지르는
+    자리에서 계단 안쪽 모서리가 (2,2)·(1,2) 떨어져 마개(2)에 걸렸다 — 안쪽 번짐이 한 칸씩 비어
+    대각선 테두리에 톱니가 났다 (2026-09-24 네온 맥박에서, 번짐 있는 구성표 9종 모두)"""
     xs = [x for x, _ in got]; ys = [y for _, y in got]
     x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
     found = nearest(set(got), (x0, y0, x1, y1))
-    cap = (n + 2) ** 2
+    cap = n + 2
 
     def at(u: float, v: float) -> tuple | None:
         p = (round(x0 + u * (x1 - x0)), round(y0 + v * (y1 - y0)))
         q = found.get(p)
-        return got[q] if q and (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 <= cap else None
+        return got[q] if q and max(abs(q[0] - p[0]), abs(q[1] - p[1])) <= cap else None
 
     return at
 

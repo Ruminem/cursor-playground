@@ -375,3 +375,21 @@ for scheme in build.SCHEMES:
 print(f"기호 칸 {len(build.SCHEMES) * 4}개 · 화살표 무늬가 샌 칸 {len(leaks)}개")
 assert not leaks, "기호에 화살표 무늬가 섞임 — " + " · ".join(leaks)
 print("기호 OK — 도움말·작업·위치·사용자 칸의 화살표 부분이 화살표 그림과 같다")
+
+
+# ── 번짐 층이 대각선 계단에서 비지 않는가 ──────────────────────────────────
+# 매끈한 대각선은 원본의 계단을 가로지르므로, 안쪽 번짐 층의 자리를 비율로 옮기면 계단 안쪽
+# 모서리에 떨어진다. 층 칸까지 대각 두 칸이라도 '가까이 있음'으로 쳐야 한다 — 유클리드로 재던
+# 때는 여기서 한 칸씩 비어 네온 맥박의 오른쪽 위 테두리에 톱니가 났다(2026-09-24)
+frames, _, _ = build.smooth_parts("neonpulse", "arrow", "round", {})
+halo = sm.samplers_of(frames, build.MAT.get("neonpulse"))[len(frames) // 2][3]
+(st, recipes), _, _, _ = sm.stencil("round", "arrow", sm.cells_for(128))
+empty = sum(1 for n, iu, iv, _ in st.values() for k, *_ in recipes[n]
+            if k in ("halo0", "halo1") and not halo[int(k[4])](iu / sm.UV, iv / sm.UV))
+print(f"네온 맥박 round 128 · 번짐 층이 빈 칸 {empty}")
+assert not empty, f"번짐이 둘린 구성표인데 번짐 층이 {empty}칸 비었다 (대각선 톱니)"
+# 마개 자체는 남아야 한다 — 한쪽에만 있는 번짐이 몸 너머 반대쪽까지 칠해지면 안 된다
+one = sm._ring_at({**{(0, y): WHITE for y in range(11)}, (10, 0): WHITE}, 0)   # 왼쪽 벽만 찬 층
+assert one(0.2, 0.5), "층 바로 옆(대각 두 칸 안)인데 색을 못 떴다"
+assert one(0.5, 0.5) is None, "층에서 다섯 칸 떨어진 자리까지 칠했다 — 마개가 풀렸다"
+print("번짐 층 OK — 대각선 계단에서 안 비고, 한쪽 번짐이 반대쪽으로 새지 않는다")
