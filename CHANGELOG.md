@@ -7,8 +7,8 @@
 - Detached bits — Gold's sparkles, snowflakes, petals — are scattered as round dots around the new body instead of being welded into it. Gold used to grow two lumps on its side
 - The scheme list is 57, down from 121. Four groups (hand-drawn and minimal, colour and pattern, nature and seasons, light and screen) were dropped because a full build had grown past four minutes
 - Animated cursors on the smooth shapes run at about 30 frames per second instead of 8 to 15. In-between frames are blended from the ones on either side, and **the loop takes exactly as long as before** — a frame's time is split rather than shortened, so a 5-tick frame becomes 3 + 2 and the animation is smoother, not faster
-- Electric is a current now, not blinking dots. Two white-headed pulses run around the yellow outline and throw jagged arcs from wherever they are, at a true 30 fps on every shape — 32 frames, 1.07 seconds a loop, with no blended in-between frames. On the smooth shapes the arcs are pinned to the new outline, so they discharge from the body instead of floating beside it. Gold's sparkles are crosses again, the way the source art draws them
-- Lava drips. Drops gather at the tail tip and the left wing tip, stretch, break off, speed up as they fall and darken as they cool. The tail drips every 0.8 seconds and the wing once in 1.6, out of step, while the pattern keeps flowing underneath — 24 frames, 1.6 seconds a loop
+- Electric is a current now, not blinking dots. Two white-headed pulses run around the yellow outline and now and then throw sparks that trail behind them, at a true 30 fps on every shape — 32 frames, 1.07 seconds a loop, with no blended in-between frames. On the smooth shapes a spark is a thin forked bolt with a blue glow, rooted on the new outline, so it discharges from the body instead of sticking out of it like a rod. Gold's sparkles are crosses again, the way the source art draws them
+- Lava drips. Drops gather at the tail tip and the left wing tip, stretch, break off, speed up as they fall and darken as they cool. The tail drips every 0.8 seconds and the wing once in 1.6, out of step, while the pattern keeps flowing underneath — 24 frames, 1.6 seconds a loop. On the smooth shapes the drop hangs from the smooth tail tip and falls from right under it
 - Glitch and Rainfall got their in-between frames drawn rather than blended. Glitch tears along a scanline, the way a real one does, and Rainfall's droplets step down one row at a time — for Rainfall this costs nothing, because three of its six frames were duplicates
 
 **한국어**
@@ -18,8 +18,8 @@
 - 몸에서 떨어져 나온 조각(골드의 반짝이·눈송이·꽃잎)을 몸에 붙이지 않고 새 몸 둘레에 둥근 점으로 다시 흩음. 전에는 골드 옆구리에 혹이 두 개 났음
 - 구성표가 121종에서 57종이 됨. 전체 빌드가 4분을 넘겨서 네 갈래(손그림·미니멀, 색과 무늬, 자연·계절, 빛과 화면)를 뺌
 - 매끈한 모양의 움직이는 커서가 8~15fps 에서 30fps 안팎으로 촘촘해짐. 사이 프레임을 양옆에서 섞어 넣고, **한 바퀴 도는 시간은 그대로임** — 한 프레임이 머무는 시간을 줄이는 게 아니라 쪼개므로 5틱짜리는 3+2 가 됨. 빨라진 게 아니라 부드러워진 것임
-- 전기가 깜빡이는 점이 아니라 흐르는 전류가 됨. 흰 머리의 펄스 둘이 노란 외곽선을 따라 돌며 지나가는 자리에서 가닥을 튀김. 모든 모양에서 사이를 섞지 않은 30fps 임 — 32프레임, 한 바퀴 1.07초. 매끈한 모양에서는 가닥 뿌리를 새 외곽선에 붙여 몸 옆에 떠 있지 않고 몸에서 방전되는 것처럼 보임. 골드의 반짝이도 원본 그림대로 다시 십자가 됨
-- 용암이 뚝뚝 떨어짐. 꼬리 끝과 왼쪽 날개 끝에 방울이 맺혀 늘어지다 끊기고, 가속하며 떨어지면서 식어 어두워짐. 꼬리는 0.8초마다, 날개는 1.6초에 한 번 엇박으로 떨어지고 그 밑으로 무늬는 계속 흐름 — 24프레임, 한 바퀴 1.6초
+- 전기가 깜빡이는 점이 아니라 흐르는 전류가 됨. 흰 머리의 펄스 둘이 노란 외곽선을 따라 돌며 이따금 뒤로 끌리는 불똥을 튀김. 모든 모양에서 사이를 섞지 않은 30fps 임 — 32프레임, 한 바퀴 1.07초. 매끈한 모양에서는 불똥을 푸른 번짐을 두른 가는 ⚡ 꺾은선으로 그리고 뿌리를 새 외곽선에 붙여, 막대처럼 삐죽 나오지 않고 몸에서 방전되는 것처럼 보임. 골드의 반짝이도 원본 그림대로 다시 십자가 됨
+- 용암이 뚝뚝 떨어짐. 꼬리 끝과 왼쪽 날개 끝에 방울이 맺혀 늘어지다 끊기고, 가속하며 떨어지면서 식어 어두워짐. 꼬리는 0.8초마다, 날개는 1.6초에 한 번 엇박으로 떨어지고 그 밑으로 무늬는 계속 흐름 — 24프레임, 한 바퀴 1.6초. 매끈한 모양에서도 방울이 매끈한 꼬리 끝에 맺혀 그 바로 밑으로 떨어짐
 - 글리치와 빗줄기는 사이 프레임을 섞지 않고 그림으로 그림. 글리치는 실제 글리치처럼 가로줄을 따라 찢어지고, 빗줄기는 물방울이 한 줄씩 내려옴 — 빗줄기는 여섯 장 중 셋이 복사본이었던 자리를 채운 것이라 용량이 안 늚
 
 ## 1.3.0 — 2026-09-19

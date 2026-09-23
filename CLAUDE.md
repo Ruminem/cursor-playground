@@ -10,7 +10,7 @@
 |---|---|
 | `schemes.json` | 구성표 57종 목록. `build.py`·`install.ps1`·`handler.ps1` 이 다 같은 파일을 읽는다 |
 | `shapes.json` | 커서 모양 목록. **첫 번째가 기본**(테마 그림 그대로), 나머지는 `smooth.py` 가 그린다 |
-| `art/<구성표>/<칸>.txt` | 픽셀 그림 원본. 글자 한 자 = 한 칸, 머리에 `hotspot`/`color`/`rate` 줄 |
+| `art/<구성표>/<칸>.txt` | 픽셀 그림 원본. 글자 한 자 = 한 칸, 머리에 `hotspot`/`color`/`rate` 줄. 알파가 `fe`(254)인 색은 **몸에 매달린 조각**(용암 방울)이라 매끈한 모양이 따로 떼어 새 꼬리 끝에 매단다(`smooth.HANG`) — 눈으로는 불투명과 같으니 다른 그림에 쓰면 조각이 뜯겨 나간다 |
 | `build.py` | 전부를 다시 만드는 입구. `python build.py` 하나로 `preview.html`·`win-cursor/dist/`·`win-cursor/data/`·README 표까지 |
 | `smooth.py` | 거리함수로 매끈한 모양을 그리고(`stencil`) 테마 색을 자리대로 떠 넣는다(`paint`) |
 | `make_cur.py` | `.txt` → PNG → `.cur`/`.ani` 변환만 담당. 그림을 해석하는 곳 |

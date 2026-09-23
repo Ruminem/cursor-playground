@@ -82,6 +82,13 @@ SPECK = 5       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불
 STRAND = 3      # 몸에 대각으로 닿은 조각이 이 칸 수 이상이면 '몸에서 뻗은 가닥'으로 보고 새 몸
                 # 테두리에 다시 붙인다 (specks). 57종 실측으로 전기 가닥은 3~5칸, 나머지 구성표의
                 # 닿은 조각은 1~2칸이라 이 선에서 갈린다 (2026-09-23)
+BOLT_CORE = 0.45    # 가닥을 번개로 그릴 때 심의 반지름 (원본 한 칸 반지름의 배수). 1 이면 예전 막대
+BOLT_GLOW = 1.6     # 심 둘레 빛 번짐의 반지름 (같은 배수)
+BOLT_GLOW_A = 0.3   # 빛 번짐의 진하기
+BOLT_JAG = 0.45     # 번개 꺾은선이 마디마다 옆으로 꺾이는 폭 (원본 한 칸 크기의 배수)
+HANG = 254      # 이 알파로 칠한 칸은 '몸에 매달린 조각'이다 (용암 방울). 몸에 이어져 있어도 떼어 내고,
+                # 새 몸에서는 매달린 몸 칸이 새 테두리에 오게 옮긴다 (specks). 눈으로는 불투명(255)과
+                # 같다. 2026-09-23 57종 어디에도 이 알파가 없음을 보고 골랐다 — 다른 그림에 쓰면 뜯긴다
 GHOST_R = 4    # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
 GHOST_HIT = 0.75  # 옮긴 자리에서 몸과 이만큼 겹쳐야 유령으로 본다
 GHOST_MIN = 6   # 이 칸 수보다 적으면 유령이 아니라 반짝이로 본다
@@ -653,34 +660,52 @@ def specks_of(solid: dict, box: tuple | None = None) -> tuple[list, dict]:
 
     box 를 주면 비율을 그 네모(x0, y0, x1, y1)로 잰다. 프레임 묶음에서는 **모든 프레임에 공통인
     몸**의 네모를 준다 — 용암 방울이 끝에 붙어 몸이 한두 칸 길어지는 프레임마다 그 장의 몸으로
-    재면, 같은 때 떨어지고 있는 다른 방울의 비율이 바뀌어 위로 튄다."""
-    parts = blobs_of(solid)
+    재면, 같은 때 떨어지고 있는 다른 방울의 비율이 바뀌어 위로 튄다.
+
+    **알파가 HANG 인 칸은 몸에 이어져 있어도 따로 뗀다** (용암 방울). 몸에 붙은 채로 두면 매끈한
+    모양에서는 몸의 일부라 안 보이고, 떨어진 뒤에야 커서 밖 허공에서 나타났다."""
+    hang = {p for p, c in solid.items() if c[3] == HANG}
+    keep = {p: c for p, c in solid.items() if p not in hang} if hang else solid
+    parts = blobs_of(keep)
     rest = parts[1:]
-    if not rest or any(len(b) > SPECK for b in rest) or sum(len(b) for b in rest) * 8 > len(parts[0]):
+    ok = bool(rest) and not any(len(b) > SPECK for b in rest) and sum(len(b) for b in rest) * 8 <= len(parts[0])
+    if not ok and not hang:
         return [], solid
-    body = parts[0]
+    body = parts[0] if ok else set(keep)           # 불꽃으로 못 보면 조각은 예전처럼 몸에 둔다
+    core = parts[0]
     if box is None:
-        xs = [x for x, _ in body]; ys = [y for _, y in body]
+        xs = [x for x, _ in core]; ys = [y for _, y in core]
         box = (min(xs), min(ys), max(xs), max(ys))
     x0, y0 = box[0], box[1]
     w, h = max(1, box[2] - x0), max(1, box[3] - y0)
-    near = {(x + dx, y + dy) for x, y in body for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+    near = {(x + dx, y + dy) for x, y in core for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
     specks = []
-    for b in rest:
+    for b in rest if ok else []:
         g = Bunch(((x - x0) / w, (y - y0) / h, solid[(x, y)]) for x, y in b)
         g.step = (1 / w, 1 / h)                    # 원본 한 칸이 u·v 로 얼마인지 (이웃 판정용)
         # 몸 모서리에 대각으로 닿은 채 뻗어 나간 가닥 (STRAND). 짧은 조각은 안 센다 — 눈송이
         # 한 점은 떨어지다 몸을 한 프레임 스칠 뿐이라, 붙이면 낙하 궤적이 그 프레임만 튄다
         g.touch = len(b) >= STRAND and any(p in near for p in b)
         specks.append(g)
+    for b in blobs_of({p: solid[p] for p in hang}) if hang else []:
+        g = Bunch(((x - x0) / w, (y - y0) / h, solid[(x, y)]) for x, y in b)
+        g.step = (1 / w, 1 / h)
+        # 매달린 자리 — 조각 맨 윗칸 바로 위의 몸 칸. 조각이 그 칸에 바로 붙어 있었는지도 적는다
+        tx, ty = min(b, key=lambda p: (p[1], p[0]))
+        above = [y for x, y in core if x == tx and y < ty]
+        ax, ay = (tx, max(above)) if above else min(core, key=lambda p: (p[0] - tx) ** 2 + (p[1] - ty) ** 2)
+        g.hang = ((ax - x0) / w, (ay - y0) / h, ty - ay == 1 and ax == tx)
+        specks.append(g)
     return specks, {p: solid[p] for p in body}
 
 
 class Bunch(list):
-    """불꽃 한 조각의 칸들 (u, v, 색). 원래 몸에서 뻗어 나간 가닥인지와 원본 한 칸의 크기를
-    같이 들고 다닌다 — 가닥(전기의 방전)은 새 몸에서도 테두리에 붙여야 몸에서 튀는 것으로 읽힌다"""
+    """불꽃 한 조각의 칸들 (u, v, 색). 원래 몸에서 뻗어 나간 가닥인지, 몸 어디에 매달린 조각인지,
+    원본 한 칸의 크기를 같이 들고 다닌다 — 가닥(전기의 방전)과 방울(용암)은 새 몸에서도 테두리에
+    붙여야 몸에서 튀고 몸에서 떨어지는 것으로 읽힌다"""
     touch = False
     step = None
+    hang = None                                    # (u, v, 바로 붙어 있었나) — 매달린 몸 칸
 
 
 def _ring_at(got: dict, n: int):
@@ -1009,8 +1034,15 @@ def specks(marks: list, box: tuple, cells: int, edge: list | None = None) -> dic
 
     **원래 몸에 닿아 있던 조각은 새 몸 테두리에 다시 붙인다** (edge 는 새 몸의 테두리 칸들).
     새 몸은 윤곽이 달라 비율 자리로 옮기면 뿌리가 몸에서 몇 픽셀 떠서, 전기의 가닥이 몸에서
-    튀는 방전이 아니라 옆에 떠 있는 대시로 보였다. 떨어져 날리던 조각(눈송이·반짝이·용암
-    방울)은 원래 자리가 뜻이라 그대로 둔다"""
+    튀는 방전이 아니라 옆에 떠 있는 대시로 보였다. 떨어져 날리던 조각(눈송이·반짝이)은 원래
+    자리가 뜻이라 그대로 둔다.
+
+    **매달린 조각(용암 방울)은 매달린 몸 칸이 새 테두리에 오게 통째로 옮긴다.** 비율 자리로만
+    옮기면 새 몸의 꼬리 끝과 어긋나 방울이 커서 밖 허공에서 나타났다. 몸에 바로 붙어 있던
+    조각은 그 칸까지 이어 그려 테두리에서 늘어진 것으로 보이게 한다.
+
+    **몸에서 뻗은 가닥은 번개로 그린다** — 가는 심에 옅은 빛 번짐을 두르고, 이웃 칸 사이마다
+    옆으로 한 번 꺾는다. 점 지름 그대로 이으면 큰 판에서 4px 굵기 막대가 되어 털처럼 보였다"""
     bx, by, bw, bh = box
     n = max(1, round(cells / LIMIT))
     r = n / 2
@@ -1018,41 +1050,80 @@ def specks(marks: list, box: tuple, cells: int, edge: list | None = None) -> dic
     for group in marks:
         # 원본 한 칸을 덮는 n칸 네모의 한가운데
         pts = [(bx + round(u * (bw - 1)) + r, by + round(v * (bh - 1)) + r, c) for u, v, c in group]
-        if edge and getattr(group, "touch", False):
+        uvs = [(u, v) for u, v, _ in group]
+        hang = getattr(group, "hang", None)
+        bolt = edge and getattr(group, "touch", False)
+        if edge and hang:
+            au, av, stuck = hang
+            ax, ay = bx + au * (bw - 1) + r, by + av * (bh - 1) + r
+            qx, qy = min(edge, key=lambda q: (q[0] + 0.5 - ax) ** 2 + (q[1] + 0.5 - ay) ** 2)
+            sx, sy = qx + 0.5 - ax, qy + 0.5 - ay
+            pts = [(x + sx, y + sy, c) for x, y, c in pts]
+            if stuck:                              # 매달린 몸 칸도 이을 점으로 넣는다 (몸 안이라 안 칠해진다)
+                top = min(range(len(uvs)), key=lambda i: (uvs[i][1], uvs[i][0]))
+                pts.append((qx + 0.5, qy + 0.5, pts[top][2]))
+                uvs.append((au, av))
+        elif bolt:
             # 테두리에 가장 가까운 점(뿌리)이 테두리에 반쯤 걸치도록 조각을 통째로 민다
-            d2, (rx, ry), (qx, qy) = min((((p[0] - q[0] - 0.5) ** 2 + (p[1] - q[1] - 0.5) ** 2), p[:2], q)
-                                         for p in pts for q in edge)
+            d2, ri, (qx, qy) = min((((p[0] - q[0] - 0.5) ** 2 + (p[1] - q[1] - 0.5) ** 2), i, q)
+                                   for i, p in enumerate(pts) for q in edge)
+            rx, ry = pts[ri][:2]
             dist = math.sqrt(d2)
             if dist > r * 0.5:
                 k = (dist - r * 0.5) / dist
                 sx, sy = (qx + 0.5 - rx) * k, (qy + 0.5 - ry) * k
                 pts = [(x + sx, y + sy, c) for x, y, c in pts]
-        for cx, cy, c in pts:
-            _dot(out, cx, cy, r, c)
-        if len(pts) < 2:
-            continue
-        # 원본에서 붙어 있던 쌍만 잇는다 (대각까지). 원본 한 칸의 크기를 알면 그걸로 가른다 —
-        # 가장 가까운 두 점 거리로 재면, 몸이 가로·세로로 다르게 펴질 때(11×17 → 65×79) 짧은 쪽
-        # 축이 기준이 되어 긴 쪽 이웃이 빠지고 가닥이 점선이 됐다
-        step = getattr(group, "step", None)
-        gap = None if step else \
-            min(math.hypot(a[0] - b[0], a[1] - b[1]) for i, a in enumerate(pts) for b in pts[i + 1:])
-        for i, a in enumerate(pts):
-            for j in range(i + 1, len(pts)):
-                b = pts[j]
+            # 번개 꺾은선: 뿌리에서 가장 먼 칸(끝)까지 곧게 긋고, 칸 수만큼 마디로 나눠 마디마다
+            # 옆으로 번갈아 꺾는다. 칸끼리 그대로 이으면 ㄴ·ㄱ 회로선이 되고, 가운데만 밀면 물결이 됐다
+            root = pts[ri]
+            order = sorted(range(len(pts)), key=lambda i: (pts[i][0] - root[0]) ** 2 + (pts[i][1] - root[1]) ** 2)
+            tip = pts[order[-1]]
+            span = math.hypot(tip[0] - root[0], tip[1] - root[1]) or 1.0
+            nx, ny = -(tip[1] - root[1]) / span, (tip[0] - root[0]) / span
+            cell = ((bw - 1) * group.step[0] + (bh - 1) * group.step[1]) / 2 if group.step else n
+            m = len(pts) - 1
+            flip = 1 if (round(root[0]) + round(root[1])) % 2 else -1      # 첫 꺾임 쪽 — 자리에 따라 갈린다
+            poly = []
+            for i in range(m + 1):
+                t = i / m
+                off = 0.0 if i in (0, m) else flip * (1 if i % 2 else -1) * BOLT_JAG * cell
+                poly.append((root[0] + (tip[0] - root[0]) * t + nx * off,
+                             root[1] + (tip[1] - root[1]) * t + ny * off, pts[order[i]][2]))
+            pts = poly
+        # 번개는 심을 가늘게 하고 둘레에 옅은 번짐을 깐다. 나머지는 원본 한 칸 굵기 그대로
+        core = max(0.6, r * BOLT_CORE) if bolt else r
+        glow = r * BOLT_GLOW if bolt else 0.0
+        segs = list(zip(pts, pts[1:])) if bolt else []     # 번개는 꺾은선 마디를 차례로 잇는다
+        if len(pts) > 1 and not bolt:
+            # 원본에서 붙어 있던 쌍만 잇는다 (대각까지). 원본 한 칸의 크기를 알면 그걸로 가른다 —
+            # 가장 가까운 두 점 거리로 재면, 몸이 가로·세로로 다르게 펴질 때(11×17 → 65×79) 짧은 쪽
+            # 축이 기준이 되어 긴 쪽 이웃이 빠지고 가닥이 점선이 됐다
+            step = getattr(group, "step", None)
+            gap = None if step else \
+                min(math.hypot(a[0] - b[0], a[1] - b[1]) for i, a in enumerate(pts) for b in pts[i + 1:])
+            for i, a in enumerate(pts):
+                for j in range(i + 1, len(pts)):
+                    b = pts[j]
+                    d = math.hypot(b[0] - a[0], b[1] - a[1])
+                    du, dv = abs(uvs[i][0] - uvs[j][0]), abs(uvs[i][1] - uvs[j][1])
+                    far = (du > step[0] * 1.01 or dv > step[1] * 1.01) if step else d > gap * 1.45
+                    if not far and d > core:
+                        segs.append((a, b))
+        # 번짐은 그 가닥에서 가장 푸른 색 한 가지로 깐다. 흰 뿌리를 옅게 깔면 어두운 바탕에서 회색 테가 된다
+        tint = max((c for _, _, c in pts), key=lambda c: c[2] - c[0]) if bolt else None
+        for layer_r, fade in ((glow, BOLT_GLOW_A), (core, 1.0)) if bolt else ((core, 1.0),):
+            def col(c):
+                return (tint if fade < 1 else c)[:3] + (round((255 if fade < 1 else c[3]) * fade),)
+            for cx, cy, c in pts:
+                _dot(out, cx, cy, layer_r, col(c))
+            for a, b in segs:
                 d = math.hypot(b[0] - a[0], b[1] - a[1])
-                if step:
-                    far = (abs(group[i][0] - group[j][0]) > step[0] * 1.01
-                           or abs(group[i][1] - group[j][1]) > step[1] * 1.01)
-                else:
-                    far = d > gap * 1.45
-                if d <= r or far:
-                    continue
-                k = math.ceil(d / r)
+                # 번개가 아닌 조각은 예전 간격(점 반지름)을 그대로 쓴다 — 바꾸면 골드 십자 같은 그림이 몇 픽셀씩 달라진다
+                k = max(1, math.ceil(d / (max(0.5, layer_r * 0.8) if bolt else layer_r)))
                 for j in range(1, k):
                     t = j / k
-                    _dot(out, a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, r,
-                         a[2] if t < 0.5 else b[2])
+                    _dot(out, a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, layer_r,
+                         col(a[2] if t < 0.5 else b[2]))
     return out
 
 
@@ -1065,7 +1136,7 @@ def draw(sid: str, rid: str, samplers: list, cells: int, glyphs: list | None = N
     # 불꽃은 번짐 위에 얹되 몸은 덮지 않는다 (덮으면 모양이 갉아먹힌다). 몸에 닿아 있던 조각이
     # 있을 때만 새 몸 테두리를 구한다 — 테두리 칸과 조각 점을 전부 견주는 값이라 없으면 안 쓴다
     edge = [p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)] \
-        if any(getattr(g, "touch", False) for s in samplers for g in s[4]) else None
+        if any(getattr(g, "touch", False) or getattr(g, "hang", None) for s in samplers for g in s[4]) else None
     out = [{**px, **{p: c for p, c in specks(s[4], box, cells, edge).items() if p not in solid}} if s[4] else px
            for px, s in zip(out, samplers)]
     if glyphs:

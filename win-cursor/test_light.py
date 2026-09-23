@@ -279,6 +279,35 @@ assert gap_f > 5, f"떨어진 점까지 테두리로 끌려감 ({gap_f}칸)"
 print("가닥 뿌리 OK — 뻗은 가닥만 새 테두리에 붙는다")
 
 
+# ── 매달린 조각(용암 방울)이 새 몸의 매달린 자리에서 늘어지는가 ─────────────────
+# 비율 자리로만 옮기면 새 몸의 꼬리 끝과 어긋나 방울이 커서 밖 허공에서 나타났다(2026-09-23).
+# 매달린 몸 칸이 새 테두리에 오게 옮기고, 바로 붙어 있던 조각은 테두리까지 이어져야 한다.
+# 새 몸의 아래 테두리는 y=40 · x 10..30 이고, 비율로 옮긴 매달린 자리(x≈7)는 그 왼쪽 위에 뜬다
+edge = [(x, 40) for x in range(10, 31)]
+ORANGE = (255, 138, 16, 255)
+
+
+def hanging(dys: list[int], stuck: bool) -> dict:
+    # 세로 한 칸(0.2 → 12px)을 점 지름(9px)보다 크게 잡는다 — 작으면 이어 그리지 않아도 점끼리 저절로
+    # 겹쳐 붙어 보여서 헛검사가 된다 (처음에 0.1 로 짰다가 그랬다)
+    g = sm.Bunch([(0.05, 0.5 + dy * 0.2, ORANGE) for dy in dys])
+    g.step, g.hang = (0.1, 0.2), (0.05, 0.5, stuck)
+    return sm.specks([g], (0, 0, 60, 60), S_CELLS, edge)
+
+
+drip = hanging([1, 2], True)
+mid = sum(x for x, _ in drip) / len(drip)
+rows = sorted({y for _, y in drip})
+holes = [y for y in range(41, rows[-1]) if y not in rows]
+print(f"맺힌 방울 가운데 x {mid:.1f} (테두리 끝 10.5) · 테두리 밑으로 끊긴 줄 {len(holes)}")
+assert abs(mid - 10.5) < 2, f"매달린 조각이 새 몸의 매달린 자리로 안 옮겨짐 (가운데 x {mid:.1f})"
+assert not holes, f"몸에 붙어 있던 방울이 테두리에서 떨어져 보임 (끊긴 줄 {holes})"
+fall = hanging([5], False)
+top = min(y for _, y in fall)
+assert top > 45, f"떨어지는 방울까지 테두리에 이어 붙임 (맨 윗줄 {top})"
+print("매달린 조각 OK — 새 꼬리 끝에서 늘어지고, 떨어진 방울은 그 밑으로 떨어진다")
+
+
 # ── 프레임 사이를 섞은 것이 양끝 사이에 있는가 ──────────────────────────────
 # 60fps 로 늘릴 때 쓰는 길이다. 섞은 프레임이 양끝 사이 값이 아니면 움직임이 튀고,
 # 알파를 안 곱하고 섞으면 나타나고 사라지는 자리에 검은 테가 난다 (투명한 칸의 색이 섞여 들어와서).
