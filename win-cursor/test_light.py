@@ -228,19 +228,55 @@ print("불꽃 OK — 네모가 아니라 둥근 점이다")
 # 멀어지므로, 사이를 안 채우면 가닥이 아니라 점선으로 찍힌다.
 # 판·몸 크기는 실제 빌드가 쓰는 비율로 잡는다 (160px 판, 그 안을 거의 채운 몸). 판을 작게
 # 잡으면 점끼리 저절로 겹쳐서 사이를 안 채워도 통과한다 — 처음에 그렇게 짰다가 헛검사가 됐다
-CELLS = sm.LIMIT * 9
+# (맨 위 CELLS 와 이름을 가른다 — 같은 이름으로 덮으면 뒤에 render 를 부르는 검사가 조용히 딴 판을 잰다)
+S_CELLS = sm.LIMIT * 9
 BOX = (10, 10, 130, 130)
 STEP = 1 / 12                     # 원본 화살표 폭이 12칸쯤이라 이웃 칸이 이만큼 떨어져 있다
-line = sm.specks([[(0.0, 0.5, WHITE), (STEP, 0.5, WHITE)]], BOX, CELLS)
-ys_ = [y for _, y in line]
-row = (min(ys_) + max(ys_)) // 2
-xs_ = sorted(x for x, y in line if y == row)
-holes = [b for a, b in zip(xs_, xs_[1:]) if b - a > 1]
-print(f"가닥 {min(xs_)}..{max(xs_)} · 끊긴 자리 {len(holes)}")
+
+
+def holes_in_row(px: dict) -> list:
+    ys_ = [y for _, y in px]
+    row = (min(ys_) + max(ys_)) // 2
+    xs_ = sorted(x for x, y in px if y == row)
+    return [b for a, b in zip(xs_, xs_[1:]) if b - a > 1]
+
+
+line = sm.specks([[(0.0, 0.5, WHITE), (STEP, 0.5, WHITE)]], BOX, S_CELLS)
+holes = holes_in_row(line)
+print(f"가닥 {len(line)}칸 · 끊긴 자리 {len(holes)}")
 assert not holes, f"이어진 조각이 점선으로 찍힘 (끊긴 자리 {holes})"
-assert len(sm.specks([[(0.0, 0.5, WHITE)], [(STEP, 0.5, WHITE)]], BOX, CELLS)) < len(line), \
+assert len(sm.specks([[(0.0, 0.5, WHITE)], [(STEP, 0.5, WHITE)]], BOX, S_CELLS)) < len(line), \
     "따로 떨어진 두 조각까지 이어 버림"
-print("가닥 OK — 한 조각은 이어지고 다른 조각끼리는 안 붙는다")
+
+# 몸이 가로·세로로 다르게 펴질 때. 원본 화살표 11×17 칸이 65×79 로 펴지면 한 칸이 가로 6.5px ·
+# 세로 4.6px 라, 가장 가까운 두 점(세로)을 기준으로 이웃을 가르면 가로 이웃이 빠져 점선이 됐다
+# (2026-09-23 전기 가닥에서). 조각이 원본 한 칸의 크기를 들고 다니면 축마다 따로 가른다.
+# 검사는 배율 차이를 크게 벌려 둔다(가로 12px · 세로 4px) — 실제 값(6.4 · 4.9)을 그대로 쓰면
+# 옛 문턱(4.9×1.45)이 가로 간격보다 커서 옛 코드도 통과한다. 실제로 끊긴 건 반올림으로 세로가
+# 4px 까지 줄었던 프레임이었다
+ell = sm.Bunch([(0.0, 0.5, WHITE), (0.1, 0.5, WHITE), (0.2, 0.5, WHITE), (0.0, 0.6, WHITE)])
+ell.step = (0.1, 0.1)
+holes = holes_in_row(sm.specks([ell], (12, 12, 120, 40), 80))
+assert not holes, f"가로로 더 펴진 몸에서 가닥이 점선이 됨 (끊긴 자리 {holes})"
+print("가닥 OK — 한 조각은 이어지고, 몸이 가로·세로로 다르게 펴져도 안 끊기고, 다른 조각끼리는 안 붙는다")
+
+
+# ── 몸에서 뻗은 가닥은 새 몸 테두리에 붙는가 ─────────────────────────────────
+# 새 몸은 윤곽이 달라 비율 자리로 옮기면 뿌리가 몸에서 뜬다. 뻗은 가닥(touch)만 테두리로
+# 당기고, 떨어져 날리던 점(눈송이)은 제자리에 둔다
+edge = [(20, y) for y in range(10, 60)]                 # 새 몸의 오른쪽 테두리가 x=20 인 판
+strand = sm.Bunch([(1.0, 0.5, WHITE), (1.05, 0.5, WHITE), (1.1, 0.5, WHITE)])
+strand.touch = True
+flake = [(1.0, 0.5, WHITE)]                             # 같은 자리의 떨어진 점
+bx = (0, 10, 30, 50)                                    # 비율 1.0 이면 x≈29 — 테두리 밖으로 9칸 뜬다
+got = sm.specks([strand], bx, S_CELLS, edge)
+kept = sm.specks([flake], bx, S_CELLS, edge)
+gap_s = min(x for x, _ in got) - 21
+gap_f = min(x for x, _ in kept) - 21
+print(f"가닥 뿌리와 테두리 사이 {gap_s}칸 · 떨어진 점은 {gap_f}칸 그대로")
+assert gap_s <= 0, f"뻗은 가닥이 새 몸에서 떠 있음 ({gap_s}칸)"
+assert gap_f > 5, f"떨어진 점까지 테두리로 끌려감 ({gap_f}칸)"
+print("가닥 뿌리 OK — 뻗은 가닥만 새 테두리에 붙는다")
 
 
 # ── 프레임 사이를 섞은 것이 양끝 사이에 있는가 ──────────────────────────────
@@ -277,3 +313,36 @@ got = struct.unpack("<4I", ani[ani.index(b"rate") + 8:ani.index(b"rate") + 24])
 assert got == (3, 2, 3, 2), f"rate 칸에 엉뚱한 값: {got}"
 assert b"rate" not in make_cur.curs_to_ani([bytes(4)] * 4, 6), "고른 rate 인데 칸을 넣었다"
 print("rate 칸 OK — 프레임마다 머무는 시간이 파일에 적힌다")
+
+
+# ── 기호 칸이 화살표 무늬를 끌고 오지 않는가 ──────────────────────────────────
+# 도움말·백그라운드 작업·위치·사용자는 매끈한 모양에서 **화살표 그림과의 차이**를 기호로 떼어
+# 새 화살표에 얹는다 (build.smooth_parts). 그 칸의 화살표 부분이 화살표 그림과 한 칸이라도
+# 다르면 그 칸이 기호에 섞여 매끈한 몸 위에 네모 픽셀로 박힌다 — 2026-09-22 에 용암 무늬와
+# 전기 불꽃을 칸마다 따로 뽑아 그렇게 됐다. 절반 넘는 프레임에 나오는 기호 칸의 상자에서 3칸 넘게
+# 떨어진 칸이 있으면 실패한다. 여유를 두는 것은 기호 **스스로** 움직이는 구성표 때문이다 —
+# 불꽃놀이의 모래시계는 터지며 아래로 2~3칸 번지고, 지터의 기호는 옆으로 2칸 떨린다(1칸 여유로
+# 짰다가 이 둘이 걸렸다). 샌 화살표 무늬는 몸 안쪽·왼쪽이라 기호 상자에서 훨씬 멀다
+import build  # noqa: E402
+
+leaks = []
+for scheme in build.SCHEMES:
+    sid = scheme["id"]
+    arrow = shapelib.read_art(build.art_raw(sid, "arrow"))[0]
+    for rid in ("help", "busy", "pin", "person"):
+        frames = shapelib.read_art(build.art_raw(sid, rid))[0]
+        glyphs = shapelib.glyph_of([arrow[i % len(arrow)] for i in range(len(frames))], frames)
+        seen: dict = {}
+        for g in glyphs:
+            for p in g:
+                seen[p] = seen.get(p, 0) + 1
+        core = [p for p, n in seen.items() if n * 2 > len(frames)]
+        if not core:
+            continue
+        x0, y0, x1, y1 = shapelib.bbox(core)
+        out = [p for p in seen if not (x0 - 3 <= p[0] <= x1 + 3 and y0 - 3 <= p[1] <= y1 + 3)]
+        if out:
+            leaks.append(f"{sid}/{rid} {len(out)}칸")
+print(f"기호 칸 {len(build.SCHEMES) * 4}개 · 화살표 무늬가 샌 칸 {len(leaks)}개")
+assert not leaks, "기호에 화살표 무늬가 섞임 — " + " · ".join(leaks)
+print("기호 OK — 도움말·작업·위치·사용자 칸의 화살표 부분이 화살표 그림과 같다")

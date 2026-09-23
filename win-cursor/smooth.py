@@ -79,7 +79,10 @@ SPECK = 5       # 몸에서 떨어져 나온 조각이 이 칸 수 이하면 불
                 # 6칸 위로는 73개뿐이다. 6 이상으로 올려도 `sum(조각)*8 > 몸` 마개가 나머지를
                 # 잡아서 그림이 더 달라지지 않는다. 2 → 5 로 바뀌는 것은 gold 9칸 · sakura 5칸 ·
                 # pencil 1칸, 121종 중 3종뿐 (2026-09-19 전수로 셈)
-GHOST_R = 4     # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
+STRAND = 3      # 몸에 대각으로 닿은 조각이 이 칸 수 이상이면 '몸에서 뻗은 가닥'으로 보고 새 몸
+                # 테두리에 다시 붙인다 (specks). 57종 실측으로 전기 가닥은 3~5칸, 나머지 구성표의
+                # 닿은 조각은 1~2칸이라 이 선에서 갈린다 (2026-09-23)
+GHOST_R = 4    # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
 GHOST_HIT = 0.75  # 옮긴 자리에서 몸과 이만큼 겹쳐야 유령으로 본다
 GHOST_MIN = 6   # 이 칸 수보다 적으면 유령이 아니라 반짝이로 본다
 GHOST_FILL = 0.30  # 옮겨서 드러난 칸을 평균 이만큼은 채워야 유령으로 본다
@@ -639,24 +642,45 @@ def blobs_of(solid) -> list[set]:
     return sorted(out, key=len, reverse=True)
 
 
-def specks_of(solid: dict) -> tuple[list, dict]:
+def specks_of(solid: dict, box: tuple | None = None) -> tuple[list, dict]:
     """몸에서 떨어져 나온 작은 조각(전기 불꽃·눈송이·꽃잎)을 몸과 갈라 놓는다.
 
     자리는 몸 테두리 기준 비율로 남긴다. 몸을 새로 그려도 같은 자리에 흩을 수 있다.
     큰 조각이 하나라도 있으면 그 그림은 원래 끊어 그린 것(손그림·점선)이라 보고 건드리지 않는다.
 
     **조각마다 따로 묶어 넘긴다.** 여러 칸이 이어진 조각(전기의 가닥)은 그릴 때 점 사이를
-    채워야 선으로 보이는데, 한 줄로 쏟아 놓으면 어느 칸이 같은 조각이었는지 알 수 없다."""
+    채워야 선으로 보이는데, 한 줄로 쏟아 놓으면 어느 칸이 같은 조각이었는지 알 수 없다.
+
+    box 를 주면 비율을 그 네모(x0, y0, x1, y1)로 잰다. 프레임 묶음에서는 **모든 프레임에 공통인
+    몸**의 네모를 준다 — 용암 방울이 끝에 붙어 몸이 한두 칸 길어지는 프레임마다 그 장의 몸으로
+    재면, 같은 때 떨어지고 있는 다른 방울의 비율이 바뀌어 위로 튄다."""
     parts = blobs_of(solid)
     rest = parts[1:]
     if not rest or any(len(b) > SPECK for b in rest) or sum(len(b) for b in rest) * 8 > len(parts[0]):
         return [], solid
     body = parts[0]
-    xs = [x for x, _ in body]; ys = [y for _, y in body]
-    x0, y0 = min(xs), min(ys)
-    w, h = max(1, max(xs) - x0), max(1, max(ys) - y0)
-    specks = [[((x - x0) / w, (y - y0) / h, solid[(x, y)]) for x, y in b] for b in rest]
+    if box is None:
+        xs = [x for x, _ in body]; ys = [y for _, y in body]
+        box = (min(xs), min(ys), max(xs), max(ys))
+    x0, y0 = box[0], box[1]
+    w, h = max(1, box[2] - x0), max(1, box[3] - y0)
+    near = {(x + dx, y + dy) for x, y in body for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+    specks = []
+    for b in rest:
+        g = Bunch(((x - x0) / w, (y - y0) / h, solid[(x, y)]) for x, y in b)
+        g.step = (1 / w, 1 / h)                    # 원본 한 칸이 u·v 로 얼마인지 (이웃 판정용)
+        # 몸 모서리에 대각으로 닿은 채 뻗어 나간 가닥 (STRAND). 짧은 조각은 안 센다 — 눈송이
+        # 한 점은 떨어지다 몸을 한 프레임 스칠 뿐이라, 붙이면 낙하 궤적이 그 프레임만 튄다
+        g.touch = len(b) >= STRAND and any(p in near for p in b)
+        specks.append(g)
     return specks, {p: solid[p] for p in body}
+
+
+class Bunch(list):
+    """불꽃 한 조각의 칸들 (u, v, 색). 원래 몸에서 뻗어 나간 가닥인지와 원본 한 칸의 크기를
+    같이 들고 다닌다 — 가닥(전기의 방전)은 새 몸에서도 테두리에 붙여야 몸에서 튀는 것으로 읽힌다"""
+    touch = False
+    step = None
 
 
 def _ring_at(got: dict, n: int):
@@ -777,17 +801,19 @@ def samplers_of(frames: list[dict], mat: str | None = None) -> list[tuple]:
     clean = [{p: c for p, c in f.items() if c not in d} or dict(f) for f, d in zip(frames, drop)]
     rings = _rings(core)
     lit = _lit(rings, clean)
-    return [sampler_of(f, rings, lit, mat)[:6] + (g, mat) for f, g in zip(clean, ghosts)]
+    xs = [x for x, _ in core]; ys = [y for _, y in core]
+    box = (min(xs), min(ys), max(xs), max(ys))     # 불꽃 비율은 공통 몸으로 잰다 (specks_of)
+    return [sampler_of(f, rings, lit, mat, box)[:6] + (g, mat) for f, g in zip(clean, ghosts)]
 
 
 def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
-               mat: str | None = None) -> tuple:
+               mat: str | None = None, box: tuple | None = None) -> tuple:
     """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색, 유령
 
     mat 은 이 구성표의 재질 이름(MATERIALS 의 키). 색을 뜨는 데는 안 쓰이고 뒤에서 음영을
     얹을 때 그대로 넘어간다 — 여기 들고 다니는 이유는 색과 재질이 같은 구성표에서 나오기 때문이다"""
     solid = {p: c for p, c in frame.items() if c[3] >= 200} or dict(frame)
-    specks, solid = specks_of(solid)
+    specks, solid = specks_of(solid, box)
     rim = {p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)}
     edge = Counter(solid[p] for p in rim).most_common(1)[0][0]
     fill = {p: c for p, c in solid.items() if p not in rim} or solid
@@ -970,7 +996,7 @@ def _dot(out: dict, cx: float, cy: float, r: float, c: tuple) -> None:
                 out[(px, py)] = c[:3] + (a,)
 
 
-def specks(marks: list, box: tuple, cells: int) -> dict:
+def specks(marks: list, box: tuple, cells: int, edge: list | None = None) -> dict:
     """불꽃을 새 몸 테두리 기준 같은 비율 자리에 다시 흩는다 (칸이 크면 조각도 그만큼 커진다).
 
     **네모가 아니라 둥근 점으로 찍는다.** 원본 한 칸을 n×n 네모로 늘리면 160px 판에서
@@ -979,7 +1005,12 @@ def specks(marks: list, box: tuple, cells: int) -> dict:
 
     **한 조각 안에서 이웃이던 칸 사이는 채운다.** 몸이 20칸으로 펴지면서 원본에서 붙어
     있던 두 칸이 점 지름보다 멀어져, 전기의 가닥이 이어진 선이 아니라 점선으로 찍혔다.
-    이웃인지는 그 조각에서 가장 가까운 두 점 사이 거리로 잰다 — 원본 한 칸이 그 거리다."""
+    이웃인지는 그 조각에서 가장 가까운 두 점 사이 거리로 잰다 — 원본 한 칸이 그 거리다.
+
+    **원래 몸에 닿아 있던 조각은 새 몸 테두리에 다시 붙인다** (edge 는 새 몸의 테두리 칸들).
+    새 몸은 윤곽이 달라 비율 자리로 옮기면 뿌리가 몸에서 몇 픽셀 떠서, 전기의 가닥이 몸에서
+    튀는 방전이 아니라 옆에 떠 있는 대시로 보였다. 떨어져 날리던 조각(눈송이·반짝이·용암
+    방울)은 원래 자리가 뜻이라 그대로 둔다"""
     bx, by, bw, bh = box
     n = max(1, round(cells / LIMIT))
     r = n / 2
@@ -987,15 +1018,35 @@ def specks(marks: list, box: tuple, cells: int) -> dict:
     for group in marks:
         # 원본 한 칸을 덮는 n칸 네모의 한가운데
         pts = [(bx + round(u * (bw - 1)) + r, by + round(v * (bh - 1)) + r, c) for u, v, c in group]
+        if edge and getattr(group, "touch", False):
+            # 테두리에 가장 가까운 점(뿌리)이 테두리에 반쯤 걸치도록 조각을 통째로 민다
+            d2, (rx, ry), (qx, qy) = min((((p[0] - q[0] - 0.5) ** 2 + (p[1] - q[1] - 0.5) ** 2), p[:2], q)
+                                         for p in pts for q in edge)
+            dist = math.sqrt(d2)
+            if dist > r * 0.5:
+                k = (dist - r * 0.5) / dist
+                sx, sy = (qx + 0.5 - rx) * k, (qy + 0.5 - ry) * k
+                pts = [(x + sx, y + sy, c) for x, y, c in pts]
         for cx, cy, c in pts:
             _dot(out, cx, cy, r, c)
         if len(pts) < 2:
             continue
-        gap = min(math.hypot(a[0] - b[0], a[1] - b[1]) for i, a in enumerate(pts) for b in pts[i + 1:])
+        # 원본에서 붙어 있던 쌍만 잇는다 (대각까지). 원본 한 칸의 크기를 알면 그걸로 가른다 —
+        # 가장 가까운 두 점 거리로 재면, 몸이 가로·세로로 다르게 펴질 때(11×17 → 65×79) 짧은 쪽
+        # 축이 기준이 되어 긴 쪽 이웃이 빠지고 가닥이 점선이 됐다
+        step = getattr(group, "step", None)
+        gap = None if step else \
+            min(math.hypot(a[0] - b[0], a[1] - b[1]) for i, a in enumerate(pts) for b in pts[i + 1:])
         for i, a in enumerate(pts):
-            for b in pts[i + 1:]:
+            for j in range(i + 1, len(pts)):
+                b = pts[j]
                 d = math.hypot(b[0] - a[0], b[1] - a[1])
-                if d <= r or d > gap * 1.45:        # 원본에서 붙어 있던 쌍만 (대각까지)
+                if step:
+                    far = (abs(group[i][0] - group[j][0]) > step[0] * 1.01
+                           or abs(group[i][1] - group[j][1]) > step[1] * 1.01)
+                else:
+                    far = d > gap * 1.45
+                if d <= r or far:
                     continue
                 k = math.ceil(d / r)
                 for j in range(1, k):
@@ -1011,8 +1062,11 @@ def draw(sid: str, rid: str, samplers: list, cells: int, glyphs: list | None = N
     st, hot, box, solid = stencil(sid, rid, cells)
     out = [paint(st, s, memos[i] if memos else None) for i, s in enumerate(samplers)]
     out = [_ghosts(px, solid, box, s[6]) for px, s in zip(out, samplers)]
-    # 불꽃은 번짐 위에 얹되 몸은 덮지 않는다 (덮으면 모양이 갉아먹힌다)
-    out = [{**px, **{p: c for p, c in specks(s[4], box, cells).items() if p not in solid}} if s[4] else px
+    # 불꽃은 번짐 위에 얹되 몸은 덮지 않는다 (덮으면 모양이 갉아먹힌다). 몸에 닿아 있던 조각이
+    # 있을 때만 새 몸 테두리를 구한다 — 테두리 칸과 조각 점을 전부 견주는 값이라 없으면 안 쓴다
+    edge = [p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)] \
+        if any(getattr(g, "touch", False) for s in samplers for g in s[4]) else None
+    out = [{**px, **{p: c for p, c in specks(s[4], box, cells, edge).items() if p not in solid}} if s[4] else px
            for px, s in zip(out, samplers)]
     if glyphs:
         f = cells / LIMIT
