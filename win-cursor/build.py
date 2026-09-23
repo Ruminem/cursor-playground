@@ -14,6 +14,7 @@ import pickle
 import subprocess
 import sys
 import time
+import zlib
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
@@ -54,16 +55,19 @@ def version() -> str:
     return f"v{ver} · {sha}" if sha else f"v{ver}"
 
 
-def _hashes() -> tuple[dict, str, str]:
-    """(구성표별 재료 해시, 전부 합친 해시, 시안 페이지 해시). 지난번과 같으면 그 산출물은 건너뛴다"""
-    code = _sha(*((HERE / n).read_bytes() for n in ("build.py", "make_cur.py", "shape.py", "smooth.py", "shapes.json")))
+def _hashes() -> tuple[str, dict, str, str]:
+    """(코드 해시, 구성표별 재료 해시, 전부 합친 해시, 시안 페이지 해시). 지난번과 같으면 그 산출물은 건너뛴다"""
+    # 파이썬·zlib 버전도 코드로 친다. PNG 바이트가 버전마다 달라서, 다른 파이썬이 만든 캐시를
+    # 받으면(러너의 3.14 패치가 올라간 날 등) 섞이지 않고 전부 다시 그려야 한다 — 릴리스가 캐시를 쓴다
+    code = _sha(sys.version, zlib.ZLIB_RUNTIME_VERSION,
+                *((HERE / n).read_bytes() for n in ("build.py", "make_cur.py", "shape.py", "smooth.py", "shapes.json")))
     art = {s["id"]: _sha(code, json.dumps(s, sort_keys=True),
                          *(f.read_bytes() for f in sorted((HERE / "art" / s["id"]).iterdir())))
            for s in SCHEMES}
     # 시안 페이지와 모양 데이터는 구성표 전부를 한 파일에 담아서 하나만 바뀌어도 다시 만든다
     every = _sha(*(art[s["id"]] for s in SCHEMES))
     # 버전 표시를 해시에 넣는다 — 커밋이 바뀌면 그림이 그대로여도 페이지를 다시 만들어야 한다
-    return art, every, _sha(every, (HERE / "preview.tpl.html").read_bytes(), version())
+    return code, art, every, _sha(every, (HERE / "preview.tpl.html").read_bytes(), version())
 
 
 # dist/ 안에 두면 CI 의 커서 파일 점검이 이걸 커서로 알고 열어 보다 실패한다
@@ -293,9 +297,9 @@ def _load_stencils() -> None:
         _stencils_loaded = True
 
 
-def build_dist(job: tuple[str, str, list[str]]) -> tuple[str, int]:
+def build_dist(job: tuple[str, list[str]]) -> tuple[str, int]:
     """모양 하나의 dist 커서. 맡은 구성표만 만든다 (프로세스를 나눠 돌리기 위함)"""
-    shape_id, label, sids = job
+    shape_id, sids = job
     shape, cache = shape_of(shape_id), {}
     if shape is not None:
         _load_stencils()
@@ -314,7 +318,7 @@ def build_dist(job: tuple[str, str, list[str]]) -> tuple[str, int]:
             (out / f"{rid}.{ext}").write_bytes(blob)
             count += 1
         cache.pop(sid, None)
-    return f"dist {label}", count
+    return f"dist {shape_id}", count
 
 
 def build_data(job: tuple[str, list[str]]) -> tuple[str, int]:
@@ -370,13 +374,16 @@ if __name__ == "__main__":
     t0 = time.time()
     # 지난번 빌드가 남긴 표식. 재료가 그대로인 산출물은 다시 그리지 않는다.
     # CI 는 늘 빈 체크아웃이라 표식이 없어 전부 다시 만든다. 손으로 그러려면 --all
-    art, every, page_key = _hashes()
+    code, art, every, page_key = _hashes()
     was = {} if "--all" in sys.argv else json.loads(STAMP.read_text()) if STAMP.exists() else {}
 
     with ProcessPoolExecutor() as pool:
         # 재료가 바뀐 구성표. dist 는 여기에 "폴더가 없는 것"을 더하고, data 는 이 목록만 갈아 끼운다
         changed = [s["id"] for s in SCHEMES if was.get(s["id"]) != art[s["id"]]]
         dist_jobs, data_jobs, skipped = [], [], 0
+        # 일감 차례를 정할 어림 값 — 그림 프레임 수. 움직이는 구성표 몇이 일의 대부분이다
+        frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES for rid, _, _ in ROLES + EXTRA}
+        left: dict[str, int] = {}                       # 모양마다 남은 일감. 다 끝나면 한 줄 찍는다
         for shp in SHAPES:
             base = shp["id"] == SHAPES[0]["id"]
             root = HERE / "dist" if base else HERE / "dist" / shp["id"]
@@ -384,20 +391,30 @@ if __name__ == "__main__":
                      if s["id"] in changed or not (root / s["id"]).is_dir()]
             skipped += len(SCHEMES) - len(stale)
             if stale:
-                # 프로세스로 나눈다. 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다
-                parts = min(4, len(stale))
-                dist_jobs += [(shp["id"], f"{shp['id']} {i + 1}/{parts}", stale[i::parts]) for i in range(parts)]
+                # 구성표 하나가 일감 하나. 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
+                # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
+                # 마지막 모양의 묶음만 남아 워커 8개가 20초 넘게 놀았다 (2026-09-24, 5600X 262초 중 22초)
+                left[f"dist {shp['id']}"] = len(stale)
+                dist_jobs += [(shp["id"], [sid]) for sid in stale]
             if not base and (was.get("*") != every or not (HERE / "data" / f"{shp['id']}.json").exists()):
                 data_jobs.append((shp["id"], changed or [s["id"] for s in SCHEMES]))
 
         # 매끈한 모양의 스텐실(테마와 무관한 160벌)을 먼저 병렬로 구워 한 파일에 모은다. 워커마다 굽게 두면
         # 같은 것을 2.7배 다시 굽고, 그 값은 구성표 수와 무관해서 구성표를 줄여도 안 줄었다 (2026-09-20)
-        if (data_jobs or any(shape_of(s) is not None for s, _, _ in dist_jobs)) \
-                and (was.get("*") != every or not STENCILS.exists()):
+        # 스텐실은 테마와 무관해서 코드에만 기댄다 — 그림만 고쳤으면 다시 굽지 않는다
+        if (data_jobs or any(shape_of(s) is not None for s, _ in dist_jobs)) \
+                and (was.get("*stencil") != code or not STENCILS.exists()):
             baked = dict(pool.map(bake, smoothlib.stencil_keys()))
             STENCILS.write_bytes(pickle.dumps(baked, protocol=pickle.HIGHEST_PROTOCOL))
             print(f"[{time.time() - t0:5.1f}초] 스텐실 {len(baked)}벌 구움")
-        # 오래 걸리는 data 를 먼저 넣는다 — 긴 것이 맨 뒤에 오면 그 하나가 꼬리가 된다
+        # 오래 걸리는 것부터 넣는다 — 긴 것이 맨 뒤에 오면 그 하나가 꼬리가 된다. data(모양당 45–70초)가
+        # 먼저고, dist 는 그릴 프레임 수 순. 매끈한 모양은 프레임마다 세 크기로 새로 칠해서 기본 모양보다
+        # 프레임당 몇 배 무겁다 (차례만 정하는 어림이라 정확할 필요는 없다)
+        def cost(job):
+            shape_id, (sid,) = job
+            smooth = shape_of(shape_id) is not None
+            return sum(frames[sid, rid] for rid, _, _ in ROLES + EXTRA if not (smooth and rid in KEEP)) * (3 if smooth else 1)
+        dist_jobs.sort(key=cost, reverse=True)
         jobs = [pool.submit(build_data, j) for j in data_jobs] + [pool.submit(build_dist, j) for j in dist_jobs]
 
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
@@ -405,12 +422,18 @@ if __name__ == "__main__":
             _load_stencils()                             # 모양 탭 아이콘도 매끈한 모양이다
             out.write_text(build(), encoding="utf-8", newline="\n")
             print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")
-        total = 0
+        total, made = 0, {}
         for done in as_completed(jobs):
             what, count = done.result()
             total += count
+            if what in left:                              # dist 는 모양 하나가 다 끝났을 때만 찍는다
+                left[what] -= 1
+                made[what] = made.get(what, 0) + count
+                if left[what]:
+                    continue
+                count = made[what]
             print(f"[{time.time() - t0:5.1f}초] {what}" + (f" 커서 {count}개" if count else ""))
 
-    STAMP.write_text(json.dumps({**art, "*": every, "*page": page_key}), encoding="utf-8", newline="\n")
+    STAMP.write_text(json.dumps({**art, "*": every, "*page": page_key, "*stencil": code}), encoding="utf-8", newline="\n")
     update_readme()
     print(f"dist/ 커서 {total}개 만듦 (그대로 둔 구성표 {skipped}개) · 전부 {time.time() - t0:.1f}초")
