@@ -1,6 +1,11 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <title>cursor-playground 구성표</title>
 <link rel="icon" type="image/png" sizes="64x64" href="<!--FAVICON-->">
+<script>
+// 적용은 윈도우에서만 된다 (cursor-playground:// 를 받는 것이 handler.ps1). 다른 OS 는 미리보기만 두고 적용 버튼을 끈다.
+// 첫 그림 전에 표시를 달아야 버튼이 켜졌다 꺼지며 깜빡이지 않는다
+if (!/Win/.test(navigator.platform || '') && !/Windows/.test(navigator.userAgent)) document.documentElement.classList.add('not-win');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
@@ -170,6 +175,9 @@ pre .c{color:var(--muted)}
 .steps{margin:0;padding-left:20px;display:grid;gap:4px}
 .setup{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px;display:grid;gap:10px}
 .setup h2{margin:0}
+.not-win-note{display:none}
+.not-win .not-win-note{display:block;color:var(--accent-ink)}
+.not-win button:disabled{opacity:.45;cursor:not-allowed}
 .setup p{margin:0;max-width:70ch}
 .setup a,.install a{color:var(--accent-ink);text-underline-offset:3px}
 .cmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
@@ -197,6 +205,7 @@ pre .c{color:var(--muted)}
 
   <section class="setup" aria-labelledby="setup-title">
     <h2 id="setup-title">처음 한 번</h2>
+    <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠.</p>
     <p>윈도우 PowerShell 을 열고 아래 한 줄을 붙여넣음. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음.</p>
     <div class="cmd">
       <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
@@ -611,7 +620,9 @@ pre .c{color:var(--muted)}
   // (기본 모양은 예전 형식 그대로 보낸다 — 이미 깔린 처리 스크립트가 알아듣게)
   function applySpec(id){ return 'apply/' + id + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue() + shapeTail(); }
   window.cpUrl = function(id){ return 'cursor-playground://' + applySpec(id); };
+  var notWin = document.documentElement.classList.contains('not-win');
   function send(action){
+    if (notWin) return;
     if (action === 'restore') action = 'restore/' + visit;
     else if (action === 'size') action = 'size/' + window.cpSize() + '/' + visit;
     else if (action === 'schedule') action = 'schedule/' + visit + window.cpScheduleSpec();
@@ -646,6 +657,11 @@ pre .c{color:var(--muted)}
   // 랜덤 버튼이 쓰는 입구: 그 구성표의 적용 버튼을 그대로 누른다
   window.cpSend = send;
   window.cpApply = function(sid){ var b = document.querySelector('[data-apply="' + sid + '"]'); if (b) b.click(); };
+  // 윈도우가 아니면 적용으로 가는 버튼을 끈다. 백업·주소 줄은 고른 상태를 되돌리는 데까지만 가고
+  // 마지막 cpApply 가 꺼진 버튼을 눌러 아무 일도 안 일어난다 — 그 조합을 미리보기로 쓰게 둔다
+  if (notWin) document.querySelectorAll('[data-apply],[data-action],#random,#sched-on,#sched-off').forEach(function(b){
+    b.disabled = true; b.title = '윈도우에서만 적용됨';
+  });
   document.getElementById('act-cancel').addEventListener('click', function(){ dlg.close(); });
   document.getElementById('act-ok').addEventListener('click', function(){ dlg.close(); send(pending); });
 
@@ -901,7 +917,10 @@ pre .c{color:var(--muted)}
     return m && { id: m[1], size: +m[2], hue: +m[3], shape: m[4] || window.cpShapes()[0].id };
   }
   var apply = document.getElementById('urlbar-apply');
-  function nope(){ apply.textContent = '못 읽음'; setTimeout(function(){ apply.textContent = '적용'; }, 1600); }
+  // 윈도우가 아니면 붙여넣은 주소의 조합을 이 페이지에서 보여 주는 데까지만 간다
+  var applyLabel = document.documentElement.classList.contains('not-win') ? '보기' : '적용';
+  apply.textContent = applyLabel;
+  function nope(){ apply.textContent = '못 읽음'; setTimeout(function(){ apply.textContent = applyLabel; }, 1600); }
   // 적용은 그 구성표 카드의 적용 버튼을 그대로 누른다 (확인 창과 검사를 같이 지나가게)
   apply.addEventListener('click', function(){
     var text = out.textContent.trim();
