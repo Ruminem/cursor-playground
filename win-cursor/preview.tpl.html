@@ -416,8 +416,8 @@ pre .c{color:var(--muted)}
     var savedSize = parseInt(localStorage.getItem('cp-size'), 10); if (SIZES.indexOf(savedSize) >= 0) size = savedSize;
     var savedHue = parseInt(localStorage.getItem('cp-hue'), 10); if (savedHue >= 0 && savedHue < 360) hue = savedHue;
   } catch (e) {}
-  var style = document.createElement('style'), thumbStyle = document.createElement('style');
-  document.head.appendChild(style); document.head.appendChild(thumbStyle);
+  var thumbStyle = document.createElement('style');
+  document.head.appendChild(thumbStyle);
   var app = document.getElementById('app');
 
   function hue2(p, q, t){
@@ -440,17 +440,50 @@ pre .c{color:var(--muted)}
       d[i] = Math.round(hue2(p, q, h + 1/3) * 255); d[i + 1] = Math.round(hue2(p, q, h) * 255); d[i + 2] = Math.round(hue2(p, q, h - 1/3) * 255);
     }
   }
-  // px 가 0 이면 원래 크기
+  // 데이터 주소 → 짧은 blob 주소. 사파리는 프레임마다 스타일을 새로 쓸 때 긴 데이터 주소를 통째로 다시 읽고
+  // 그림을 다시 풀어서 애니메이션이 끊겼다. blob 주소면 스타일 글이 짧고, 한 번 푼 그림을 주소로 다시 쓴다
+  var blobs = {};
+  function blobOf(uri){
+    if (!blobs[uri]) blobs[uri] = fetch(uri).then(function(r){ return r.blob(); })
+      .then(function(b){ return URL.createObjectURL(b); }, function(){ return uri; });
+    return blobs[uri];
+  }
+  // 카드·목록에 까는 그림. 색조가 없으면 원래 그림 그대로라 캔버스를 거치지 않는다
+  function bgOf(uri, deg){
+    return deg ? paint(uri, 0, deg).then(function(r){ return blobOf(r.uri); }) : blobOf(uri);
+  }
+  // 크기·색조가 바뀌면 전의 변환 그림을 버린다. 색조 막대를 끌면 끝없이 쌓여 아이폰에서 메모리가 모자랄 수 있었다
+  var gen = '';
+  function regen(px, deg){
+    var now = px + '|' + deg;
+    if (now === gen) return;
+    gen = now;
+    var old = [];
+    Object.keys(cache).forEach(function(key){
+      var k = key.split('|', 2);
+      if ((k[0] !== '0' && k[0] !== String(px)) || (k[1] !== '0' && k[1] !== String(deg))) {
+        old.push(cache[key]); delete cache[key];
+      }
+    });
+    // 지금 스타일이 아직 옛 그림을 가리킬 수 있어서, 새 스타일이 들어간 뒤에 놓는다
+    setTimeout(function(){
+      old.forEach(function(p){ p.then(function(r){
+        if (r.made && blobs[r.uri]) { blobs[r.uri].then(function(u){ if (u !== r.uri) URL.revokeObjectURL(u); }); delete blobs[r.uri]; }
+      }); });
+    }, 3000);
+  }
+  // px 가 0 이면 원래 크기. 원래 크기·원래 색이면 캔버스 없이 받은 그림을 그대로 돌려준다
   function paint(uri, px, deg){
     var key = px + '|' + deg + '|' + uri;
     if (!cache[key]) {
       cache[key] = new Promise(function(resolve){
         var img = new Image();
         img.onload = function(){
+          if (!deg && (!px || px === img.naturalWidth)) { resolve({ uri: uri, k: 1 }); return; }
           var n = px || img.naturalWidth, cv = document.createElement('canvas'); cv.width = cv.height = n;
           var g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, n, n);
           if (deg) { var data = g.getImageData(0, 0, n, n); rotate(data.data, deg); g.putImageData(data, 0, 0); }
-          resolve({ uri: cv.toDataURL('image/png'), k: n / img.naturalWidth });
+          resolve({ uri: cv.toDataURL('image/png'), k: n / img.naturalWidth, made: true });
         };
         img.src = uri;
       });
@@ -463,59 +496,111 @@ pre .c{color:var(--muted)}
     });
   }
 
-  var lastKey = '';
+  // 마우스가 없는 기기(폰)는 커서를 못 보니 커서 그림은 만들지 않고 카드 그림만 움직인다
+  var FINE = !window.matchMedia || matchMedia('(any-pointer: fine)').matches;
+  // 움직임은 스타일시트를 통째로 갈지 않고 그 칸의 style 만 바꾼다. 시트를 새로 쓰면 문서 전체의 스타일을
+  // 다시 따져서, 한 프레임마다 요소 1,400개를 훑었다. 손댄 칸은 원래 값을 적어 뒀다가 되돌린다
+  var cards = new Map();
+  function set(book, el, prop, val, prio){
+    var o = book.get(el);
+    if (!o) { o = {}; book.set(el, o); }
+    if (!(prop in o)) o[prop] = [el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)];
+    if (o[prop][2] !== val) { o[prop][2] = val; el.style.setProperty(prop, val, prio || ''); }  // 같은 그림이면 안 건드린다
+  }
+  function restore(book){
+    book.forEach(function(o, el){ for (var prop in o) el.style.setProperty(prop, o[prop][0], o[prop][1]); });
+    book.clear();
+  }
+  // 구성표마다 바꿀 칸 목록. 페이지 모양은 안 바뀌니 한 번 찾아 둔다
+  var spotBook = {};
+  function spots(sid){
+    var mine = spotBook[sid] || (spotBook[sid] = {});
+    return function(sel){
+      return mine[sel] || (mine[sel] = [].slice.call(document.querySelectorAll(sel)));
+    };
+  }
+  // 커서는 마우스가 올라간 칸에서만 보인다. 커서 규칙을 바꾸면 그 규칙을 따르는 칸(.c-hand 만 283개)을
+  // 전부 다시 따져서 크롬에서도 시간의 18%가 거기 갔다. 그래서 올라간 칸 하나에만 박는다
+  var hovered = null, hoverBook = new Map();
+  document.addEventListener('pointerover', function(e){
+    var el = e.target.closest ? e.target.closest('[class^="c-"],[class*=" c-"]') : null;
+    if (el === hovered) return;
+    restore(hoverBook); hovered = el; lastKey = ''; tick();
+  });
+  var lastKey = '', asked = 0, shown = 0;
   function tick(){
     var sid = app.getAttribute('data-scheme'), px = size, deg = hue;
-    if (!DATA[sid]) return;
+    if (!DATA[sid] || document.hidden) return;
+    regen(px, deg);
     var moving = animated(sid) && motionOK;
     // 페이지에 박힌 그림이 곧 기본 모양·기본 크기·원래 색이라, 그 상태면 따로 그릴 것이 없다
     if (px === 32 && deg === 0 && !moving && shape === SHAPES[0].id) {
-      if (lastKey) { style.textContent = ''; lastKey = ''; }
+      if (lastKey) { restore(cards); restore(hoverBook); lastKey = ''; }
       return;
     }
-    var now = performance.now(), jobs = [], parts = [];
+    var now = performance.now(), jobs = [], parts = [], at = spots(sid);
+    var over = hovered, hid = FINE && over && (/(?:^| )c-([a-z]+)/.exec(hovered.className) || [])[1];
+    if (hid && !over.closest('[data-scheme="' + sid + '"]') && !over.matches('.card.s-' + sid)) hid = null;
     Object.keys(DATA[sid]).forEach(function(rid){
       var d = DATA[sid][rid], f = moving ? Math.floor(now / d[4]) % d[0].length : 0;
       parts.push(f);
-      jobs.push(Promise.all([paint(d[0][f], px, deg), paint(d[0][f], 0, deg)]).then(function(r){
-        var hx = Math.floor(d[1] * r[0].k), hy = Math.floor(d[2] * r[0].k);
-        return '[data-scheme="' + sid + '"] .c-' + rid + ',[data-scheme="' + sid + '"].c-' + rid + ',.card.s-' + sid + '.c-' + rid +
-          '{cursor:url(' + r[0].uri + ') ' + hx + ' ' + hy + ',' + d[3] + '}' +
-          ' .card.s-' + sid + '.c-' + rid + ' .sprite{background-image:url(' + r[1].uri + ')!important}';
+      jobs.push(Promise.all([rid === hid ? paint(d[0][f], px, deg) : null, bgOf(d[0][f], deg)]).then(function(r){
+        var hx = r[0] && Math.floor(d[1] * r[0].k), hy = r[0] && Math.floor(d[2] * r[0].k);
+        return function(){
+          if (r[0] && over === hovered) set(hoverBook, over, 'cursor', 'url(' + r[0].uri + ') ' + hx + ' ' + hy + ',' + d[3]);
+          at('.card.s-' + sid + '.c-' + rid + ' .sprite').forEach(function(el){ set(cards, el, 'background-image', 'url(' + r[1] + ')'); });
+        };
       }));
     });
     Object.keys(EXTRA[sid] || {}).forEach(function(rid){
       var d = EXTRA[sid][rid], f = moving ? Math.floor(now / d[1]) % d[0].length : 0;
       parts.push(f);
-      jobs.push(paint(d[0][f], 0, deg).then(function(r){
-        return ' .extra.s-' + sid + '.e-' + rid + ' i{background-image:url(' + r.uri + ')!important}';
+      jobs.push(bgOf(d[0][f], deg).then(function(u){
+        return function(){ at('.extra.s-' + sid + '.e-' + rid + ' i').forEach(function(el){ set(cards, el, 'background-image', 'url(' + u + ')'); }); };
       }));
     });
-    var key = sid + '|' + px + '|' + deg + '|' + parts.join(',');
+    var key = sid + '|' + shape + '|' + px + '|' + deg + '|' + parts.join(',');
     if (key === lastKey) return;
-    Promise.all(jobs).then(function(rules){
-      if (app.getAttribute('data-scheme') !== sid || size !== px || hue !== deg) return;
-      style.textContent = rules.join(' ');
-      lastKey = key;
+    lastKey = key;
+    var mine = ++asked;
+    Promise.all(jobs).then(function(puts){
+      // 더 뒤에 부른 프레임이 먼저 들어갔으면 옛 프레임은 버린다. "마지막에 부른 것만"으로 하면 그림 준비가
+      // 한 틱(50ms)보다 늦는 첫 바퀴에 전부 버려져 멈춰 있었다
+      if (mine < shown || key.indexOf(sid + '|' + shape + '|') !== 0) return;
+      shown = mine;
+      if (cards.sid !== sid) { restore(cards); cards.sid = sid; }
+      puts.forEach(function(f){ f(); });
     });
   }
   // 목록 썸네일: 움직이는 구성표는 고르지 않아도 계속 움직인다. 색조는 .thumb 의 CSS 필터가 따로 입힌다
   var MOVING = Object.keys(DATA).filter(function(sid){ return DATA[sid].arrow[0].length > 1; });
-  var thumbAnim = document.createElement('style'); document.head.appendChild(thumbAnim);
-  var lastThumbKey = '';
+  var lastThumbKey = '', thumbs = new Map(), thumbAsked = 0, thumbShown = 0;
+  // 화면에 보이는 썸네일만 움직인다. 목록 전체를 프레임마다 바꾸던 것이 끊김의 큰 몫이었다
+  var seen = {};
+  if (window.IntersectionObserver) {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ seen[e.target.getAttribute('data-scheme-item')] = e.isIntersecting; });
+    });
+    document.querySelectorAll('[data-scheme-item]').forEach(function(el){ io.observe(el); });
+  }
   function tickThumbs(){
-    if (!motionOK || !MOVING.length) return;
-    var now = performance.now(), picks = MOVING.map(function(sid){
+    if (!motionOK || !MOVING.length || document.hidden) return;
+    var now = performance.now(), picks = MOVING.filter(function(sid){ return !window.IntersectionObserver || seen[sid]; }).map(function(sid){
       var d = DATA[sid].arrow;
       return [sid, d, Math.floor(now / d[4]) % d[0].length];
     });
-    var key = picks.map(function(p){ return p[2]; }).join(',');
+    var key = shape + '|' + picks.map(function(p){ return p[0] + p[2]; }).join(',');
     if (key === lastThumbKey) return;
-    Promise.all(picks.map(function(p){ return paint(p[1][0][p[2]], 0, 0); })).then(function(images){
-      thumbAnim.textContent = picks.map(function(p, i){
-        return '[data-scheme-item="' + p[0] + '"] .thumb{background-image:url(' + images[i].uri + ')!important}';
-      }).join(' ');
-      lastThumbKey = key;
+    lastThumbKey = key;
+    var mine = ++thumbAsked;
+    Promise.all(picks.map(function(p){ return blobOf(p[1][0][p[2]]); })).then(function(images){
+      if (mine < thumbShown || key.indexOf(shape + '|') !== 0) return;
+      thumbShown = mine;
+      picks.forEach(function(p, i){
+        // 모양을 바꿨을 때 얹히는 shapeThumbs(!important)를 이겨야 해서 important
+        var el = document.querySelector('[data-scheme-item="' + p[0] + '"] .thumb');
+        if (el) set(thumbs, el, 'background-image', 'url(' + images[i] + ')', 'important');
+      });
     });
   }
   var motionOK = !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -543,15 +628,15 @@ pre .c{color:var(--muted)}
   // 모양 고르기: 테마는 그대로 두고 실루엣만 바꾼 같은 목록을 보여 준다
   var shapeNote = document.getElementById('shape-note');
   var shapeThumbs = document.createElement('style');
-  document.head.insertBefore(shapeThumbs, thumbAnim);  // 움직이는 썸네일(!important)이 이 위에 얹힌다
+  document.head.appendChild(shapeThumbs);
   function paintThumbs(){
     if (shape === SHAPES[0].id) { shapeThumbs.textContent = ''; return; }
     var ids = Object.keys(DATA), mine = shape;
-    Promise.all(ids.map(function(sid){ return paint(DATA[sid].arrow[0][0], 0, 0); })).then(function(images){
+    Promise.all(ids.map(function(sid){ return blobOf(DATA[sid].arrow[0][0]); })).then(function(images){
       if (shape !== mine) return;
       shapeThumbs.textContent = ids.map(function(sid, i){
         // 칸마다 style 로 박혀 있는 기본 모양 그림을 이겨야 해서 !important
-        return '[data-scheme-item="' + sid + '"] .thumb{background-image:url(' + images[i].uri + ')!important}';
+        return '[data-scheme-item="' + sid + '"] .thumb{background-image:url(' + images[i] + ')!important}';
       }).join(' ');
     });
   }
@@ -617,7 +702,7 @@ pre .c{color:var(--muted)}
     function put(pack){
       DATA = pack.data; EXTRA = pack.extra; shape = pick.id;
       MOVING = Object.keys(DATA).filter(function(sid){ return DATA[sid].arrow[0].length > 1; });
-      lastKey = ''; lastThumbKey = '';
+      lastKey = ''; lastThumbKey = ''; restore(thumbs); restore(cards); restore(hoverBook);
       document.querySelectorAll('[data-shape]').forEach(function(b){ b.setAttribute('aria-selected', String(b.getAttribute('data-shape') === pick.id)); });
       shapeNote.textContent = pick.desc;
       try { localStorage.setItem('cp-shape', pick.id); } catch (e) {}
