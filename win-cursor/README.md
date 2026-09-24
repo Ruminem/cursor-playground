@@ -55,8 +55,8 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/sticker` | Sticker | A mint body cut out with a thick white border and a faint shadow. |
 | `art/gameboy` | Game Boy | Light and shade drawn with just four greens, like an old handheld screen. |
 | `art/commodore` | Commodore | The blue-on-lavender palette of an 8-bit home computer. |
-| `art/terminal` | Amber terminal | Amber phosphor glowing on an old terminal screen. |
-| `art/dos` | DOS | Four hard steps of EGA blue from top to bottom. |
+| `art/terminal` | Amber terminal | Scanlined amber phosphor glowing off an old terminal screen. |
+| `art/dos` | DOS | Four hard steps of EGA blue from top to bottom, inside a thin white rim. |
 | `art/arcade` | Arcade | Cabinet-sign colours from yellow to purple inside a double black line. |
 
 **Materials**
@@ -306,8 +306,8 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/sticker` | 스티커 | 민트색 몸체를 두꺼운 흰 테두리와 옅은 그림자로 오려 붙인 느낌. |
 | `art/gameboy` | 게임보이 | 초록 네 가지 색만으로 빛과 그늘을 넣은 휴대용 게임기 화면풍. |
 | `art/commodore` | 코모도어 | 파랑과 연보라 두 색만 쓰던 8비트 가정용 컴퓨터 화면. |
-| `art/terminal` | 터미널 | 검은 배경에 주황 인광이 번지는 옛 단말기 글자. |
-| `art/dos` | 도스 | 위에서 아래로 네 단계로 끊기는 EGA 파랑. |
+| `art/terminal` | 터미널 | 검은 판에 주사선이 지나고 둘레로 주황 인광이 번지는 옛 단말기 글자. |
+| `art/dos` | 도스 | 위에서 아래로 네 단계로 끊기는 EGA 파랑에 흰 테 한 겹. |
 | `art/arcade` | 아케이드 | 노랑에서 보라로 떨어지는 오락실 간판 색에 두 겹 검정 선. |
 
 **재질**
