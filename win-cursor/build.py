@@ -130,7 +130,17 @@ def smooth_parts(sid: str, rid: str, shape: str, cache: dict) -> tuple[list[dict
     return use, rate, glyphs
 
 
-def page_bits(sid: str, rid: str, shape: str | None, cache: dict) -> tuple[list[str], int, int, int, int, int]:
+def _drawer(ats: dict | None, sid: str, rid: str, shape: str, frames: list[dict], glyphs: list | None):
+    """ats 를 받았으면 이 칸의 drawer 를 거기서 꺼내거나 만들어 둔다 — 커서와 시안 데이터가 같은 그림을 나눠 쓰게"""
+    if ats is None:
+        return None
+    if rid not in ats:
+        ats[rid] = smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid))
+    return ats[rid]
+
+
+def page_bits(sid: str, rid: str, shape: str | None, cache: dict,
+              ats: dict | None = None) -> tuple[list[str], int, int, int, int, int]:
     """시안 페이지에 넣을 (프레임별 그림 주소, 핫스팟 x, y, rate(ms), 폭, 높이)"""
     if shape is None or rid in KEEP:
         raw = art_raw(sid, rid)
@@ -142,19 +152,21 @@ def page_bits(sid: str, rid: str, shape: str | None, cache: dict) -> tuple[list[
         w, h = max(len(r) for r in rows), len(rows)
     else:
         frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
-        pngs, (hx, hy), (w, h) = smoothlib.page(shape, rid, frames, glyphs, MAT.get(sid))
+        at = _drawer(ats, sid, rid, shape, frames, glyphs)
+        pngs, (hx, hy), (w, h) = smoothlib.page(shape, rid, frames, glyphs, MAT.get(sid), at)
     return (["data:image/png;base64," + base64.b64encode(p).decode() for p in pngs],
             hx, hy, rate * 1000 // 60, w, h)
 
 
-def cursor_bytes(sid: str, rid: str, shape: str | None, cache: dict) -> tuple[bytes, str]:
+def cursor_bytes(sid: str, rid: str, shape: str | None, cache: dict, ats: dict | None = None) -> tuple[bytes, str]:
     """dist 에 넣을 커서 파일 하나와 확장자"""
     if shape is None or rid in KEEP:
         raw = art_raw(sid, rid)
         hot = read_hotspot(raw) or (0, 0)
         return (txt_to_ani(raw, hot), "ani") if is_animated(raw) else (txt_to_cur(raw, hot), "cur")
     frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
-    return smoothlib.cursor(shape, rid, frames, rate, glyphs, MAT.get(sid))
+    at = _drawer(ats, sid, rid, shape, frames, glyphs)
+    return smoothlib.cursor(shape, rid, frames, rate, glyphs, MAT.get(sid), at)
 
 
 def favicon() -> str:
@@ -259,26 +271,37 @@ def build() -> str:
     )
 
 
+def data_bit(sid: str, rid: str, shape: str | None, cache: dict, ats: dict | None = None) -> list:
+    """시안 데이터의 칸 하나. ROLES 칸은 [그림들, 핫스팟 x, y, 대체 커서, rate, 폭, 높이], EXTRA 칸은 [그림들, rate]"""
+    uris, hx, hy, rate, w, h = page_bits(sid, rid, shape, cache, ats)
+    fallback = next((f for r, _, f in ROLES if r == rid), None)
+    return [uris, hx, hy, fallback, rate, w, h] if fallback is not None else [uris, rate]
+
+
+def splice(pieces: dict[str, tuple[dict, dict]], old: dict | None) -> dict:
+    """구성표별 조각 {구성표: (칸들, 덧칸들)} 을 SCHEMES 차례로 이어 data/<모양>.json 모양으로.
+    old 를 주면 조각이 없는 구성표는 지난번 것을 그대로 옮긴다"""
+    data: dict[str, dict[str, list]] = {}
+    extra: dict[str, dict[str, list]] = {}
+    for scheme in SCHEMES:
+        sid = scheme["id"]
+        data[sid], extra[sid] = pieces[sid] if sid in pieces else (old["data"][sid], old["extra"][sid])
+    return {"data": data, "extra": extra}
+
+
 def shape_data(shape_id: str, sids: list[str], old: dict | None) -> dict:
     """다른 모양의 페이지 데이터. 기본 모양이 preview.html 에 박혀 있는 것과 같은 구조.
 
     old 를 주면 sids 에 든 구성표만 새로 그리고 나머지는 지난번 것을 그대로 옮긴다."""
     shape, cache = shape_of(shape_id), {}
-    data: dict[str, dict[str, list]] = {}
-    extra: dict[str, dict[str, list]] = {}
+    pieces = {}
     for scheme in SCHEMES:
         sid = scheme["id"]
-        if old is not None and sid not in sids:
-            data[sid], extra[sid] = old["data"][sid], old["extra"][sid]
-            continue
-        for rid, _, fallback in ROLES:
-            uris, hx, hy, rate, w, h = page_bits(sid, rid, shape, cache)
-            data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, rate, w, h]
-        for rid, _, _ in EXTRA:
-            pics, _, _, rate, _, _ = page_bits(sid, rid, shape, cache)
-            extra.setdefault(sid, {})[rid] = [pics, rate]
-        cache.pop(sid, None)
-    return {"data": data, "extra": extra}
+        if old is None or sid in sids:
+            pieces[sid] = ({rid: data_bit(sid, rid, shape, cache) for rid, _, _ in ROLES},
+                           {rid: data_bit(sid, rid, shape, cache) for rid, _, _ in EXTRA})
+            cache.pop(sid, None)
+    return splice(pieces, old)
 
 
 def timed(fn, job) -> tuple:
@@ -309,43 +332,51 @@ def _load_stencils() -> None:
         _stencils_loaded = True
 
 
-def build_dist(job: tuple[str, list[str]]) -> tuple[str, int]:
-    """모양 하나의 dist 커서. 맡은 구성표만 만든다 (프로세스를 나눠 돌리기 위함)"""
-    shape_id, sids = job
+def build_one(job: tuple[str, str, bool, bool]) -> tuple[int, tuple | None]:
+    """(모양, 구성표) 하나. dist 커서 파일을 쓰고, 시안 데이터 조각을 만들어 돌려준다 (파일은 부모가 모아 쓴다).
+
+    한 칸의 커서(32·64·128 판)와 시안 그림(20·40칸, 화살표는 60칸)은 20·40칸이 똑같은 그림이라
+    drawer 하나로 나눠 그린다. data 를 모양마다 따로 일감으로 돌리던 때는 그게 워커 시간의 1/4이었다 (5600X, 2026-09-24)"""
+    shape_id, sid, want_dist, want_data = job
     shape, cache = shape_of(shape_id), {}
     if shape is not None:
         _load_stencils()
     # 기본 모양은 dist/<구성표>/ 그대로 둔다 (이미 깔린 처리 스크립트가 그 주소를 쓴다)
-    root = HERE / "dist" if shape is None else HERE / "dist" / shape_id
-    count = 0
-    for sid in sids:
-        out = root / sid
+    out = (HERE / "dist" if shape is None else HERE / "dist" / shape_id) / sid
+    if want_dist:
         out.mkdir(parents=True, exist_ok=True)
-        for rid, _, _ in ROLES + EXTRA:
-            # 모양이 안 건드리는 칸은 기본 모양 파일과 바이트까지 같다. 두 번 쓰지 않고
-            # 받는 쪽(handler.ps1, install.ps1)이 dist/<구성표>/ 것으로 넘어간다
-            if shape is not None and rid in KEEP:
-                continue
-            blob, ext = cursor_bytes(sid, rid, shape, cache)
+    count, data, extra = 0, {}, {}
+    for rid, _, _ in ROLES + EXTRA:
+        ats: dict = {}                                  # 칸마다 새로 — 한 칸 그림만 들고 있게 (메모리)
+        # 모양이 안 건드리는 칸은 기본 모양 파일과 바이트까지 같다. 두 번 쓰지 않고
+        # 받는 쪽(handler.ps1, install.ps1)이 dist/<구성표>/ 것으로 넘어간다
+        if want_dist and not (shape is not None and rid in KEEP):
+            blob, ext = cursor_bytes(sid, rid, shape, cache, ats)
             (out / f"{rid}.{ext}").write_bytes(blob)
             count += 1
-        cache.pop(sid, None)
-    return f"dist {shape_id}", count
+        if want_data:
+            (data if any(r == rid for r, _, _ in ROLES) else extra)[rid] = data_bit(sid, rid, shape, cache, ats)
+    return count, ((data, extra) if want_data else None)
 
 
-def build_data(job: tuple[str, list[str]]) -> tuple[str, int]:
-    """모양 하나의 시안 페이지 데이터 data/<모양>.json"""
-    shape_id, sids = job
-    _load_stencils()
-    path = HERE / "data" / f"{shape_id}.json"
+def data_path(shape_id: str) -> Path:
+    return HERE / "data" / f"{shape_id}.json"
+
+
+def data_whole(shape_id: str) -> bool:
+    """지난번 data/<모양>.json 을 조각 갈아 끼우기에 쓸 수 있나 — 없거나 구성표가 늘거나 줄었으면 못 쓴다"""
+    path = data_path(shape_id)
+    return path.exists() and set(json.loads(path.read_text(encoding="utf-8")).get("data", ())) == {s["id"] for s in SCHEMES}
+
+
+def write_data(shape_id: str, pieces: dict[str, tuple[dict, dict]]) -> None:
+    """모양 하나의 시안 페이지 데이터 data/<모양>.json. 한 파일에 구성표 전부가 다 들어 있어서
+    지난번 파일이 있으면 조각이 온 구성표만 갈아 끼운다.
+    코드가 바뀌면 모든 구성표의 조각이 오므로(해시에 코드가 섞여 있다) 통째로 다시 쓰인다"""
+    path = data_path(shape_id)
     path.parent.mkdir(exist_ok=True)
-    # 한 파일에 구성표 전부가 다 들어 있다. 지난번 파일이 있으면 바뀐 자리만 갈아 끼운다.
-    # 코드가 바뀌면 모든 구성표가 sids 에 들어오므로(해시에 코드가 섞여 있다) 통째로 다시 그려진다
-    old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
-    if old is not None and set(old.get("data", ())) != {s["id"] for s in SCHEMES}:
-        old = None                                   # 구성표가 늘거나 줄었으면 옮겨 쓸 수 없다
-    path.write_text(json.dumps(shape_data(shape_id, sids, old), separators=(",", ":")), encoding="utf-8", newline="\n")
-    return f"data/{shape_id}.json" + (f" (구성표 {len(sids)}종만)" if old is not None else ""), 0
+    old = json.loads(path.read_text(encoding="utf-8")) if len(pieces) < len(SCHEMES) else None
+    path.write_text(json.dumps(splice(pieces, old), separators=(",", ":")), encoding="utf-8", newline="\n")
 
 
 def update_readme() -> None:
@@ -393,45 +424,51 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(workers) as pool:
         # 재료가 바뀐 구성표. dist 는 여기에 "폴더가 없는 것"을 더하고, data 는 이 목록만 갈아 끼운다
         changed = [s["id"] for s in SCHEMES if was.get(s["id"]) != art[s["id"]]]
-        dist_jobs, data_jobs, skipped = [], [], 0
+        jobs_of, skipped = [], 0
         # 일감 차례를 정할 어림 값 — 그림 프레임 수. 움직이는 구성표 몇이 일의 대부분이다
         frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES for rid, _, _ in ROLES + EXTRA}
         left: dict[str, int] = {}                       # 모양마다 남은 일감. 다 끝나면 한 줄 찍는다
+        pieces: dict[str, dict] = {}                    # 시안 데이터를 새로 쓸 모양 → 구성표별 조각
         for shp in SHAPES:
             base = shp["id"] == SHAPES[0]["id"]
             root = HERE / "dist" if base else HERE / "dist" / shp["id"]
-            stale = [s["id"] for s in SCHEMES
-                     if s["id"] in changed or not (root / s["id"]).is_dir()]
+            stale = {s["id"] for s in SCHEMES
+                     if s["id"] in changed or not (root / s["id"]).is_dir()}
             skipped += len(SCHEMES) - len(stale)
-            if stale:
-                # 구성표 하나가 일감 하나. 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
-                # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
-                # 마지막 모양의 묶음만 남아 워커 8개가 20초 넘게 놀았다 (2026-09-24, 5600X 262초 중 22초)
-                left[f"dist {shp['id']}"] = len(stale)
-                dist_jobs += [(shp["id"], [sid]) for sid in stale]
-            if not base and (was.get("*") != every or not (HERE / "data" / f"{shp['id']}.json").exists()):
-                data_jobs.append((shp["id"], changed or [s["id"] for s in SCHEMES]))
+            fresh: set[str] = set()                     # 시안 데이터 조각을 새로 그릴 구성표
+            if not base and (was.get("*") != every or not data_path(shp["id"]).exists()):
+                fresh = set(changed) if changed and data_whole(shp["id"]) else {s["id"] for s in SCHEMES}
+                pieces[shp["id"]] = {}
+            # (모양 × 구성표) 하나가 일감 하나. 커서와 시안 데이터를 한 일감에서 같이 만든다.
+            # 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
+            # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
+            # 마지막 모양의 묶음만 남아 워커 8개가 20초 넘게 놀았다 (2026-09-24, 5600X 262초 중 22초)
+            mine = [(shp["id"], s["id"], s["id"] in stale, s["id"] in fresh) for s in SCHEMES
+                    if s["id"] in stale or s["id"] in fresh]
+            if mine:
+                left[shp["id"]] = len(mine)
+                jobs_of += mine
 
         # 매끈한 모양의 스텐실(테마와 무관한 160벌)을 먼저 병렬로 구워 한 파일에 모은다. 워커마다 굽게 두면
         # 같은 것을 2.7배 다시 굽고, 그 값은 구성표 수와 무관해서 구성표를 줄여도 안 줄었다 (2026-09-20)
         # 스텐실은 테마와 무관해서 코드에만 기댄다 — 그림만 고쳤으면 다시 굽지 않는다
-        if (data_jobs or any(shape_of(s) is not None for s, _ in dist_jobs)) \
+        if any(shape_of(j[0]) is not None for j in jobs_of) \
                 and (was.get("*stencil") != code or not STENCILS.exists()):
             baked = dict(pool.map(bake, smoothlib.stencil_keys()))
             STENCILS.write_bytes(pickle.dumps(baked, protocol=pickle.HIGHEST_PROTOCOL))
             print(f"[{time.time() - t0:5.1f}초] 스텐실 {len(baked)}벌 구움")
-        # 오래 걸리는 것부터 넣는다 — 긴 것이 맨 뒤에 오면 그 하나가 꼬리가 된다. data(모양당 45–70초)가
-        # 먼저고, dist 는 그릴 프레임 수 순. 매끈한 모양은 프레임마다 세 크기로 새로 칠해서 기본 모양보다
-        # 프레임당 몇 배 무겁다 (차례만 정하는 어림이라 정확할 필요는 없다)
+        # 오래 걸리는 것부터 넣는다 — 긴 것이 맨 뒤에 오면 그 하나가 꼬리가 된다. 그릴 프레임 수 순.
+        # 매끈한 모양은 프레임마다 세 크기로 새로 칠해서 기본 모양보다 프레임당 몇 배 무겁다.
+        # 시안 데이터만 그리는 일감은 한 크기 몫 (차례만 정하는 어림이라 정확할 필요는 없다)
         def cost(job):
-            shape_id, (sid,) = job
+            shape_id, sid, want_dist, _ = job
             smooth = shape_of(shape_id) is not None
-            return sum(frames[sid, rid] for rid, _, _ in ROLES + EXTRA if not (smooth and rid in KEEP)) * (3 if smooth else 1)
-        dist_jobs.sort(key=cost, reverse=True)
+            n = sum(frames[sid, rid] for rid, _, _ in ROLES + EXTRA if not (smooth and rid in KEEP))
+            return n * (3 if smooth and want_dist else 1)
+        jobs_of.sort(key=cost, reverse=True)
         t_sub = time.time()
-        jobs = {pool.submit(timed, build_data, j): j for j in data_jobs}
-        jobs |= {pool.submit(timed, build_dist, j): j for j in dist_jobs}
-        whole = sum(map(cost, dist_jobs)) or 1          # 진행률은 이 어림 값의 합으로 센다
+        jobs = {pool.submit(timed, build_one, j): j for j in jobs_of}
+        whole = sum(map(cost, jobs_of)) or 1            # 진행률은 이 어림 값의 합으로 센다
 
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
         if was.get("*page") != page_key or not out.exists():
@@ -441,25 +478,27 @@ if __name__ == "__main__":
         total, made, spent, per_sid, got, step = 0, {}, {}, {}, 0, 1
         spans = []                                      # (시작, 끝) — 가동률과 꼬리를 잰다
         for n, done in enumerate(as_completed(jobs), 1):
-            (what, count), a, b = done.result()
+            (count, piece), a, b = done.result()
             spans.append((a, b))
             total += count
-            if what not in left:                          # data
-                print(f"[{time.time() - t0:5.1f}초] {what} · {b - a:.1f}초")
-                continue
-            # dist 는 모양 하나가 다 끝났을 때 한 줄, 그 사이엔 어림 진행률이 10% 넘을 때마다 한 줄
-            shape_id, (sid,) = jobs[done]
+            shape_id, sid, _, _ = job = jobs[done]
+            if piece is not None:
+                pieces[shape_id][sid] = piece
             per_sid[sid] = per_sid.get(sid, 0) + b - a
-            spent[what] = spent.get(what, 0) + b - a
-            got += cost(jobs[done])
-            left[what] -= 1
-            made[what] = made.get(what, 0) + count
-            if not left[what]:
-                print(f"[{time.time() - t0:5.1f}초] {what} 커서 {made[what]}개 · 워커 시간 {_dur(spent[what])}")
+            spent[shape_id] = spent.get(shape_id, 0) + b - a
+            got += cost(job)
+            left[shape_id] -= 1
+            made[shape_id] = made.get(shape_id, 0) + count
+            # 모양 하나가 다 끝났을 때 한 줄 (시안 데이터도 그때 쓴다), 그 사이엔 어림 진행률이 10% 넘을 때마다 한 줄
+            if not left[shape_id]:
+                what = f"{shape_id} 커서 {made[shape_id]}개"
+                if shape_id in pieces:
+                    what += f" · data/{shape_id}.json" + ("" if len(pieces[shape_id]) == len(SCHEMES)
+                                                          else f" (구성표 {len(pieces[shape_id])}종만)")
+                    write_data(shape_id, pieces.pop(shape_id))
+                print(f"[{time.time() - t0:5.1f}초] {what} · 워커 시간 {_dur(spent[shape_id])}")
             if got * 10 >= whole * step and got < whole:
                 step = got * 10 // whole + 1
-                # 남은 시간은 dist 일감이 실제로 쓴 워커 시간으로 어림한다 — 벽시계로 재면 처음에 워커를
-                # 차지한 data 일감 몫까지 dist 에 얹혀 몇 배로 부푼다
                 rest = sum(spent.values()) * (whole - got) / got / workers
                 print(f"[{time.time() - t0:5.1f}초] 진행 {got * 100 // whole}% · 일감 {n}/{len(jobs)}"
                       f" · 커서 {total:,}개 · 남은 어림 {_dur(rest)}")
