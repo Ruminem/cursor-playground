@@ -508,6 +508,7 @@ pre .c{color:var(--muted)}
           if (deg) { var data = g.getImageData(0, 0, n, n); rotate(data.data, deg); g.putImageData(data, 0, 0); }
           resolve({ uri: cv.toDataURL('image/png'), k: n / img.naturalWidth, made: true });
         };
+        img.onerror = function(){ resolve({ uri: uri, k: 1 }); };  // 못 읽어도 막대가 멈춰 서지 않게
         img.src = uri;
       });
     }
@@ -551,14 +552,25 @@ pre .c{color:var(--muted)}
     restore(hoverBook); hovered = el; lastKey = ''; tick();
   });
   var lastKey = '', asked = 0, shown = 0;
+  // 색조 막대를 끄는 동안: 정확한 색 그림(픽셀마다 색상환 돌리기)은 한 번에 한 벌만 굽고 중간 값은 건너뛴다.
+  // 전에는 input 마다 한 벌씩 쌓여서 느린 기기(폰)에서는 막대를 놓은 뒤에야 따라잡았다.
+  // 굽는 동안은 지금 보이는 그림과의 각도 차만큼 CSS hue-rotate 를 얹어 바로 반응하게 한다
+  var busy = 0, again = false, shownDeg = 0;
+  var nudge = document.createElement('style'); document.head.appendChild(nudge);
+  function nudgeHue(){
+    var d = hue - shownDeg;
+    nudge.textContent = d ? '.card .sprite,.extra span.pic i{filter:hue-rotate(' + d + 'deg)}' : '';
+  }
   function tick(){
     var sid = app.getAttribute('data-scheme'), px = size, deg = hue;
     if (!DATA[sid] || document.hidden) return;
+    if (busy && performance.now() - busy < 2000) { again = true; return; }
     regen(px, deg);
     var moving = animated(sid) && motionOK;
     // 페이지에 박힌 그림이 곧 기본 모양·기본 크기·원래 색이라, 그 상태면 따로 그릴 것이 없다
     if (px === 32 && deg === 0 && !moving && shape === SHAPES[0].id) {
       if (lastKey) { restore(cards); restore(hoverBook); lastKey = ''; }
+      shownDeg = 0; nudgeHue();
       return;
     }
     var now = performance.now(), jobs = [], parts = [], at = spots(sid);
@@ -586,14 +598,18 @@ pre .c{color:var(--muted)}
     if (key === lastKey) return;
     lastKey = key;
     var mine = ++asked;
+    busy = performance.now();
+    function next(){ busy = 0; if (again) { again = false; tick(); } }
     Promise.all(jobs).then(function(puts){
       // 더 뒤에 부른 프레임이 먼저 들어갔으면 옛 프레임은 버린다. "마지막에 부른 것만"으로 하면 그림 준비가
       // 한 틱(50ms)보다 늦는 첫 바퀴에 전부 버려져 멈춰 있었다
-      if (mine < shown || key.indexOf(sid + '|' + shape + '|') !== 0) return;
+      if (mine < shown || key.indexOf(sid + '|' + shape + '|') !== 0) return next();
       shown = mine;
       if (cards.sid !== sid) { restore(cards); cards.sid = sid; }
       puts.forEach(function(f){ f(); });
-    });
+      shownDeg = deg; nudgeHue();
+      next();
+    }, next);
   }
   // 목록 썸네일: 움직이는 구성표는 고르지 않아도 계속 움직인다. 색조는 .thumb 의 CSS 필터가 따로 입힌다
   var MOVING = Object.keys(DATA).filter(function(sid){ return DATA[sid].arrow[0].length > 1; });
@@ -641,7 +657,7 @@ pre .c{color:var(--muted)}
     // 목록 썸네일은 120장이라 CSS 필터로 비슷하게만 보여 줌
     thumbStyle.textContent = deg ? '.thumb{filter:hue-rotate(' + deg + 'deg)}' : '';
     try { localStorage.setItem('cp-hue', String(deg)); } catch (e) {}
-    tick();
+    nudgeHue(); tick();
   }
   document.querySelectorAll('[data-size]').forEach(function(b){
     b.addEventListener('click', function(){ chooseSize(parseInt(b.getAttribute('data-size'), 10)); });
