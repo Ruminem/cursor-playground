@@ -428,7 +428,7 @@ pre .c{color:var(--muted)}
   // 모양 목록. 첫 번째(기본)의 그림만 페이지에 박혀 있고 나머지는 고를 때 data/<모양>/ 에서 받는다
   var SHAPES = /*SHAPE_LIST*/;
   var packs = {}, shape = SHAPES[0].id;
-  packs[shape] = { data: DATA, extra: EXTRA };
+  packs[shape] = { data: DATA, extra: EXTRA, arrows: true };
   var SIZES = [32, 48, 64, 96, 128];
   var size = 32, hue = 0, cache = {};
   try {
@@ -653,7 +653,9 @@ pre .c{color:var(--muted)}
     }, next);
   }
   // 목록 썸네일: 움직이는 구성표는 고르지 않아도 계속 움직인다. 색조는 .thumb 의 CSS 필터가 따로 입힌다.
-  // 그림은 그대로 두고 --f 만 바꾸니 그림을 기다릴 것이 없다
+  // 그림은 그대로 두고 --f 만 바꾸니 그림을 기다릴 것이 없다.
+  // 썸네일은 지금 고른 모양보다 늦게 바뀔 수 있어서(화살표 그림을 나중에 받는다) 깔린 모양의 데이터를 따로 든다
+  var thumbData = DATA;
   var MOVING = Object.keys(DATA).filter(function(sid){ return DATA[sid].arrow[7] > 1; });
   var thumbs = new Map();
   // 화면에 보이는 썸네일만 움직인다. 목록 전체를 프레임마다 바꾸던 것이 끊김의 큰 몫이었다
@@ -669,7 +671,7 @@ pre .c{color:var(--muted)}
     var now = performance.now();
     MOVING.forEach(function(sid){
       if (window.IntersectionObserver && !seen[sid]) return;
-      var d = DATA[sid].arrow, el = thumbOf[sid];
+      var d = thumbData[sid].arrow, el = thumbOf[sid];
       if (el) set(thumbs, el, '--f', String(Math.floor(now / d[4]) % d[7]));
     });
   }
@@ -699,9 +701,9 @@ pre .c{color:var(--muted)}
   var shapeNote = document.getElementById('shape-note');
   var shapeThumbs = document.createElement('style');
   document.head.appendChild(shapeThumbs);
-  function paintThumbs(){
-    if (shape === SHAPES[0].id) { shapeThumbs.textContent = ''; return; }
-    var ids = Object.keys(DATA), mine = shape, pack = DATA;
+  function paintThumbs(mine, pack){
+    if (mine === SHAPES[0].id) { shapeThumbs.textContent = ''; return; }
+    var ids = Object.keys(pack);
     Promise.all(ids.map(function(sid){ return blobOf(pack[sid].arrow[0]); })).then(function(images){
       if (shape !== mine) return;
       shapeThumbs.textContent = ids.map(function(sid, i){
@@ -719,8 +721,8 @@ pre .c{color:var(--muted)}
   var thumbFit = document.createElement('style');
   document.head.insertBefore(thumbFit, shapeThumbs);
   var fitRules = {};                                    // 모양 → 규칙. 모양 묶음은 한 번 받으면 안 바뀐다
-  function fitThumbs(){
-    var mine = shape, pack = DATA, el = document.querySelector('.thumb');
+  function fitThumbs(mine, pack){
+    var el = document.querySelector('.thumb');
     if (!el) return;
     if (!fitRules[mine]) {
       // 여백은 두지 않는다 — 2px 만 둬도 21칸 화살표(스티커·폭죽 등)가 3배(63px)에서 2배로, 31칸 용암이 1배로 떨어진다
@@ -755,14 +757,20 @@ pre .c{color:var(--muted)}
       stage.style.setProperty('--hx', d[1]); stage.style.setProperty('--hy', d[2]);
     });
   }
-  // 다른 모양은 data/<모양>/index.json(구성표 전부의 화살표 + 칸 정보)을 먼저 받고, 나머지 칸 그림은
-  // 구성표를 볼 때 data/<모양>/<구성표>.json 으로 받는다. 한 파일(24MB)을 통째로 받던 때는 모양을 누르고
+  // 다른 모양은 data/<모양>/index.json(칸 정보만, 몇십 KB)과 지금 구성표의 data/<모양>/<구성표>.json 만 받고
+  // 바로 바꾼다. 목록 썸네일 그림(arrows.json)은 그 뒤에, 다른 구성표 그림은 그 구성표를 볼 때 받는다. 한 파일(24MB)을 통째로 받던 때는 모양을 누르고
   // 다 받을 때까지 아무것도 안 바뀌었고, 받은 뒤 푸는 데만 느린 CPU 에서 0.7초 멈췄다
   var got = {};
   function getJSON(url){
     if (!got[url]) got[url] = fetch(url).then(function(r){ if (!r.ok) throw new Error(url); return r.json(); })
       .catch(function(e){ setTimeout(function(){ delete got[url]; }, 5000); throw e; });   // 5초 뒤 다시 받아 볼 수 있게
     return got[url];
+  }
+  // 목록 썸네일을 이 모양으로 바꾼다. 그 모양의 화살표 그림이 다 있을 때만 부른다
+  function showThumbs(id, pack){
+    thumbData = pack.data;
+    MOVING = Object.keys(thumbData).filter(function(sid){ return thumbData[sid].arrow[7] > 1; });
+    restore(thumbs); paintThumbs(id, thumbData); fitThumbs(id, thumbData);
   }
   function need(sid){
     var pack = packs[shape], mine = shape;
@@ -778,12 +786,18 @@ pre .c{color:var(--muted)}
     var pick = SHAPES.filter(function(s){ return s.id === id; })[0] || SHAPES[0];
     function put(pack){
       DATA = pack.data; EXTRA = pack.extra; shape = pick.id;
-      MOVING = Object.keys(DATA).filter(function(sid){ return DATA[sid].arrow[7] > 1; });
-      lastKey = ''; restore(thumbs); restore(cards); restore(hoverBook);
+      lastKey = ''; restore(cards); restore(hoverBook);
       document.querySelectorAll('[data-shape]').forEach(function(b){ b.setAttribute('aria-selected', String(b.getAttribute('data-shape') === pick.id)); });
       shapeNote.textContent = pick.desc;
       try { localStorage.setItem('cp-shape', pick.id); } catch (e) {}
-      paintThumbs(); fitThumbs(); relabel(); tick();
+      relabel(); tick();
+      // 목록 썸네일(구성표 57종의 화살표)은 모양을 바꾼 뒤에 받는다. 받기 전까지는 전 모양 그림 그대로
+      if (pack.arrows) showThumbs(pick.id, pack);
+      else getJSON('data/' + pick.id + '/arrows.json').then(function(one){
+        Object.keys(one.data).forEach(function(sid){ if (pack.data[sid]) pack.data[sid].arrow[0] = one.data[sid]; });
+        pack.arrows = true;
+        if (shape === pick.id) showThumbs(pick.id, pack);
+      }, function(){});
       if (done) done();  // 모양 묶음을 받고 나서야 백업이 그 모양으로 적용을 보낼 수 있다
     }
     if (packs[pick.id]) { put(packs[pick.id]); return; }

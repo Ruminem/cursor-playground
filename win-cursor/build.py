@@ -418,15 +418,18 @@ def data_dir(shape_id: str) -> Path:
 def split_data(whole: dict) -> dict[str, dict]:
     """모양 하나의 데이터를 페이지가 받는 파일들로 {파일 이름: 내용}.
 
-    index.json 은 구성표 전부의 화살표 그림(목록 썸네일)과 칸마다 핫스팟·크기(그림 자리는 빈 글자),
-    <구성표>.json 은 그 구성표의 나머지 칸 그림. 모양을 고르면 index 와 지금 구성표 하나만 받는다 —
-    한 파일(24MB)을 통째로 받던 때는 모양을 바꿀 때마다 다 받고 나서야 바뀌었다"""
+    index.json 은 구성표마다 칸의 핫스팟·크기·프레임 수만(그림 자리는 빈 글자, 몇십 KB),
+    arrows.json 은 구성표 전부의 화살표 그림(목록 썸네일), <구성표>.json 은 그 구성표의 칸 그림 전부.
+    모양을 고르면 index 와 지금 구성표 하나만 받고 바로 바꾸고, 썸네일 그림은 그 뒤에 받는다 —
+    한 파일(24MB)을 통째로 받던 때는 다 받고 나서야 바뀌었고, index 에 화살표를 같이 넣었을 때도
+    gzip 2.4MB 라 폰 회선에서 2–3초 기다렸다"""
     index: dict[str, dict] = {}
-    files: dict[str, dict] = {"index.json": {"data": index}}
+    arrows: dict[str, str] = {}
+    files: dict[str, dict] = {"index.json": {"data": index}, "arrows.json": {"data": arrows}}
     for sid, roles in whole["data"].items():
-        index[sid] = {rid: e if rid == "arrow" else ["", *e[1:]] for rid, e in roles.items()}
-        files[f"{sid}.json"] = {"data": {rid: e[0] for rid, e in roles.items() if rid != "arrow"},
-                                "extra": whole["extra"][sid]}
+        index[sid] = {rid: ["", *e[1:]] for rid, e in roles.items()}
+        arrows[sid] = roles["arrow"][0]
+        files[f"{sid}.json"] = {"data": {rid: e[0] for rid, e in roles.items()}, "extra": whole["extra"][sid]}
     return files
 
 
@@ -438,7 +441,7 @@ def read_data(shape_id: str) -> dict | None:
         data, extra = {}, {}
         for sid, roles in index.items():
             one = json.loads((root / f"{sid}.json").read_text(encoding="utf-8"))
-            data[sid] = {rid: e if rid == "arrow" else [one["data"][rid], *e[1:]] for rid, e in roles.items()}
+            data[sid] = {rid: [one["data"][rid], *e[1:]] for rid, e in roles.items()}
             extra[sid] = one["extra"]
         return {"data": data, "extra": extra}
     except (OSError, KeyError, ValueError):
