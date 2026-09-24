@@ -1,180 +1,1128 @@
 hotspot 5,10
-rate 5
-color 0 0e2a4aff
-color 1 1e4a78ff
+rate 3
+color 0 0c2c4cff
+color 1 12385bff
+color 2 133c5eff
+color 3 143c5fff
+color 4 153f63ff
+color 5 164164ff
+color 6 164165ff
+color 7 164265ff
+color 8 174367ff
+color 9 184569ff
+color A 19476cff
+color B 1a496eff
+color C 1a4a6fff
+color D 1b4a70ff
+color E 1b4c72ff
+color F 1c4e74ff
+color G 1d5076ff
+color H 1e5177ff
+color I 1e5278ff
+color J 1f547aff
+color K 1f547bff
+color L 21577fff
+color M 215981ff
+color N 225a83ff
+color O 225b83ff
+color P 2279b8ff
+color Q 245e86ff
+color R 245e87ff
+color S 247cbaff
+color T 256089ff
+color U 25618aff
+color V 267fbcff
+color W 27648eff
+color X 286791ff
+color Y 286892ff
+color Z 2882bfff
+color a 2a6b96ff
+color b 2a85c1ff
+color c 2a91c5ff
+color d 2b6d99ff
+color e 2b88c3ff
+color f 2b91c6ff
+color g 2b92c6ff
+color h 2c92c7ff
+color i 2d719dff
+color j 2d8bc5ff
+color k 2d91c7ff
+color l 2d93c8ff
+color m 2d94c8ff
+color n 2e74a0ff
+color o 2e91c8ff
+color p 2e92c8ff
+color q 2e94c9ff
+color r 2e95c9ff
+color s 2f8ec8ff
+color t 2f91c8ff
+color u 2f92c9ff
+color v 2f93c9ff
+color w 2f95caff
+color x 2f96caff
+color y 2f97cbff
+color z 3077a4ff
+color 가 3093caff
+color 각 3096cbff
+color 갂 3097cbff
+color 갃 3098ccff
+color 간 317aa8ff
+color 갅 3191caff
+color 갆 3193caff
+color 갇 3197ccff
+color 갈 3198ccff
+color 갉 3199cdff
+color 갊 3294cbff
+color 갋 3298cdff
+color 갌 3299cdff
+color 갍 329aceff
+color 갎 337dabff
+color 갏 3394ccff
+color 감 3395ccff
+color 갑 3396cdff
+color 값 3397cdff
+color 갓 3399ceff
+color 갔 339aceff
+color 강 339bcfff
+color 갖 3480afff
+color 갗 3496cdff
+color 갘 3497ceff
+color 같 3498ceff
+color 갚 349acfff
+color 갛 349bcfff
+color 개 349cd0ff
+color 객 349dd0ff
+color 갞 3582b2ff
+color 갟 3596ceff
+color 갠 359bd0ff
+color 갡 359cd0ff
+color 갢 359dd1ff
+color 갣 359ed1ff
+color 갤 369cd1ff
+color 갥 369dd1ff
+color 갦 369fd2ff
+color 갧 3787b6ff
+color 갨 3799d0ff
+color 갩 379dd2ff
+color 갪 379ed2ff
+color 갫 379fd3ff
+color 갬 37a0d3ff
+color 갭 3888b8ff
+color 갮 389ed3ff
+color 갯 389fd3ff
+color 갰 38a0d4ff
+color 갱 399cd3ff
+color 갲 399fd4ff
+color 갳 39a0d4ff
+color 갴 39a1d5ff
+color 갵 39a3d5ff
+color 갶 3aa0d5ff
+color 갷 3aa1d5ff
+color 갸 3aa2d6ff
+color 갹 3aa3d6ff
+color 갺 3aa4d6ff
+color 갻 3b9fd5ff
+color 갼 3ba2d6ff
+color 갽 3ba3d7ff
+color 갾 3ba4d7ff
+color 갿 3ba5d7ff
+color 걀 3ca2d7ff
+color 걁 3ca3d7ff
+color 걂 3ca4d8ff
+color 걃 3ca5d8ff
+color 걄 3da5d9ff
+color 걅 3ea5d9ff
+color 걆 3ea6daff
+color 걇 3ea8daff
+color 걈 3fa9dbff
+color 걉 40a8dcff
+color 걊 42abdeff
+color 걋 44aee0ff
+color 걌 5fc0f8ff
+color 걍 61c2faff
+color 걎 63c5fcff
+color 걏 64c5fdff
+color 걐 65c8ffff
+color 걑 66caffff
+color 걒 67cbffff
+color 걓 67cdffff
+color 걔 68c9ffff
+color 걕 68ceffff
+color 걖 69cbffff
+color 걗 69cfffff
+color 걘 69d0ffff
+color 걙 6ad1ffff
+color 걚 6bcdffff
+color 걛 6bceffff
+color 걜 6bd1ffff
+color 걝 6bd2ffff
+color 걞 6bd3ffff
+color 걟 6cd2ffff
+color 걠 6cd4ffff
+color 걡 6dd1ffff
+color 걢 6dd5ffff
+color 걣 6dd6ffff
+color 걤 6ecfffff
+color 걥 6ed0ffff
+color 걦 6ed4ffff
+color 걧 6ed5ffff
+color 걨 6ed7ffff
+color 걩 6fd5ffff
+color 걪 70d6ffff
+color 걫 70d7ffff
+color 걬 70d8ffff
+color 걭 71d8ffff
+color 걮 72d6ffff
+color 걯 72d8ffff
+color 거 72daffff
+color 걱 73d4ffff
+color 걲 73d6ffff
+color 걳 73d9ffff
+color 건 73dbffff
+color 걵 74daffff
+color 걶 74dbffff
+color 걷 74ddffff
+color 걸 75dcffff
+color 걹 76d9ffff
+color 걺 76dcffff
+color 걻 76ddffff
+color 걼 76deffff
+color 걽 77ddffff
+color 걾 77dfffff
+color 걿 78dbffff
+color 검 78dfffff
+color 겁 78e0ffff
+color 겂 79dfffff
+color 것 79e0ffff
+color 겄 79e2ffff
+color 겅 7ae0ffff
+color 겆 7bddffff
+color 겇 7bdeffff
+color 겈 7be1ffff
+color 겉 7be2ffff
+color 겊 7de1ffff
+color 겋 7de4ffff
+color 게 7de5ffff
+color 겍 7ee4ffff
+color 겎 7ee8ffff
+color 겏 7fe3ffff
+color 겐 7fe7ffff
+color 겑 80e2ffff
+color 겒 80e6ffff
+color 겓 80e7ffff
+color 겔 81eaffff
+color 겕 81ebffff
+color 겖 82e6ffff
+color 겗 82e9ffff
+color 겘 82eaffff
+color 겙 83e9ffff
+color 겚 83edffff
+color 겛 84e8ffff
+color 겜 84ecffff
+color 겝 84edffff
+color 겞 85e7ffff
+color 겟 85ebffff
+color 겠 85ecffff
+color 겡 86efffff
+color 겢 86f0ffff
+color 겣 87eeffff
+color 겤 87efffff
+color 겥 88eeffff
+color 겦 89f1ffff
+color 겧 89f2ffff
+color 겨 8af0ffff
+color 격 8af1ffff
+color 겪 8bf4ffff
+color 겫 8cf3ffff
+color 견 8cf4ffff
+color 겭 8df3ffff
+color 겮 8ef6ffff
+color 겯 8ff6ffff
+color 결 91f9ffff
+color 겱 cbe7f2ff
+color 겲 cce8f3ff
+color 겳 cde9f4ff
+color 겴 d1edf8ff
+color 겵 d2eef9ff
+color 겶 d8f4ffff
+color 겷 f4fdffff
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00걋00
+..00겶걊걊00
+.00걉걉걉걉걉00
+00걅걅걅걅걅걅걅00
+0걀걀걀걀걀걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00겷00
+..00겶걊걊00
+.00걉걉걉걉걉00
+00걅걅걅걅걅걅걅00
+0걀걀걀걀걀걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00걋00
+..00겶겷걊00
+.00걉걉걉걉걉00
+00걅걅걅걅걅걅걅00
+0걀걀걀걀걀걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00걋00
+..00겶걊걊00
+.00걉걉겷걉걉00
+00걅걅걅걅걅걅걅00
+0걀걀걀걀걀걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00걋00
+..00겶걊걊00
+.00걉걉걉걉걉00
+00걅걅걅겷걅걅걅00
+0걀걀걀걀걀걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00걋00
+..00겶걊걊00
+.00걉걉겷걉걉00
+00걅걅겷겷겷걅걅00
+0걀걀걀걀겷걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00걋00
+..00겶걊걊00
+.00걉겷겷겷걉00
+00걅걅겷c겷걅걅00
+0걀걀걀겷겷겷걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000
 frame
 ....000
-...00100
-..0011100
-.001111100
-00111111100
-01111111110
-00000100000
-....010
-....010
-....010
-....010
-....010
-....010
-....010
-00000100000
-01111111110
-00111111100
-.001111100
-..0011100
-...00100
+...00걋00
+..00겶걊걊00
+.00걉겷겷겷걉00
+00걅걅겷g겷걅걅00
+0걀걀걀겷겷겷걀걀걀0
+0000갭갻갭0000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋00
+..00겶겷걊00
+.00걉겷겷겷걉00
+00걅겷겷걅겷겷걅00
+0걀걀걀겷겷겷걀걀걀0
+0000갭겷갭0000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋00
+..0갭겷겷겷갭0
+.00겷겷y겷겷00
+00걅겷m걅m겷걅00
+0걀걀겷겷f겷겷걀걀0
+000갭갭겷갭갭000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...0갭걋갭0
+..0갭겷겷겷갭0
+.0갭겷갃갃갃겷갭0
+00걅겷r걅r겷걅00
+0걀걀겷hhh겷걀걀0
+000갭갭겷갭갭000
+....갭갱갭
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...갧갧겷갧갧
+..갧갧겷겷겷갧갧
+.0갧겷갉갉갉겷갧0
+00겷겷x걅x겷겷00
+0걀걀겷lll겷걀걀0
+00갧갧갧겷갧갧갧00
+....갧겷갧
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...갖갖겷갖갖
+..갖갖겷객겷갖갖
+.0갖겷갍걉갍겷갖0
+00겷갂걅걅걅갂겷00
+0걀겷겷q걀q겷겷걀0
+00갖갖갖k갖갖갖00
+....갖겷갖
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....간간간
+...간간겷간간
+..간간겱갣갣간간
+.간간강걉걉걉강간간
+0간겷갈걅걅걅갈겷간0
+0걀겷w걀걀걀w겷걀0
+00간간간p간간간00
+....간겷간
+....간갨간
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....nnn
+...nn겷nn
+..nn겲갦갦nn
+.nn개겮겮겮개nn
+0n겷갌겫갔겫갌겷n0
+0걀겷각겨겨겨각겷걀0
+0nnnnvnnnn0
+....n겷n
+....n갨n
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....ddd
+...dd갵dd
+..dd겳걊갬dd
+.dd갢견견견갢dd
+0d갔걅격갛격걅갔d0
+0겨겨갇겥겥겥갇겨겨0
+0ddda갻addd0
+....dod
+....d겞d
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....XXX
+...XX갺XX
+..XX겶겪걊XX
+.XX걉겦겦겦걉XX
+XX갛겣겣걅겣겣갛XX
+X겟갋걀겟겟겟걀갋겟X
+0XXXY겛YXXX0
+....XuX
+....X겑X
+....X갟X
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....TTT
+...TT갿TT
+..TW겧겧겧WT
+.TT겤겤갫겤겤TT
+TT갡겠갡걅갡겠갡TT
+T겒갓겙겙갓겙겙갓겷T
+TTTWW겖WWTTT
+....T가T
+....T겆T
+....T갟T
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....MMM
+...MU걋UM
+..MU겡겡겡UM
+.MU겜갫갫갫겜UM
+MM걅겗갡걅갡겗걅MM
+M겅갚겒갓갓갓겒갚겅M
+MMMUU겏UUMMM
+....U갱U
+....MtM
+....M걱M
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....III
+...QQ겢QQ
+..QQ겝겝겝QQ
+.IQ겘갰갰갰겘갭갭
+II겓겓갥걅갥겓겷갭갭
+I갤걀겍갚갚갚겍겷l갭
+IIQQQ겊Q갭갭갭갭
+....Q겇Q
+....I갆I
+....I걤I
+....I갏I
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....C0C
+...NN겚NN
+..NN겔갹겔NN
+.CN겐갰걉갰겐갞갞
+C0겋갥걅걅걅갥겷갞갞
+C갩겈겈갚걀갚겈겷q갞
+CCNNN값N갞갞갞갞
+....N걿N
+....C갊C
+....C걔C
+....C갏C
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....LLL
+...LL겕LL
+..LL겴갾갾LL
+.LL갴걉걉걉갴갎갎
+7L겉갪걅걅걅겷겷갎갎
+7갮겂갠걀걀걀겷겂갮갎
+77LLL같L갎갎갎갎
+....L걹L
+....L감L
+....7걍7
+....7걌7
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....JJJ
+...JJ겎JJ
+..JJ겴갾갾JJ
+.JJ갴걉걉걉갴zz
+1J검갪걅걅걅겷겷zz
+1걀걺갠걀걀걀겷걺걀z
+1JJJJ같Jzzzz
+....J걲J
+....J갨J
+....1갏1
+....1갏1
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....GGG
+...GG걇GG
+..GG겵걊걃Gi
+.GG갸걉걉걉결ii
+0G갯걅걅걅걅겯갌Gi
+0걳걳갤걀걀걀겭걳걳0
+0GGG0갻iiiGi
+....G갑G
+....G걥G
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....EEE
+...EE걈EE
+..EE겶걊걊aa
+.EE걉걉걉걉견aa
+EE갳걅걅걅걅격갛Ea
+E걪갩걀걀걀겥겥갩걪E
+0EEE0갻aaaEa
+....E갘a
+....E걚E
+....E갟E
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....BBB
+...BB걈BB
+..B0겶걊걊WW
+.BB걉걉걉걉겤WW
+BB갳걅걅걅겠겠갡BB
+B걦갩걀걀걀겙갓갩걦B
+BBB00갻WWBBB
+....B갘W
+....B걖B
+....B갟B
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....999
+...90걋09
+..90겶걊걊RR
+.90걉걉걉겘겘RR
+99걅걅걅걅겓갥걅99
+9걜갮걀걀걀겍갚갮걜9
+99900갻RR999
+....0갱R
+....9감R
+....9걏9
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....555
+...00걋0L
+..00겶걊걊LL
+.50걉걉걉게게QQ
+55걅걅걅걅겉갪겓QQ
+5갲걀걀걀걀겂갠겍갚Q
+55000갻LQQQQ
+....0갱L
+....5갗L
+....5걍5
+....5갏5
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....303
+...00걋0G
+..00겶걊겄GG
+.30걉걉걉걾갸OO
+30걅걅걅걸걸걅겋OO
+3갲걀걀걀걳갤걀겈갚O
+33000걮GOOOO
+....0갱G
+....3갗G
+....3갟3
+....3갏3
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋BB
+..00겶걊걷BB
+.00걉걉거거갽LL
+00걅걅걅걫갳겉겉LL
+0걀걀걀걀걦갩겂갠걀L
+0000B걡BLLLL
+....0걛B
+....0갨B
+....0갟B
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋66
+..00겶걨걨66
+.00걉걉걠걂걉KK
+00걅걅걅걙갷것것KK
+0걀걀걀걀걕갮걽갠걀K
+00006걒6KKKK
+....6걐6
+....0걎6
+....0갟6
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....001
+...00걋11
+..00겶걊걊1H
+.00걉걉걉걆겁HH
+00걅걅걅걅걁걻갯0H
+0걀걀걀걀갶걀걵갤걀0
+00001갻HHH0H
+....1갱1
+....1갨1
+....0갟1
+....0갏1
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋00
+..00겶걊걊FF
+.00걉걉걉걉걼FF
+00걅걅걅걅걅걶갯0F
+0걀걀걀걀걀걯걯걀걀0
+00000갻FFF0F
+....0갱F
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋00
+..00겶걊걊DD
+.00걉걉걉걉건DD
+00걅걅걅걅걭걭갳00
+0걀걀걀걀걀걩갩걀걀0
+00000갻DD000
+....0갱D
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋00
+..00겶걊걊AA
+.00걉걉걉걬걬AA
+00걅걅걅걅걧갷걅00
+0걀걀걀걀걀걟갮걀걀0
+00000갻AA000
+....0갱A
+....0갨A
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋08
+..00겶걊걊88
+.00걉걉걉걢걢00
+00걅걅걅걅걝갷걅00
+0걀걀걀걀걀걗갮걀걀0
+00000갻80000
+....0갱8
+....0갨8
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋04
+..00겶걊걣44
+.00걉걉걉걞걄00
+00걅걅걅걘걘걅걅00
+0걀걀걀걀걓갲걀걀걀0
+00000걑40000
+....0갱4
+....0갨4
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋22
+..00겶걊걊22
+.00걉걉걉걉걄00
+00걅걅걅걅갼걅걅00
+0걀걀걀걀걀갲걀걀걀0
+00002갻20000
+....0갱2
+....0갨2
+....0갟2
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋00
+..00겶걊걊00
+.00걉걉걉걉걉00
+00걅걅걅걅걅걅걅00
+0걀걀걀걀걀걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
+....000
+frame
+....000
+...00걋00
+..00겶걊걊00
+.00걉걉걉걉걉00
+00걅걅걅걅걅걅걅00
+0걀걀걀걀걀걀걀걀걀0
+00000갻00000
+....0갱0
+....0갨0
+....0갟0
+....0갏0
+....0갅0
+....0s0
+....0j0
+00000e00000
+0bbbbbbbbb0
+00ZZZZZZZ00
+.00VVVVV00
+..00SSS00
+...00P00
 ....000

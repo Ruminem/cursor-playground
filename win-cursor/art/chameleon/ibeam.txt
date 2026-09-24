@@ -1,146 +1,893 @@
 hotspot 4,8
-rate 6
-color 0 090959ff
-color 1 095909ff
-color 2 095959ff
-color 3 4040ffff
-color 4 4053ffff
-color 5 407effff
-color 6 40a9ffff
-color 7 40d4ffff
-color 8 40ff40ff
-color 9 40ff6bff
-color A 40ff96ff
-color B 40ffc1ff
-color C 40ffecff
-color D 40ffffff
-color E 53ff40ff
-color F 590909ff
-color G 590959ff
-color H 595909ff
-color I 6b40ffff
-color J 7eff40ff
-color K 9640ffff
-color L a9ff40ff
-color M c140ffff
-color N d4ff40ff
-color O ec40ffff
-color P ff4040ff
-color Q ff4053ff
-color R ff407eff
-color S ff40a9ff
-color T ff40d4ff
-color U ff40ffff
-color V ff6b40ff
-color W ff9640ff
-color X ffc140ff
-color Y ffec40ff
-color Z ffff40ff
+rate 8
+color 0 144037ff
+color 1 144038ff
+color 2 144039ff
+color 3 14403aff
+color 4 153f3aff
+color 5 153f3bff
+color 6 154136ff
+color 7 163f3bff
+color 8 164133ff
+color 9 164134ff
+color A 174131ff
+color B 17422fff
+color C 183d3cff
+color D 183e3cff
+color E 193d3eff
+color F 19422bff
+color G 19422cff
+color H 194329ff
+color I 1a3c3eff
+color J 1a4326ff
+color K 1a4328ff
+color L 1b3c3fff
+color M 1b4325ff
+color N 1b4326ff
+color O 1b4423ff
+color P 1b4424ff
+color Q 1c3b40ff
+color R 1c4421ff
+color S 1d441dff
+color T 1d441eff
+color U 1d441fff
+color V 1e3a41ff
+color W 1e3a42ff
+color X 1e441dff
+color Y 203943ff
+color Z 20441cff
+color a 213844ff
+color b 21441cff
+color c 23441cff
+color d 243645ff
+color e 253547ff
+color f 25441cff
+color g 26441cff
+color h 273448ff
+color i 27441cff
+color j 283449ff
+color k 28441cff
+color l 29334aff
+color m 2a334aff
+color n 2a451cff
+color o 2b324bff
+color p 2b324cff
+color q 2c314cff
+color r 2d314cff
+color s 2d314dff
+color t 2d451bff
+color u 2e304cff
+color v 2f304bff
+color w 322f49ff
+color x 32451bff
+color y 33451bff
+color z 342e48ff
+color 가 34a897ff
+color 각 352d46ff
+color 갂 362d46ff
+color 갃 36451aff
+color 간 372d45ff
+color 갅 37451aff
+color 갆 382d45ff
+color 갇 39451aff
+color 갈 3a2c43ff
+color 갉 3a2c44ff
+color 갊 3a451aff
+color 갋 3aab86ff
+color 갌 3b451aff
+color 갍 3c2b42ff
+color 갎 3c451aff
+color 갏 3d2b41ff
+color 감 3e4519ff
+color 갑 3ec8b4ff
+color 값 3fc9b0ff
+color 갓 40c9adff
+color 갔 40c9afff
+color 강 412a3eff
+color 갖 414519ff
+color 갗 41c6b6ff
+color 갘 42caa9ff
+color 같 43283cff
+color 갚 43293cff
+color 갛 43293dff
+color 개 444519ff
+color 객 44c5b8ff
+color 갞 45283bff
+color 갟 45283cff
+color 갠 454519ff
+color 갡 46273aff
+color 갢 46283bff
+color 갣 464518ff
+color 갤 46b061ff
+color 갥 46c3baff
+color 갦 47273aff
+color 갧 474518ff
+color 갨 479ca5ff
+color 갩 47c3bbff
+color 갪 482739ff
+color 갫 484318ff
+color 갬 484418ff
+color 갭 484518ff
+color 갮 492739ff
+color 갯 494018ff
+color 갰 494118ff
+color 갱 494318ff
+color 갲 4a2637ff
+color 갳 4a2638ff
+color 갴 4a3e17ff
+color 갵 4a3f18ff
+color 갶 4b3917ff
+color 갷 4b3a17ff
+color 갸 4b3b17ff
+color 갹 4b3c17ff
+color 갺 4bce8cff
+color 갻 4c2535ff
+color 갼 4c2536ff
+color 갽 4c2633ff
+color 갾 4c2634ff
+color 갿 4c3616ff
+color 걀 4c3716ff
+color 걁 4c3717ff
+color 걂 4c3817ff
+color 걃 4cce8bff
+color 걄 4d2731ff
+color 걅 4d282dff
+color 걆 4d282eff
+color 걇 4d282fff
+color 걈 4d292bff
+color 걉 4d292cff
+color 걊 4d2a28ff
+color 걋 4d2a29ff
+color 걌 4d2b25ff
+color 걍 4d2b26ff
+color 걎 4d2d22ff
+color 걏 4d2e1dff
+color 걐 4d2e1eff
+color 걑 4d2e1fff
+color 걒 4d2f1cff
+color 걓 4d301aff
+color 걔 4d3216ff
+color 걕 4d3316ff
+color 걖 4d3416ff
+color 걗 4db44cff
+color 걘 4dcf87ff
+color 걙 4e3018ff
+color 걚 4e3116ff
+color 걛 4e3216ff
+color 걜 4fd080ff
+color 걝 59d464ff
+color 걞 59d563ff
+color 걟 5ad561ff
+color 걠 5bd55dff
+color 걡 5cd65aff
+color 걢 5fb4cdff
+color 걣 62d659ff
+color 걤 63d659ff
+color 걥 65b0d2ff
+color 걦 6689beff
+color 걧 66b449ff
+color 걨 66d659ff
+color 걩 68aed5ff
+color 걪 6aadd6ff
+color 걫 6cd658ff
+color 걬 74d7c8ff
+color 걭 74d7c9ff
+color 걮 75d7c8ff
+color 걯 75d7caff
+color 거 75d8c5ff
+color 걱 7680caff
+color 걲 76d6caff
+color 걳 76d8c3ff
+color 건 77d6cbff
+color 걵 77d9c0ff
+color 걶 77d9c1ff
+color 걷 78d5cdff
+color 걸 7adab7ff
+color 걹 7bdbb4ff
+color 걺 7cdbb1ff
+color 걻 7dd2cfff
+color 걼 7fd1d2ff
+color 걽 7fdca9ff
+color 걾 80dda4ff
+color 걿 80dda6ff
+color 검 81dda2ff
+color 겁 829ee9ff
+color 겂 82cfd4ff
+color 것 85df95ff
+color 겄 85df98ff
+color 겅 869cebff
+color 겆 86e092ff
+color 겇 889aedff
+color 겈 88e18cff
+color 겉 88e18dff
+color 겊 899aedff
+color 겋 89e18aff
+color 게 8acadaff
+color 겍 8ae188ff
+color 겎 8c98f0ff
+color 겏 8cc9dbff
+color 겐 8ce188ff
+color 겑 8dc8dcff
+color 겒 8e77b8ff
+color 겓 9097edff
+color 겔 90e187ff
+color 겕 91c6dfff
+color 겖 9395ebff
+color 겗 93e187ff
+color 겘 95e187ff
+color 겙 9694e9ff
+color 겚 96d754ff
+color 겛 9794e8ff
+color 겜 97c2e4ff
+color 겝 97e187ff
+color 겞 98d754ff
+color 겟 9ac0e6ff
+color 겠 9cb543ff
+color 겡 9cbee8ff
+color 겢 9ed753ff
+color 겣 a4baeeff
+color 겤 a4e285ff
+color 겥 a5b9efff
+color 겦 a6b8f0ff
+color 겧 a8d752ff
+color 겨 a9b7f1ff
+color 격 a9e285ff
+color 겪 abb5f4ff
+color 겫 abb6f3ff
+color 견 acb5f4ff
+color 겭 aeb4f3ff
+color 겮 aee285ff
+color 겯 afb4f2ff
+color 결 b0b3f1ff
+color 겱 b2b3f0ff
+color 겲 b5689bff
+color 겳 b689d2ff
+color 겴 b7b1ecff
+color 겵 b8e283ff
+color 겶 bbb0eaff
+color 겷 bcb540ff
+color 겸 bd86ccff
+color 겹 bdaee8ff
+color 겺 bde282ff
+color 겻 c0aa3eff
+color 겼 c0e282ff
+color 경 c284c9ff
+color 겾 c384c8ff
+color 겿 c3e282ff
+color 곀 c8903bff
+color 곁 c9618dff
+color 곂 c9abdfff
+color 곃 ca6b75ff
+color 계 caaadfff
+color 곅 cb7a4cff
+color 곆 cc8139ff
+color 곇 cda9dcff
+color 곈 d0a8daff
+color 곉 d1d84eff
+color 곊 d2e380ff
+color 곋 d3d84dff
+color 곌 d6d84dff
+color 곍 d6e380ff
+color 곎 d9a5d4ff
+color 곏 dae380ff
+color 곐 dbd84dff
+color 곑 dca4d1ff
+color 곒 e0a2cfff
+color 곓 e0d84cff
+color 곔 e1d34bff
+color 곕 e1d54cff
+color 곖 e1e37fff
+color 곗 e2d04bff
+color 곘 e378b1ff
+color 곙 e4e37fff
+color 곚 e5e37fff
+color 곛 e6e37eff
+color 곜 e877adff
+color 곝 e8bd48ff
+color 곞 e99fc8ff
+color 곟 e9bc48ff
+color 고 e9e07dff
+color 곡 e9e27eff
+color 곢 e9e37eff
+color 곣 ea76acff
+color 곤 eab948ff
+color 곥 eadd7dff
+color 곦 eadf7dff
+color 곧 eb76abff
+color 골 eb9ec7ff
+color 곩 ebb447ff
+color 곪 ebdd7dff
+color 곫 ec9ec5ff
+color 곬 ecd77dff
+color 곭 edd57cff
+color 곮 ee9dc4ff
+color 곯 eed27cff
+color 곰 ef74a8ff
+color 곱 ef75a4ff
+color 곲 ef77a1ff
+color 곳 ef789dff
+color 곴 ef789eff
+color 공 efcd7bff
+color 곶 f0ca7bff
+color 곷 f1847eff
+color 곸 f18776ff
+color 곹 f18970ff
+color 곺 f18972ff
+color 곻 f1a045ff
+color 과 f1a145ff
+color 곽 f1c87bff
+color 곾 f1c97bff
+color 곿 f29c44ff
+color 관 f29cc1ff
+color 괁 f29e45ff
+color 괂 f39550ff
+color 괃 f3974cff
+color 괄 f39848ff
+color 괅 f39849ff
+color 괆 f39a44ff
+color 괇 f39bc0ff
+color 괈 f39cbdff
+color 괉 f39cbeff
+color 괊 f39dbbff
+color 괋 f3bf7aff
+color 괌 f3c17aff
+color 괍 f49fb5ff
+color 괎 f4a1afff
+color 괏 f4a1b2ff
+color 괐 f4bd79ff
+color 광 f5a6a2ff
+color 괒 f5a6a4ff
+color 괓 f5a7a0ff
+color 괔 f5a99cff
+color 괕 f5ac94ff
+color 괖 f6ae8dff
+color 괗 f6ae90ff
+color 괘 f6b380ff
+color 괙 f6b381ff
+color 괚 f6b382ff
+color 괛 f6b47dff
+color 괜 f6b678ff
+color 괝 f6b679ff
+color 괞 f6b67aff
+color 괟 f6b878ff
+color 괠 f6ba79ff
 frame
-222222222
-2PPPPPPP2
-2222P2222
-...2V2
-...2V2
-...2V2
-...2V2
-...2W2
-...2W2
-...2W2
-...2X2
-...2X2
-...2X2
-...2X2
-2222Y2222
-2YYYYYYY2
-222222222
+갭갭갭갧갧갧갭갭갭
+갧곚곌곋곉곋곌곐갧
+개갖감갎겠갎감갖개
+...y겵y
+...n겤n
+...c겗c
+...X겍X
+...S겍S
+...S겍S
+...S겍S
+...X겍X
+...c겗c
+...n겤n
+...y겵y
+개갖감갎겠갎감갖개
+갧곚곌곋곉곋곌곐갧
+갭갭갭갧갧갧갭갭갭
 frame
-000000000
-0ZZZZZZZ0
-0000Z0000
-...0N0
-...0N0
-...0N0
-...0N0
-...0L0
-...0L0
-...0L0
-...0J0
-...0J0
-...0J0
-...0J0
-0000E0000
-0EEEEEEE0
-000000000
+갖감갎갊갇갊갎감갖
+갊겼겢겞겚겞겢겧갊
+xtnk걧kntx
+...b겔b
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+...b겔b
+xtnk걧kntx
+갊겼겢겞겚겞겢겧갊
+갖감갎갊갇갊갎감갖
 frame
-GGGGGGGGG
-G8888888G
-GGGG8GGGG
-...G9G
-...G9G
-...G9G
-...G9G
-...GAG
-...GAG
-...GAG
-...GBG
-...GBG
-...GBG
-...GBG
-GGGGCGGGG
-GCCCCCCCG
-GGGGGGGGG
+tnigfgint
+g겘걨걤걣걤걨걫g
+ZXSS걗SSXZ
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+...S겋S
+...T겆T
+...S겋S
+...S겍S
+...S겍S
+...S겍S
+...S겍S
+ZXSS걗SSXZ
+g겘걨걤걣걤걨걫g
+tnigfgint
 frame
-FFFFFFFFF
-FDDDDDDDF
-FFFFDFFFF
-...F7F
-...F7F
-...F7F
-...F7F
-...F6F
-...F6F
-...F6F
-...F5F
-...F5F
-...F5F
-...F5F
-FFFF4FFFF
-F4444444F
-FFFFFFFFF
+XSSSSSSSX
+S겍걡걡걡걡걡걡S
+SSSS걗SSSS
+...S겍S
+...S겍S
+...T겈T
+...R것R
+...N검N
+...K걺K
+...N검N
+...R것R
+...T겈T
+...S겍S
+...S겍S
+SSSS걗SSSS
+S겍걡걡걡걡걡걡S
+XSSSSSSSX
 frame
-HHHHHHHHH
-H3333333H
-HHHH3HHHH
-...HIH
-...HIH
-...HIH
-...HIH
-...HKH
-...HKH
-...HKH
-...HMH
-...HMH
-...HMH
-...HMH
-HHHHOHHHH
-HOOOOOOOH
-HHHHHHHHH
+SSSSSSSSS
+S겍걡걡걡걡걡걡S
+SSSS걗SSSS
+...U겉U
+...O겄O
+...H걿H
+...B걹B
+...9걵9
+...6걮6
+...9걵9
+...B걹B
+...H걿H
+...O겄O
+...U겉U
+SSSS걗SSSS
+S겍걡걡걡걡걡걡S
+SSSSSSSSS
 frame
-111111111
-1UUUUUUU1
-1111U1111
-...1T1
-...1T1
-...1T1
-...1T1
-...1S1
-...1S1
-...1S1
-...1R1
-...1R1
-...1R1
-...1R1
-1111Q1111
-1QQQQQQQ1
-111111111
+SSSSSSSSS
+S겋걟걞걝걞걟걠S
+UROM갤MORU
+...F걽F
+...A걸A
+...6걳6
+...2걬2
+...3걭3
+...3걭3
+...3걭3
+...2걬2
+...6걳6
+...A걸A
+...F걽F
+UROM갤MORU
+S겋걟걞걝걞걟걠S
+SSSSSSSSS
+frame
+RPMJJJMPR
+J걾걘걃갺걃걘걜J
+GBA8갋8ABG
+...0거0
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+...0거0
+GBA8갋8ABG
+J걾걘걃갺걃걘걜J
+RPMJJJMPR
+frame
+BA89998AB
+9걶갓갔값갔갓갘9
+1233가3321
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+...3걯3
+...3걻3
+...3걯3
+...3걭3
+...3걭3
+...3걭3
+...3걭3
+1233가3321
+9걶갓갔값갔갓갘9
+BA89998AB
+frame
+233333332
+3걭갑갑갑갑갑갑3
+3333가3333
+...3걭3
+...3걭3
+...4건4
+...C걼C
+...Q게Q
+...V겜V
+...Q게Q
+...C걼C
+...4건4
+...3걭3
+...3걭3
+3333가3333
+3걭갑갑갑갑갑갑3
+233333332
+frame
+333333333
+3걭갑갑갑갑갑갑3
+3333가3333
+...5걷5
+...E겂E
+...W겑W
+...d겟d
+...j겣j
+...l겫l
+...j겣j
+...d겟d
+...W겑W
+...E겂E
+...5걷5
+3333가3333
+3걭갑갑갑갑갑갑3
+333333333
+frame
+333333333
+3걲객갥갩갥객갗3
+7CIL갨LIC7
+...Y겕Y
+...e겡e
+...m겦m
+...q겪q
+...s견s
+...s견s
+...s견s
+...q겪q
+...m겦m
+...e겡e
+...Y겕Y
+7CIL갨LIC7
+3걲객갥갩갥객갗3
+333333333
+frame
+DILQQQLID
+Q겏걥걩걪걩걥걢Q
+adeh걦heda
+...o겨o
+...s견s
+...s견s
+...s견s
+...s견s
+...s견s
+...s견s
+...s견s
+...s견s
+...s견s
+...o겨o
+adeh걦heda
+Q겏걥걩걪걩걥걢Q
+DILQQQLID
+frame
+dehjjjhed
+j겥겅겇겊겇겅겁j
+pqss걱ssqp
+...s견s
+...s견s
+...s견s
+...s견s
+...s겭s
+...u겴u
+...s겭s
+...s견s
+...s견s
+...s견s
+...s견s
+pqss걱ssqp
+j겥겅겇겊겇겅겁j
+dehjjjhed
+frame
+qsssssssq
+s견겎겎겎겎겎겎s
+ssss걱ssss
+...s견s
+...s견s
+...u결u
+...w겶w
+...간곂간
+...갉곎갉
+...간곂간
+...w겶w
+...u결u
+...s견s
+...s견s
+ssss걱ssss
+s견겎겎겎겎겎겎s
+qsssssssq
+frame
+sssssssss
+s견겎겎겎겎겎겎s
+ssss걱ssss
+...v겱v
+...z겹z
+...갈곇갈
+...강곑강
+...갢곞갢
+...갪관갪
+...갢곞갢
+...강곑강
+...갈곇갈
+...z겹z
+...v겱v
+ssss걱ssss
+s견겎겎겎겎겎겎s
+sssssssss
+frame
+ssssrssss
+s겯겖겙겛겙겖겓s
+vwz각겒각zwv
+...갍곈갍
+...갛곒갛
+...갮곫갮
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갮곫갮
+...갛곒갛
+...갍곈갍
+vwz각겒각zwv
+s겯겖겙겛겙겖겓s
+ssssrssss
+frame
+wz갂간갆간갂zw
+간계겸경겾경겸겳간
+갏강갚갟겲갟갚강갏
+...갳곮갳
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갳곮갳
+갏강갚갟겲갟갚강갏
+간계겸경겾경겸겳간
+wz갂간갆간갂zw
+frame
+강같갞갡갦갡갞같강
+갡골곜곣곧곣곜곘갡
+갲갼갼갼곁갼갼갼갲
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괉갼
+...갻괍갻
+...갼괉갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+...갼괇갼
+갲갼갼갼곁갼갼갼갲
+갡골곜곣곧곣곜곘갡
+강같갞갡갦갡갞같강
+frame
+갼갼갼갼갼갼갼갼갼
+갼괇곰곰곰곰곰곰갼
+갼갼갼갼곁갼갼갼갼
+...갼괇갼
+...갼괇갼
+...갻괈갻
+...걄괏걄
+...걉괒걉
+...걋괕걋
+...걉괒걉
+...걄괏걄
+...갻괈갻
+...갼괇갼
+...갼괇갼
+갼갼갼갼곁갼갼갼갼
+갼괇곰곰곰곰곰곰갼
+갼갼갼갼갼갼갼갼갼
+frame
+갼갼갼갼갼갼갼갼갼
+갼괇곰곰곰곰곰곰갼
+갼갼갼갼곁갼갼갼갼
+...갾괊갾
+...걇괎걇
+...걊괓걊
+...걎괗걎
+...걒괚걒
+...걓괞걓
+...걒괚걒
+...걎괗걎
+...걊괓걊
+...걇괎걇
+...갾괊갾
+갼갼갼갼곁갼갼갼갼
+갼괇곰곰곰곰곰곰갼
+갼갼갼갼갼갼갼갼갼
+frame
+갼갼갼갻갻갻갼갼갼
+갻괈곲곴곳곴곲곱갻
+갽걄걆걅곃걅걆걄갽
+...걍괔걍
+...걑괖걑
+...걓괘걓
+...걚괝걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괝걚
+...걓괘걓
+...걑괖걑
+...걍괔걍
+갽걄걆걅곃걅걆걄갽
+갻괈곲곴곳곴곲곱갻
+갼갼갼갻갻갻갼갼갼
+frame
+걄걆걉걈걈걈걉걆걄
+걈광곸곺곹곺곸곷걈
+걌걎걑걐곅걐걑걎걌
+...걙괛걙
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걙괛걙
+걌걎걑걐곅걐걑걎걌
+걈광곸곺곹곺곸곷걈
+걄걆걉걈걈걈걉걆걄
+frame
+걎걑걏걒걒걒걏걑걎
+걒괙괃괅괄괅괃괂걒
+걙걚걚걚곆걚걚걚걙
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괟걚
+...걔괐걔
+...걚괟걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+...걚괜걚
+걙걚걚걚곆걚걚걚걙
+걒괙괃괅괄괅괃괂걒
+걎걑걏걒걒걒걏걑걎
+frame
+걚걚걚걚걚걚걚걚걚
+걚괜괆괆괆괆괆괆걚
+걚걚걚걚곆걚걚걚걚
+...걚괜걚
+...걚괜걚
+...걔괟걔
+...걖괋걖
+...걁곽걁
+...갶곯갶
+...걁곽걁
+...걖괋걖
+...걔괟걔
+...걚괜걚
+...걚괜걚
+걚걚걚걚곆걚걚걚걚
+걚괜괆괆괆괆괆괆걚
+걚걚걚걚걚걚걚걚걚
+frame
+걚걚걚걚걚걚걚걚걚
+걚괜괆괆괆괆괆괆걚
+걚걚걚걚곆걚걚걚걚
+...걕괠걕
+...갿괌갿
+...갷곶갷
+...갴곭갴
+...갰곪갰
+...갱곡갱
+...갰곪갰
+...갴곭갴
+...갷곶갷
+...갿괌갿
+...걕괠걕
+걚걚걚걚곆걚걚걚걚
+걚괜괆괆괆괆괆괆걚
+걚걚걚걚걚걚걚걚걚
+frame
+걚걚걚걚걛걚걚걚걚
+걚괟괁곻과곻괁곿걚
+걕걖갿걀곀걀갿걖걕
+...갸공갸
+...갵곬갵
+...갫곦갫
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갫곦갫
+...갵곬갵
+...갸공갸
+걕걖갿걀곀걀갿걖걕
+걚괟괁곻과곻괁곿걚
+걚걚걚걚걛걚걚걚걚
+frame
+걖갿걀걂걂걂걀갿걖
+걂곾곤곟곝곟곤곩걂
+갹갴갵갯겻갯갵갴갹
+...갬고갬
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갬고갬
+갹갴갵갯겻갯갵갴갹
+걂곾곤곟곝곟곤곩걂
+걖갿걀걂걂걂걀갿걖
+frame
+갴갵갰갰갰갰갰갵갴
+갰곥곔곕곕곕곔곗갰
+갬갭갭갭겷갭갭갭갬
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갧곛갧
+...갣곏갣
+...갧곛갧
+...갭곢갭
+...갭곢갭
+...갭곢갭
+...갭곢갭
+갬갭갭갭겷갭갭갭갬
+갰곥곔곕곕곕곔곗갰
+갴갵갰갰갰갰갰갵갴
+frame
+갭갭갭갭갭갭갭갭갭
+갭곢곓곓곓곓곓곓갭
+갭갭갭갭겷갭갭갭갭
+...갭곢갭
+...갭곢갭
+...갣곙갣
+...갖곍갖
+...갌겿갌
+...갅겮갅
+...갌겿갌
+...갖곍갖
+...갣곙갣
+...갭곢갭
+...갭곢갭
+갭갭갭갭겷갭갭갭갭
+갭곢곓곓곓곓곓곓갭
+갭갭갭갭갭갭갭갭갭
+frame
+갭갭갭갭갭갭갭갭갭
+갭곢곓곓곓곓곓곓갭
+갭갭갭갭겷갭갭갭갭
+...갠곖갠
+...감곊감
+...갃겺갃
+...t격t
+...g겝g
+...c겐c
+...g겝g
+...t격t
+...갃겺갃
+...감곊감
+...갠곖갠
+갭갭갭갭겷갭갭갭갭
+갭곢곓곓곓곓곓곓갭
+갭갭갭갭갭갭갭갭갭
