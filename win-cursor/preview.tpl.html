@@ -175,6 +175,8 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 /* 그림은 프레임을 세로로 이은 한 장(프레임 --n 장, 프레임 뒤마다 판의 1/8 만큼 빈 줄이라 한 칸이 판의 1.125배).
    움직임은 그림을 바꿔 끼우지 않고 --f(프레임 번호)로 자리만 옮긴다 */
 .sprite,.extra span.pic i{background-size:var(--s) calc(var(--s) * 1.125 * var(--n,1));background-position:0 calc(var(--s) * -1.125 * var(--f,0))}
+/* 움직이는 그림은 제 레이어에 둬서 한 장 넘길 때 그 칸만 다시 칠한다. 안 그러면 장마다 페이지 전체를 다시 칠했다 */
+.sprite,.extra span.pic i,.thumb{will-change:transform}
 .hot{position:absolute;width:var(--px);height:var(--px);left:calc(var(--hx) * var(--px));top:calc(var(--hy) * var(--px));
   outline:2px solid var(--hot);outline-offset:1px}
 .meta{min-width:0}
@@ -615,11 +617,21 @@ pre .c{color:var(--muted)}
         set(cards, el, '--f', String(f));
       });
     }
+    // 장 번호부터 세어 지난번과 같으면 아무것도 안 만든다. 화면 주사율마다 불리니 여기서 끝나는 때가 대부분이다
+    var fr = {}, fx = {};
     Object.keys(DATA[sid]).forEach(function(rid){
       var d = DATA[sid][rid];
-      if (!d[0]) return;                            // 다른 모양의 이 구성표 그림을 아직 받는 중
-      var f = moving ? Math.floor(now / d[4]) % d[7] : 0;
-      parts.push(f);
+      if (d[0]) parts.push(fr[rid] = moving ? Math.floor(now / d[4]) % d[7] : 0);   // 빈 것은 다른 모양의 그림을 아직 받는 중
+    });
+    Object.keys(EXTRA[sid] || {}).forEach(function(rid){
+      var d = EXTRA[sid][rid];
+      parts.push(fx[rid] = moving ? Math.floor(now / d[1]) % d[2] : 0);
+    });
+    var key = sid + '|' + shape + '|' + px + '|' + deg + '|' + (hid || '') + '|' + parts.join(',');
+    if (key === lastKey) return;
+    lastKey = key;
+    Object.keys(fr).forEach(function(rid){
+      var d = DATA[sid][rid], f = fr[rid];
       jobs.push(Promise.all([rid === hid ? paint(d[0], px, deg, f) : null, plain ? null : bgOf(d[0], deg)]).then(function(r){
         var hx = r[0] && Math.floor(d[1] * r[0].k), hy = r[0] && Math.floor(d[2] * r[0].k);
         return function(){
@@ -628,16 +640,12 @@ pre .c{color:var(--muted)}
         };
       }));
     });
-    Object.keys(EXTRA[sid] || {}).forEach(function(rid){
-      var d = EXTRA[sid][rid], f = moving ? Math.floor(now / d[1]) % d[2] : 0;
-      parts.push(f);
+    Object.keys(fx).forEach(function(rid){
+      var d = EXTRA[sid][rid], f = fx[rid];
       jobs.push((plain ? Promise.resolve(null) : bgOf(d[0], deg)).then(function(u){
         return function(){ put('.extra.s-' + sid + '.e-' + rid + ' i', u, d[2], f); };
       }));
     });
-    var key = sid + '|' + shape + '|' + px + '|' + deg + '|' + parts.join(',');
-    if (key === lastKey) return;
-    lastKey = key;
     var mine = ++asked;
     busy = performance.now();
     function next(){ busy = 0; if (again) { again = false; tick(); } }
@@ -676,7 +684,22 @@ pre .c{color:var(--muted)}
     });
   }
   var motionOK = !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  setInterval(function(){ tick(); tickThumbs(); }, 50);
+  // 다음 장이 바뀌는 때에 맞춰 깬다. 전에는 50ms(20Hz)마다 봐서 33ms 한 장인 그림이 한 장 건너 한 장씩
+  // 절뚝이며 넘어갔다(폭죽은 16ms 한 장이라 셋 중 둘을 건너뛰었다). 화면 주사율마다 부르면 박자는 맞지만
+  // 안 바뀌는 프레임에도 합성을 돌려 CPU 를 더 먹었다. 움직이는 것이 없으면 전처럼 50ms 마다 본다
+  function wait(){
+    var now = performance.now(), w = 50, sid = app.getAttribute('data-scheme');
+    function at(ms){ if (ms > 0) w = Math.min(w, ms - now % ms); }
+    if (motionOK && !document.hidden) {
+      if (DATA[sid] && animated(sid)) {
+        Object.keys(DATA[sid]).forEach(function(rid){ if (DATA[sid][rid][7] > 1) at(DATA[sid][rid][4]); });
+        Object.keys(EXTRA[sid] || {}).forEach(function(rid){ if (EXTRA[sid][rid][2] > 1) at(EXTRA[sid][rid][1]); });
+      }
+      MOVING.forEach(function(m){ if (!window.IntersectionObserver || seen[m]) at(thumbData[m].arrow[4]); });
+    }
+    return Math.max(4, w + 1);   // 1ms 늦게 깨야 Math.floor 가 확실히 다음 장으로 넘어가 있다
+  }
+  (function loop(){ tick(); tickThumbs(); setTimeout(loop, wait()); })();
 
   function chooseSize(px){
     size = px;
