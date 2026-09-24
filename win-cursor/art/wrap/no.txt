@@ -1,22 +1,25 @@
 hotspot 8,8
-color 0 7aa0b478
-color 1 8ac0d478
-color 2 bfe4f0a0
-color 3 ffffffc8
+color 0 5b8fabff
+color D 86b6ccdc
+color f a6cfe0dc
+color L c6e5f0dc
+color s 6fa6bff0
+color b e4f6fcf0
+color W ffffffff
 ......00000
-....002222200
-...02211221120
-..0122000001220
-.02230.....03220
-.022020.....0220
-0210.010.....0110
-0210..010....0110
-0220...030...0220
-0220....020..0220
-0210.....010.0110
-.0110.....010210
-.02230.....03220
-..0222000002220
-...02211221120
-....001122100
+....00bLLLb00
+...0LbWsfbWsf0
+..0LffsDDDsfff0
+.0LffD00000ffff0
+.0bfDfb0...0ffb0
+0bWs0bWs0...0bWs0
+0LsD00sff0..0LsD0
+0LfD0.0fff0.0LfD0
+0LbD0..0ffb00LbD0
+0bWs0...0bWs0bWs0
+.0sff0...0sfLfs0
+.0ffff00000LffD0
+..0fffbLLLbffD0
+...0fbWsfbWsD0
+....00sDDDs00
 ......00000

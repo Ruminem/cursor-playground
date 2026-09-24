@@ -1,22 +1,24 @@
 hotspot 4,8
-color 0 7aa0b478
-color 1 8ac0d478
-color 2 bfe4f0a0
-color 3 ffffffc8
-000000000
-032223220
-000020000
-...010
-...010
-...020
-...020
-...010
-...010
-...020
-...020
-...010
-...010
-...020
-000020000
-022112210
-000000000
+color 0 5b8fabff
+color D 86b6ccdc
+color f a6cfe0dc
+color L c6e5f0dc
+color b e4f6fcf0
+color W ffffffff
+.0000000
+0LLLLLLD0
+.000f000
+...0W0
+...0b0
+...0f0
+...0f0
+...0W0
+...0b0
+...0f0
+...0f0
+...0W0
+...0b0
+...0f0
+.000f000
+0LLLLLLD0
+.0000000

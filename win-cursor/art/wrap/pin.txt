@@ -1,23 +1,25 @@
 hotspot 0,0
-color 0 7aa0b478
-color 1 8ac0d478
-color 2 bfe4f0a0
-color 3 ffffffc8
-color 4 ffffffff
+color 0 5b8fabff
+color D 86b6ccdc
+color f a6cfe0dc
+color L c6e5f0dc
+color s 6fa6bff0
+color b e4f6fcf0
+color W ffffffff
 0
 00
-020
-0220
-02210
-032220
-0222220...33333
-02211220.3344433
-0221122103433343
-0322232223434343
-0222220003433343
-0220120..3343433
-020.0220..33433
-00..0320...343
-0....0220..333
-.....0210
+0f0
+0Lb0
+0bWs0
+0Lsff0
+0Lffff0
+0Lbfffb0....00000
+0bWsfbWs0..0bbbbL0
+0LsfffsDf00bLLfLLL0
+0LfDfD00000bLf0bLf0
+0LD0fD0...0LLLbLLf0
+0f0.0Lf0...0LLLLf0
+00..0fD0....0LLf0
+0....0Lf0....0L0
+.....0fD0.....0
 ......00
