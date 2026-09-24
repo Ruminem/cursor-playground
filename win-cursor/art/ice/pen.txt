@@ -6,20 +6,20 @@ color 3 b4e4f7ff
 color 4 a2dbf4ff
 color 5 90d1f0ff
 color W ffffffff
-color F b4f0ff50
-...........F
-..........F0F
-.........F0W0F
-........F0WW20F
-.......F0WW2SS0F
-......F0WW3SS0F
-.....F0WW3SS0F
-....F0WW4SS0F
-...F0WW4SS0F
-..F0WW5SS0F
-.F0SW5SS0F
-.F0S0SS0F
-F04S000F
-F0SS0FF
-.F00F
-..FF
+color R c6edfac7
+..........RRR
+.........RR0RR
+........RR0W0RR
+.......RR0WW20RR
+......RR0WW2SS0R
+.....RR0WW3SS0RR
+....RR0WW3SS0RR
+...RR0WW4SS0RR
+..RR0WW4SS0RR
+.RR0WW5SS0RR
+.R0SW5SS0RR
+RR0S0SS0RR
+R04S000RR
+R0SS0RRR
+RR00RR
+.RRRR
