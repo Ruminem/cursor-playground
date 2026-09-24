@@ -105,7 +105,7 @@ jobs:
             # 기본 모양은 dist\<구성표>\, 나머지는 dist\<모양>\<구성표>\ 에 들어간다
             $root = if ($shape.id -eq $shapes[0].id) { 'dist' } else { "dist\$($shape.id)" }
             if ($shape.id -ne $shapes[0].id) {
-              if (-not (Test-Path "data\$($shape.id).json")) { Write-Host "모양 데이터 없음: $($shape.id).json"; $fail = 1 }
+              if (-not (Test-Path "data\$($shape.id)\index.json")) { Write-Host "모양 데이터 없음: $($shape.id)/index.json"; $fail = 1 }
             }
             # 모양이 안 바꾸는 칸은 기본 모양 파일과 같아서 모양 쪽에 두지 않는다 (받을 때 기본 것으로 넘어간다)
             $keep = 'ns','we','nwse','nesw','up','cross','pen','hand'

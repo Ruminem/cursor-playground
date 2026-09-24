@@ -3,7 +3,8 @@
 
 사용법: python build.py
 
-preview.html 에는 기본 모양의 그림 데이터가 들어가고, 다른 모양은 data/<모양>.json 으로 따로 나간다.
+preview.html 에는 기본 모양의 그림 데이터가 들어가고, 다른 모양은 data/<모양>/ 으로 따로 나간다
+(index.json 과 구성표마다 한 파일 — split_data 참고).
 dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려받는다 (기본 모양은 dist/<구성표>/,
 나머지는 dist/<모양>/<구성표>/). art/ 나 shapes/ 를 고치면 이걸 다시 돌리고 결과까지 커밋해야 웹에 반영된다.
 """
@@ -140,8 +141,8 @@ def _drawer(ats: dict | None, sid: str, rid: str, shape: str, frames: list[dict]
 
 
 def page_bits(sid: str, rid: str, shape: str | None, cache: dict,
-              ats: dict | None = None) -> tuple[list[str], int, int, int, int, int]:
-    """시안 페이지에 넣을 (프레임별 그림 주소, 핫스팟 x, y, rate(ms), 폭, 높이)"""
+              ats: dict | None = None) -> tuple[list[bytes], int, int, int, int, int]:
+    """시안 페이지에 넣을 (프레임별 PNG, 핫스팟 x, y, rate(ms), 폭, 높이)"""
     if shape is None or rid in KEEP:
         raw = art_raw(sid, rid)
         src = canvas_size(raw)
@@ -154,8 +155,59 @@ def page_bits(sid: str, rid: str, shape: str | None, cache: dict,
         frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
         at = _drawer(ats, sid, rid, shape, frames, glyphs)
         pngs, (hx, hy), (w, h) = smoothlib.page(shape, rid, frames, glyphs, MAT.get(sid), at)
-    return (["data:image/png;base64," + base64.b64encode(p).decode() for p in pngs],
-            hx, hy, rate * 1000 // 60, w, h)
+    return pngs, hx, hy, rate * 1000 // 60, w, h
+
+
+def uri_of(png: bytes) -> str:
+    return "data:image/png;base64," + base64.b64encode(png).decode()
+
+
+def _scanlines(png: bytes) -> tuple[int, bytes]:
+    """우리 PNG(8비트 RGBA, 필터 0, IDAT 하나 이상)를 풀어 (폭, 필터 바이트째 행들)"""
+    w, pos, idat = int.from_bytes(png[16:20], "big"), 8, b""
+    while pos < len(png):
+        n = int.from_bytes(png[pos:pos + 4], "big")
+        if png[pos + 4:pos + 8] == b"IDAT":
+            idat += png[pos + 8:pos + 8 + n]
+        pos += 12 + n
+    return w, zlib.decompress(idat)
+
+
+def strip(pngs: list[bytes], ink: bool = False) -> tuple[str, list[int] | int]:
+    """프레임들을 세로로 이은 PNG 한 장 (주소, 잉크 상자).
+
+    프레임마다 따로 넣으면 PNG 머리·base64 앞머리만 한 장에 115바이트라 기본 모양 데이터가 5.1MB 였고,
+    이으면 zlib 가 앞 프레임과 같은 줄을 찾아 줄여서 1.4MB 가 된다(매끈한 모양 24.4→10.8MB, 2026-09-24).
+    페이지는 그림 주소를 바꿔 끼우지 않고 자리(background-position)만 옮겨서, 사파리가 프레임마다 그림을
+    다시 풀며 깜빡이던 것도 없어진다.
+    프레임 뒤마다 판의 1/8 만큼 투명한 줄을 둔다 — 매끈한 모양을 부드럽게 줄여 그리면 이웃 프레임의 가장자리
+    줄이 번져 들어온다 (프레임 2만 8천 장 중 1만 9천 장이 맨 윗줄이나 맨 아랫줄에 색이 있다).
+    ink 면 모든 프레임의 불투명(알파 > 8) 영역을 합친 [x0, y0, x1, y1, 판] 도 잰다 — 목록 썸네일 자리 맞춤용"""
+    raws, w = [], 0
+    for png in pngs:
+        w, raw = _scanlines(png)
+        assert all(raw[i] == 0 for i in range(0, len(raw), w * 4 + 1)), "필터 없는 PNG 만 이을 수 있다"
+        raws.append(raw)
+    gap = bytes((w * 4 + 1) * (w // 8))
+    body = gap.join(raws) + gap
+    tall = len(body) // (w * 4 + 1)
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return len(data).to_bytes(4, "big") + kind + data + zlib.crc32(kind + data).to_bytes(4, "big")
+
+    ihdr = w.to_bytes(4, "big") + tall.to_bytes(4, "big") + bytes((8, 6, 0, 0, 0))
+    uri = uri_of(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(body, 9)) + chunk(b"IEND", b""))
+    if not ink:
+        return uri, 0
+    x0 = y0 = w
+    x1 = y1 = -1
+    for raw in raws:
+        for y in range(w):
+            row = raw[y * (w * 4 + 1) + 1:(y + 1) * (w * 4 + 1)]
+            xs = [x for x in range(w) if row[x * 4 + 3] > 8]
+            if xs:
+                x0, x1, y0, y1 = min(x0, xs[0]), max(x1, xs[-1]), min(y0, y), max(y1, y)
+    return uri, ([x0, y0, x1, y1, w] if x1 >= 0 else [0, 0, w - 1, w - 1, w])
 
 
 def cursor_bytes(sid: str, rid: str, shape: str | None, cache: dict, ats: dict | None = None) -> tuple[bytes, str]:
@@ -189,22 +241,22 @@ def build() -> str:
     groups: dict[str, list[str]] = {}
     for scheme in SCHEMES:
         sid, sname, sdesc = scheme["id"], scheme["name"], scheme["desc"]
-        cards, thumb = [], ""
+        cards = []
         for rid, rlabel, fallback in ROLES:
-            # 움직이는 커서는 프레임마다 그림을 넣어 두고 페이지 스크립트가 번갈아 끼운다. CSS 기본값은 첫 프레임
-            uris, hx, hy, rate, w, h = page_bits(sid, rid, None, {})
-            uri = uris[0]
+            # 그림은 프레임을 이은 한 장(strip)으로 넘기고 페이지 스크립트가 카드에 깔고 자리를 옮긴다.
+            # 카드에 미리 박아 두면 같은 그림이 페이지에 두 번 들어간다. CSS 커서 기본값은 첫 프레임
+            entry = data_bit(sid, rid, None, {})
+            hx, hy, w, h = entry[1], entry[2], entry[5], entry[6]
+            uri = uri_of(page_bits(sid, rid, None, {})[0][0])
             css.append(
                 f'[data-scheme="{sid}"] .c-{rid},[data-scheme="{sid}"].c-{rid},.card.s-{sid}.c-{rid}'
                 f"{{cursor:url({uri}) {hx} {hy},{fallback}}}"
             )
-            data.setdefault(sid, {})[rid] = [uris, hx, hy, fallback, rate, w, h]
-            if rid == "arrow":
-                thumb = uri
+            data.setdefault(sid, {})[rid] = entry
             cards.append(f"""
         <article class="card s-{sid} c-{rid}" tabindex="0">
           <div class="stage" style="--hx:{hx};--hy:{hy}">
-            <div class="sprite" style="background-image:url({uri})"></div>
+            <div class="sprite"></div>
             <span class="hot" aria-hidden="true"></span>
           </div>
           <div class="meta">
@@ -215,15 +267,13 @@ def build() -> str:
         </article>""")
         extras = []
         for rid, rlabel, _ in EXTRA:
-            pics, _, _, rate, _, _ = page_bits(sid, rid, None, {})
-            # 움직이거나 색조를 바꿀 때 페이지 스크립트가 프레임을 번갈아 끼울 수 있게 넘긴다
-            extra_data.setdefault(sid, {})[rid] = [pics, rate]
-            extras.append(f'<div class="extra s-{sid} e-{rid}"><span class="pic"><i style="background-image:url({pics[0]})"></i></span>{rlabel}</div>')
+            extra_data.setdefault(sid, {})[rid] = data_bit(sid, rid, None, {})
+            extras.append(f'<div class="extra s-{sid} e-{rid}"><span class="pic"><i></i></span>{rlabel}</div>')
         search = " ".join((sid, sname, scheme["name_en"], scheme["category"], scheme["category_en"])).lower()
         groups.setdefault(scheme["category"], []).append(f"""
       <div class="pick-wrap" data-scheme-item="{sid}" data-search="{search}">
         <button type="button" class="pick c-hand" data-pick="{sid}" aria-pressed="false">
-          <span class="thumb" style="background-image:url({thumb})"></span>
+          <span class="thumb"></span>
           <span class="pick-name">{sname}</span>
         </button>
         <button type="button" class="star c-hand" data-star="{sid}" aria-pressed="false" title="즐겨찾기" aria-label="{sname} 즐겨찾기">★</button>
@@ -241,7 +291,7 @@ def build() -> str:
     # 모양 탭. 단추에 붙는 그림은 첫 구성표의 화살표를 그 모양으로 그린 것
     tabs = []
     for i, shp in enumerate(SHAPES):
-        pic = page_bits(SCHEMES[0]["id"], "arrow", shape_of(shp["id"]), {})[0][0]
+        pic = uri_of(page_bits(SCHEMES[0]["id"], "arrow", shape_of(shp["id"]), {})[0][0])
         tabs.append(f'<button type="button" class="shape c-hand{" smooth" if i else ""}" role="tab" data-shape="{shp["id"]}"'
                     f' aria-selected="{"true" if i == 0 else "false"}"><i style="background-image:url({pic})"></i>{shp["name"]}</button>')
 
@@ -272,14 +322,16 @@ def build() -> str:
 
 
 def data_bit(sid: str, rid: str, shape: str | None, cache: dict, ats: dict | None = None) -> list:
-    """시안 데이터의 칸 하나. ROLES 칸은 [그림들, 핫스팟 x, y, 대체 커서, rate, 폭, 높이], EXTRA 칸은 [그림들, rate]"""
-    uris, hx, hy, rate, w, h = page_bits(sid, rid, shape, cache, ats)
+    """시안 데이터의 칸 하나. ROLES 칸은 [스트립, 핫스팟 x, y, 대체 커서, rate, 폭, 높이, 프레임 수, 잉크 상자],
+    EXTRA 칸은 [스트립, rate, 프레임 수]. 잉크 상자는 화살표만 (나머지는 0)"""
+    pngs, hx, hy, rate, w, h = page_bits(sid, rid, shape, cache, ats)
+    uri, box = strip(pngs, rid == "arrow")
     fallback = next((f for r, _, f in ROLES if r == rid), None)
-    return [uris, hx, hy, fallback, rate, w, h] if fallback is not None else [uris, rate]
+    return [uri, hx, hy, fallback, rate, w, h, len(pngs), box] if fallback is not None else [uri, rate, len(pngs)]
 
 
 def splice(pieces: dict[str, tuple[dict, dict]], old: dict | None) -> dict:
-    """구성표별 조각 {구성표: (칸들, 덧칸들)} 을 SCHEMES 차례로 이어 data/<모양>.json 모양으로.
+    """구성표별 조각 {구성표: (칸들, 덧칸들)} 을 SCHEMES 차례로 이어 {"data": …, "extra": …} 로.
     old 를 주면 조각이 없는 구성표는 지난번 것을 그대로 옮긴다"""
     data: dict[str, dict[str, list]] = {}
     extra: dict[str, dict[str, list]] = {}
@@ -359,24 +411,56 @@ def build_one(job: tuple[str, str, bool, bool]) -> tuple[int, tuple | None]:
     return count, ((data, extra) if want_data else None)
 
 
-def data_path(shape_id: str) -> Path:
-    return HERE / "data" / f"{shape_id}.json"
+def data_dir(shape_id: str) -> Path:
+    return HERE / "data" / shape_id
+
+
+def split_data(whole: dict) -> dict[str, dict]:
+    """모양 하나의 데이터를 페이지가 받는 파일들로 {파일 이름: 내용}.
+
+    index.json 은 구성표 전부의 화살표 그림(목록 썸네일)과 칸마다 핫스팟·크기(그림 자리는 빈 글자),
+    <구성표>.json 은 그 구성표의 나머지 칸 그림. 모양을 고르면 index 와 지금 구성표 하나만 받는다 —
+    한 파일(24MB)을 통째로 받던 때는 모양을 바꿀 때마다 다 받고 나서야 바뀌었다"""
+    index: dict[str, dict] = {}
+    files: dict[str, dict] = {"index.json": {"data": index}}
+    for sid, roles in whole["data"].items():
+        index[sid] = {rid: e if rid == "arrow" else ["", *e[1:]] for rid, e in roles.items()}
+        files[f"{sid}.json"] = {"data": {rid: e[0] for rid, e in roles.items() if rid != "arrow"},
+                                "extra": whole["extra"][sid]}
+    return files
+
+
+def read_data(shape_id: str) -> dict | None:
+    """split_data 의 거꾸로. 지난번 파일들이 온전하지 않으면 None"""
+    root = data_dir(shape_id)
+    try:
+        index = json.loads((root / "index.json").read_text(encoding="utf-8"))["data"]
+        data, extra = {}, {}
+        for sid, roles in index.items():
+            one = json.loads((root / f"{sid}.json").read_text(encoding="utf-8"))
+            data[sid] = {rid: e if rid == "arrow" else [one["data"][rid], *e[1:]] for rid, e in roles.items()}
+            extra[sid] = one["extra"]
+        return {"data": data, "extra": extra}
+    except (OSError, KeyError, ValueError):
+        return None
 
 
 def data_whole(shape_id: str) -> bool:
-    """지난번 data/<모양>.json 을 조각 갈아 끼우기에 쓸 수 있나 — 없거나 구성표가 늘거나 줄었으면 못 쓴다"""
-    path = data_path(shape_id)
-    return path.exists() and set(json.loads(path.read_text(encoding="utf-8")).get("data", ())) == {s["id"] for s in SCHEMES}
+    """지난번 data/<모양>/ 을 조각 갈아 끼우기에 쓸 수 있나 — 없거나 구성표가 늘거나 줄었으면 못 쓴다"""
+    old = read_data(shape_id)
+    return old is not None and set(old["data"]) == {s["id"] for s in SCHEMES}
 
 
 def write_data(shape_id: str, pieces: dict[str, tuple[dict, dict]]) -> None:
-    """모양 하나의 시안 페이지 데이터 data/<모양>.json. 한 파일에 구성표 전부가 다 들어 있어서
-    지난번 파일이 있으면 조각이 온 구성표만 갈아 끼운다.
+    """모양 하나의 시안 페이지 데이터 data/<모양>/. 지난번 파일이 있으면 조각이 온 구성표만 갈아 끼운다.
     코드가 바뀌면 모든 구성표의 조각이 오므로(해시에 코드가 섞여 있다) 통째로 다시 쓰인다"""
-    path = data_path(shape_id)
-    path.parent.mkdir(exist_ok=True)
-    old = json.loads(path.read_text(encoding="utf-8")) if len(pieces) < len(SCHEMES) else None
-    path.write_text(json.dumps(splice(pieces, old), separators=(",", ":")), encoding="utf-8", newline="\n")
+    root = data_dir(shape_id)
+    root.mkdir(parents=True, exist_ok=True)
+    old = read_data(shape_id) if len(pieces) < len(SCHEMES) else None
+    for name, body in split_data(splice(pieces, old)).items():
+        (root / name).write_text(json.dumps(body, separators=(",", ":")), encoding="utf-8", newline="\n")
+    # 한 파일에 다 넣던 때의 data/<모양>.json. 남겨 두면 Pages 에 모양마다 24MB 씩 그대로 올라간다
+    (HERE / "data" / f"{shape_id}.json").unlink(missing_ok=True)
 
 
 def update_readme() -> None:
@@ -436,7 +520,7 @@ if __name__ == "__main__":
                      if s["id"] in changed or not (root / s["id"]).is_dir()}
             skipped += len(SCHEMES) - len(stale)
             fresh: set[str] = set()                     # 시안 데이터 조각을 새로 그릴 구성표
-            if not base and (was.get("*") != every or not data_path(shp["id"]).exists()):
+            if not base and (was.get("*") != every or not (data_dir(shp["id"]) / "index.json").exists()):
                 fresh = set(changed) if changed and data_whole(shp["id"]) else {s["id"] for s in SCHEMES}
                 pieces[shp["id"]] = {}
             # (모양 × 구성표) 하나가 일감 하나. 커서와 시안 데이터를 한 일감에서 같이 만든다.
@@ -493,7 +577,7 @@ if __name__ == "__main__":
             if not left[shape_id]:
                 what = f"{shape_id} 커서 {made[shape_id]}개"
                 if shape_id in pieces:
-                    what += f" · data/{shape_id}.json" + ("" if len(pieces[shape_id]) == len(SCHEMES)
+                    what += f" · data/{shape_id}/" + ("" if len(pieces[shape_id]) == len(SCHEMES)
                                                           else f" (구성표 {len(pieces[shape_id])}종만)")
                     write_data(shape_id, pieces.pop(shape_id))
                 print(f"[{time.time() - t0:5.1f}초] {what} · 워커 시간 {_dur(spent[shape_id])}")

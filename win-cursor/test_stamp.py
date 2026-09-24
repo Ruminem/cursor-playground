@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-"""build.py 가 바뀐 구성표 자리만 갈아 끼워 만든 data/<모양>.json 이,
+"""build.py 가 바뀐 구성표 자리만 갈아 끼워 만든 data/<모양>/ 이,
 통째로 만든 것과 같은지 본다. 다르면 시안 페이지가 낡은 그림을 보여 준다.
 
 사용법: python test_stamp.py — 구성표 세 종·모양 하나로 줄여서 몇 초 안에 끝난다.
 """
 import json
 import re
+import tempfile
+from pathlib import Path
 
 import build
 
@@ -42,4 +44,14 @@ spliced = build.shape_data(shape_id, sids[1:2], old)   # 가운데 한 종만 �
 dump = lambda d: json.dumps(d, separators=(",", ":"))
 assert dump(spliced) == dump(whole), "갈아 끼운 데이터가 통째로 만든 것과 다름"
 assert list(spliced["data"]) == sids, f"구성표 차례가 어긋남: {list(spliced['data'])}"
+
+# 파일로 쪼개 쓰고(index.json + 구성표마다 한 파일) 도로 읽으면 같아야 한다. 한 종만 다시 써도
+tmp = Path(tempfile.mkdtemp())
+build.data_dir = lambda s: tmp / s
+build.write_data(shape_id, {sid: (whole["data"][sid], whole["extra"][sid]) for sid in sids})
+assert dump(build.read_data(shape_id)) == dump(whole), "쪼개 쓴 데이터를 도로 읽으니 다름"
+build.write_data(shape_id, {sid: (whole["data"][sid], whole["extra"][sid]) for sid in sids[1:2]})
+assert dump(build.read_data(shape_id)) == dump(whole), "한 종만 갈아 쓴 파일이 통째로 쓴 것과 다름"
+index = json.loads((tmp / shape_id / "index.json").read_text(encoding="utf-8"))["data"]
+assert all(e[0] == "" for roles in index.values() for rid, e in roles.items() if rid != "arrow"), "index 에 화살표 말고 그림이 들었음"
 print(f"갈아 끼우기 OK · {shape_id} · 구성표 {len(sids)}종 · {len(dump(whole))}바이트")
