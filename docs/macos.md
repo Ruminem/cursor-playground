@@ -133,6 +133,27 @@ XML/바이너리 plist 하나. 맥 없이 파이썬 표준 라이브러리 `plis
   코드 0시간이지만 우리 파일 이름(`busy`, `pin` …)이 어떻게 맞춰지는지, `.ani` 의 고르지 않은 rate 를 어떻게 다루는지는
   모른다 — 그 앱의 변환 코드는 비공개 저장소(`Mousecape-Core`)라 못 읽었다.
 
+## ① 시험판: 전기 구성표 `.cape` (2026-09-24)
+
+`win-cursor/gen/cape.py` 가 구성표 하나를 `.cape` 로 뽑는다. 기본 모양(테마 그림 그대로)만, 빌드와 무관하게 손으로 돌린다.
+
+```
+cd win-cursor
+python gen/cape.py electric          # → out/electric.cape (224 KiB)
+```
+
+- 13칸 → 맥 이름 33개 (3장의 표). up·pen·pin·person 은 버린다. 화살표·I빔은 오래된 이름만 넣었다 — 원본 Mousecape 는
+  이름 하나라도 등록에 실패하면 전체를 포기해서다(`apply.m` 의 "Bailing out"). macOS 26 의 새 이름은 swiftUI 판이 채운다
+- 32pt 판, 1x = 32px · 2x = 64px (최근접 확대). `--scales 1,2,4` 로 더 큰 판을 넣을 수 있다
+- 전기 원본 32장 × 2틱(1.07초) → 24장 × 0.0444초. 한 바퀴 시간은 같고 장 사이 간격이 조금 고르지 않다
+- 우리 화살표는 32칸 판에서 12px 남짓이라 **맥 기본 화살표보다 작아 보일 것이다** — 윈도우에서와 같은 크기다
+
+### 맥에서 재 보는 순서
+1. [Mousecape-swiftUI 릴리스](https://github.com/sdmj76/Mousecape-swiftUI/releases)에서 받아 설치. 막히면 시스템 설정 › 개인정보 보호 및 보안 에서 "그래도 열기"
+2. 설정 › 손쉬운 사용 › 디스플레이 › 포인터 에서 **색 재설정** (색을 바꿔 두면 Mousecape 창 안에서만 바뀐다)
+3. `electric.cape` 를 두 번 눌러(또는 창에 끌어) 가져오고 적용
+4. 아래 목록 1~7 을 본다. 원래대로는 Mousecape 메뉴 › File › Reset System Cursor (⌘R)
+
 ## 맥에서 확인할 것
 
 1. Mousecape-swiftUI v1.2.0 이 지금 쓰는 macOS(26.x)에서 설치되는지, Gatekeeper 가 막는지
