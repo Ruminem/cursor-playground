@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-// 시안 페이지의 "맥용 .cape 받기" 버튼이 지금 dist 로 .cape 를 구울 수 있는지 본다.
-// 버튼 코드를 따로 옮겨 적지 않고 preview.tpl.html 에서 그대로 떼어 node 에서 돌린다 — 페이지의 fetch 는
+// 시안 페이지의 "맥용 .cape 받기"(윈도우가 아닐 때 맨 아래 줄 적용 자리) 가 지금 dist 로 .cape 를 구울 수 있는지 본다.
+// 굽는 코드(window.cpCape)를 따로 옮겨 적지 않고 preview.tpl.html 에서 그대로 떼어 node 에서 돌린다 — 페이지의 fetch 는
 // dist 파일 읽기로, 캔버스는 받은 PNG 를 재는 흉내로 바꾼다. 구성표 전부 × 모양 전부를 한 번씩 누른다.
 // 그림을 고쳐도 커서 파일 꼴(32·64px 가 든 .cur, rate·seq 가 든 .ani, dist 경로, 칸마다 같은 확장자)이
 // 그대로면 통과하고, 그게 바뀌어 맥 버튼이 깨지면 여기서 걸린다.
@@ -12,8 +12,7 @@ const HERE = __dirname, read = p => fs.readFileSync(path.join(HERE, p));
 const tpl = read('preview.tpl.html').toString('utf8');
 const start = tpl.indexOf('// 맥용 .cape:'), end = tpl.indexOf('\n// 내 백업', start);
 if (start < 0 || end < 0) { console.log('preview.tpl.html 에서 맥 버튼 코드를 못 찾음'); process.exit(1); }
-// 페이지는 실패 까닭을 삼키고 안내 문구만 띄운다. 여기서는 까닭을 봐야 하니 catch 가 받은 오류를 window 에 남긴다
-const code = tpl.slice(start, end).replace('}).catch(function(){', '}).catch(function(e){ window.err = e;');
+const code = tpl.slice(start, end);
 
 const schemes = JSON.parse(read('schemes.json')), shapes = JSON.parse(read('shapes.json'));
 const MAC = JSON.parse(read('mac.json')), MAX = 24, PTS = 32;
@@ -21,18 +20,11 @@ const PNG = '89504e470d0a1a0a';
 // 페이지의 animated() 와 같은 규칙: 구성표 안에 .ani 가 하나라도 있으면 그 구성표는 전부 .ani 로 받는다
 const animated = sid => fs.readdirSync(path.join(HERE, 'dist', sid)).some(f => f.endsWith('.ani'));
 
-// 한 번 누르기 = 페이지 코드를 새 판에 올리고 click. 끝나면 {xml, note, bad, missing}
+// 한 번 누르기 = 페이지 코드를 새 판에 올리고 cpCape(). 끝나면 {xml, err, bad, missing}
 function press(sid, shape, hue) {
   return new Promise(done => {
     const bad = [], missing = [];
-    let click, xml = null;
-    const note = { textContent: '' };
-    const btn = {
-      _d: false,
-      get disabled() { return this._d; },
-      set disabled(v) { this._d = v; if (!v && click) setImmediate(() => done({ xml, err: window.err, bad, missing })); },
-      addEventListener(ev, fn) { click = fn; },
-    };
+    let xml = null;
     class Blob {
       constructor(parts) { this.parts = parts; this.size = parts.reduce((n, p) => n + (p.length || p.byteLength || 0), 0); }
       arrayBuffer() { return Promise.resolve(Buffer.concat(this.parts.map(p => Buffer.from(p)))); }
@@ -55,9 +47,7 @@ function press(sid, shape, hue) {
       cpRotate(d, deg) { if (deg !== hue) bad.push('색조가 안 넘어감'); },
     };
     const document = {
-      getElementById: id => (id === 'mac-cape' ? btn : note),
-      querySelector: sel => sel.startsWith('[data-pick]') ? { getAttribute: () => sid }
-        : { getAttribute: () => sid },
+      querySelector: () => ({ getAttribute: () => sid }),
       createElement: tag => tag === 'canvas' ? canvas() : { click() {} },
     };
     const fetch = url => {
@@ -78,7 +68,7 @@ function press(sid, shape, hue) {
     const ctx = { window, document, fetch, createImageBitmap, Blob, URL, btoa: s => Buffer.from(s, 'binary').toString('base64'),
                   setTimeout, Promise, Math, String, Object, Number, Uint8Array, DataView, Error, JSON };
     vm.runInNewContext(code, ctx);
-    click();
+    window.cpCape().then(() => done({ xml, bad, missing }), err => done({ xml: null, err, bad, missing }));
   });
 }
 
