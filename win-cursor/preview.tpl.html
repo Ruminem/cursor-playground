@@ -31,6 +31,20 @@ if (!/Win/.test(navigator.platform || '') && !/Windows/.test(navigator.userAgent
 *{box-sizing:border-box}
 body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:32px 92px}  /* 아래 여백은 고정된 주소 줄(.urlbar) 자리 */
 .wrap{max-width:980px;margin:0 auto;display:grid;gap:36px}
+/* 좁은 화면: 두 통을 풀어 한 줄로 쌓고, 미리보기(.view)를 구성표 고르기 바로 밑에 끼운다 */
+.pane{display:contents}
+.pane>*{order:0}
+.pane.view>*{order:1}
+.pane>.later{order:2}
+/* 넓은 화면: 왼쪽은 고르는 통(혼자 스크롤), 오른쪽은 미리보기 통(붙박이). 페이지 자체는 스크롤하지 않는다.
+   높이는 화면에서 아래 고정 주소 줄(.urlbar) 자리를 뺀 만큼 */
+@media (min-width:1100px){
+  body{height:100vh;height:100dvh;overflow:hidden;padding:0 0 var(--bar,64px)}
+  .wrap{max-width:1560px;height:100%;padding:0 16px;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 32px}
+  .pane{display:grid;align-content:start;gap:36px;min-height:0;overflow-y:auto;padding:32px 4px 32px 0}
+  .pane.pick{scrollbar-gutter:stable;padding-right:16px}
+  .pane.view{overscroll-behavior:contain}
+}
 header{display:grid;gap:10px}
 .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 h1{font:700 clamp(28px,6vw,44px)/1.05 var(--display);margin:0;letter-spacing:.01em;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 10px}
@@ -197,6 +211,7 @@ pre .c{color:var(--muted)}
 </style>
 
 <div class="wrap c-arrow" id="app" data-scheme="pink">
+ <div class="pane pick">
   <header>
     <span class="eyebrow">win-cursor · 포인터 구성표 <!--COUNT-->종</span>
     <h1>cursor-playground <em>schemes</em><span class="ver"><!--VERSION--></span></h1>
@@ -271,7 +286,42 @@ pre .c{color:var(--muted)}
       <span class="size-note" id="bak-note">지금 고른 구성표·모양·색조·크기를 묶어 둠(최대 20개). 누르면 그 조합으로 다시 적용함. <b>이 브라우저에만</b> 저장되므로 다른 PC 로 옮기려면 <b>내보내기</b>.</span>
     </div>
   </section>
+  <section class="later">
+    <h2>내 커서 그리기</h2>
+    <div class="editor">
+      <canvas id="draw" class="try-cursor" aria-label="커서를 그리는 32x32 격자"></canvas>
+      <div class="tools">
+        <div class="swatches"><button type="button" class="swatch c-hand" data-swatch="#000000" aria-label="#000000"></button><button type="button" class="swatch c-hand" data-swatch="#ffffff" aria-label="#ffffff"></button><button type="button" class="swatch c-hand" data-swatch="#7d7280" aria-label="#7d7280"></button><button type="button" class="swatch c-hand" data-swatch="#e84545" aria-label="#e84545"></button><button type="button" class="swatch c-hand" data-swatch="#f5902a" aria-label="#f5902a"></button><button type="button" class="swatch c-hand" data-swatch="#f5d22e" aria-label="#f5d22e"></button><button type="button" class="swatch c-hand" data-swatch="#4cb85a" aria-label="#4cb85a"></button><button type="button" class="swatch c-hand" data-swatch="#2a7de1" aria-label="#2a7de1"></button><button type="button" class="swatch c-hand" data-swatch="#8a4cd2" aria-label="#8a4cd2"></button><button type="button" class="swatch c-hand" data-swatch="#f078be" aria-label="#f078be"></button><button type="button" class="swatch c-hand" data-swatch="#8c5a2a" aria-label="#8c5a2a"></button><button type="button" class="swatch c-hand" data-swatch="#28e5ff" aria-label="#28e5ff"></button></div>
+        <label class="pick-color">색 직접 고르기 <input type="color" id="draw-color" class="c-hand" value="#f078be"></label>
+        <div class="sizes modes">
+          <button type="button" class="size c-hand" data-mode="pen" aria-pressed="true">그리기</button>
+          <button type="button" class="size c-hand" data-mode="erase" aria-pressed="false">지우개</button>
+          <button type="button" class="size c-hand" data-mode="hot" aria-pressed="false">클릭 지점</button>
+        </div>
+        <div class="tool-row">
+          <button type="button" class="ghost c-hand" id="draw-undo">되돌리기</button>
+          <button type="button" class="ghost c-hand" id="draw-clear">전부 지우기</button>
+          <button type="button" class="register c-hand" id="draw-save">.cur 내려받기</button>
+        </div>
+        <p class="note try-cursor">이 글 위에 마우스를 올리면 그린 커서가 나옴. 파란 칸이 클릭 지점.
+        내려받은 .cur 는 포인터 설정의 <b>찾아보기</b> 로 칸 하나에 지정하면 됨. 그림은 이 브라우저에 저장돼 다음에도 남음.</p>
+      </div>
+    </div>
+  </section>
+  <section class="install later">
+    <h2>그 밖에</h2>
+    <ul class="steps">
+      <li><b>원래대로</b> 는 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감. 페이지를 닫았다 다시 열면 그때부터 새로 셈 (같은 탭 새로고침은 이어짐).</li>
+      <li>맨 아래 <b>지금 설정</b> 줄은 고쳐 쓸 수 있음. 어디서 받은 주소를 붙여넣고 <b>적용</b>(또는 Enter)을 누르면 그 구성표·모양·색조·크기로 바뀜. 주소 안의 방문 번호는 그 PC 의 것이라 버리고 씀.</li>
+      <li><b>포인터 설정 열기</b> 는 윈도우 마우스 속성 창을 포인터 탭으로 엶. 칸 하나만 바꾸거나 구성표를 직접 고를 때.</li>
+      <li>버튼을 눌렀는데 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 위의 한 줄부터.</li>
+      <li>그림을 직접 고치려면 <a href="https://github.com/Ruminem/cursor-playground">저장소</a>를 받아 <code>art/</code> 를 고치고 <code>python build.py</code>. 로컬 메뉴는 <code>win-cursor/cursors.bat</code>.</li>
+      <li>다 치우고 싶으면 <button type="button" class="linkish c-hand" data-action="unlink">완전 제거</button> — 한 줄 설치할 때의 커서로 돌린 뒤 버튼 연결과 설치 폴더까지 지움.</li>
+    </ul>
+  </section>
+ </div>
 
+ <div class="pane view">
   <section>
     <h2>여섯 칸</h2>
     <!--PANELS-->
@@ -294,41 +344,7 @@ pre .c{color:var(--muted)}
       <p class="note">페이지 기본 커서도 고른 구성표의 일반 선택. 브라우저가 커서 이미지를 막는 환경에서는 기본 커서로 대신 보임.</p>
     </div>
   </section>
-
-
-  <section>
-    <h2>내 커서 그리기</h2>
-    <div class="editor">
-      <canvas id="draw" class="try-cursor" aria-label="커서를 그리는 32x32 격자"></canvas>
-      <div class="tools">
-        <div class="swatches"><button type="button" class="swatch c-hand" data-swatch="#000000" aria-label="#000000"></button><button type="button" class="swatch c-hand" data-swatch="#ffffff" aria-label="#ffffff"></button><button type="button" class="swatch c-hand" data-swatch="#7d7280" aria-label="#7d7280"></button><button type="button" class="swatch c-hand" data-swatch="#e84545" aria-label="#e84545"></button><button type="button" class="swatch c-hand" data-swatch="#f5902a" aria-label="#f5902a"></button><button type="button" class="swatch c-hand" data-swatch="#f5d22e" aria-label="#f5d22e"></button><button type="button" class="swatch c-hand" data-swatch="#4cb85a" aria-label="#4cb85a"></button><button type="button" class="swatch c-hand" data-swatch="#2a7de1" aria-label="#2a7de1"></button><button type="button" class="swatch c-hand" data-swatch="#8a4cd2" aria-label="#8a4cd2"></button><button type="button" class="swatch c-hand" data-swatch="#f078be" aria-label="#f078be"></button><button type="button" class="swatch c-hand" data-swatch="#8c5a2a" aria-label="#8c5a2a"></button><button type="button" class="swatch c-hand" data-swatch="#28e5ff" aria-label="#28e5ff"></button></div>
-        <label class="pick-color">색 직접 고르기 <input type="color" id="draw-color" class="c-hand" value="#f078be"></label>
-        <div class="sizes modes">
-          <button type="button" class="size c-hand" data-mode="pen" aria-pressed="true">그리기</button>
-          <button type="button" class="size c-hand" data-mode="erase" aria-pressed="false">지우개</button>
-          <button type="button" class="size c-hand" data-mode="hot" aria-pressed="false">클릭 지점</button>
-        </div>
-        <div class="tool-row">
-          <button type="button" class="ghost c-hand" id="draw-undo">되돌리기</button>
-          <button type="button" class="ghost c-hand" id="draw-clear">전부 지우기</button>
-          <button type="button" class="register c-hand" id="draw-save">.cur 내려받기</button>
-        </div>
-        <p class="note try-cursor">이 글 위에 마우스를 올리면 그린 커서가 나옴. 파란 칸이 클릭 지점.
-        내려받은 .cur 는 포인터 설정의 <b>찾아보기</b> 로 칸 하나에 지정하면 됨. 그림은 이 브라우저에 저장돼 다음에도 남음.</p>
-      </div>
-    </div>
-  </section>
-  <section class="install">
-    <h2>그 밖에</h2>
-    <ul class="steps">
-      <li><b>원래대로</b> 는 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감. 페이지를 닫았다 다시 열면 그때부터 새로 셈 (같은 탭 새로고침은 이어짐).</li>
-      <li>맨 아래 <b>지금 설정</b> 줄은 고쳐 쓸 수 있음. 어디서 받은 주소를 붙여넣고 <b>적용</b>(또는 Enter)을 누르면 그 구성표·모양·색조·크기로 바뀜. 주소 안의 방문 번호는 그 PC 의 것이라 버리고 씀.</li>
-      <li><b>포인터 설정 열기</b> 는 윈도우 마우스 속성 창을 포인터 탭으로 엶. 칸 하나만 바꾸거나 구성표를 직접 고를 때.</li>
-      <li>버튼을 눌렀는데 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 위의 한 줄부터.</li>
-      <li>그림을 직접 고치려면 <a href="https://github.com/Ruminem/cursor-playground">저장소</a>를 받아 <code>art/</code> 를 고치고 <code>python build.py</code>. 로컬 메뉴는 <code>win-cursor/cursors.bat</code>.</li>
-      <li>다 치우고 싶으면 <button type="button" class="linkish c-hand" data-action="unlink">완전 제거</button> — 한 줄 설치할 때의 커서로 돌린 뒤 버튼 연결과 설치 폴더까지 지움.</li>
-    </ul>
-  </section>
+ </div>
 </div>
 
 <div class="urlbar cmd" role="group" aria-label="지금 설정 주소">
@@ -908,6 +924,11 @@ pre .c{color:var(--muted)}
 // 지금 설정 주소: 화면 맨 아래 줄에 적용 주소를 띄워 둔다. 복사해서 Win+R 이나 주소창에 붙이면 그대로 적용됨
 (function(){
   var out = document.getElementById('urlbar-url'), last = '';
+  // 주소가 길면 줄이 두 줄로 불어난다. 넓은 화면의 두 통 높이가 이 값(--bar)만큼 비켜 앉는다
+  var bar = document.querySelector('.urlbar');
+  function seat(){ document.documentElement.style.setProperty('--bar', bar.offsetHeight + 'px'); }
+  if (window.ResizeObserver) new ResizeObserver(seat).observe(bar); else addEventListener('resize', seat);
+  seat();
   function picked(){ return document.querySelector('[data-pick][aria-pressed="true"]'); }
   window.cpCopy(document.getElementById('urlbar-copy'), out);
   // 붙여넣은 주소 읽기: 방문 번호는 그 PC 의 것이라 버리고 구성표·크기·색조·모양만 가져온다.
