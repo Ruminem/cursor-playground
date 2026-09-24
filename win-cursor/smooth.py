@@ -1512,16 +1512,28 @@ def tween(pxs: list[dict], parts: list[int]) -> list[dict]:
     return out
 
 
-def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None,
-           mat: str | None = None) -> tuple[bytes, str]:
-    """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다)"""
+def drawer(sid: str, rid: str, frames: list[dict], glyphs: list | None = None, mat: str | None = None):
+    """칸 수를 받아 draw 결과를 돌려주는 함수. 샘플러·메모를 한 번만 만들고 칸 수마다 한 번만 그린다.
+    커서 32·64 판과 시안 페이지(20·40칸)가 같은 칸 수를 그리므로 한 일감에서 둘을 만들 때 나눠 쓴다"""
     samplers = samplers_of(frames, mat)
     memos = [{} for _ in frames]
+    done: dict[int, tuple] = {}
+    def at(cells: int) -> tuple[list[dict], tuple[int, int]]:
+        if cells not in done:
+            done[cells] = draw(sid, rid, samplers, cells, glyphs, memos)
+        return done[cells]
+    return at
+
+
+def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None,
+           mat: str | None = None, at=None) -> tuple[bytes, str]:
+    """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다). at 은 drawer() 가 만든 것 (나눠 쓸 때)"""
+    at = at or drawer(sid, rid, frames, glyphs, mat)
     # FPS 가 켜져 있으면 다 그린 뒤에 사이를 섞는다 — 그리는 값은 그대로 두고 프레임만 는다
     parts = steps(rate, FPS) if FPS and len(frames) > 1 else [rate]
     per_size = []
     for size in CUR_SIZES:
-        pxs, hot = draw(sid, rid, samplers, cells_for(size), glyphs, memos)
+        pxs, hot = at(cells_for(size))
         per_size.append([(pixels_to_png(_fit(px, size), size), hot) for px in tween(pxs, parts)])
     n = len(per_size[0])
     curs = [pngs_to_cur([per_size[i][fi] for i in range(len(CUR_SIZES))]) for fi in range(n)]
@@ -1530,15 +1542,14 @@ def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | Non
 
 
 def page(sid: str, rid: str, frames: list[dict], glyphs: list | None = None,
-         mat: str | None = None) -> tuple[list[bytes], tuple[int, int], tuple[int, int]]:
+         mat: str | None = None, at=None) -> tuple[list[bytes], tuple[int, int], tuple[int, int]]:
     """시안 페이지용 (프레임별 PNG, 핫스팟, 칸 수). 그림은 PAGE 판으로 크게 그린다"""
-    samplers = samplers_of(frames, mat)
-    memos = [{} for _ in frames]
-    base, hot = draw(sid, rid, samplers, LIMIT, glyphs, memos)
+    at = at or drawer(sid, rid, frames, glyphs, mat)
+    base, hot = at(LIMIT)
     wide = max(x for px in base for x, _ in px) + 1
     tall = max(y for px in base for _, y in px) + 1
     board = PAGE if rid == "arrow" else PAGE_SMALL
-    pxs, _ = draw(sid, rid, samplers, cells_for(board), glyphs, memos)
+    pxs, _ = at(cells_for(board))
     return [pixels_to_png(_fit(px, board), board) for px in pxs], hot, (wide, tall)
 
 
