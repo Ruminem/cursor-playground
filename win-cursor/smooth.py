@@ -89,6 +89,13 @@ BOLT_JAG = 0.45     # 번개 꺾은선이 마디마다 옆으로 꺾이는 폭 (
 HANG = 254      # 이 알파로 칠한 칸은 '몸에 매달린 조각'이다 (용암 방울). 몸에 이어져 있어도 떼어 내고,
                 # 새 몸에서는 매달린 몸 칸이 새 테두리에 오게 옮긴다 (specks). 눈으로는 불투명(255)과
                 # 같다. 2026-09-23 57종 어디에도 이 알파가 없음을 보고 골랐다 — 다른 그림에 쓰면 뜯긴다
+RISE = 253      # 이 알파로 칠한 칸은 '몸 위로 솟는 조각'이다 (모닥불의 불길·불티). HANG 을 뒤집은 것으로,
+                # 세로줄마다 따로 떼어 그 줄의 맨 윗 몸 칸에 뿌리를 박는다 — 불길은 넓게 이어져 있어도
+                # 새 몸의 비스듬한 윗변을 줄마다 따라가야 뜨거나 파묻히지 않는다. 번짐 층에서도 뺀다.
+                # 2026-09-24 57종 어디에도 이 알파가 없음을 보고 골랐다
+STAR = 252      # 이 알파로 칠한 칸은 '몸 위에서 반짝이는 별'이다. 매끈한 모양에서 몸 색을 뜰 때는 둘레 몸
+                # 색으로 메워 두고(안 메우면 별이 몸 무늬에 섞여 노란 얼룩으로 번졌다), 별은 따로 네 갈래
+                # 반짝이로 몸 위에 얹는다 (star). 몸 밖에 떠 있어도 같다. 2026-09-24 골랐다
 GHOST_R = 4    # 유령(몸을 통째로 옮긴 복사본)을 얼마나 멀리까지 찾아볼지 (테마 그림 칸)
 GHOST_HIT = 0.75  # 옮긴 자리에서 몸과 이만큼 겹쳐야 유령으로 본다
 GHOST_MIN = 6   # 이 칸 수보다 적으면 유령이 아니라 반짝이로 본다
@@ -665,11 +672,14 @@ def specks_of(solid: dict, box: tuple | None = None) -> tuple[list, dict]:
     **알파가 HANG 인 칸은 몸에 이어져 있어도 따로 뗀다** (용암 방울). 몸에 붙은 채로 두면 매끈한
     모양에서는 몸의 일부라 안 보이고, 떨어진 뒤에야 커서 밖 허공에서 나타났다."""
     hang = {p for p, c in solid.items() if c[3] == HANG}
-    keep = {p: c for p, c in solid.items() if p not in hang} if hang else solid
+    rise = {p for p, c in solid.items() if c[3] == RISE}
+    star = {p for p, c in solid.items() if c[3] == STAR}
+    keep = {p: c for p, c in solid.items() if p not in hang and p not in rise and p not in star} \
+        if hang or rise or star else solid
     parts = blobs_of(keep)
     rest = parts[1:]
     ok = bool(rest) and not any(len(b) > SPECK for b in rest) and sum(len(b) for b in rest) * 8 <= len(parts[0])
-    if not ok and not hang:
+    if not ok and not hang and not rise and not star:
         return [], solid
     body = parts[0] if ok else set(keep)           # 불꽃으로 못 보면 조각은 예전처럼 몸에 둔다
     core = parts[0]
@@ -694,9 +704,55 @@ def specks_of(solid: dict, box: tuple | None = None) -> tuple[list, dict]:
         tx, ty = min(b, key=lambda p: (p[1], p[0]))
         above = [y for x, y in core if x == tx and y < ty]
         ax, ay = (tx, max(above)) if above else min(core, key=lambda p: (p[0] - tx) ** 2 + (p[1] - ty) ** 2)
-        g.hang = ((ax - x0) / w, (ay - y0) / h, ty - ay == 1 and ax == tx)
+        g.hang = ((ax - x0) / w, (ay - y0) / h, ty - ay == 1 and ax == tx, False)
         specks.append(g)
-    return specks, {p: solid[p] for p in body}
+    for cx in sorted({x for x, _ in rise}):
+        b = [p for p in rise if p[0] == cx]
+        g = Bunch(((x - x0) / w, (y - y0) / h, solid[(x, y)]) for x, y in b)
+        g.step = (1 / w, 1 / h)
+        # 뿌리 — 이 줄에서 불길 밑에 있는 맨 윗 몸 칸. 줄 밑에 몸이 없으면 가장 가까운 몸 칸
+        bx_, by_ = max(b, key=lambda p: p[1])
+        below = [y for x, y in core if x == cx and y > by_]
+        ax, ay = (cx, min(below)) if below else min(core, key=lambda p: (p[0] - bx_) ** 2 + (p[1] - by_) ** 2)
+        g.hang = ((ax - x0) / w, (ay - y0) / h, ay - by_ == 1 and ax == bx_, True)
+        specks.append(g)
+    # 별 — 몸에 박힌 칸은 몸으로 되돌리되 둘레 몸 색으로 메우고, 별은 대각까지 이은 덩어리마다 떼어 얹는다
+    fill = {}
+    if star:
+        inside = set()
+        grow = {p for p in star if any((p[0] + dx, p[1] + dy) in core for dx, dy in N4)}
+        while grow:
+            inside |= grow
+            grow = {(x + dx, y + dy) for x, y in grow for dx, dy in N4} & (star - inside)
+        # 메우는 색은 속 칸에서만 줍는다 — 빛살 끝이 테두리에 닿으면 테두리 색이 번져 몸 안에 얼룩이 진다
+        deep = {q: c for q, c in keep.items() if all((q[0] + dx, q[1] + dy) in solid for dx, dy in N4)}
+        todo = set(inside)
+        while todo:
+            done = {}
+            for x, y in todo:
+                got = [deep.get(q) or fill.get(q) for q in ((x + dx, y + dy) for dx, dy in N4)]
+                got = [c for c in got if c]
+                if got:
+                    done[(x, y)] = Counter(got).most_common(1)[0][0]
+            if not done:
+                if deep is keep:
+                    break
+                deep = keep                        # 속 칸에 안 닿는 별(얇은 몸)은 테두리 색이라도 줍는다
+                continue
+            fill.update(done)
+            todo -= set(done)
+        body = set(body) | set(fill)
+        left = set(star)
+        while left:
+            b, grow = set(), {left.pop()}
+            while grow:
+                b |= grow
+                grow = {(x + dx, y + dy) for x, y in grow for dx in (-1, 0, 1) for dy in (-1, 0, 1)} & left
+                left -= grow
+            g = Bunch(((x - x0) / w, (y - y0) / h, solid[(x, y)]) for x, y in sorted(b))
+            g.step, g.star = (1 / w, 1 / h), True
+            specks.append(g)
+    return specks, {p: fill.get(p) or solid[p] for p in body}
 
 
 class Bunch(list):
@@ -704,8 +760,9 @@ class Bunch(list):
     원본 한 칸의 크기를 같이 들고 다닌다 — 가닥(전기의 방전)과 방울(용암)은 새 몸에서도 테두리에
     붙여야 몸에서 튀고 몸에서 떨어지는 것으로 읽힌다"""
     touch = False
+    star = False
     step = None
-    hang = None                                    # (u, v, 바로 붙어 있었나) — 매달린 몸 칸
+    hang = None                                    # (u, v, 바로 붙어 있었나, 위로 솟나) — 뿌리 몸 칸
 
 
 def _ring_at(got: dict, n: int):
@@ -744,14 +801,15 @@ def _lit(rings: list[set], frames: list[dict]) -> list[bool]:
 
     층이 살아 있으면 덜 찬 프레임은 찬 자리만 칠해져서 번짐이 프레임마다 늘었다 줄었다 한다.
     프레임마다 따로 재면 잔상이 얇아지는 프레임에서 통째로 사라져 깜빡인다."""
-    return [bool(r) and any(len([p for p in r if p in f]) * 2 >= len(r) for f in frames) for r in rings]
+    return [bool(r) and any(len([p for p in r if p in f and f[p][3] not in (RISE, STAR)]) * 2 >= len(r) for f in frames)
+            for r in rings]
 
 
 def _outward(frame: dict, rings: list[set], lit: list[bool]) -> list:
     """이 프레임의 번짐 층들 (층마다 자리로 색을 뜨는 함수, 없으면 None)"""
     out = []
     for n, r in enumerate(rings):
-        got = {p: frame[p] for p in r if p in frame} if lit[n] else {}
+        got = {p: frame[p] for p in r if p in frame and frame[p][3] not in (RISE, STAR)} if lit[n] else {}   # 솟는 불길은 번짐이 아니다
         out.append(_ring_at(got, n) if got else None)
     return out
 
@@ -814,12 +872,87 @@ def ghosts_of(frames: list[dict], core: set) -> list[list]:
     return out
 
 
+JOLT_MAX = 6         # 줄 밀림으로 볼 가장 큰 가로 칸 수
+
+
+def jolts_of(frames: list[dict]) -> list[dict] | None:
+    """프레임마다 몸의 가로줄이 몇 칸 밀렸는지 — [{y: dx}, ...]. 떨림이 아니면 None
+
+    글리치 떨림은 몸 줄을 통째로 옆으로 밀어 찢는다. 매끈한 모양은 고정된 스텐실에 색만 떠
+    칠하므로 그대로 두면 몸은 가만있고 밀린 칸이 테두리 번짐으로만 남는다. 줄마다 얼마나 밀렸는지
+    재 두면 새 몸의 픽셀 줄을 같은 비율만큼 밀 수 있다.
+
+    기준은 **줄마다 가장 흔한 모양**이고, 다른 장의 그 줄이 그것을 정확히 옆으로 옮긴 것일 때만
+    센다. 밀린 장이 30% 는 넘고 달라진 줄의 90% 이상이 정확한 옮김이어야 켠다 — 불꽃·물결처럼
+    모양이 바뀌는 그림은 옮김으로 딱 떨어지지 않아 여기서 떨어진다."""
+    if len(frames) < 4:
+        return None
+    rows = [{} for _ in frames]                    # 장마다 y → 몸 칸 x 들
+    for r, f in zip(rows, frames):
+        for (x, y), c in f.items():
+            if c[3] >= 200:
+                r.setdefault(y, set()).add(x)
+    mode = {}
+    for y in {y for r in rows for y in r}:
+        mode[y] = Counter(frozenset(r.get(y, ())) for r in rows).most_common(1)[0][0]
+    out, moved, odd = [], 0, 0
+    for r in rows:
+        sh = {}
+        for y, m in mode.items():
+            row = r.get(y, set())
+            if row == m:
+                continue
+            hit = next((dx for dx in range(-JOLT_MAX, JOLT_MAX + 1)
+                        if m and dx and {x + dx for x in m} == row), None)
+            if hit is None:
+                odd += 1
+            else:
+                sh[y] = hit
+        moved += bool(sh)
+        out.append(sh)
+    hits = sum(len(sh) for sh in out)
+    if moved * 10 < len(frames) * 3 or hits * 10 < (hits + odd) * 9:
+        return None
+    return out
+
+
+def _snow_of(frames: list[dict]) -> tuple[list[dict], list[dict]]:
+    """떨리는 그림에서 TV 눈(무채색 잡티)을 떼어 낸다 — (눈 뺀 프레임들, 프레임마다 눈 칸)
+
+    몸 밖 반투명 회색 칸과, 몸 안에서 그 자리의 흔한 색과 다른 불투명 회색 칸이 눈이다. 색을 떠
+    칠하는 길로 보내면 번짐 층의 회색 고리나 몸 속 얼룩으로 뭉개진다. 따로 들고 가서 draw 가
+    그림 칸 크기의 네모로 찍는다 — TV 눈은 원래 네모나다. 몸 안 칸은 흔한 색으로 메워 둔다"""
+    seen: dict = {}
+    for f in frames:
+        for p, c in f.items():
+            if c[3] >= 200:
+                seen.setdefault(p, Counter())[c] += 1
+    common = {p: n.most_common(1)[0][0] for p, n in seen.items()}
+    clean, snow = [], []
+    for f in frames:
+        g, s = {}, {}
+        for p, c in f.items():
+            if c[0] == c[1] == c[2] and (c[3] < 200 or c != common[p]):
+                s[p] = c
+                if c[3] >= 200:
+                    g[p] = common[p]
+            else:
+                g[p] = c
+        clean.append(g)
+        snow.append(s)
+    return clean, snow
+
+
 def samplers_of(frames: list[dict], mat: str | None = None) -> list[tuple]:
     """프레임 묶음의 색 뜨는 도구들. 번짐은 묶음 전체를 봐야 재므로 여기서 한 번에 만든다.
 
     층 자리는 이 프레임의 몸이 아니라 **프레임 전부에서 변치 않는 부분** 바깥으로 잡는다.
     한 프레임만 부푼 것을 바깥으로 세야 잔상이 잡힌다 — 글리치의 빨강·청록 잔상은 그
     프레임에서는 몸에 붙어 있어서, 프레임 하나만 보면 번짐 층이 통째로 비어 나온다."""
+    jolt = jolts_of(frames)
+    if jolt:                                   # 밀린 줄을 제자리로 돌려 몸 모양을 잰다. 떨림은 draw 가 다시 준다
+        frames = [{(x - sh.get(y, 0), y): c for (x, y), c in f.items()} for f, sh in zip(frames, jolt)]
+        frames, snow = _snow_of(frames)
     bodies = [set(specks_of({p: c for p, c in f.items() if c[3] >= 200} or dict(f))[1]) for f in frames]
     core = set.intersection(*bodies)
     if not core:                               # 프레임끼리 겹치는 곳이 없으면 장마다 따로 잰다
@@ -833,7 +966,8 @@ def samplers_of(frames: list[dict], mat: str | None = None) -> list[tuple]:
     lit = _lit(rings, clean)
     xs = [x for x, _ in core]; ys = [y for _, y in core]
     box = (min(xs), min(ys), max(xs), max(ys))     # 불꽃 비율은 공통 몸으로 잰다 (specks_of)
-    return [sampler_of(f, rings, lit, mat, box)[:6] + (g, mat) for f, g in zip(clean, ghosts)]
+    return [sampler_of(f, rings, lit, mat, box)[:6] + (g, mat, (box, jolt[i], snow[i]) if jolt else None)
+            for i, (f, g) in enumerate(zip(clean, ghosts))]
 
 
 def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
@@ -850,7 +984,7 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
     xs = [x for x, _ in fill]; ys = [y for _, y in fill]
     x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
     found = nearest(set(fill), (x0, y0, x1, y1))
-    gloss = max(frame.values(), key=lambda c: (c[0] + c[1] + c[2]) * (1 if c[3] >= 200 else 0))
+    gloss = max(frame.values(), key=lambda c: (c[0] + c[1] + c[2]) * (1 if 200 <= c[3] != STAR else 0))
     if rings is None:                          # 한 장만 줬으면 그 장의 몸을 기준으로
         rings = _rings(set(solid))
         lit = _lit(rings, [frame])
@@ -1059,13 +1193,15 @@ def specks(marks: list, box: tuple, cells: int, edge: list | None = None) -> dic
         hang = getattr(group, "hang", None)
         bolt = edge and getattr(group, "touch", False)
         if edge and hang:
-            au, av, stuck = hang
+            au, av, stuck, *up = hang              # 넷째 칸(위로 솟나)이 없으면 매달린 조각
+            up = bool(up and up[0])
             ax, ay = bx + au * (bw - 1) + r, by + av * (bh - 1) + r
             qx, qy = min(edge, key=lambda q: (q[0] + 0.5 - ax) ** 2 + (q[1] + 0.5 - ay) ** 2)
             sx, sy = qx + 0.5 - ax, qy + 0.5 - ay
             pts = [(x + sx, y + sy, c) for x, y, c in pts]
             if stuck:                              # 매달린 몸 칸도 이을 점으로 넣는다 (몸 안이라 안 칠해진다)
-                top = min(range(len(uvs)), key=lambda i: (uvs[i][1], uvs[i][0]))
+                # 매달린 조각은 맨 윗칸, 솟는 조각은 맨 아랫칸이 몸에 닿아 있던 칸이다
+                top = (max if up else min)(range(len(uvs)), key=lambda i: (uvs[i][1], uvs[i][0]))
                 pts.append((qx + 0.5, qy + 0.5, pts[top][2]))
                 uvs.append((au, av))
         elif bolt:
@@ -1132,6 +1268,126 @@ def specks(marks: list, box: tuple, cells: int, edge: list | None = None) -> dic
     return out
 
 
+def rise_sheet(marks: list, box: tuple, cells: int, solid: set) -> tuple[dict, list]:
+    """몸에 붙어 솟은 불길을 새 몸 윗변 위에 한 장으로 편다. (펼친 칸, 남은 조각) 을 낸다.
+
+    불길은 원본 한 줄씩 떼어 오지만(specks_of) 줄마다 점으로 찍으면, 몸이 펴진 만큼 줄 사이가 벌어지고
+    줄마다 가장 가까운 테두리로 따로 끌려가 모닥불이 빗살(세로 막대 여럿)이 됐다 (2026-09-24).
+    그래서 새 몸 윗변의 픽셀 기둥마다 원본에서 그 자리 양옆 두 줄의 불길 키를 섞어 세운다 —
+    혀의 윤곽이 계단 없이 이어지고, 뿌리는 늘 새 윗변에 닿는다. 색은 가까운 줄의 색을 위아래로 섞는다.
+    몸에서 떨어져 떠오른 칸(불티)은 조각으로 남겨 specks 가 흩는다"""
+    bx, by, bw, bh = box
+    r = max(1, round(cells / LIMIT)) / 2
+    cols, rest, step = {}, [], None
+    for g in marks:
+        hang = getattr(g, "hang", None)
+        if not (hang and len(hang) > 3 and hang[3] and hang[2]):
+            rest.append(g)
+            continue
+        au, av = hang[0], hang[1]
+        step = su, sv = g.step
+        at = {round((av - v) / sv): c for _, v, c in g}
+        run = []
+        while len(run) + 1 in at:
+            run.append(at[len(run) + 1])
+        cols[round(au / su)] = run
+        left = [(u, v, c) for u, v, c in g if round((av - v) / sv) > len(run)]
+        if left:
+            b = Bunch(left)
+            b.step, b.hang = g.step, (au, av, False, True)
+            rest.append(b)
+    if not cols:
+        return {}, rest
+    wcell, hcell = (bw - 1) * step[0], (bh - 1) * step[1]      # 원본 한 칸의 새 픽셀 폭·높이
+    tops: dict = {}
+    for x, y in solid:
+        if y < tops.get(x, y + 1):
+            tops[x] = y
+    out = {}
+    for x, t in tops.items():
+        fi = (x + 0.5 - bx - r) / wcell
+        i0 = math.floor(fi)
+        f = fi - i0
+        a, b = cols.get(i0, []), cols.get(i0 + 1, [])
+        hgt = len(a) * (1 - f) + len(b) * f
+        if hgt <= 0:
+            continue
+        near = a if (f < 0.5 and a) or not b else b
+        for py in range(t - 1, t - 2 - math.ceil(hgt * hcell), -1):
+            d = (t - py - 0.5) / hcell                 # 새 윗변에서 원본 몇 칸 위인가
+            cov = min(1.0, (hgt - d) * hcell + 0.5)    # 혀 끝 한 픽셀은 덮은 만큼 흐린다
+            if cov <= 0:
+                break
+            kf = max(0.0, d - 0.5)
+            k0 = min(int(kf), len(near) - 1)
+            c0, c1 = near[k0], near[min(k0 + 1, len(near) - 1)]
+            fr = min(1.0, kf - k0)
+            out[(x, py)] = tuple(round(c0[j] + (c1[j] - c0[j]) * fr) for j in range(3)) + (round(c0[3] * cov),)
+    return out, rest
+
+
+def star(group, box: tuple, cells: int) -> dict:
+    """별 한 덩어리를 네 갈래 반짝이로 그린다 — 가운데가 가장 밝고, 빛살이 끝으로 가늘어지며 식는다.
+
+    칸을 둥근 점으로 이어 찍으면 몸이 펴진 만큼 굵은 십자(＋)가 되어 별이 아니라 더하기 표였다.
+    빛살 길이는 원본 덩어리의 가로·세로 뻗음 그대로, 모양은 |x|^½ + |y|^½ ≤ 1 (끝이 뾰족한 네 갈래).
+    한 칸짜리 잔별도 작은 반짝이로 그린다"""
+    bx, by, bw, bh = box
+    r = max(1, round(cells / LIMIT)) / 2
+    pts = [(bx + u * (bw - 1) + r, by + v * (bh - 1) + r, c) for u, v, c in group]
+    cx, cy, c0 = max(pts, key=lambda p: (sum(p[2][:3]), -abs(p[0] - sum(q[0] for q in pts) / len(pts))))
+    far = max(pts, key=lambda p: (p[0] - cx) ** 2 + (p[1] - cy) ** 2)
+    c1 = far[2] if far is not None else c0
+    rx = max(abs(p[0] - cx) for p in pts) + r * 1.4
+    ry = max(abs(p[1] - cy) for p in pts) + r * 1.4
+    out = {}
+    SS = 4
+    for py in range(math.floor(cy - ry), math.ceil(cy + ry) + 1):
+        for px in range(math.floor(cx - rx), math.ceil(cx + rx) + 1):
+            hit = 0
+            for j in range(SS * SS):
+                dx = abs(px + (j % SS + 0.5) / SS - cx) / rx
+                dy = abs(py + (j // SS + 0.5) / SS - cy) / ry
+                hit += math.sqrt(dx) + math.sqrt(dy) <= 1
+            if hit:
+                k = min(1.0, math.hypot((px + 0.5 - cx) / rx, (py + 0.5 - cy) / ry) * 1.6)
+                out[(px, py)] = tuple(round(c0[i] + (c1[i] - c0[i]) * k) for i in range(3)) + \
+                    (round(255 * hit / (SS * SS)),)
+    return out
+
+
+def _over(under: tuple | None, top: tuple) -> tuple:
+    """top 을 under 위에 알파로 얹는다"""
+    if not under or under[3] == 0:
+        return top
+    a, b = top[3] / 255, under[3] / 255
+    oa = a + b * (1 - a)
+    rgb = tuple(round((top[i] * a + under[i] * b * (1 - a)) / oa) for i in range(3))
+    return rgb + (round(oa * 255),)
+
+
+def _jolt(px: dict, box: tuple, solid: set, jolt: tuple) -> dict:
+    """그림의 줄 밀림(jolts_of)을 새 몸에 옮긴다. 픽셀 줄마다 그 높이에 해당하는 그림 줄의 밀림을
+    몸 너비 비율로 늘려 민다. 번짐·잔상도 같은 줄이면 같이 밀린다 — 화면이 찢기는 것이라.
+    TV 눈(_snow_of)은 밀기 전에 그림 칸 크기 네모로 찍는다. 몸 안 눈은 몸에만, 밖 눈은 밖에만"""
+    (x0, y0, x1, y1), sh, snow = jolt
+    bx0, by0, bw, bh = box
+    kx = (bw - 1) / max(1, x1 - x0)
+    ky = (bh - 1) / max(1, y1 - y0)
+    sx, sy = max(1, round(kx)), max(1, round(ky))
+    px = dict(px)
+    for (x, y), c in snow.items():
+        ax, ay = bx0 + round((x - x0) * kx - sx / 2), by0 + round((y - y0) * ky - sy / 2)
+        for p in ((ax + i, ay + j) for i in range(sx) for j in range(sy)):
+            if (p in solid) == (c[3] >= 200):
+                px[p] = _over(px.get(p), c)
+    out = {}
+    for (x, y), c in px.items():
+        ya = min(y1, max(y0, round(y0 + (y - by0) / max(1, bh - 1) * (y1 - y0))))
+        out[(x + round(sh.get(ya, 0) * kx), y)] = c
+    return out
+
+
 def draw(sid: str, rid: str, samplers: list, cells: int, glyphs: list | None = None,
          memos: list | None = None) -> tuple[list[dict], tuple[int, int]]:
     """이 칸 수로 프레임들을 그린다. glyphs 를 주면 기본 칸 수 기준으로 잡은 기호를 같이 얹는다"""
@@ -1142,8 +1398,20 @@ def draw(sid: str, rid: str, samplers: list, cells: int, glyphs: list | None = N
     # 있을 때만 새 몸 테두리를 구한다 — 테두리 칸과 조각 점을 전부 견주는 값이라 없으면 안 쓴다
     edge = [p for p in solid if any((p[0] + dx, p[1] + dy) not in solid for dx, dy in N4)] \
         if any(getattr(g, "touch", False) or getattr(g, "hang", None) for s in samplers for g in s[4]) else None
-    out = [{**px, **{p: c for p, c in specks(s[4], box, cells, edge).items() if p not in solid}} if s[4] else px
-           for px, s in zip(out, samplers)]
+    def marks(px, ms):
+        if not ms:
+            return px
+        sheet, rest = rise_sheet(ms, box, cells, solid)
+        stars = [g for g in rest if g.star]
+        rest = [g for g in rest if not g.star]
+        add = {**(specks(rest, box, cells, edge) if rest else {}), **sheet}
+        px = {**px, **{p: c for p, c in add.items() if p not in solid}}
+        for g in stars:                            # 별은 몸 위에도 얹는다 — 몸 안에서 반짝이는 것이라
+            for p, c in star(g, box, cells).items():
+                px[p] = _over(px.get(p), c)
+        return px
+    out = [marks(px, s[4]) for px, s in zip(out, samplers)]
+    out = [_jolt(px, box, solid, s[8]) if len(s) > 8 and s[8] else px for px, s in zip(out, samplers)]
     if glyphs:
         f = cells / LIMIT
         out = [{**px, **scale_up(g, f)} for px, g in zip(out, glyphs)]

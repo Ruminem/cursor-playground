@@ -307,6 +307,31 @@ top = min(y for _, y in fall)
 assert top > 45, f"떨어지는 방울까지 테두리에 이어 붙임 (맨 윗줄 {top})"
 print("매달린 조각 OK — 새 꼬리 끝에서 늘어지고, 떨어진 방울은 그 밑으로 떨어진다")
 
+# 솟는 조각(모닥불 불길)은 그 반대 — 새 몸의 윗변(y=20)에 뿌리를 박고 위로 솟아야 한다
+edge = [(x, 20) for x in range(10, 31)]
+
+
+def rising(dys: list[int], stuck: bool) -> dict:
+    g = sm.Bunch([(0.05, 0.5 - dy * 0.2, ORANGE) for dy in dys])
+    g.step, g.hang = (0.1, 0.2), (0.05, 0.5, stuck, True)
+    return sm.specks([g], (0, 0, 60, 60), S_CELLS, edge)
+
+
+lick = rising([1, 2], True)
+rows = sorted({y for _, y in lick})
+holes = [y for y in range(rows[0], 20) if y not in rows]
+mid = sum(x for x, _ in lick) / len(lick)
+print(f"솟은 불길 가운데 x {mid:.1f} (테두리 끝 10.5) · 맨 아랫줄 {rows[-1]} · 윗변까지 끊긴 줄 {len(holes)}")
+assert abs(mid - 10.5) < 2, f"솟는 조각이 새 몸의 뿌리 자리로 안 옮겨짐 (가운데 x {mid:.1f})"
+assert rows[-1] >= 19 and not holes, f"몸에 붙어 있던 불길이 윗변에서 떠 있음 (끊긴 줄 {holes})"
+ember = rising([5], False)
+assert max(y for _, y in ember) < 15, f"떠오른 불티까지 윗변에 이어 붙임 (맨 아랫줄 {max(y for _, y in ember)})"
+fake = {(x, y): (9, 9, 9, 255) for x in range(4) for y in range(4, 8)}
+fake.update({(1, 3): ORANGE[:3] + (sm.RISE,), (1, 2): ORANGE[:3] + (sm.RISE,), (2, 3): ORANGE[:3] + (sm.RISE,)})
+marks, body = sm.specks_of(fake)
+assert len(body) == 16 and sorted(len(g) for g in marks) == [1, 2], f"솟는 조각을 줄마다 못 뗌: {marks}"
+print("솟는 조각 OK — 줄마다 떼어 새 윗변에 뿌리를 박고, 떠오른 불티는 떠 있다")
+
 
 # ── 프레임 사이를 섞은 것이 양끝 사이에 있는가 ──────────────────────────────
 # 60fps 로 늘릴 때 쓰는 길이다. 섞은 프레임이 양끝 사이 값이 아니면 움직임이 튀고,
@@ -393,3 +418,74 @@ one = sm._ring_at({**{(0, y): WHITE for y in range(11)}, (10, 0): WHITE}, 0)   #
 assert one(0.2, 0.5), "층 바로 옆(대각 두 칸 안)인데 색을 못 떴다"
 assert one(0.5, 0.5) is None, "층에서 다섯 칸 떨어진 자리까지 칠했다 — 마개가 풀렸다"
 print("번짐 층 OK — 대각선 계단에서 안 비고, 한쪽 번짐이 반대쪽으로 새지 않는다")
+
+
+# ── 솟은 불길이 새 윗변 위에 한 장으로 펴지는가 ───────────────────────────────
+# 원본 줄마다 따로 찍으면 몸이 펴진 만큼 줄 사이가 벌어져 모닥불이 빗살이 됐다(2026-09-24).
+# 불길 다섯 줄(키가 1·2 번갈아)을 새 몸 윗변(y=20) 위에 펴서, 기둥 사이가 안 비고 뿌리가 전부
+# 윗변 바로 위(y=19)에 닿는지 본다
+flames = []
+for i, u in enumerate((0.3, 0.4, 0.5, 0.6, 0.7)):
+    g = sm.Bunch([(u, 0.5 - k * 0.2, ORANGE) for k in (1, 2)][:1 + i % 2])
+    g.step, g.hang = (0.1, 0.2), (u, 0.5, True, True)
+    flames.append(g)
+top_body = {(x, y) for x in range(61) for y in range(20, 61)}
+sheet, rest = sm.rise_sheet(flames, (0, 0, 60, 60), 128, top_body)
+cols = sorted({x for x, _ in sheet})
+gaps = [x for x in range(cols[0], cols[-1]) if x not in cols] if cols else ["전부"]
+roots = [x for x in cols if (x, 19) not in sheet]
+print(f"불길 장 기둥 {len(cols)}개 · 빈 기둥 {len(gaps)} · 윗변에 안 닿은 기둥 {len(roots)} · 남은 조각 {len(rest)}")
+assert cols and not gaps, f"불길이 빗살로 갈라짐 (빈 기둥 {gaps[:5]})"
+assert not roots and not (sheet.keys() & top_body), f"불길 뿌리가 윗변에서 떴거나 몸을 덮음 ({roots[:5]})"
+assert not rest, "몸에 붙은 불길을 장으로 못 펴고 조각으로 남김"
+print("불길 장 OK — 기둥 사이가 안 비고 뿌리가 새 윗변에 닿는다")
+
+
+# ── 별이 네 갈래 반짝이인가 ───────────────────────────────────────────────────
+# 칸을 둥근 점으로 이어 찍던 때는 굵은 더하기(＋)였다. 네 갈래 반짝이면 가운데와 빛살 위는
+# 칠하고 빛살 사이(대각선)는 비워야 한다 — 원이나 네모로 칠하면 대각선이 찬다
+W = (255, 255, 255, 255)
+twinkle = [(0.5, 0.5, W)] + [(0.5 + dx * 0.05, 0.5 + dy * 0.05, (255, 200, 60, 255))
+                             for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (2, 0), (-2, 0), (0, 2), (0, -2))]
+spark = sm.star(twinkle, (0, 0, 100, 100), 128)
+xs = [x for x, _ in spark]
+cx = cy = (min(xs) + max(xs)) // 2
+rx = max(xs) - cx
+arm = spark.get((cx + rx // 2, cy), (0, 0, 0, 0))[3]
+diag = spark.get((cx + round(rx * 0.45), cy + round(rx * 0.45)), (0, 0, 0, 0))[3]   # 원이면 여기가 찬다
+print(f"별 반지름 {rx}px · 가운데 {spark.get((cx, cy))} · 빛살 중간 알파 {arm} · 대각선 알파 {diag}")
+assert spark.get((cx, cy), (0,) * 4)[:3] == (255, 255, 255), "별 가운데가 가장 밝은 색이 아님"
+assert arm > 200 and diag < 60, f"네 갈래가 아님 — 빛살 {arm} · 대각선 {diag}"
+print("별 OK — 가운데가 희고 빛살은 차고 빛살 사이는 빈다")
+
+
+# ── 글리치의 줄 밀림을 잡아 새 몸을 같이 흔드는가 ────────────────────────────────
+# 매끈한 모양은 고정된 스텐실에 색만 떠 칠해, 그대로면 글리치의 몸은 가만있고 밀린 칸이 테두리
+# 번짐으로만 남았다(2026-09-24). 줄마다 몇 칸 밀렸는지 재서(jolts_of) 새 몸 픽셀 줄을 민다(_jolt).
+# 밀림이 아니라 모양이 바뀌는 그림(불꽃·물결)에서 켜지면 그 그림이 찢기므로 57종에 돌려 본다
+block = {(x, y): (17, 17, 17, 255) for x in range(4, 12) for y in range(4, 12)}
+shook = []
+for i in range(8):
+    dx = (0, 2, 0, -1, 0, 3, 0, 1)[i]
+    shook.append({(x + (dx if y in (6, 7) else 0), y): c for (x, y), c in block.items()})
+got = sm.jolts_of(shook)
+assert got and got[1] == {6: 2, 7: 2} and got[0] == {}, f"줄 밀림을 못 잼: {got and got[:2]}"
+grow = [{(x, y): c for (x, y), c in block.items() if x < 12 - (i % 3) or y > 8} for i in range(8)]
+assert sm.jolts_of(grow) is None, "모양이 바뀌는 그림을 줄 밀림으로 봄"
+px = {(x, y): (0, 0, 0, 255) for x in range(10) for y in range(10)}
+moved = sm._jolt(px, (0, 0, 10, 10), set(px), ((0, 0, 9, 9), {9: 1}, {}))
+assert (10, 9) in moved and (0, 9) not in moved and (0, 8) in moved, "새 몸의 맨 아랫줄만 한 칸 밀려야 함"
+lit = []
+import build  # noqa: E402,F811
+for scheme in build.SCHEMES:
+    for rid in ("arrow", "wait", "hand"):
+        if sm.jolts_of(shapelib.read_art(build.art_raw(scheme["id"], rid))[0]):
+            lit.append(f"{scheme['id']}/{rid}")
+print(f"줄 밀림이 켜진 칸 {len(lit)}개: {' · '.join(lit)}")
+assert lit and all(s.startswith("jitter/") for s in lit), f"글리치 말고도 켜짐: {lit}"
+# TV 눈(무채색 반투명)은 색 뜨는 재료에서 빠지고 따로 들려야 한다 — 안 빼면 회색 고리로 뭉개진다
+noisy = [{**f, (2, 5 + i % 3): (90, 90, 90, 144)} for i, f in enumerate(shook)]
+clean, snow = sm._snow_of(noisy)
+assert all(len(s) == 1 for s in snow) and all(q not in f for f, s in zip(clean, snow) for q in s), \
+    "TV 눈을 몸 재료에서 못 뗌"
+print("줄 밀림 OK — 글리치에서만 켜지고, 새 몸 줄을 밀고, TV 눈은 따로 든다")
