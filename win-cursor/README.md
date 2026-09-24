@@ -96,11 +96,11 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/heartbeat` | Heartbeat | The pink body brightens in a double beat and its glow spreads out. |
 | `art/electric` | Electric | The yellow and white outline crackles while blue sparks jump around it. |
 | `art/barber` | Barber pole | Red, white and blue diagonal stripes keep spinning. |
-| `art/coderain` | Code rain | Streams of green code pour down inside a black body. |
+| `art/coderain` | Matrix | Streams of green code pour down inside a black body. |
 | `art/rainfall` | Rainfall | Raindrops falling without stop, each column at its own pace. |
 | `art/bubbles` | Bubbles | Bubbles rising through water and popping at the top. |
 | `art/lavaflow` | Lava flow | Molten rock rippling as it creeps downward. |
-| `art/spinner` | Spinner | Six coloured wedges turning around the centre. |
+| `art/spinner` | Spinner | A four-blade pinwheel in red, green, yellow and blue spinning under a white glint. |
 | `art/scan` | Scan | A bright line sweeping from top to bottom. |
 | `art/firework` | Firework | Sparks spreading outward ring by ring and fading. |
 | `art/snowfall` | Snowfall | Snowflakes drifting down around a white body. |
@@ -347,11 +347,11 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/heartbeat` | 두근두근 | 분홍 몸체가 콩닥 두 번씩 밝아지며 번짐이 퍼짐. |
 | `art/electric` | 전기 | 노랑·흰 외곽선이 번쩍이고 둘레로 푸른 불꽃이 튐. |
 | `art/barber` | 이발소 기둥 | 빨강·흰·파랑 사선 줄무늬가 쉬지 않고 돌아감. |
-| `art/coderain` | 글자비 | 검은 몸체 안에서 초록 글자 줄기가 위에서 아래로 쏟아짐. |
+| `art/coderain` | 매트릭스 | 검은 몸체 안에서 초록 글자 줄기가 위에서 아래로 쏟아짐. |
 | `art/rainfall` | 빗줄기 | 빗방울이 줄마다 다른 높이에서 쉬지 않고 떨어짐. |
 | `art/bubbles` | 기포 | 물속 기포가 위로 올라가 톡 터짐. |
 | `art/lavaflow` | 용암 | 붉은 용암이 일렁이며 천천히 흘러내림. |
-| `art/spinner` | 회전 | 여섯 빛깔 부채꼴이 가운데를 축으로 돌아감. |
+| `art/spinner` | 회전 | 빨강·초록·노랑·파랑 네 날 바람개비가 흰 광택 아래에서 빙글빙글 돎. |
 | `art/scan` | 스캔 | 밝은 가로줄이 위에서 아래로 훑고 지나감. |
 | `art/firework` | 폭죽 | 불꽃이 둘레로 한 겹씩 퍼지며 옅어짐. |
 | `art/snowfall` | 눈 내림 | 하얀 몸체 둘레로 눈송이가 계속 내려옴. |
