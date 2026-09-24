@@ -506,3 +506,15 @@ diff = sum(1 for a, b in zip(off, on) for k in (0, 1) for u in range(8) for v in
 print(f"반짝이 move · sway 를 켜면 번짐이 달라지는 자리 {diff}곳")
 assert diff, "sway 를 켜도 번짐이 그대로 — 문이 헛돈다"
 print("흔들림 번짐 OK — 해양 애니에서만 켜지고, 켜면 번짐이 달라진다")
+
+
+# ── schemes.json 의 animated 가 그림과 맞는가 ─────────────────────────────────
+# handler.ps1 과 CI 가 이 값으로 .ani/.cur 를 고른다. 해양 애니 6종에 빠져서 윈도우 적용이 .cur 를 찾다
+# 실패할 뻔했다(2026-09-24, CI 에서 걸림). 그림이 한 칸이라도 움직이면 animated 가 참이어야 한다
+import make_cur  # noqa: E402
+wrong = [s["id"] for s in build.SCHEMES
+         if bool(s.get("animated")) != any(make_cur.is_animated(build.art_raw(s["id"], rid))
+                                            for rid, *_ in build.ROLES + build.EXTRA)]
+print(f"animated 표시가 그림과 어긋난 구성표 {len(wrong)}개 {wrong}")
+assert not wrong, f"schemes.json 의 animated 가 그림과 다름: {wrong}"
+print("animated OK — 움직이는 그림이 있는 구성표만 animated")
