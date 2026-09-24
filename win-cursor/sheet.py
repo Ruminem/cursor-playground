@@ -40,11 +40,11 @@ def pick(arg: str, known: list[str], what: str) -> list[str]:
 def frames_of(shape: str, sid: str, role: str, size: int, cache: dict, mat: str | None = None,
               k: int = 1) -> list[dict]:
     """이 모양·구성표·칸의 프레임별 {좌표: RGBA}. build.py 가 커서를 만들 때와 같은 길을 지난다"""
-    if build.shape_of(shape) is None or role in build.KEEP:     # 테마 그림 그대로 쓰는 자리
+    if build.shape_of(shape) is None or role in build.KEEPS[sid]:   # 테마 그림 그대로 쓰는 자리
         raw = build.art_raw(sid, role)
         return sm.tween([sm.scale_up(f, size / canvas_size(raw)) for f in shapelib.read_art(raw)[0]], [1] * k)
     frames, _, glyphs = build.smooth_parts(sid, role, shape, cache)
-    return sm.tween(sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid)),
+    return sm.tween(sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid), sid in build.SWAYS),
                             sm.cells_for(size), glyphs)[0], [1] * k)
 
 

@@ -31,6 +31,10 @@ from make_cur import MIN_SIZE, curs_to_ani, pixels_to_png, pngs_to_cur
 DESIGN = 26     # 설계 격자 높이. 실제 칸 수는 이 비율로 맞춘다
 LIMIT = 20      # 32칸 판에서 몸이 차지하는 칸 수 (테마 그림들이 17~23칸이라 거기에 맞춤)
 HALO = 3        # 테마의 몸 바깥 번짐을 다시 둘러 줄 층 수 (20칸 기준)
+SWAY = 0.96     # 프레임 전부에 공통인 몸이 장 몸 평균의 이 비율 아래면 **몸이 흔들리는 그림**(헤엄)으로 보고
+                # 번짐을 그 장의 몸 밖에서만 뜬다 (samplers_of). schemes.json 에 sway 를 단 구성표에서만 —
+                # 해양 애니는 0.74–0.95 인데 반짝이 move 0.92·폭죽 move 0.94·지터 ibeam 0.92 도 이 아래라
+                # 비율로는 못 가른다 (2026-09-24 잰 값)
 # 커서 파일에 담는 판 크기. 픽셀아트는 다섯 크기를 다 담지만(늘리면 어긋난다) 매끈한 그림은
 # 윈도우가 사이 크기로 늘려도 티가 안 나서 셋만 담는다 — 파일이 38% 작아지고 빌드도 그만큼 빠르다
 CUR_SIZES = (32, 64, 128)
@@ -943,7 +947,7 @@ def _snow_of(frames: list[dict]) -> tuple[list[dict], list[dict]]:
     return clean, snow
 
 
-def samplers_of(frames: list[dict], mat: str | None = None) -> list[tuple]:
+def samplers_of(frames: list[dict], mat: str | None = None, sway: bool = False) -> list[tuple]:
     """프레임 묶음의 색 뜨는 도구들. 번짐은 묶음 전체를 봐야 재므로 여기서 한 번에 만든다.
 
     층 자리는 이 프레임의 몸이 아니라 **프레임 전부에서 변치 않는 부분** 바깥으로 잡는다.
@@ -963,15 +967,20 @@ def samplers_of(frames: list[dict], mat: str | None = None) -> list[tuple]:
     drop = [{c for c, _, _ in g} for g in ghosts]
     clean = [{p: c for p, c in f.items() if c not in d} or dict(f) for f, d in zip(frames, drop)]
     rings = _rings(core)
-    lit = _lit(rings, clean)
+    # 몸이 장마다 흔들리면(꼬리질·부풀기) 공통 몸 바깥 층에 그 장의 몸이 걸린다. 그걸 번짐으로 뜨면
+    # 외곽선·몸 색이 테에 검은 점으로 박혀 깜빡인다. 반짝이·폭죽처럼 몸에서 한두 칸 튀는 것은 번짐으로
+    # 남겨야 하므로, 공통 몸이 크게 모자랄 때만 번짐을 그 장의 몸 밖에서 뜬다
+    sway = sway and len(core) * len(bodies) < SWAY * sum(map(len, bodies))
+    aura = [{p: c for p, c in f.items() if p not in b} for f, b in zip(clean, bodies)] if sway else clean
+    lit = _lit(rings, aura)
     xs = [x for x, _ in core]; ys = [y for _, y in core]
     box = (min(xs), min(ys), max(xs), max(ys))     # 불꽃 비율은 공통 몸으로 잰다 (specks_of)
-    return [sampler_of(f, rings, lit, mat, box)[:6] + (g, mat, (box, jolt[i], snow[i]) if jolt else None)
-            for i, (f, g) in enumerate(zip(clean, ghosts))]
+    return [sampler_of(f, rings, lit, mat, box, a)[:6] + (g, mat, (box, jolt[i], snow[i]) if jolt else None)
+            for i, (f, g, a) in enumerate(zip(clean, ghosts, aura))]
 
 
 def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
-               mat: str | None = None, box: tuple | None = None) -> tuple:
+               mat: str | None = None, box: tuple | None = None, aura: dict | None = None) -> tuple:
     """테마 그림 한 장에서 색을 뜨는 도구 — 몸 색, 외곽선 대표색, 가장 밝은 색, 번짐 층, 불꽃, 외곽선 색, 유령
 
     mat 은 이 구성표의 재질 이름(MATERIALS 의 키). 색을 뜨는 데는 안 쓰이고 뒤에서 음영을
@@ -988,7 +997,7 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
     if rings is None:                          # 한 장만 줬으면 그 장의 몸을 기준으로
         rings = _rings(set(solid))
         lit = _lit(rings, [frame])
-    halo = _outward(frame, rings, lit)
+    halo = _outward(frame if aura is None else aura, rings, lit)   # aura: 번짐을 뜰 그림 (samplers_of 의 흔들림)
 
     region = _regions(fill)
 
@@ -1512,10 +1521,11 @@ def tween(pxs: list[dict], parts: list[int]) -> list[dict]:
     return out
 
 
-def drawer(sid: str, rid: str, frames: list[dict], glyphs: list | None = None, mat: str | None = None):
+def drawer(sid: str, rid: str, frames: list[dict], glyphs: list | None = None, mat: str | None = None,
+           sway: bool = False):
     """칸 수를 받아 draw 결과를 돌려주는 함수. 샘플러·메모를 한 번만 만들고 칸 수마다 한 번만 그린다.
     커서 32·64 판과 시안 페이지(20·40칸)가 같은 칸 수를 그리므로 한 일감에서 둘을 만들 때 나눠 쓴다"""
-    samplers = samplers_of(frames, mat)
+    samplers = samplers_of(frames, mat, sway)
     memos = [{} for _ in frames]
     done: dict[int, tuple] = {}
     def at(cells: int) -> tuple[list[dict], tuple[int, int]]:

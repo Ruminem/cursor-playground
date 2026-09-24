@@ -102,6 +102,13 @@ EXTRA = [
 # 모양이 건드리지 않는 칸들. 테마 색으로만 그린 기호(크기 조정 4종 등)와, 테마마다
 # 하트·손가락·별로 다른 링크 칸. 링크는 테마의 표정이라 모양을 바꿀 때도 그대로 둔다
 KEEP = {"ns", "we", "nwse", "nesw", "up", "cross", "pen", "hand"}
+# 구성표가 schemes.json 의 keep 으로 더 붙드는 칸 — 해양 생물의 "사용 중"은 모래시계가 아니라 생물 그림이다.
+# 모양 폴더에 파일이 없으면 받는 쪽이 기본 모양으로 넘어가는 약속은 KEEP 만의 것이라, 여기 칸은
+# 모양 폴더에도 기본 모양과 같은 바이트로 쓴다 (build_one)
+KEEPS = {s["id"]: KEEP | set(s.get("keep", ())) for s in SCHEMES}
+# 몸이 장마다 흔들리는 그림(헤엄) — 매끈한 모양의 번짐 테를 그 장 몸 밖에서만 뜬다 (smooth.samplers_of).
+# 비율만으로 켜면 반짝이·폭죽 move 처럼 몸에서 튀는 것도 걸려서 표식을 단 구성표만
+SWAYS = {s["id"] for s in SCHEMES if s.get("sway")}
 
 
 def shape_of(shape_id: str) -> str | None:
@@ -132,18 +139,19 @@ def smooth_parts(sid: str, rid: str, shape: str, cache: dict) -> tuple[list[dict
 
 
 def _drawer(ats: dict | None, sid: str, rid: str, shape: str, frames: list[dict], glyphs: list | None):
-    """ats 를 받았으면 이 칸의 drawer 를 거기서 꺼내거나 만들어 둔다 — 커서와 시안 데이터가 같은 그림을 나눠 쓰게"""
+    """이 칸의 drawer. ats 를 받았으면 거기서 꺼내거나 만들어 둔다 — 커서와 시안 데이터가 같은 그림을 나눠 쓰게.
+    안 받았어도 여기서 만든다 — smooth 쪽이 대신 만들면 구성표를 몰라 sway 표식이 빠진다"""
     if ats is None:
-        return None
+        return smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid), sid in SWAYS)
     if rid not in ats:
-        ats[rid] = smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid))
+        ats[rid] = smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid), sid in SWAYS)
     return ats[rid]
 
 
 def page_bits(sid: str, rid: str, shape: str | None, cache: dict,
               ats: dict | None = None) -> tuple[list[bytes], int, int, int, int, int]:
     """시안 페이지에 넣을 (프레임별 PNG, 핫스팟 x, y, rate(ms), 폭, 높이)"""
-    if shape is None or rid in KEEP:
+    if shape is None or rid in KEEPS[sid]:
         raw = art_raw(sid, rid)
         src = canvas_size(raw)
         pngs = [txt_to_png(f, None, src) for f in split_frames(raw)]
@@ -212,7 +220,7 @@ def strip(pngs: list[bytes], ink: bool = False) -> tuple[str, list[int] | int]:
 
 def cursor_bytes(sid: str, rid: str, shape: str | None, cache: dict, ats: dict | None = None) -> tuple[bytes, str]:
     """dist 에 넣을 커서 파일 하나와 확장자"""
-    if shape is None or rid in KEEP:
+    if shape is None or rid in KEEPS[sid]:
         raw = art_raw(sid, rid)
         hot = read_hotspot(raw) or (0, 0)
         return (txt_to_ani(raw, hot), "ani") if is_animated(raw) else (txt_to_cur(raw, hot), "cur")
@@ -550,7 +558,7 @@ if __name__ == "__main__":
         def cost(job):
             shape_id, sid, want_dist, _ = job
             smooth = shape_of(shape_id) is not None
-            n = sum(frames[sid, rid] for rid, _, _ in ROLES + EXTRA if not (smooth and rid in KEEP))
+            n = sum(frames[sid, rid] for rid, _, _ in ROLES + EXTRA if not (smooth and rid in KEEPS[sid]))
             return n * (3 if smooth and want_dist else 1)
         jobs_of.sort(key=cost, reverse=True)
         t_sub = time.time()

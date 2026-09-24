@@ -489,3 +489,32 @@ clean, snow = sm._snow_of(noisy)
 assert all(len(s) == 1 for s in snow) and all(q not in f for f, s in zip(clean, snow) for q in s), \
     "TV 눈을 몸 재료에서 못 뗌"
 print("줄 밀림 OK — 글리치에서만 켜지고, 새 몸 줄을 밀고, TV 눈은 따로 든다")
+
+
+# ── 흔들림 번짐은 sway 를 단 구성표에서만 켜지는가 ──────────────────────────────
+# 비율만으로 켜던 때 반짝이 move(0.92)·폭죽 move(0.94)도 걸려서 기존 커서 바이트가 바뀌었다(2026-09-24).
+# 표식을 단 것은 해양 애니 6종뿐이고, 표식이 실제로 번짐을 바꾸는지(문이 헛돌지 않는지)도 본다
+sways = sorted(build.SWAYS)
+print(f"sway 표식 {len(sways)}종: {' · '.join(sways)}")
+assert sways == sorted(s["id"] for s in build.SCHEMES if s["id"].endswith("anim") and s.get("keep")), sways
+frames, _, _ = build.smooth_parts("twinkle", "move", "round", {})
+off, on = sm.samplers_of(frames), sm.samplers_of(frames, sway=True)
+def at(h, k, u, v):
+    return h[k](u, v) if h and h[k] else None
+diff = sum(1 for a, b in zip(off, on) for k in (0, 1) for u in range(8) for v in range(8)
+           if at(a[3], k, u / 8, v / 8) != at(b[3], k, u / 8, v / 8))
+print(f"반짝이 move · sway 를 켜면 번짐이 달라지는 자리 {diff}곳")
+assert diff, "sway 를 켜도 번짐이 그대로 — 문이 헛돈다"
+print("흔들림 번짐 OK — 해양 애니에서만 켜지고, 켜면 번짐이 달라진다")
+
+
+# ── schemes.json 의 animated 가 그림과 맞는가 ─────────────────────────────────
+# handler.ps1 과 CI 가 이 값으로 .ani/.cur 를 고른다. 해양 애니 6종에 빠져서 윈도우 적용이 .cur 를 찾다
+# 실패할 뻔했다(2026-09-24, CI 에서 걸림). 그림이 한 칸이라도 움직이면 animated 가 참이어야 한다
+import make_cur  # noqa: E402
+wrong = [s["id"] for s in build.SCHEMES
+         if bool(s.get("animated")) != any(make_cur.is_animated(build.art_raw(s["id"], rid))
+                                            for rid, *_ in build.ROLES + build.EXTRA)]
+print(f"animated 표시가 그림과 어긋난 구성표 {len(wrong)}개 {wrong}")
+assert not wrong, f"schemes.json 의 animated 가 그림과 다름: {wrong}"
+print("animated OK — 움직이는 그림이 있는 구성표만 animated")
