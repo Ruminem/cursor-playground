@@ -1,0 +1,31 @@
+hotspot 1,19
+color 0 17212cff
+color 1 2c3a4aff
+color 2 43566bff
+color 3 566b83ff
+color 4 cfd8e0ff
+color 5 dfe6ecff
+color 6 f7fafcff
+color R d2dde6c7
+..............RRRR
+.............RR00RR
+.............R0330RR
+.............R03220RR
+.......RRRRR.R032220RR
+......RR000...0322220R
+......R03330.00211110R
+......R0322203200000RR
+......R032223210RRRRR
+......R03222240RR
+.....RR06222540R
+....RR03222540RR
+...RR032225540R
+..RR032225540RR
+..R032255540RR
+..R032044110R
+.RR03540000RR
+RR03240RRRRR
+R03240RR
+R0240RR
+RR00RR
+.RRRR

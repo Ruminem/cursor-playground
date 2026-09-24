@@ -1,0 +1,25 @@
+hotspot 12,6
+color 0 4e1219ff
+color 1 e4849cff
+color 2 ff9eaaff
+color 3 ffbcc4ff
+color 4 ffd8dcff
+color 5 fff2f2ff
+color 6 f06a14ff
+color 7 c8440cff
+color 8 ffa050ff
+color E 140608ff
+color R ffd2d4c7
+......RRR........RRR
+.....RR0RR......RR0RR
+....RR050RR.....R040RR
+...RR05400RRRRRRR0420RR
+.RRR05E244000000004220RR
+RR004233326446446426660RR
+R08863333363363363333270R
+RR002233327117117126670RR
+.RRR02E211000000002210RR
+...RR02100RRRRRRR0210RR
+....RR010RR.....R010RR
+.....RR0RR......RR0RR
+......RRR........RRR
