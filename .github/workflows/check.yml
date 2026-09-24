@@ -120,6 +120,12 @@ jobs:
           "구성표 $($schemes.Count)종 x 모양 $($shapes.Count)가지 확인 (기본 17칸, 나머지 모양 9칸)"
           exit $fail
 
+      # 시안 페이지의 맥 버튼은 새로 그리지 않고 이 dist 를 받아 다시 담는다. 커서 파일 꼴이 바뀌면 여기서 걸린다
+      - name: 맥용 .cape 버튼이 지금 커서 파일로 구워지는지
+        shell: pwsh
+        working-directory: win-cursor
+        run: node test_mac.js
+
       # 여기부터 배포. 주소를 지금 그대로 두려고 저장소째로 올린다 (.git 만 덜어낸다)
       - name: .git 덜어내기
         if: github.ref == 'refs/heads/main'
