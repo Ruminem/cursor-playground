@@ -17,6 +17,8 @@
 | `shape.py` | `.txt` 읽고 쓰기, 글리프 자리 옮기기 |
 | `sheet.py` | 모양 × 구성표(또는 프레임)를 PNG 한 장에 그려 눈으로 견주는 도구. 빌드 없이 3초. 빌드 해시에 안 들어가서 고쳐도 다시 그리지 않는다 |
 | `gen/firework.py` | 폭죽 그림(`art/firework/`)을 다시 뽑는 생성기. 손으로 돌리고 빌드는 안 부른다. 빌드 코드 해시와 CI 캐시 키(`win-cursor/*.py`)에 안 들어가서 고쳐도 다시 그리지 않는다 — 돌려서 art 가 바뀌어야 반영된다 |
+| `mac.json` | 윈도우 칸 → 맥 커서 이름. 시안 페이지의 **맥용 .cape 받기** 버튼과 `gen/cape.py` 가 같이 읽는다. 버튼은 새로 그리지 않고 dist 의 `.cur`/`.ani` 를 받아 브라우저에서 `.cape` 로 다시 담는다 (`docs/macos.md`) |
+| `gen/cape.py` | 구성표 하나를 `.cape` 로 뽑는 손 도구(기본 모양만). 버튼의 기준 답 — 기본 모양이면 둘이 같은 그림·핫스팟·장 수가 나와야 한다 |
 | `preview.tpl.html` | 시안 페이지 틀. `build.py` 가 여기에 데이터를 끼워 `preview.html` 을 뱉는다 |
 | `handler.ps1` | `cursor-playground://` 주소를 받아 실제로 커서를 적용/되돌림. 받는 주소 목록은 파일 머리에 |
 | `install.ps1` / `setup.ps1` | 주소 연결 등록과 설치 |

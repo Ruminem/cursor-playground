@@ -227,6 +227,8 @@ pre .c{color:var(--muted)}
 .not-win button:disabled{opacity:.45;cursor:not-allowed}
 .setup p{margin:0;max-width:70ch}
 .setup a,.install a{color:var(--accent-ink);text-underline-offset:3px}
+.setup ol{margin:0;padding-left:20px;display:grid;gap:4px;max-width:70ch}
+#mac-note{align-self:center}
 .cmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
 .cmd code{flex:1 1 320px;min-width:0;overflow-x:auto;white-space:nowrap;font:13px/1.5 var(--mono);background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
 .copy{font:700 14px/1 var(--body);color:#1E1A20;background:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 16px;min-height:40px}
@@ -253,13 +255,28 @@ pre .c{color:var(--muted)}
 
   <section class="setup" aria-labelledby="setup-title">
     <h2 id="setup-title">처음 한 번</h2>
-    <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠.</p>
+    <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠. 맥이면 바로 아래 <b>맥에서 쓰기</b>.</p>
     <p>윈도우 PowerShell 을 열고 아래 한 줄을 붙여넣음. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음.</p>
     <div class="cmd">
       <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
       <button type="button" class="copy c-hand" id="copy-btn">복사</button>
     </div>
     <p class="note">인터넷의 스크립트를 받아 바로 실행하는 명령이라, 붙여넣기 전에 <a href="setup.ps1">setup.ps1</a> 과 <a href="handler.ps1">handler.ps1</a> 내용을 확인할 수 있음.</p>
+  </section>
+
+  <section class="setup" aria-labelledby="mac-title">
+    <h2 id="mac-title">맥에서 쓰기</h2>
+    <p>맥은 커서를 바꾸는 공식 길이 없어서 무료 앱 <a href="https://github.com/sdmj76/Mousecape-swiftUI/releases">Mousecape</a> 에 기댐. 아래 버튼이 <b>지금 고른 구성표·모양·색조</b>를 Mousecape 가 읽는 <code>.cape</code> 파일로 구워 줌.</p>
+    <div class="cmd">
+      <button type="button" class="register c-hand" id="mac-cape">맥용 .cape 받기</button>
+      <span class="note" id="mac-note" role="status"></span>
+    </div>
+    <ol class="note">
+      <li>Mousecape 를 처음 열면 맥이 막음 — <b>완료</b>를 누르고 시스템 설정 › 개인정보 보호 및 보안 맨 아래의 <b>그래도 열기</b>.</li>
+      <li>시스템 설정 › 손쉬운 사용 › 디스플레이 › 포인터 에서 <b>색 재설정</b> (포인터 색을 바꿔 두면 적용이 안 먹음).</li>
+      <li>받은 <code>.cape</code> 를 두 번 눌러 가져오고 <b>Apply</b>. 원래대로는 Mousecape 에서 ⌘R.</li>
+    </ol>
+    <p class="note">맥에 없는 칸(대체·필기·위치·사용자 선택)은 빠짐. 맥은 커서 하나에 24장까지라, 움직이는 구성표는 한 바퀴 시간은 그대로 두고 장을 솎음 — 폭죽은 60fps 가 10fps 가 됨.</p>
   </section>
 
   <section>
@@ -731,6 +748,8 @@ pre .c{color:var(--muted)}
   window.cpHue = function(){ return hue; };
   window.cpShape = function(){ return shape; };
   window.cpShapes = function(){ return SHAPES; };
+  window.cpRotate = rotate;      // 맥용 .cape 도 윈도우와 같은 식으로 색조를 돌린다
+  window.cpAnimated = animated;
   // 주소에 ?shape=round 를 붙이면 그 모양으로 열린다 (링크로 넘기기 좋게)
   var savedShape = (/[?&]shape=([a-z]{1,12})/.exec(location.search) || [])[1];
   try { savedShape = savedShape || localStorage.getItem('cp-shape'); } catch (e) {}
@@ -1091,6 +1110,124 @@ pre .c{color:var(--muted)}
     if (url === last) return;
     last = url; out.textContent = url;
   }, 200);
+})();
+
+// 맥용 .cape: 지금 고른 구성표·모양·색조를 Mousecape 가 읽는 .cape(plist)로 굽는다 (docs/macos.md).
+// 새로 그리지 않고 윈도우 버튼과 같은 dist 커서 파일에서 32·64px 그림을 꺼내 다시 담는다.
+// 칸 → 맥 이름은 mac.json (gen/cape.py 와 같이 씀). 기본 모양이면 gen/cape.py 와 같은 그림·핫스팟·장 고르기가 나와야 한다
+(function(){
+  var btn = document.getElementById('mac-cape'), note = document.getElementById('mac-note');
+  var MAX = 24, PTS = 32, SCALES = [1, 2];   // Mousecape 가 받는 장 수 상한, 맥 커서 한 변(포인트), 1x·2x
+  function tag(v, o){ return String.fromCharCode(v.getUint8(o), v.getUint8(o + 1), v.getUint8(o + 2), v.getUint8(o + 3)); }
+  function get(url){ return fetch(url).then(function(r){ if (!r.ok) throw new Error(url); return r.arrayBuffer(); }); }
+  // .cur 한 조각 → {폭: [PNG 바이트, 핫스팟 x, y]}. 항목의 자리값은 조각 머리부터 센다
+  function cur(buf, off){
+    var v = new DataView(buf, off), out = {};
+    for (var i = 0, n = v.getUint16(4, true); i < n; i++) {
+      var e = 6 + 16 * i;
+      out[v.getUint8(e) || 256] = [new Uint8Array(buf, off + v.getUint32(e + 12, true), v.getUint32(e + 8, true)),
+                                   v.getUint16(e + 4, true), v.getUint16(e + 6, true)];
+    }
+    return out;
+  }
+  // .cur 나 .ani → {frames: [조각…], steps: [[장 번호, 틱(1/60초)]…]}
+  function parse(buf){
+    var v = new DataView(buf);
+    if (tag(v, 0) !== 'RIFF') return { frames: [cur(buf, 0)], steps: [[0, 60]] };
+    var frames = [], rates = null, seq = null, head = null;
+    function words(p, size){ var a = []; for (var i = 0; i < size / 4; i++) a.push(v.getUint32(p + 4 * i, true)); return a; }
+    (function walk(p, end){
+      while (p + 8 <= end) {
+        var id = tag(v, p), size = v.getUint32(p + 4, true), body = p + 8;
+        if (id === 'LIST') walk(body + 4, body + size);
+        else if (id === 'anih') head = { steps: v.getUint32(body + 8, true), rate: v.getUint32(body + 28, true) };
+        else if (id === 'rate') rates = words(body, size);
+        else if (id === 'seq ') seq = words(body, size);
+        else if (id === 'icon') frames.push(cur(buf, body));
+        p = body + size + (size & 1);
+      }
+    })(12, buf.byteLength);
+    var steps = [];
+    for (var i = 0; i < head.steps; i++) steps.push([seq ? seq[i] : i, rates ? rates[i] : head.rate]);
+    return { frames: frames, steps: steps };
+  }
+  // 맥은 커서 하나에 프레임 길이가 하나뿐이다. 한 바퀴를 k 등분해 그때 보이는 장을 고르고, 한 바퀴 시간은 지킨다.
+  // 고르게 도는 n 장이면 k = min(n, 24) 로 gen/cape.py 의 pick 과 같은 장이 골린다
+  function pick(steps){
+    var total = 0, even = true;
+    steps.forEach(function(s){ total += s[1]; even = even && s[1] === steps[0][1]; });
+    var k = Math.min(even ? steps.length : total, MAX), idx = [];
+    for (var i = 0, j = 0, cum = 0; i < k; i++) {
+      while (j < steps.length - 1 && (cum + steps[j][1]) * k <= i * total) cum += steps[j++][1];   // 정수로만 비교
+      idx.push(steps[j][0]);
+    }
+    return { idx: idx, duration: k > 1 ? total / 60 / k : 1 };
+  }
+  function biggest(f){ return Math.max.apply(null, Object.keys(f).map(Number)); }
+  // 고른 장들을 px 칸으로 세로로 쌓은 PNG 한 장. 그 크기 그림이 없으면 가장 큰 것을 픽셀 그대로 줄이거나 키운다
+  function sheet(frames, px, deg){
+    return Promise.all(frames.map(function(f){
+      return createImageBitmap(new Blob([(f[px] || f[biggest(f)])[0]], { type: 'image/png' }), { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+    })).then(function(imgs){
+      var cv = document.createElement('canvas'); cv.width = px; cv.height = px * imgs.length;
+      var g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+      imgs.forEach(function(im, i){ g.drawImage(im, 0, i * px, px, px); });
+      if (deg) { var d = g.getImageData(0, 0, cv.width, cv.height); window.cpRotate(d.data, deg); g.putImageData(d, 0, 0); }
+      return new Promise(function(ok){ cv.toBlob(ok, 'image/png'); });
+    }).then(function(b){ return b.arrayBuffer(); });
+  }
+  function b64(buf){
+    var u = new Uint8Array(buf), s = '';
+    for (var i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+  function esc(t){ return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function kv(k, v){ return '<key>' + esc(k) + '</key>' + v; }
+  function real(x){ return '<real>' + x + '</real>'; }
+  // 칸 하나 → plist 의 커서 dict 하나 (같은 칸이 채우는 맥 이름들이 나눠 씀)
+  function slot(buf, deg){
+    var a = parse(buf), p = pick(a.steps), frames = p.idx.map(function(i){ return a.frames[i]; });
+    var w = frames[0][PTS] ? PTS : biggest(frames[0]), first = frames[0][w], k = PTS / w;   // 핫스팟은 첫 장 것
+    return Promise.all(SCALES.map(function(s){ return sheet(frames, PTS * s, deg); })).then(function(pngs){
+      return '<dict>' + kv('FrameCount', '<integer>' + frames.length + '</integer>') + kv('FrameDuration', real(p.duration)) +
+        kv('HotSpotX', real(Math.min(first[1] * k, PTS - 0.01))) + kv('HotSpotY', real(Math.min(first[2] * k, PTS - 0.01))) +
+        kv('PointsHigh', real(PTS)) + kv('PointsWide', real(PTS)) +
+        kv('Representations', '<array>' + pngs.map(function(b){ return '<data>' + b64(b) + '</data>'; }).join('') + '</array>') + '</dict>';
+    });
+  }
+  btn.addEventListener('click', function(){
+    var chosen = document.querySelector('[data-pick][aria-pressed="true"]');
+    if (!chosen || btn.disabled) return;
+    var sid = chosen.getAttribute('data-pick'), deg = window.cpHue(), shape = window.cpShape();
+    var base = window.cpShapes()[0].id === shape ? null : shape, ext = window.cpAnimated(sid) ? 'ani' : 'cur';
+    var card = document.querySelector('[data-apply="' + sid + '"]'), sname = card ? card.getAttribute('data-name') : sid;
+    var shapeName = base ? ' ' + window.cpShapes().filter(function(s){ return s.id === shape; })[0].name : '';
+    btn.disabled = true; note.textContent = sname + shapeName + ' 굽는 중…';
+    // 모양이 안 바꾸는 칸은 모양 쪽에 파일이 없다. 없으면 기본 것을 받는다 (handler.ps1 과 같은 규칙)
+    function file(rid){
+      var plain = 'dist/' + sid + '/' + rid + '.' + ext;
+      return base ? get('dist/' + base + '/' + sid + '/' + rid + '.' + ext).catch(function(){ return get(plain); }) : get(plain);
+    }
+    fetch('mac.json').then(function(r){ if (!r.ok) throw new Error('mac.json'); return r.json(); }).then(function(map){
+      var rids = Object.keys(map);
+      return Promise.all(rids.map(function(rid){ return file(rid).then(function(b){ return slot(b, deg); }); })).then(function(dicts){
+        var tail = (base ? '.' + base : '') + (deg ? '.h' + deg : ''), cursors = '';
+        rids.forEach(function(rid, i){ map[rid].forEach(function(name){ cursors += kv(name, dicts[i]); }); });
+        var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
+          '<plist version="1.0"><dict>' + kv('Author', '<string>cursor-playground</string>') +
+          kv('CapeName', '<string>' + esc('cursor-playground ' + sname + shapeName + (deg ? ' ' + deg + '°' : '')) + '</string>') +
+          kv('CapeVersion', real(1)) + kv('Cloud', '<false/>') + kv('Cursors', '<dict>' + cursors + '</dict>') + kv('HiDPI', '<true/>') +
+          kv('Identifier', '<string>io.github.ruminem.cursor-playground.' + sid + tail + '</string>') +
+          kv('MinimumVersion', real(2)) + kv('Version', real(2)) + '</dict></plist>\n';
+        var blob = new Blob([xml], { type: 'application/octet-stream' }), url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = 'cursor-playground-' + sid + tail.replace(/\./g, '-') + '.cape'; a.click();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+        note.textContent = a.download + ' (' + Math.round(blob.size / 1024) + ' KiB)';
+      });
+    }).catch(function(){
+      note.textContent = '커서 파일을 받지 못함 — 이 버튼은 GitHub Pages 에 올라간 페이지에서만 됨';
+    }).then(function(){ btn.disabled = false; });
+  });
 })();
 
 // 내 백업: 지금 고른 구성표·모양·색조·크기를 묶어 이 브라우저에 저장해 두고, 누르면 그 조합으로 다시 적용한다

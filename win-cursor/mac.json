@@ -1,0 +1,15 @@
+{
+  "arrow": ["com.apple.coregraphics.Arrow", "com.apple.coregraphics.ArrowCtx"],
+  "busy": ["com.apple.cursor.4"],
+  "wait": ["com.apple.coregraphics.Wait"],
+  "hand": ["com.apple.cursor.13", "com.apple.cursor.12", "com.apple.cursor.11"],
+  "ibeam": ["com.apple.coregraphics.IBeam", "com.apple.coregraphics.IBeamXOR"],
+  "ns": ["com.apple.cursor.23", "com.apple.cursor.32", "com.apple.cursor.21", "com.apple.cursor.22", "com.apple.cursor.31", "com.apple.cursor.36"],
+  "we": ["com.apple.cursor.19", "com.apple.cursor.28", "com.apple.cursor.17", "com.apple.cursor.18", "com.apple.cursor.27", "com.apple.cursor.38"],
+  "nwse": ["com.apple.cursor.34", "com.apple.cursor.33", "com.apple.cursor.35"],
+  "nesw": ["com.apple.cursor.30", "com.apple.cursor.29", "com.apple.cursor.37"],
+  "move": ["com.apple.coregraphics.Move", "com.apple.cursor.39"],
+  "no": ["com.apple.cursor.3"],
+  "help": ["com.apple.cursor.40"],
+  "cross": ["com.apple.cursor.7", "com.apple.cursor.8"]
+}
