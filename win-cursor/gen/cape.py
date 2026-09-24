@@ -10,6 +10,7 @@
 그보다 많으면 한 바퀴 시간을 지키며 솎는다. 윈도우 칸 중 up·pen·pin·person 은 맥에 자리가 없어 버린다.
 """
 import argparse
+import json
 import plistlib
 import struct
 import sys
@@ -24,25 +25,10 @@ POINTS = 32       # 맥 커서 한 변(포인트). Mousecape 가 핫스팟을 31
 MAX_FRAMES = 24   # Mousecape 가 받는 프레임 수 상한 (MCMaxFrameCount)
 
 # 윈도우 칸 → 맥 커서 이름들 (Mousecape MCDefs.m 의 cursorMap). 한 칸이 여러 이름을 채운다.
-# 원본 Mousecape 는 이름 하나라도 등록에 실패하면 전체를 포기하므로 오래된 이름만 넣는다.
+# 시안 페이지의 .cape 버튼도 같은 mac.json 을 읽는다.
+# 원본 Mousecape 는 이름 하나라도 등록에 실패하면 전체를 포기하므로 오래된 이름만 넣었다.
 # macOS 26 에서 늘어난 화살표·I빔 이름은 Mousecape-swiftUI 가 런타임에 찾아 같이 채운다.
-MAC = {
-    "arrow": ["com.apple.coregraphics.Arrow", "com.apple.coregraphics.ArrowCtx"],
-    "busy": ["com.apple.cursor.4"],                                   # Busy (화살표 + 도는 것)
-    "wait": ["com.apple.coregraphics.Wait"],                          # 무지개 공 자리
-    "hand": ["com.apple.cursor.13", "com.apple.cursor.12", "com.apple.cursor.11"],  # Pointing, 잡는 손 Open·Closed
-    "ibeam": ["com.apple.coregraphics.IBeam", "com.apple.coregraphics.IBeamXOR"],
-    "ns": ["com.apple.cursor.23", "com.apple.cursor.32",              # Resize N-S, Window N-S
-           "com.apple.cursor.21", "com.apple.cursor.22", "com.apple.cursor.31", "com.apple.cursor.36"],
-    "we": ["com.apple.cursor.19", "com.apple.cursor.28",
-           "com.apple.cursor.17", "com.apple.cursor.18", "com.apple.cursor.27", "com.apple.cursor.38"],
-    "nwse": ["com.apple.cursor.34", "com.apple.cursor.33", "com.apple.cursor.35"],
-    "nesw": ["com.apple.cursor.30", "com.apple.cursor.29", "com.apple.cursor.37"],
-    "move": ["com.apple.coregraphics.Move", "com.apple.cursor.39"],
-    "no": ["com.apple.cursor.3"],                                     # Forbidden
-    "help": ["com.apple.cursor.40"],
-    "cross": ["com.apple.cursor.7", "com.apple.cursor.8"],
-}
+MAC = json.loads((ROOT / "mac.json").read_text(encoding="utf-8"))
 
 
 def pick(n: int, rate: int) -> tuple[list[int], float]:
@@ -93,7 +79,6 @@ def cursor(text: str, scales: list[int]) -> dict:
 
 
 def cape(scheme: str, scales: list[int]) -> dict:
-    import json
     names = {s["id"]: s for s in json.loads((ROOT / "schemes.json").read_text(encoding="utf-8"))}
     if scheme not in names:
         raise SystemExit(f"schemes.json 에 없는 구성표: {scheme}")
