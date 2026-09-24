@@ -1,20 +1,25 @@
 hotspot 8,8
-color 0 ffffffc8
-color 1 ffffffff
-............000
-........00000100
-........011111100
-........001111110
-.........00111100
-.........0011110
-........00100110
-.......001000010
-.000..00100..000
-.010000100
-.01100100
-.0111100
-00111100
-011111100
-001111110
-.00100000
-..000
+color 0 5b8fabff
+color D 86b6ccdc
+color f a6cfe0dc
+color L c6e5f0dc
+color s 6fa6bff0
+color b e4f6fcf0
+color W ffffffff
+........00000000
+.......0fLbLLLbf0
+........0bWsfbWs0
+.........0sfffsD0
+..........0LfffD0
+.........0bfDfbD0
+........0bWs0bWs0
+.0.....0Lfs0.0sD0
+0f0...0LfD0...0f0
+0Lb0.0bfD0.....0
+0bWs0bWs0
+0LsfLfs0
+0LfffD0
+0Lbfffb0
+0bWsfbWs0
+0fsDDDsDf0
+.00000000

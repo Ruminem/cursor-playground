@@ -1,15 +1,20 @@
-hotspot 5,4
-color 0 7aa0b478
-color 1 8ac0d478
-color 2 bfe4f0a0
-color 3 ffffffc8
-.000...000
-03220.02230
-02222222220
-02211221120
-02211221120
-.022232220
-..0222220
-...01220
-....020
-.....0
+hotspot 4,0
+color 0 5b8fabff
+color D 86b6ccdc
+color f a6cfe0dc
+color L c6e5f0dc
+color s 6fa6bff0
+color b e4f6fcf0
+color W ffffffff
+....00
+...0Lf0
+...0LD0
+...0LD000
+...0LD0Lf000
+.000LD0LD0Lf0
+0Lb0LfbffLbD0
+0bWsfbWsfbWs0
+.0sfffsfffsD0
+..0ffffffffD0
+...0fDDDDDD0
+....0000000

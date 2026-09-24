@@ -1,37 +1,31 @@
 hotspot 1,1
 color 0 286ea0ff
-color 1 8cd2f0ff
-color 2 93d5f1ff
-color 3 9ad8f2ff
-color 4 a1dcf3ff
-color 5 a8dff5ff
-color 6 afe2f6ff
-color 7 b4f0ff50
-color 8 b6e5f7ff
-color 9 bce9f8ff
-color A c3ecf9ff
-color B caeffaff
-color C d1f2fcff
-color D d8f6fdff
-color E dff9feff
-color F e6fcffff
-color G ffffffff
-.7
-707
-7007
-70F07
-70EE07
-70DDD07
-70CCCC07
-70BBBBB07...00000
-70GAAAAA07.0088800
-709G99999070800080
-7088G8888800000080
-70666G600000700800
-705505G07777.0800
-7040704G07...080
-7007703307...000
-707..702207..080
-.7...701107..000
-......7007
-.......77
+color S 4a98ccff
+color 1 d8f5fdff
+color 2 c6edfaff
+color 3 b4e4f7ff
+color 4 a2dbf4ff
+color 5 90d1f0ff
+color 6 7ec7ecff
+color 7 6cbde7ff
+color W ffffffff
+color F b4f0ff50
+.F
+F0F
+F00F
+F0W0F
+F0WW0F
+F0W220F
+F0W2220F.....FFFF
+F0W33W30F...F0000F
+F0W3W3330...0W1WW0F
+F0WW4444W0.02S00W20F
+F0W444SWSS0.00.0WS0F
+F0WSS5W00000..0WS0F
+F05S0WS0...FF0WS0F
+F0S0.0W60...F05S0F
+F00..06S0.....00
+F0F..F0W70F.F0WS0F
+.F...F07S0F..F00F
+......F00F....FF
+.......FF

@@ -1,38 +1,31 @@
 hotspot 9,9
 color 0 286ea0ff
-color 1 8cd2f0ff
-color 2 92d5f1ff
-color 3 99d8f2ff
-color 4 9fdbf3ff
-color 5 a6def4ff
-color 6 ace1f5ff
-color 7 b3e4f6ff
-color 8 b4f0ff50
-color 9 b9e7f8ff
-color A bfeaf9ff
-color B c6edfaff
-color C ccf0fbff
-color D d3f3fcff
-color E d9f6fdff
-color F e0f9feff
-color G e6fcffff
-color H ffffffff
-.......88888
-.....880000088
-....800GHGGG008
-...80FFFFHFFFF08
-..80HEE00000EEE08
-.80DDH0888880DDD08
-.80CC0H08...80CC08
-80BB080H08...80BB08
-80HA0880H08..80AA08
-809H08.80H08.80H908
-807708..80H08807H08
-806608...80H0806608
-.805508...80H05508
-.804440888880H4408
-..803330000033H08
-...802222H222208
-....800111H1008
-.....880000088
-.......88888
+color S 4a98ccff
+color 1 d8f5fdff
+color 2 c6edfaff
+color 3 b4e4f7ff
+color 4 a2dbf4ff
+color 5 90d1f0ff
+color 6 7ec7ecff
+color 7 6cbde7ff
+color W ffffffff
+color F b4f0ff50
+.......FFFFF
+.....FF00000FF
+....F00WWWWW00F
+...F0WWW111WWW0F
+..F0WWSSSSWS2220F
+.F0WW2S0000022W20F
+.F0WSS330...0W330F
+F0WWS03W30...03330F
+F0W4S004440..0W4W0F
+F0W4S0.044W0.0WWS0F
+F0W4W0..0W4400W4S0F
+F05W50...05550WSS0F
+.F05550...05WWWS0F
+.F0666W00000W6SS0F
+..F06W6WWWWWWSS0F
+...F0SS77W7SSS0F
+....F00SWSSS00F
+.....FF00000FF
+.......FFFFF

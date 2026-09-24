@@ -1,22 +1,28 @@
-hotspot 0,0
-color 0 3c3a36ff
-color 1 6e6a64ff
-color 2 9a9690ff
-color 3 c8c4bcff
-0
-00
-020
-0310
-02220
-013220
-0232220
-02321220
-032232230
-0231212220
-02312200000
-0230120
-020.0220
-00..0210
-0....0210
-.....0230
-......00
+hotspot 1,1
+color 0 34322eff
+color 1 67635dff
+color 2 84807aff
+color 3 9e9a93ff
+color 4 bcb8b0ff
+color 5 5c5852ff
+color 6 d4d0c8ff
+color R d6d2cac7
+.R
+R0R
+R00R
+R040R
+R0430R
+R04330R
+R043530R
+R0455330R
+R04333330R
+R043663230R
+R0466621110R
+R04212100000R
+R0310310..RR
+R010.0430
+R00..0360
+R0R..R0630R
+.R...R0310R
+......R00R
+.......RR
