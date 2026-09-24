@@ -998,7 +998,14 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
     def cell(cx: int, cy: int) -> tuple:
         return fill[src(cx, cy)]
 
-    blend: dict = {}
+    # 섞은 색은 fill 하나로만 정해진다. 움직이는 그림은 테두리만 돌고 몸 안쪽이 그대로인 프레임이
+    # 많아서, 안쪽이 같은 프레임끼리 한 벌을 나눠 쓴다 (전기 둥근 모양에서 _mix 71만 번이 거의 다 헛돌았다)
+    key = (PATTERN, KEEP, tuple(sorted(fill.items())))
+    blend = _BLENDS.get(key)
+    if blend is None:
+        if len(_BLENDS) > 64:
+            _BLENDS.clear()
+        blend = _BLENDS[key] = {}
 
     def at(u: float, v: float) -> tuple:
         """색을 뜬다. 자리는 UV 단계로 쪼개져 있고 층(body·lit·dark)마다 같은 자리가 다시
@@ -1047,14 +1054,31 @@ def sampler_of(frame: dict, rings: list | None = None, lit: list | None = None,
     return at, edge, gloss, halo, specks, edge_at, [], mat
 
 
-def _color(layers: tuple, iu: int, iv: int, it: int, sampler: tuple) -> tuple | None:
+_BLENDS: dict = {}     # fill → 섞은 색 (sampler_of). 프레임끼리 나눠 쓴다
+_SAME: dict = {}       # (하이라이트 바탕색, 재질) → {(칠하는 방법, 뜬 색들): 칸 색} (paint)
+
+
+def _needs(layers: tuple) -> tuple[bool, tuple, bool]:
+    """칠하는 방법 하나가 테마에서 무엇을 뜨는지 — (몸 색, 번짐 층 번호들, 외곽선 색)"""
+    body, halos, edge = False, set(), False
+    for kind, *_ in layers:
+        if kind == "edge":
+            edge = True
+        elif kind[0] == "h":
+            halos.add(int(kind[4]))
+        elif kind not in ("shadow", "glow", "band"):
+            body = True
+    return body, tuple(sorted(halos)), edge
+
+
+def _color(layers: tuple, c_body: tuple | None, c_halo: dict, c_edge: tuple | None,
+           gloss: tuple, mat: dict) -> tuple | None:
     """칠하는 방법 하나를 테마 색으로 풀어 한 칸의 색을 만든다.
 
     스텐실에는 **빛의 기하**(램버트·하이라이트·테두리 빛)만 들어 있고 재질은 여기서 입힌다.
     재질마다 스텐실을 따로 구우면 굽는 비용이 재질 수만큼 늘어난다 — 스텐실은 테마와 무관해야
-    구성표 전부가 한 벌을 돌려 쓴다"""
-    at, _, gloss, halo, _, edge_at = sampler[:6]
-    mat = MATERIALS[sampler[7] if len(sampler) > 7 and sampler[7] else DEFAULT_MAT]
+    구성표 전부가 한 벌을 돌려 쓴다. 테마에서 뜬 색(몸·번짐 층·외곽선)은 paint 가 먼저 떠서
+    넘긴다 — 결과가 뜬 색으로만 정해지니 같은 색이 오는 칸은 프레임·크기를 넘어 돌려 쓴다"""
     # 하이라이트 색. 흰색 쪽으로 밀어야 2색 테마(분홍·잉크)에서도 광택이 산다 —
     # 거기선 '테마의 가장 밝은 색' 이 곧 몸 색이라 덧대도 아무 일이 안 일어난다
     hl = mix((255, 255, 255), gloss[:3], mat["tint"])
@@ -1063,15 +1087,14 @@ def _color(layers: tuple, iu: int, iv: int, it: int, sampler: tuple) -> tuple | 
         if kind == "shadow":
             rgba = (0, 0, 0, round(a * 255))
         elif kind[0] == "h":                       # halo0 · halo1 · halo2
-            fn = halo[int(kind[4])]
-            c = fn(iu / UV, iv / UV) if fn else None
+            c = c_halo[int(kind[4])]
             if not c:
                 continue                           # 번짐이 없는 테마·자리면 그 층은 비워 둔다
             rgba = c[:3] + (round(a * c[3]),)
         elif kind in ("glow", "band"):
             rgba = gloss[:3] + (round(a * 255),)
         elif kind == "edge":
-            c = edge_at(it)
+            c = c_edge
             # 외곽선도 벽이라 빛을 받는다. 평평한 검은 테를 한 가지 색으로 두르면 스티커가 된다 —
             # 빛을 보는 쪽은 하이라이트 쪽으로 살짝 밀고 등진 쪽은 눌러서 둥근 입술로 읽히게
             d = k2 * 2 - 1
@@ -1079,8 +1102,8 @@ def _color(layers: tuple, iu: int, iv: int, it: int, sampler: tuple) -> tuple | 
                 tuple(round(v * (1 + EDGE_LAMB * d)) for v in c[:3])
             rgba = tuple(e) + (round(a * c[3]),)
         else:
-            c = at(iu / UV, iv / UV)
-            k = 1 - 0.15 * t                       # 아래로 갈수록 살짝 어둡게
+            c = c_body
+            k = 1 - 0.15 * t                      # 아래로 갈수록 살짝 어둡게
             g = 0.0
             if kind == "vol":
                 # 명암은 몸 색에 **곱한다**. 테마의 밝은 색으로 섞으면 2색 테마(분홍·잉크)에서는
@@ -1109,13 +1132,31 @@ def paint(stencil: tuple, sampler: tuple, memo: dict | None = None) -> dict:
     st, recipes = stencil
     if memo is None:
         memo = {}
+    at, _, gloss, halo, _, edge_at = sampler[:6]
+    name = sampler[7] if len(sampler) > 7 and sampler[7] else DEFAULT_MAT
+    mat = MATERIALS[name]
+    # 자리 → 뜬 색 → 칸 색 두 단계로 돌려 쓴다. 뒤 단계는 자리와 무관해서 프레임·크기를 넘는다
+    same = _SAME.get((gloss, name))
+    if same is None:
+        if len(_SAME) > 8:
+            _SAME.clear()
+        same = _SAME[(gloss, name)] = {}
+    needs = [_needs(r) for r in recipes]
     out = {}
     for cell, (n, iu, iv, it) in st.items():
         layers = recipes[n]
         key = (layers, iu, iv, it)
         col = memo.get(key, MISS)
         if col is MISS:
-            col = memo[key] = _color(layers, iu, iv, it, sampler)
+            body, halos, edge = needs[n]
+            c_body = at(iu / UV, iv / UV) if body else None
+            c_halo = {i: halo[i](iu / UV, iv / UV) if halo[i] else None for i in halos} if halos else {}
+            c_edge = edge_at(it) if edge else None
+            key2 = (layers, c_body, tuple(c_halo.values()), c_edge)
+            col = same.get(key2, MISS)
+            if col is MISS:
+                col = same[key2] = _color(layers, c_body, c_halo, c_edge, gloss, mat)
+            memo[key] = col
         if col:
             out[cell] = col
     return out

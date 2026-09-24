@@ -88,6 +88,7 @@ def main(argv: list[str] | None = None) -> Path:
             raise SystemExit(f"smooth.py 에 없는 상수: {name}")
         setattr(sm, name, ast.literal_eval(val))
     sm._cache.clear()                                # 스텐실 캐시가 옛 값으로 그린 것을 들고 있다
+    sm._BLENDS.clear(); sm._SAME.clear()             # 색 캐시도 마찬가지
 
     t0 = time.time()
     shapes = pick(a.shapes, [s["id"] for s in build.SHAPES], "모양")
