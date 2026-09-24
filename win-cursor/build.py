@@ -106,6 +106,9 @@ KEEP = {"ns", "we", "nwse", "nesw", "up", "cross", "pen", "hand"}
 # 모양 폴더에 파일이 없으면 받는 쪽이 기본 모양으로 넘어가는 약속은 KEEP 만의 것이라, 여기 칸은
 # 모양 폴더에도 기본 모양과 같은 바이트로 쓴다 (build_one)
 KEEPS = {s["id"]: KEEP | set(s.get("keep", ())) for s in SCHEMES}
+# 몸이 장마다 흔들리는 그림(헤엄) — 매끈한 모양의 번짐 테를 그 장 몸 밖에서만 뜬다 (smooth.samplers_of).
+# 비율만으로 켜면 반짝이·폭죽 move 처럼 몸에서 튀는 것도 걸려서 표식을 단 구성표만
+SWAYS = {s["id"] for s in SCHEMES if s.get("sway")}
 
 
 def shape_of(shape_id: str) -> str | None:
@@ -136,11 +139,12 @@ def smooth_parts(sid: str, rid: str, shape: str, cache: dict) -> tuple[list[dict
 
 
 def _drawer(ats: dict | None, sid: str, rid: str, shape: str, frames: list[dict], glyphs: list | None):
-    """ats 를 받았으면 이 칸의 drawer 를 거기서 꺼내거나 만들어 둔다 — 커서와 시안 데이터가 같은 그림을 나눠 쓰게"""
+    """이 칸의 drawer. ats 를 받았으면 거기서 꺼내거나 만들어 둔다 — 커서와 시안 데이터가 같은 그림을 나눠 쓰게.
+    안 받았어도 여기서 만든다 — smooth 쪽이 대신 만들면 구성표를 몰라 sway 표식이 빠진다"""
     if ats is None:
-        return None
+        return smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid), sid in SWAYS)
     if rid not in ats:
-        ats[rid] = smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid))
+        ats[rid] = smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid), sid in SWAYS)
     return ats[rid]
 
 

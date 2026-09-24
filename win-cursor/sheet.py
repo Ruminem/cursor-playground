@@ -44,7 +44,7 @@ def frames_of(shape: str, sid: str, role: str, size: int, cache: dict, mat: str 
         raw = build.art_raw(sid, role)
         return sm.tween([sm.scale_up(f, size / canvas_size(raw)) for f in shapelib.read_art(raw)[0]], [1] * k)
     frames, _, glyphs = build.smooth_parts(sid, role, shape, cache)
-    return sm.tween(sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid)),
+    return sm.tween(sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid), sid in build.SWAYS),
                             sm.cells_for(size), glyphs)[0], [1] * k)
 
 
