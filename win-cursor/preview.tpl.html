@@ -442,10 +442,16 @@ pre .c{color:var(--muted)}
   }
   // 데이터 주소 → 짧은 blob 주소. 사파리는 프레임마다 스타일을 새로 쓸 때 긴 데이터 주소를 통째로 다시 읽고
   // 그림을 다시 풀어서 애니메이션이 끊겼다. blob 주소면 스타일 글이 짧고, 한 번 푼 그림을 주소로 다시 쓴다
-  var blobs = {};
+  // 주소만 바꿔 끼우면 사파리는 아직 안 풀린 그림 자리를 한 번 비워 그려서 프레임마다 깜빡였다(WebKitGTK 로
+  // 재현: 찍은 장의 10–12%가 빈 칸). 그래서 그림을 먼저 풀어(decode) 붙들어 두고, 다 풀린 뒤에야 주소를 넘긴다
+  var blobs = {}, held = {};
   function blobOf(uri){
     if (!blobs[uri]) blobs[uri] = fetch(uri).then(function(r){ return r.blob(); })
-      .then(function(b){ return URL.createObjectURL(b); }, function(){ return uri; });
+      .then(function(b){ return URL.createObjectURL(b); }, function(){ return uri; })
+      .then(function(u){
+        var img = new Image(); img.src = u; held[u] = img;
+        return (img.decode ? img.decode() : Promise.resolve()).then(function(){ return u; }, function(){ return u; });
+      });
     return blobs[uri];
   }
   // 카드·목록에 까는 그림. 색조가 없으면 원래 그림 그대로라 캔버스를 거치지 않는다
@@ -468,7 +474,7 @@ pre .c{color:var(--muted)}
     // 지금 스타일이 아직 옛 그림을 가리킬 수 있어서, 새 스타일이 들어간 뒤에 놓는다
     setTimeout(function(){
       old.forEach(function(p){ p.then(function(r){
-        if (r.made && blobs[r.uri]) { blobs[r.uri].then(function(u){ if (u !== r.uri) URL.revokeObjectURL(u); }); delete blobs[r.uri]; }
+        if (r.made && blobs[r.uri]) { blobs[r.uri].then(function(u){ delete held[u]; if (u !== r.uri) URL.revokeObjectURL(u); }); delete blobs[r.uri]; }
       }); });
     }, 3000);
   }
