@@ -8,6 +8,7 @@
   python sheet.py round,bevel pink,ink,chrome      모양 둘 × 구성표 셋
   python sheet.py all pink                         모양 전부 (기본 모양 포함)
   python sheet.py glow electric --frames           열을 모양 대신 프레임으로 (움직임을 볼 때, 모양은 하나만)
+  python sheet.py classic pink,ink --roles all     열을 칸 17개로 (구성표 한 벌을 통째로 볼 때)
   --role hand · --size 128 · -o 경로               칸 · 판 크기 · 나갈 자리 (기본은 임시 폴더)
 
 매끈한 모양을 고치다 "그려서 보는" 임시 스크립트를 새로 짜고 싶어지면 이 파일에 옵션을 더한다.
@@ -73,6 +74,7 @@ def main(argv: list[str] | None = None) -> Path:
     ap.add_argument("--role", default="arrow")
     ap.add_argument("--size", type=int, default=sm.PAGE)
     ap.add_argument("--frames", action="store_true", help="열을 첫 모양의 프레임으로")
+    ap.add_argument("--roles", metavar="칸들", help="열을 첫 모양의 칸으로 (쉼표로, 또는 all) — 구성표 한 벌을 통째로 볼 때")
     ap.add_argument("--mat", help="재질을 이 판에서만 이걸로 (metal·glass·glow·cloth·plastic)")
     ap.add_argument("--tween", type=int, default=1, metavar="배수",
                     help="프레임 사이를 섞어 이 배수로 늘려 본다 (--frames 와 같이 쓴다)")
@@ -102,6 +104,10 @@ def main(argv: list[str] | None = None) -> Path:
             lo, _, hi = a.range.partition(":")
             rows = [r[int(lo or 0):int(hi or len(r))] for r in rows]
         cols = f"{shapes[0]} 의 프레임 (많은 쪽 {max(len(r) for r in rows)}장)"
+    elif a.roles:
+        roles = pick(a.roles, sorted(p.stem for p in (build.HERE / "art" / schemes[0]).glob("*.txt")), "칸")
+        rows = [[frames_of(shapes[0], sid, r, a.size, cache, a.mat)[0] for r in roles] for sid in schemes]
+        cols = f"{shapes[0]} 의 칸: {' · '.join(roles)}"
     else:
         rows = [[frames_of(shp, sid, a.role, a.size, cache, a.mat)[0] for shp in shapes] for sid in schemes]
         cols = " · ".join(shapes)
