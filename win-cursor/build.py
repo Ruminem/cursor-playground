@@ -3,8 +3,8 @@
 
 사용법: python build.py
 
-preview.html 에는 기본 모양의 그림 데이터가 들어가고, 다른 모양은 data/<모양>/ 으로 따로 나간다
-(index.json 과 구성표마다 한 파일 — split_data 참고).
+모양마다 그림 데이터는 data/<모양>/ 으로 따로 나간다 (index.json 과 구성표마다 한 파일 — split_data 참고).
+preview.html 에는 기본 모양의 칸 정보·목록 화살표와 처음 여는 구성표(START) 하나의 그림만 들어간다.
 dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려받는다 (기본 모양은 dist/<구성표>/,
 나머지는 dist/<모양>/<구성표>/). art/ 나 shapes/ 를 고치면 이걸 다시 돌리고 결과까지 커밋해야 웹에 반영된다.
 """
@@ -31,6 +31,7 @@ STENCILS = HERE / ".stencils.pkl"   # 매끈한 모양의 스텐실. 빌드가 �
 SCHEMES = json.loads((HERE / "schemes.json").read_text(encoding="utf-8"))
 # 커서 모양 목록. 첫 번째가 기본(테마 그림 그대로)이고, 나머지는 smooth.py 가 그려 테마 색을 입힌다
 SHAPES = json.loads((HERE / "shapes.json").read_text(encoding="utf-8"))
+START = "pink"   # 시안 페이지가 처음 여는 구성표. 이것의 기본 모양 그림만 페이지에 박는다
 # 구성표 → 재질. 빛을 어떻게 되받는지만 정하고 색은 그대로다 (smooth.MATERIALS)
 MAT = {s["id"]: s.get("material") for s in SCHEMES}
 
@@ -303,8 +304,19 @@ def build() -> str:
         tabs.append(f'<button type="button" class="shape c-hand{" smooth" if i else ""}" role="tab" data-shape="{shp["id"]}"'
                     f' aria-selected="{"true" if i == 0 else "false"}"><i style="background-image:url({pic})"></i>{shp["name"]}</button>')
 
+    # 기본 모양 그림도 다른 모양처럼 data/<기본>/ 로 내보내고, 페이지에는 칸 정보·목록 화살표와 START 그림만 남긴다.
+    # 전부 박던 때는 페이지가 gzip 1.3MB 라 폰 회선에서 그것을 다 받을 때까지 첫 화면이 안 떴다
+    root = data_dir(SHAPES[0]["id"])
+    root.mkdir(parents=True, exist_ok=True)
+    for name, body in split_data({"data": data, "extra": extra_data}).items():
+        (root / name).write_text(json.dumps(body, separators=(",", ":")), encoding="utf-8", newline="\n")
+    data = {sid: {rid: e if sid == START or rid == "arrow" else ["", *e[1:]] for rid, e in roles.items()}
+            for sid, roles in data.items()}
+    extra_data = {START: extra_data[START]}
+
     page = (
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
+        .replace("/*START*/", json.dumps(START))
         .replace("<!--SHAPES-->", "".join(tabs))
         .replace("/*SHAPE_LIST*/", json.dumps([{k: s[k] for k in ("id", "name", "desc")} for s in SHAPES], ensure_ascii=False, separators=(",", ":")))
         .replace("/*CURSOR_CSS*/", "\n".join(css))
@@ -566,7 +578,7 @@ if __name__ == "__main__":
         whole = sum(map(cost, jobs_of)) or 1            # 진행률은 이 어림 값의 합으로 센다
 
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
-        if was.get("*page") != page_key or not out.exists():
+        if was.get("*page") != page_key or not out.exists() or not (data_dir(SHAPES[0]["id"]) / "index.json").exists():
             _load_stencils()                             # 모양 탭 아이콘도 매끈한 모양이다
             out.write_text(build(), encoding="utf-8", newline="\n")
             print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")

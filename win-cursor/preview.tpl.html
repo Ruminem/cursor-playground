@@ -423,10 +423,13 @@ pre .c{color:var(--muted)}
 (function(){
   var DATA = /*CURSOR_DATA*/;
   var EXTRA = /*EXTRA_DATA*/;
-  // 모양 목록. 첫 번째(기본)의 그림만 페이지에 박혀 있고 나머지는 고를 때 data/<모양>/ 에서 받는다
+  // 모양 목록. 기본 모양도 다른 모양처럼 구성표마다 data/<모양>/<구성표>.json 에서 받는다. 페이지에 박힌 것은
+  // 칸 정보·목록 썸네일(화살표)과 처음 여는 구성표 하나의 그림뿐 — 전부 박던 때는 페이지가 gzip 1.1MB 라
+  // 폰 회선에서 그것을 다 받고 풀 때까지 첫 화면이 안 떴다
   var SHAPES = /*SHAPE_LIST*/;
   var packs = {}, shape = SHAPES[0].id;
-  packs[shape] = { data: DATA, extra: EXTRA, arrows: true };
+  packs[shape] = { data: DATA, extra: EXTRA, arrows: true, full: {}, asking: {} };
+  Object.keys(EXTRA).forEach(function(sid){ packs[shape].full[sid] = true; });
   var SIZES = [32, 48, 64, 96, 128];
   var size = 32, hue = 0, cache = {};
   try {
@@ -531,17 +534,28 @@ pre .c{color:var(--muted)}
 
   // 페이지를 열 때 카드·덧칸·목록 썸네일에 기본 모양 그림을 깐다. 페이지에 두 번 박지 않으려고 HTML 에는 안 넣었다.
   // 여기서 깐 값이 "원래 값"이라 다른 모양·색조를 입혔다가 restore 하면 이리로 돌아온다
-  function lay(el, uri, n){ el.style.backgroundImage = 'url(' + uri + ')'; el.style.setProperty('--n', n); }
-  document.querySelectorAll('.card').forEach(function(card){
-    var sid = (/(?:^| )s-([a-z]+)/.exec(card.className) || [])[1], rid = (/(?:^| )c-([a-z]+)/.exec(card.className) || [])[1];
-    var d = DATA[sid] && DATA[sid][rid], el = card.querySelector('.sprite');
-    if (d && el) lay(el, d[0], d[7]);
-  });
-  document.querySelectorAll('.extra').forEach(function(box){
-    var sid = (/(?:^| )s-([a-z]+)/.exec(box.className) || [])[1], rid = (/(?:^| )e-([a-z]+)/.exec(box.className) || [])[1];
-    var d = EXTRA[sid] && EXTRA[sid][rid], el = box.querySelector('i');
-    if (d && el) lay(el, d[0], d[2]);
-  });
+  // 그림을 늦게 받은 구성표는 다른 모양·색조가 이미 칸을 덮었을 수 있다. 덮인 값은 되돌릴 자리만 고친다
+  function lay(el, uri, n){
+    var o = cards.get(el) || {};
+    if ('background-image' in o) o['background-image'] = ['url(' + uri + ')', ''];
+    else el.style.backgroundImage = 'url(' + uri + ')';
+    if ('--n' in o) o['--n'] = [String(n), '']; else el.style.setProperty('--n', n);
+  }
+  var base = packs[SHAPES[0].id];
+  function layScheme(sid){
+    document.querySelectorAll('.card.s-' + sid).forEach(function(card){
+      var rid = (/(?:^| )c-([a-z]+)/.exec(card.className) || [])[1];
+      var d = base.data[sid] && base.data[sid][rid], el = card.querySelector('.sprite');
+      if (d && d[0] && el) lay(el, d[0], d[7]);
+    });
+    document.querySelectorAll('.extra.s-' + sid).forEach(function(box){
+      var rid = (/(?:^| )e-([a-z]+)/.exec(box.className) || [])[1];
+      var d = base.extra[sid] && base.extra[sid][rid], el = box.querySelector('i');
+      if (d && el) lay(el, d[0], d[2]);
+    });
+  }
+  var cards = new Map();
+  Object.keys(EXTRA).forEach(layScheme);
   var thumbOf = {};
   document.querySelectorAll('[data-scheme-item]').forEach(function(item){
     var sid = item.getAttribute('data-scheme-item'), el = item.querySelector('.thumb');
@@ -552,8 +566,7 @@ pre .c{color:var(--muted)}
   // 마우스가 없는 기기(폰)는 커서를 못 보니 커서 그림은 만들지 않고 카드 그림만 움직인다
   var FINE = !window.matchMedia || matchMedia('(any-pointer: fine)').matches;
   // 움직임은 스타일시트를 통째로 갈지 않고 그 칸의 style 만 바꾼다. 시트를 새로 쓰면 문서 전체의 스타일을
-  // 다시 따져서, 한 프레임마다 요소 1,400개를 훑었다. 손댄 칸은 원래 값을 적어 뒀다가 되돌린다
-  var cards = new Map();
+  // 다시 따져서, 한 프레임마다 요소 1,400개를 훑었다. 손댄 칸은 원래 값을 cards 에 적어 뒀다가 되돌린다
   function set(book, el, prop, val, prio){
     var o = book.get(el);
     if (!o) { o = {}; book.set(el, o); }
@@ -609,7 +622,11 @@ pre .c{color:var(--muted)}
     if (hid && !over.closest('[data-scheme="' + sid + '"]') && !over.matches('.card.s-' + sid)) hid = null;
     function put(sel, uri, n, f){
       at(sel).forEach(function(el){
+        var o = cards.get(el);
         if (uri) { set(cards, el, 'background-image', 'url(' + uri + ')'); set(cards, el, '--n', String(n)); }
+        // 깐 그림 그대로 쓰는 때(색조 0)인데 전에 색조를 입힌 그림이 덮여 있으면 깐 그림으로 되돌린다.
+        // 안 그러면 움직이는 구성표는 색조를 0 으로 돌려도 입혔던 색 그대로 남았다
+        else if (o && 'background-image' in o) { set(cards, el, 'background-image', o['background-image'][0]); set(cards, el, '--n', o['--n'][0]); }
         set(cards, el, '--f', String(f));
       });
     }
@@ -798,9 +815,15 @@ pre .c{color:var(--muted)}
     getJSON('data/' + mine + '/' + sid + '.json').then(function(one){
       Object.keys(one.data).forEach(function(rid){ pack.data[sid][rid][0] = one.data[rid]; });
       pack.extra[sid] = one.extra; pack.full[sid] = true;
+      if (pack === base) layScheme(sid);
       if (shape === mine) { lastKey = ''; tick(); }
     }, function(){ setTimeout(function(){ pack.asking[sid] = false; }, 5000); });
   }
+  // 누르기 전에 손가락·마우스가 닿는 때부터 그 구성표 그림을 받아 둔다
+  document.querySelectorAll('[data-pick]').forEach(function(b){
+    function warm(){ need(b.getAttribute('data-pick')); }
+    b.addEventListener('pointerenter', warm); b.addEventListener('pointerdown', warm);
+  });
   function useShape(id, done){
     var pick = SHAPES.filter(function(s){ return s.id === id; })[0] || SHAPES[0];
     function put(pack){
@@ -939,7 +962,7 @@ pre .c{color:var(--muted)}
   picks.forEach(function(b){ b.addEventListener('click', function(){ choose(b.getAttribute('data-pick')); }); });
   var saved = null;
   try { saved = localStorage.getItem('scheme'); } catch (e) {}
-  choose(document.querySelector('[data-pick="' + saved + '"]') ? saved : 'pink');
+  choose(document.querySelector('[data-pick="' + saved + '"]') ? saved : /*START*/);
 
   var zone = document.getElementById('drag-zone'), chip = document.getElementById('drag-chip');
   var start = null, pos = {x:0, y:0};

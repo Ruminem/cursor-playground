@@ -62,7 +62,7 @@
   만든다** — 시안 그림(20·40칸)이 커서 32·64 판과 똑같은 그림이라 `smooth.drawer` 하나로 나눠 그리고, 조각은 부모가
   모양별로 모아 쓴다. 모양마다 data 일감을 따로 돌리던 때보다 컨테이너 `--all` 346.6→280.4초, 워커 시간 합 22분 25초→17분 38초
   (2026-09-24, 같은 커밋 위에서 전후, 6,110개 바이트 동일). (`smooth.FPS = 30` 을 켜기 전에는
-  2026-09-20 PC 147–161초였고, 121종이던 때는 224–268초였다). 산출물은 `dist` 247MB + `data` 47MB (2026-09-24 컨테이너 `du`: 시안 데이터를 프레임 한 장씩에서 칸마다 세로 스트립 한 장으로 바꾼 뒤 data 218→98MB, preview.html 6.0→2.0MB) — **`FPS` 를 끄면 dist 가 121MB 로
+  2026-09-20 PC 147–161초였고, 121종이던 때는 224–268초였다). 산출물은 `dist` 247MB + `data` 47MB (2026-09-24 컨테이너 `du`: 시안 데이터를 프레임 한 장씩에서 칸마다 세로 스트립 한 장으로 바꾼 뒤 data 218→98MB, preview.html 6.0→2.0MB. 2026-09-24 밤 기본 모양 그림도 `data/classic/<구성표>.json` 으로 빼고 페이지엔 칸 정보·목록 화살표·처음 여는 구성표(`build.START`) 그림만 남겨 75종 기준 2.47→0.81MB, gzip 1.29MB→239KB — 아이폰 13 흉내(CPU 4배·8Mbps) DCL 2.35–2.41→1.42–1.53초) — **`FPS` 를 끄면 dist 가 121MB 로
   돌아간다.** 용량이 문제되면 여기가 첫 손잡이다. 2026-09-23 전기(32프레임)·용암(24프레임)을 늘린 뒤
   리눅스 `du` 로 dist 256→276MB · data 48→56MB (재는 곳이 달라 위 247MB 와 바로 견주지 않는다)
   매끈한 모양의 스텐실 160벌은 테마와 무관해서 `win-cursor/.stencils.pkl` 에 먼저 구워 워커들이 나눠 쓴다.
@@ -94,7 +94,7 @@
 - 파이썬 버전은 3.14 로 맞춘다. PNG 압축(zlib) 결과가 버전마다 달라 올라가는 커서가 러너 환경을 타지 않게
 
 ## 읽지 말 것 (생성물)
-`win-cursor/preview.html`(2.0MB), `win-cursor/dist/`, `win-cursor/data/`, `win-cursor/out/`, `win-cursor/.build-stamp.json`, `win-cursor/.stencils.pkl`, `win-cursor/README.md` 의 구성표 표.
+`win-cursor/preview.html`(0.8MB), `win-cursor/dist/`, `win-cursor/data/`, `win-cursor/out/`, `win-cursor/.build-stamp.json`, `win-cursor/.stencils.pkl`, `win-cursor/README.md` 의 구성표 표.
 전부 `build.py` 가 만든다. 궁금한 게 있으면 원본(`win-cursor/art/`, `*.json`, `win-cursor/preview.tpl.html`)을 본다.
 
 ## 이 저장소의 관례
