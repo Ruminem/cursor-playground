@@ -1,20 +1,31 @@
-hotspot 8,8
+hotspot 9,9
 color 0 286ea0ff
-color 1 b6e5f7ff
-..000
-.00100000
-001111110
-011111100
-00111100
-.0111100
-.01100100
-.010000100
-.000..00100..000
-.......001000010
-........00100110
-.........0011110
-.........00111100
-........001111110
-........011111100
-........00000100
-............000
+color S 4a98ccff
+color 1 d8f5fdff
+color 2 c6edfaff
+color 3 b4e4f7ff
+color 4 a2dbf4ff
+color 5 90d1f0ff
+color 6 7ec7ecff
+color 7 6cbde7ff
+color W ffffffff
+color R c6edfac7
+.RRRRRRRRRR
+RR00000000RR
+R0WWWWWWW10R
+R0W111WSS0RR
+R0W22WSS0RR
+R0W2W2S0.R
+R0WWSS330RR
+R0WSS03W30RR...RRR
+R04S0.04440RR.RR0RR
+R0S0RRR044W0RRR0W0R
+RR0RR.RR0W440.0W40R
+.RRR...RR05550WWS0R
+........RR05WWW5S0R
+.........R.0W666W0R
+........RR0WW66WS0R
+.......RR0WW77W7S0R
+.......R07SSSWSSS0R
+.......RR00000000RR
+........RRRRRRRRRR

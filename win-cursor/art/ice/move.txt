@@ -1,42 +1,37 @@
-hotspot 10,10
+hotspot 12,12
 color 0 286ea0ff
-color 1 8cd2f0ff
-color 2 92d5f1ff
-color 3 97d7f2ff
-color 4 9ddaf3ff
-color 5 a2dcf4ff
-color 6 a8dff5ff
-color 7 aee2f6ff
-color 8 b3e4f7ff
-color 9 b4f0ff50
-color A b9e7f8ff
-color B bfeaf8ff
-color C c4ecf9ff
-color D caeffaff
-color E d0f2fbff
-color F d5f4fcff
-color G dbf7fdff
-color H e0f9feff
-color I e6fcffff
-color J ffffffff
-..........9
-.........909
-........90I09
-.......90JHH09
-......90GGJGG09
-.......900F009
-....9...90E09...9
-...909..90D09..909
-..90C09990C09990C09
-.90JB00000B00000BB09
-90AAJAAAAAJAAAAAJAA09
-.9088000008000008J09
-..90709990709990709
-...909..90609..909
-....9...90509...9
-.......9004009
-......9033J3309
-.......9022J09
-........90109
-.........909
-..........9
+color S 4a98ccff
+color 1 d8f5fdff
+color 2 c6edfaff
+color 3 b4e4f7ff
+color 4 a2dbf4ff
+color 5 90d1f0ff
+color 6 7ec7ecff
+color 7 6cbde7ff
+color W ffffffff
+color R c6edfac7
+...........RRR
+..........RR0RR
+.........RR0W0RR
+........RR0WW10RR
+.......RR0WW2220RR
+.......R0W222SWS0R
+.......RR0022W00RR
+....RRR.RR0WWS0RR.RRR
+...RR0RR.R0W3S0R.RR0RR
+..RR0W0RRR0W3S0RRR0W0RR
+.RR0WW00000W3300000W30RR
+RR0WW4WWWWWW4WWWWWWW440RR
+R0WW444W4444W4444W444SW0R
+RR044SWSSSSW4SSSWSS4SW0RR
+.RR05W0000055S00000SW0RR
+..RR0S0RRR0W5S0RRR0W0RR
+...RR0RR.R0W5W0R.RR0RR
+....RRR.RR0WWS0RR.RRR
+.......RR00W6600RR
+.......R0WWW666W0R
+.......RR0666SW0RR
+........RR07SW0RR
+.........RR0W0RR
+..........RR0RR
+...........RRR

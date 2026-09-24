@@ -1,15 +1,22 @@
-hotspot 5,0
+hotspot 3,0
 color 0 5a2a06ff
-color 1 c87a18ff
-color 2 e89a2aff
-color 3 fff0c0ff
-....00
-....00
-....00
-0000220000
-.01121110
-..021130
-..021210
-..020010
-..00..00
-.0......0
+color 1 fff0c0ff
+color 2 ffc850ff
+color 3 eb9c24ff
+color 4 b4600cff
+color 5 d67c12dc
+color 6 a8560ae6
+color 7 fff6dcf0
+color 8 fff4c8e6
+...00
+..0120
+..0740
+..0140
+..014000
+..014012000
+.00130130120
+010151551540
+021555585640
+.03666666640
+..044444440
+...0000000
