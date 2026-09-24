@@ -230,7 +230,7 @@ pre .c{color:var(--muted)}
 .setup p{margin:0;max-width:70ch}
 .setup a,.install a{color:var(--accent-ink);text-underline-offset:3px}
 .setup ol{margin:0;padding-left:20px;display:grid;gap:4px;max-width:70ch}
-#mac-note{align-self:center}
+.not-win .urlbar [data-action="restore"]{display:none}   /* 맥은 Mousecape 의 ⌘R 이 원래대로 */
 .cmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
 .cmd code{flex:1 1 320px;min-width:0;overflow-x:auto;white-space:nowrap;font:13px/1.5 var(--mono);background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
 .copy{font:700 14px/1 var(--body);color:#1E1A20;background:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 16px;min-height:40px}
@@ -257,7 +257,7 @@ pre .c{color:var(--muted)}
 
   <section class="setup" aria-labelledby="setup-title">
     <h2 id="setup-title">처음 한 번</h2>
-    <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠. 맥이면 바로 아래 <b>맥에서 쓰기</b>.</p>
+    <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠. 맥이면 오른쪽 아래 적용 자리가 <b>맥용 .cape 받기</b> 로 바뀜 — 바로 아래 <b>맥에서 쓰기</b>.</p>
     <p>윈도우 PowerShell 을 열고 아래 한 줄을 붙여넣음. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음.</p>
     <div class="cmd">
       <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
@@ -268,11 +268,7 @@ pre .c{color:var(--muted)}
 
   <section class="setup" aria-labelledby="mac-title">
     <h2 id="mac-title">맥에서 쓰기</h2>
-    <p>맥은 커서를 바꾸는 공식 길이 없어서 무료 앱 <a href="https://github.com/sdmj76/Mousecape-swiftUI/releases">Mousecape</a> 에 기댐. 아래 버튼이 <b>지금 고른 구성표·모양·색조</b>를 Mousecape 가 읽는 <code>.cape</code> 파일로 구워 줌.</p>
-    <div class="cmd">
-      <button type="button" class="register c-hand" id="mac-cape">맥용 .cape 받기</button>
-      <span class="note" id="mac-note" role="status"></span>
-    </div>
+    <p>맥은 커서를 바꾸는 공식 길이 없어서 무료 앱 <a href="https://github.com/sdmj76/Mousecape-swiftUI/releases">Mousecape</a> 에 기댐. 윈도우에서 <b>적용</b>이 있는 오른쪽 아래 자리가 맥에서는 <b>맥용 .cape 받기</b> — <b>지금 고른 구성표·모양·색조</b>를 Mousecape 가 읽는 <code>.cape</code> 파일로 구워 줌.</p>
     <ol class="note">
       <li>Mousecape 를 처음 열면 맥이 막음 — <b>완료</b>를 누르고 시스템 설정 › 개인정보 보호 및 보안 맨 아래의 <b>그래도 열기</b>.</li>
       <li>시스템 설정 › 손쉬운 사용 › 디스플레이 › 포인터 에서 <b>색 재설정</b> (포인터 색을 바꿔 두면 적용이 안 먹음).</li>
@@ -1138,10 +1134,22 @@ pre .c{color:var(--muted)}
     return m && { id: m[1], size: +m[2], hue: +m[3], shape: m[4] || window.cpShapes()[0].id };
   }
   var apply = document.getElementById('urlbar-apply');
-  // 윈도우가 아니면 붙여넣은 주소의 조합을 이 페이지에서 보여 주는 데까지만 간다
-  var applyLabel = document.documentElement.classList.contains('not-win') ? '보기' : '적용';
+  // 윈도우는 바로 적용, 맥(윈도우 아닌 곳)은 같은 자리에서 지금 조합을 .cape 로 받는다 — 목적이 같아 자리도 같게
+  var mac = document.documentElement.classList.contains('not-win');
+  var applyLabel = mac ? '맥용 .cape 받기' : '적용';
   apply.textContent = applyLabel;
-  function nope(){ apply.textContent = '못 읽음'; setTimeout(function(){ apply.textContent = applyLabel; }, 1600); }
+  function say(t){ apply.textContent = t; setTimeout(function(){ apply.textContent = applyLabel; }, 1600); }
+  function nope(){ say('못 읽음'); }
+  function cape(){
+    if (apply.disabled) return;
+    apply.disabled = true; apply.textContent = '굽는 중…';
+    window.cpCape().then(function(r){
+      apply.disabled = false; say('받음 · ' + Math.round(r.size / 1024) + ' KiB');
+    }, function(){
+      // 커서 파일은 Pages 에 올라간 dist 에서 받는다. 파일로 연 페이지면 여기로 온다
+      apply.disabled = false; say('못 받음');
+    });
+  }
   // 적용은 그 구성표 카드의 적용 버튼을 그대로 누른다 (확인 창과 검사를 같이 지나가게)
   apply.addEventListener('click', function(){
     var text = out.textContent.trim();
@@ -1150,6 +1158,7 @@ pre .c{color:var(--muted)}
       if (!b || !window.cpUse(b)) nope();
       return;
     }
+    if (mac) return cape();
     var pick = picked();
     if (pick) window.cpApply(pick.getAttribute('data-pick'));
   });
@@ -1172,8 +1181,8 @@ pre .c{color:var(--muted)}
 // 맥용 .cape: 지금 고른 구성표·모양·색조를 Mousecape 가 읽는 .cape(plist)로 굽는다 (docs/macos.md).
 // 새로 그리지 않고 윈도우 버튼과 같은 dist 커서 파일에서 32·64px 그림을 꺼내 다시 담는다.
 // 칸 → 맥 이름은 mac.json (gen/cape.py 와 같이 씀). 기본 모양이면 gen/cape.py 와 같은 그림·핫스팟·장 고르기가 나와야 한다
+// 누르는 자리는 화면 맨 아래 줄의 적용 버튼(윈도우가 아닐 때). 여기는 굽기만 하고 {name, size} 를 돌려준다
 (function(){
-  var btn = document.getElementById('mac-cape'), note = document.getElementById('mac-note');
   var MAX = 24, PTS = 32, SCALES = [1, 2];   // Mousecape 가 받는 장 수 상한, 맥 커서 한 변(포인트), 1x·2x
   function tag(v, o){ return String.fromCharCode(v.getUint8(o), v.getUint8(o + 1), v.getUint8(o + 2), v.getUint8(o + 3)); }
   function get(url){ return fetch(url).then(function(r){ if (!r.ok) throw new Error(url); return r.arrayBuffer(); }); }
@@ -1252,20 +1261,19 @@ pre .c{color:var(--muted)}
         kv('Representations', '<array>' + pngs.map(function(b){ return '<data>' + b64(b) + '</data>'; }).join('') + '</array>') + '</dict>';
     });
   }
-  btn.addEventListener('click', function(){
+  window.cpCape = function(){
     var chosen = document.querySelector('[data-pick][aria-pressed="true"]');
-    if (!chosen || btn.disabled) return;
+    if (!chosen) return Promise.reject(new Error('고른 구성표 없음'));
     var sid = chosen.getAttribute('data-pick'), deg = window.cpHue(), shape = window.cpShape();
     var base = window.cpShapes()[0].id === shape ? null : shape, ext = window.cpAnimated(sid) ? 'ani' : 'cur';
     var card = document.querySelector('[data-apply="' + sid + '"]'), sname = card ? card.getAttribute('data-name') : sid;
     var shapeName = base ? ' ' + window.cpShapes().filter(function(s){ return s.id === shape; })[0].name : '';
-    btn.disabled = true; note.textContent = sname + shapeName + ' 굽는 중…';
     // 모양이 안 바꾸는 칸은 모양 쪽에 파일이 없다. 없으면 기본 것을 받는다 (handler.ps1 과 같은 규칙)
     function file(rid){
       var plain = 'dist/' + sid + '/' + rid + '.' + ext;
       return base ? get('dist/' + base + '/' + sid + '/' + rid + '.' + ext).catch(function(){ return get(plain); }) : get(plain);
     }
-    fetch('mac.json').then(function(r){ if (!r.ok) throw new Error('mac.json'); return r.json(); }).then(function(map){
+    return fetch('mac.json').then(function(r){ if (!r.ok) throw new Error('mac.json'); return r.json(); }).then(function(map){
       var rids = Object.keys(map);
       return Promise.all(rids.map(function(rid){ return file(rid).then(function(b){ return slot(b, deg); }); })).then(function(dicts){
         var tail = (base ? '.' + base : '') + (deg ? '.h' + deg : ''), cursors = '';
@@ -1279,12 +1287,10 @@ pre .c{color:var(--muted)}
         var blob = new Blob([xml], { type: 'application/octet-stream' }), url = URL.createObjectURL(blob);
         var a = document.createElement('a'); a.href = url; a.download = 'cursor-playground-' + sid + tail.replace(/\./g, '-') + '.cape'; a.click();
         setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-        note.textContent = a.download + ' (' + Math.round(blob.size / 1024) + ' KiB)';
+        return { name: a.download, size: blob.size };
       });
-    }).catch(function(){
-      note.textContent = '커서 파일을 받지 못함 — 이 버튼은 GitHub Pages 에 올라간 페이지에서만 됨';
-    }).then(function(){ btn.disabled = false; });
-  });
+    });
+  };
 })();
 
 // 내 백업: 지금 고른 구성표·모양·색조·크기를 묶어 이 브라우저에 저장해 두고, 누르면 그 조합으로 다시 적용한다
