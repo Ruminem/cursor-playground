@@ -1,168 +1,231 @@
 hotspot 0,0
 rate 6
 color 0 202020ff
-color 1 3050c8ff
-color 2 e8303cff
-color 3 fafafaff
+color 1 213792ff
+color 2 213894ff
+color 3 223997ff
+color 4 233b9bff
+color 5 243da0ff
+color 6 2640a9ff
+color 7 2742aeff
+color 8 2944b3ff
+color 9 2a47baff
+color A 2c4ac4ff
+color B 2d4bc6ff
+color C 2f4eceff
+color D 3050d0ff
+color E 3756d2ff
+color F 3a58d3ff
+color G 4360d5ff
+color H 4864d6ff
+color I a3222aff
+color J a5222bff
+color K a8232cff
+color L ad242dff
+color M afafafff
+color N b2b2b2ff
+color O b3252eff
+color P b5b5b5ff
+color Q bababaff
+color R bd2731ff
+color S c1c1c1ff
+color T c22832ff
+color U c82934ff
+color V ccccccff
+color W d02b36ff
+color X d1d1d1ff
+color Y d8d8d8ff
+color Z db2d39ff
+color a dd2e39ff
+color b e0e0e0ff
+color c e6303bff
+color d e8313dff
+color e e93843ff
+color f e93b46ff
+color g ea444fff
+color h eb4953ff
+color i ecececff
+color j eeeeeeff
+color k f8f8f8ff
+color l fafafaff
+color m fbfbfbff
 frame
 0
 00
-030
-0330
-03110
-011120
-0112220
-01222330
-022233310
-0223331110
-02333100000
-0330110
-030.0120
-00..0220
-0....0230
-.....0330
+0l0
+0m90
+0HG60
+0HHlS0
+0HmlZL0
+0mmheWP0
+0mhhgkY20
+0hhhmlB710
+0hhli400000
+0hm0A40
+0m0.09P0
+00..0mb0
+0....0hW0
+.....0hW0
 ......00
 frame
 0
 00
-020
-0330
-03310
-031110
-0111220
-01122230
-012223330
-0222333110
-02233300000
-0230310
-030.0110
-00..0120
-0....0220
-.....0230
+0l0
+0H90
+0HGV0
+0HmlO0
+0mmgZL0
+0mhhebP0
+0hhhlk820
+0hhmmFB7M0
+0hmlA400000
+0mm0A40
+0m0.0bP0
+00..0mW0
+0....0hW0
+.....0hb0
 ......00
 frame
 0
 00
-020
-0230
-03330
-033110
-0311120
-01112220
-011222330
-0122233310
-02223300000
-0220330
-020.0110
-00..0110
-0....0220
-.....0220
+0G0
+0H90
+0HlV0
+0mmdO0
+0mhgZQ0
+0hhhlb30
+0hhmlC820
+0hmmHFBXM0
+0mmGA400000
+0mH0AQ0
+0H0.0bK0
+00..0hW0
+0....0hb0
+.....0mb0
 ......00
 frame
 0
 00
-020
-0220
-02330
-033310
-0331110
-03111220
-011122230
-0112223330
-01222300000
-0220330
-020.0310
-00..0110
-0....0120
-.....0220
+0G0
+0Hb0
+0mlR0
+0mhdO0
+0hhgiQ0
+0hhml930
+0hmmGC8N0
+0mmHHFjXI0
+0mHGAQ00000
+0HH0iQ0
+0H0.0WK0
+00..0hW0
+0....0mb0
+.....0m90
 ......00
 frame
 0
 00
-010
-0220
-02230
-023330
-0333110
-03311120
-031112220
-0111222330
-01122200000
-0120230
-020.0330
-00..0310
-0....0110
-.....0120
+0G0
+0mb0
+0mgR0
+0hhdS0
+0hhli40
+0hmmE930
+0mmHGCYN0
+0mHHHljTI0
+0HHGiQ00000
+0HH0iL0
+0H0.0WK0
+00..0hb0
+0....0m90
+.....0H90
 ......00
 frame
 0
 00
-010
-0120
-02220
-022330
-0233310
-03331110
-033111220
-0311122230
-01112200000
-0110220
-010.0330
-00..0330
-0....0110
-.....0110
+0l0
+0mW0
+0hgR0
+0hhlS0
+0hmlA40
+0mmHE9P0
+0mHHGkYJ0
+0HHHmlaTI0
+0HHliL00000
+0Hm0ZL0
+0m0.0WP0
+00..0mb0
+0....0H90
+.....0H90
 ......00
 frame
 0
 00
-010
-0110
-01220
-022230
-0223330
-02333110
-033311120
-0331112220
-03111200000
-0110220
-010.0230
-00..0330
-0....0310
-.....0110
+0l0
+0hW0
+0hgV0
+0hml50
+0mmGA40
+0mHHEbP0
+0HHHlkUJ0
+0HHmmfaTM0
+0HmlZL00000
+0mm0ZL0
+0m0.0bP0
+00..0m90
+0....0H90
+.....0Hb0
 ......00
 frame
 0
 00
-030
-0110
-01120
-012220
-0222330
-02233310
-023331110
-0333111220
-03311100000
-0310120
-010.0220
-00..0230
-0....0330
-.....0310
+0g0
+0hW0
+0hlV0
+0mmD50
+0mHGAQ0
+0HHHlbK0
+0HHmlcUJ0
+0HmmhfaXM0
+0mmgZL00000
+0mh0ZQ0
+0h0.0b30
+00..0H90
+0....0Hb0
+.....0mb0
 ......00
 frame
 0
 00
-030
-0310
-01110
-011220
-0122230
-02223330
-022333110
-0233311120
-03331100000
-0330110
-030.0220
-00..0220
-0....0330
-.....0330
+0g0
+0hb0
+0ml60
+0mHD50
+0HHGiQ0
+0HHmlWK0
+0HmmgcUN0
+0mmhhfjX10
+0mhgZQ00000
+0hh0iQ0
+0h0.0930
+00..0H90
+0....0mb0
+.....0mW0
+......00
+frame
+0
+00
+0g0
+0mb0
+0mG60
+0HHDS0
+0HHliL0
+0HmmeWK0
+0mmhgcYN0
+0mhhhlj710
+0hhgiQ00000
+0hh0i40
+0h0.0930
+00..0Hb0
+0....0mW0
+.....0hW0
 ......00
