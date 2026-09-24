@@ -10,6 +10,7 @@ dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려
 import base64
 import hashlib
 import json
+import os
 import pickle
 import subprocess
 import sys
@@ -280,6 +281,17 @@ def shape_data(shape_id: str, sids: list[str], old: dict | None) -> dict:
     return {"data": data, "extra": extra}
 
 
+def timed(fn, job) -> tuple:
+    """일감 하나를 돌리고 (결과, 시작 시각, 끝 시각)을 돌려준다. 어디서 시간이 새는지 찍으려고"""
+    t = time.time()
+    got = fn(job)
+    return got, t, time.time()
+
+
+def _dur(s: float) -> str:
+    return f"{int(s // 60)}분 {s % 60:.0f}초" if s >= 60 else f"{s:.0f}초"
+
+
 def bake(key: tuple) -> tuple:
     """스텐실 하나를 굽는다 (워커에서). 값을 돌려보내 부모가 한 파일로 모은다"""
     return key, smoothlib.stencil(*key)
@@ -377,7 +389,8 @@ if __name__ == "__main__":
     code, art, every, page_key = _hashes()
     was = {} if "--all" in sys.argv else json.loads(STAMP.read_text()) if STAMP.exists() else {}
 
-    with ProcessPoolExecutor() as pool:
+    workers = getattr(os, "process_cpu_count", os.cpu_count)() or 1   # ProcessPoolExecutor 기본값과 같다
+    with ProcessPoolExecutor(workers) as pool:
         # 재료가 바뀐 구성표. dist 는 여기에 "폴더가 없는 것"을 더하고, data 는 이 목록만 갈아 끼운다
         changed = [s["id"] for s in SCHEMES if was.get(s["id"]) != art[s["id"]]]
         dist_jobs, data_jobs, skipped = [], [], 0
@@ -415,24 +428,53 @@ if __name__ == "__main__":
             smooth = shape_of(shape_id) is not None
             return sum(frames[sid, rid] for rid, _, _ in ROLES + EXTRA if not (smooth and rid in KEEP)) * (3 if smooth else 1)
         dist_jobs.sort(key=cost, reverse=True)
-        jobs = [pool.submit(build_data, j) for j in data_jobs] + [pool.submit(build_dist, j) for j in dist_jobs]
+        t_sub = time.time()
+        jobs = {pool.submit(timed, build_data, j): j for j in data_jobs}
+        jobs |= {pool.submit(timed, build_dist, j): j for j in dist_jobs}
+        whole = sum(map(cost, dist_jobs)) or 1          # 진행률은 이 어림 값의 합으로 센다
 
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
         if was.get("*page") != page_key or not out.exists():
             _load_stencils()                             # 모양 탭 아이콘도 매끈한 모양이다
             out.write_text(build(), encoding="utf-8", newline="\n")
             print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")
-        total, made = 0, {}
-        for done in as_completed(jobs):
-            what, count = done.result()
+        total, made, spent, per_sid, got, step = 0, {}, {}, {}, 0, 1
+        spans = []                                      # (시작, 끝) — 가동률과 꼬리를 잰다
+        for n, done in enumerate(as_completed(jobs), 1):
+            (what, count), a, b = done.result()
+            spans.append((a, b))
             total += count
-            if what in left:                              # dist 는 모양 하나가 다 끝났을 때만 찍는다
-                left[what] -= 1
-                made[what] = made.get(what, 0) + count
-                if left[what]:
-                    continue
-                count = made[what]
-            print(f"[{time.time() - t0:5.1f}초] {what}" + (f" 커서 {count}개" if count else ""))
+            if what not in left:                          # data
+                print(f"[{time.time() - t0:5.1f}초] {what} · {b - a:.1f}초")
+                continue
+            # dist 는 모양 하나가 다 끝났을 때 한 줄, 그 사이엔 어림 진행률이 10% 넘을 때마다 한 줄
+            shape_id, (sid,) = jobs[done]
+            per_sid[sid] = per_sid.get(sid, 0) + b - a
+            spent[what] = spent.get(what, 0) + b - a
+            got += cost(jobs[done])
+            left[what] -= 1
+            made[what] = made.get(what, 0) + count
+            if not left[what]:
+                print(f"[{time.time() - t0:5.1f}초] {what} 커서 {made[what]}개 · 워커 시간 {_dur(spent[what])}")
+            if got * 10 >= whole * step and got < whole:
+                step = got * 10 // whole + 1
+                # 남은 시간은 dist 일감이 실제로 쓴 워커 시간으로 어림한다 — 벽시계로 재면 처음에 워커를
+                # 차지한 data 일감 몫까지 dist 에 얹혀 몇 배로 부푼다
+                rest = sum(spent.values()) * (whole - got) / got / workers
+                print(f"[{time.time() - t0:5.1f}초] 진행 {got * 100 // whole}% · 일감 {n}/{len(jobs)}"
+                      f" · 커서 {total:,}개 · 남은 어림 {_dur(rest)}")
+        if spans:
+            # 가동률 = 워커들이 실제로 일한 시간 / (워커 수 × 걸린 시간). 꼬리 = 마지막 일감이 워커에 들어간
+            # 뒤 처음 한 워커가 놀기 시작한 때부터 전부 끝날 때까지 — 차례 어림이 틀리면 여기가 길어진다
+            last_in = max(a for a, _ in spans)
+            end = max(b for _, b in spans)
+            idle_from = min(b for _, b in spans if b >= last_in)
+            busy = sum(b - a for a, b in spans)
+            print(f"워커 {workers}개 · 일한 시간 합 {_dur(busy)} · 가동률 {busy * 100 / (workers * (end - t_sub)):.0f}%"
+                  f" · 꼬리 {end - idle_from:.1f}초")
+        if per_sid:
+            top = sorted(per_sid.items(), key=lambda kv: -kv[1])[:5]
+            print("무거운 구성표 (모양 전부 합친 워커 시간): " + " · ".join(f"{k} {_dur(v)}" for k, v in top))
 
     STAMP.write_text(json.dumps({**art, "*": every, "*page": page_key, "*stencil": code}), encoding="utf-8", newline="\n")
     update_readme()
