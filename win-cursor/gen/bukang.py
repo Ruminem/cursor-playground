@@ -8,10 +8,14 @@
 동구청이 공식 캐릭터를 따로 공모하고 있으므로 그것을 닮게 그리지 않고 그냥 상어를 그린다.
 
 칸마다 자세(머리 끝·꼬리 끝)와 기호(? · 사람 · 핀 · 도는 점)는 돌고래 애니(BASE 커밋의 art/dolphinanim)에서
-빌려 오고, 옆모습 몸은 여기서 거리 단위 다각형으로 새로 그린다. wait 는 `keep` 이라 11모양 전부에 그대로 실리므로
-따로 그린다 — 물 위로 등지느러미만 내놓고 수로를 빙빙 도는 모습(`circle`). 원호로 휜 몸을 먼저 그려 봤는데 32칸에서
-지느러미가 뭉개져 버렸다. 위에서 본 칸(move)·몸을 만 칸(no)·기호뿐인 칸(cross·hand·ibeam)은 돌고래 그림에
-상어 색만 입힌다 — 새로 그리면 일이 두 배라 v0 에서 뺐다.
+빌려 오고, 옆모습 몸은 여기서 거리 단위 다각형으로 새로 그린다. 첫 벌은 돌고래 몸을 조금 고친 꼴이라 돌고래로 읽혀서
+상어만의 것을 따로 세웠다 — 입 위로 튀어나온 원뿔 주둥이 · 앞으로 쏠린 세모 등지느러미 · 긴 낫 모양 가슴지느러미 ·
+윗날개가 긴 꼬리 · 아가미구멍 셋 · 거뭇한 지느러미 끝. 꼬리도 돌고래처럼 위아래로 까딱이지 않고 옆으로 저으니
+옆에서 보면 꼬리가 줄었다 늘었다 한다(`sweep`).
+wait 는 `keep` 이라 11모양 전부에 그대로 실리므로 따로 그린다 — 물 위로 등지느러미만 내놓고 수로를 빙빙 도는
+모습(`circle`). 원호로 휜 몸을 먼저 그려 봤는데 32칸에서 지느러미가 뭉개져 버렸다. move 는 위에서 본 상어(`top`),
+no 는 빨간 금지 표지 안에서 등지느러미가 솟았다 가라앉는 그림(`sign`)이다. 기호뿐인 칸(cross·hand·ibeam)은
+돌고래 그림에 상어 색만 입힌다.
 12장 × rate 5 = 1초에 꼬리 한 번. 다른 해양 애니와 같은 박자다.
 이 파일은 빌드 코드 해시와 CI 캐시 키에 안 들어간다 — 고쳐도 빌드는 아무것도 다시 안 그리니 돌려서 art 를 고친다.
 """
@@ -52,7 +56,6 @@ def hx(s: str) -> tuple:
 OUT, DARK, MID, LIGHT = hx("1b2227ff"), hx("3d4a52ff"), hx("5b6b74ff"), hx("7e8f98ff")
 BELLY, SHADE = hx("eef2f3ff"), hx("c3ccd1ff")
 RIM = hx("d2dde6c7")                          # 돌고래 애니와 같은 반투명 테
-FOAM, FOAM2 = hx("e8fcffff"), hx("b4e4ecff")  # 거품
 # 돌고래 색 → 상어 색 (색만 입히는 칸)
 RECOLOR = {hx("17212cff"): OUT, hx("2c3a4aff"): DARK, hx("43566bff"): MID, hx("566b83ff"): LIGHT,
            hx("cfd8e0ff"): SHADE, hx("dfe6ecff"): BELLY, hx("f7fafcff"): BELLY, RIM: RIM}
@@ -71,16 +74,29 @@ def lerp_profile(pts, s):
     return pts[-1][1] if s > pts[-1][0] else pts[0][1]
 
 
-TOP = [(0, 0), (0.04, 0.03), (0.12, 0.068), (0.28, 0.092), (0.45, 0.082), (0.6, 0.055), (0.72, 0.03), (0.78, 0.022)]
-BOT = [(0, 0), (0.04, -0.028), (0.12, -0.062), (0.28, -0.082), (0.45, -0.07), (0.6, -0.045), (0.72, -0.025), (0.78, -0.018)]
-FINS = {   # 이름: 꼭짓점들 (s, v). 1칸짜리 선이 되지 않게 밑동을 넓게 잡는다
-    "dorsal": [(0.25, 0.08), (0.36, 0.19), (0.41, 0.235), (0.44, 0.2), (0.45, 0.12), (0.5, 0.07)],
-    "pectoral": [(0.24, -0.05), (0.32, -0.13), (0.42, -0.2), (0.43, -0.15), (0.4, -0.08), (0.38, -0.05)],
-    "dorsal2": [(0.63, 0.04), (0.68, 0.085), (0.7, 0.08), (0.71, 0.035)],
-    "anal": [(0.62, -0.035), (0.67, -0.075), (0.7, -0.03)],
-    "caudal": [(0.72, 0.035), (0.84, 0.13), (0.97, 0.245), (1.0, 0.235), (0.97, 0.13), (0.91, 0.04),
-               (0.97, -0.12), (0.93, -0.145), (0.84, -0.09), (0.72, -0.035)],
+# 원뿔 주둥이가 입 위로 튀어나오고(아래 윤곽이 늦게 내려감), 몸이 가장 두꺼운 자리가 앞 1/3 이다.
+# 돌고래와 가르는 것: 앞으로 쏠린 높은 세모 등지느러미 · 길고 낫 모양인 가슴지느러미 · 윗날개가 긴 비대칭 꼬리 ·
+# 가는 꼬리자루 · 작은 둘째 등지느러미·뒷지느러미 · 아가미구멍 줄. 지느러미 끝은 거뭇하다(무태상어 dusky)
+TOP = [(0, 0), (0.03, 0.022), (0.08, 0.048), (0.15, 0.068), (0.25, 0.085), (0.3, 0.088), (0.45, 0.075),
+       (0.58, 0.05), (0.68, 0.028), (0.74, 0.02), (0.78, 0.02)]
+BOT = [(0, 0), (0.03, -0.012), (0.08, -0.035), (0.15, -0.06), (0.28, -0.08), (0.42, -0.075), (0.55, -0.05),
+       (0.66, -0.028), (0.74, -0.018), (0.78, -0.018)]
+FINS = {   # 이름: 꼭짓점들 (s, v). 1칸짜리 선이 되지 않게 밑동을 넓게 잡는다. 앞의 것이 위에 그려진다
+    "pectoral": [(0.19, -0.03), (0.25, -0.1), (0.33, -0.18), (0.37, -0.21), (0.35, -0.16), (0.30, -0.09),
+                 (0.28, -0.05), (0.27, -0.03)],
+    "dorsal": [(0.24, 0.07), (0.3, 0.15), (0.35, 0.2), (0.38, 0.205), (0.385, 0.16), (0.40, 0.115),
+               (0.44, 0.08), (0.42, 0.07)],
+    "pelvic": [(0.53, -0.045), (0.58, -0.09), (0.61, -0.088), (0.60, -0.04)],
+    "dorsal2": [(0.63, 0.04), (0.67, 0.08), (0.695, 0.078), (0.69, 0.03)],
+    "anal": [(0.655, -0.03), (0.695, -0.065), (0.71, -0.025)],
+    "caudal": [(0.74, 0.018), (0.85, 0.08), (0.95, 0.15), (1.0, 0.17), (0.985, 0.12), (0.95, 0.07),
+               (0.93, 0.03), (0.915, 0.005), (0.935, -0.075), (0.905, -0.11), (0.84, -0.06), (0.74, -0.018)],
 }
+TIPS = {   # 지느러미 끝(거뭇한 자리): 이 선 너머면 DARK
+    "dorsal": lambda s, v: v > 0.155, "pectoral": lambda s, v: v < -0.15,
+    "caudal": lambda s, v: v > 0.13 or v < -0.085,
+}
+PIVOT = 0.62              # 꼬리를 좌우로 저을 때 접히는 자리 (꼬리자루 앞)
 
 
 def body_poly():
@@ -88,12 +104,18 @@ def body_poly():
     return [(s, lerp_profile(TOP, s)) for s in ss] + [(s, lerp_profile(BOT, s)) for s in reversed(ss)]
 
 
-def wave(s: float, ph: float) -> float:
-    """꼬리 쪽으로 갈수록 커지는 물결 — 머리는 가만히, 꼬리 끝이 몸길이의 9% 만큼 까딱 (6% 는 1칸이 안 돼 안 보였다)"""
-    if s <= 0.4:
-        return 0.0
-    k = ((s - 0.4) / 0.6) ** 1.6
-    return 0.09 * k * math.sin(ph - 4.5 * (s - 0.4))
+def sweep(ph: float) -> float:
+    """꼬리를 옆으로 젓는 상어를 옆에서 보면 꼬리가 앞뒤로 줄었다 늘었다 한다 — PIVOT 뒤의 길이 배율.
+    돌고래처럼 위아래로 까딱이면 상어가 아니다"""
+    return 0.82 + 0.18 * math.cos(ph)
+
+
+def fold(s: float, k: float) -> float:
+    return s if s <= PIVOT else PIVOT + (s - PIVOT) * k
+
+
+def unfold(s: float, k: float) -> float:
+    return s if s <= PIVOT else PIVOT + (s - PIVOT) / k
 
 
 def inside(poly, x, y) -> bool:
@@ -105,7 +127,7 @@ def inside(poly, x, y) -> bool:
 
 
 def straight(head, tail, size=None):
-    """머리 칸 → 꼬리 칸으로 뻗은 몸의 (local, world) — 칸 좌표 ↔ (s, v) 몸길이 단위"""
+    """머리 칸 → 꼬리 칸으로 뻗은 몸의 (local, world, L) — 칸 좌표 ↔ (s, v) 몸길이 단위, L 은 몸길이(칸)"""
     hx_, hy = head[0] + 0.5, head[1] + 0.5
     tx, ty = tail[0] + 0.5, tail[1] + 0.5
     D = math.hypot(tx - hx_, ty - hy)
@@ -120,16 +142,17 @@ def straight(head, tail, size=None):
 
     def world(s, v):
         return hx_ + (s * ux + v * nx) * L, hy + (s * uy + v * ny) * L
-    return local, world
+    return local, world, L
 
 
 def shark(head, tail, ph, size=None):
-    """자세 하나 × 위상 하나 → ({좌표: 색}, 몸 칸 집합, at). 몸 칸은 테를 두르기 전 불투명한 칸"""
-    local, world = straight(head, tail, size)
-    parts = {"body": [(s, v * THICK + wave(s, ph)) for s, v in body_poly()]}
+    """자세 하나 × 위상 하나 → ({좌표: 색}, 몸 칸 집합). 몸 칸은 테를 두르기 전 불투명한 칸"""
+    local, world, L = straight(head, tail, size)
+    k = sweep(ph)
+    parts = {"body": [(fold(s, k), v * THICK) for s, v in body_poly()]}
     for name, pts in FINS.items():
-        parts[name] = [(s, v * THICK + wave(s, ph)) for s, v in pts]
-    order = ("body", "dorsal", "pectoral", "dorsal2", "anal", "caudal")
+        parts[name] = [(fold(s, k), v * THICK) for s, v in pts]
+    order = ("pectoral", "body", "dorsal", "pelvic", "dorsal2", "anal", "caudal")
 
     SUB = 4
     region, mask = {}, set()
@@ -145,49 +168,63 @@ def shark(head, tail, ph, size=None):
                         if inside(parts[name], s, v):
                             hits[name] = hits.get(name, 0) + 1
                             break
-            if sum(hits.values()) * 2 >= SUB * SUB:
+            n = sum(hits.values())
+            if n * 2 >= SUB * SUB:
                 mask.add((x, y))
-                region[x, y] = "body" if hits.get("body", 0) * 3 >= sum(hits.values()) else max(hits, key=hits.get)
+                # 몸과 지느러미가 반반이면 몸으로 — 밑동이 몸 색으로 이어져야 지느러미가 붙어 보인다
+                region[x, y] = "body" if hits.get("body", 0) * 3 >= n and hits.get("pectoral", 0) * 2 < n \
+                    else max(hits, key=hits.get)
     mask.add(head)
     region.setdefault(head, "body")
 
     out = {}
     for p in mask:
         s, v = local(p[0] + 0.5, p[1] + 0.5)
-        v = (v - wave(s, ph)) / THICK
-        if region[p] != "body":
-            out[p] = DARK
+        s, v = unfold(s, k), v / THICK
+        r = region[p]
+        if r != "body":
+            out[p] = DARK if r in TIPS and TIPS[r](s, v) else MID
             continue
+        # 등은 짙게, 옆구리는 밝게, 배는 희게 — 옆구리와 배 사이 경계를 또렷하게 (상어의 역그늘)
         top, bot = lerp_profile(TOP, s), lerp_profile(BOT, s)
         sep = bot + 0.45 * (top - bot)
-        if v > sep + 0.55 * (top - sep):
-            out[p] = LIGHT
-        elif v > sep:
+        if v > sep + 0.5 * (top - sep):
             out[p] = MID
+        elif v > sep:
+            out[p] = LIGHT
         elif v < bot + 0.3 * (sep - bot):
             out[p] = SHADE
         else:
             out[p] = BELLY
-    # 테두리: 몸 칸 중 네 이웃에 빈 칸이 있는 것
+    # 테두리: 몸 칸 중 네 이웃에 빈 칸이 있는 것. 가슴지느러미는 몸 앞에 있으니 몸과 닿는 자리에도 선을 긋는다
     for p in mask:
         x, y = p
-        if any(q not in mask for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))):
+        nb = ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))
+        if any(q not in mask for q in nb):
+            out[p] = OUT
+        elif region[p] == "pectoral" and any(region.get(q) == "body" for q in nb):
             out[p] = OUT
 
     def at(s, v):
-        wx, wy = world(s, v * THICK + wave(s, ph))
+        wx, wy = world(fold(s, k), v * THICK)
         return math.floor(wx), math.floor(wy)
 
-    # 눈 · 아가미 두 줄 (테두리 안쪽에만)
-    for p in (at(0.12, 0.025),):
-        if p in mask:
-            out[p] = OUT
-    for gs in (0.2, 0.245):
-        for v in (-0.02, 0.01, 0.035):
-            p = at(gs, v)
-            if p in mask and out[p] != OUT:
-                out[p] = DARK
-    return out, mask, at
+    def paint(p, c):
+        if p in mask and out[p] != OUT and region[p] == "body":
+            out[p] = c
+
+    # 눈: 주둥이 끝에서 조금 뒤, 등 쪽. 입: 주둥이 아래로 비스듬한 선 한 줄
+    e = at(0.085, 0.02)
+    if e in mask:
+        out[e] = OUT
+    for s in (0.07, 0.1, 0.13):
+        paint(at(s, lerp_profile(BOT, s) * 0.45 - 0.004), DARK)
+    # 아가미구멍 셋 — 2칸 간격 세로줄
+    for i in range(3):
+        gs = 0.17 + i * 2 / L
+        for v in (-0.03, -0.01, 0.01, 0.03):
+            paint(at(gs, v), DARK)
+    return out, mask
 
 
 def rim(frame: dict, mask: set) -> dict:
@@ -201,36 +238,15 @@ def rim(frame: dict, mask: set) -> dict:
     return f
 
 
-def bubble(f: dict, mask: set, at, k: int) -> None:
-    """아가미 등 쪽에서 거품 하나가 떠올라 톡 터진다 (12장 중 1–9장)"""
-    if not 1 <= k <= 9:
-        return
-    x0, y0 = at(0.24, 0.2)
-    x, y = x0, y0 - (k - 1)
-    if k <= 3:
-        dots = {(x, y): FOAM}
-    elif k <= 7:
-        dots = {(x, y): FOAM, (x + 1, y): FOAM2, (x, y + 1): FOAM2, (x + 1, y + 1): FOAM2}
-    elif k == 8:
-        dots = {(x - 1, y): FOAM2, (x + 1, y): FOAM2, (x, y - 1): FOAM2, (x, y + 1): FOAM2}
-    else:
-        dots = {(x - 1, y - 1): FOAM2, (x + 1, y + 1): FOAM2}
-    for p, c in dots.items():
-        if p not in mask:
-            f[p] = c
-
-
 def side(role: str) -> tuple[list[dict], tuple[int, int]]:
-    """옆모습 12장. 거품·테까지 32칸에 들 때까지 몸길이를 3% 씩 줄인다 (머리는 핫스팟에 둔 채)"""
+    """옆모습 12장. 테까지 32칸에 들 때까지 몸길이를 3% 씩 줄인다 (머리는 핫스팟에 둔 채)"""
     head, tail = POSE[role]
     size = LEN
     while True:
         frames = []
         for k in range(N):
-            body, mask, at = shark(head, tail, 2 * math.pi * k / N, size)
-            f = rim(body, mask)
-            bubble(f, mask, at, k)
-            frames.append(f)
+            body, mask = shark(head, tail, 2 * math.pi * k / N, size)
+            frames.append(rim(body, mask))
         x0, y0, x1, y1 = S.bbox([p for f in frames for p in f])
         if max(x1 - x0, y1 - y0) < 32:
             return frames, head
@@ -292,6 +308,134 @@ def circle() -> tuple[list[dict], tuple[int, int]]:
     return frames, (int(cx), int(cy))
 
 
+# move: 위에서 본 부캉이. 머리가 위, 꼬리가 몸을 옆으로 S 자로 저으며 헤엄친다(옆모습에서 꼬리가 줄었다 늘었다 한 것과 같은 동작)
+TOP_W = [(0, 0), (0.04, 0.035), (0.1, 0.07), (0.2, 0.09), (0.3, 0.092), (0.45, 0.075), (0.6, 0.05),
+         (0.72, 0.03), (0.8, 0.022)]   # 몸 반폭 (몸길이 단위) — 앞 1/3 이 가장 넓은 어뢰꼴
+TOP_FINS = {   # (옆으로 a, 뒤로 t) 오른쪽 것. 왼쪽은 거울로
+    "pectoral": [(0.07, 0.2), (0.2, 0.3), (0.26, 0.37), (0.21, 0.36), (0.13, 0.33), (0.07, 0.32)],
+    "pelvic": [(0.04, 0.55), (0.1, 0.61), (0.09, 0.63), (0.03, 0.62)],
+}
+TAIL = [(-0.025, 0.78), (0.025, 0.78), (0.035, 0.9), (0.015, 1.0), (-0.015, 1.0), (-0.035, 0.9)]   # 꼬리는 위에서 보면 칼날
+MOVE = (15.5, 1.0, 29.0)   # 가운뎃줄 x · 주둥이 y · 몸길이(칸)
+
+
+def top(ph: float) -> tuple[dict, set]:
+    cx, y0, L = MOVE
+
+    def c(t):   # 가운뎃줄이 옆으로 밀린 정도. 머리 쪽은 가만히
+        u = max(0.0, (t - 0.3) / 0.7)
+        return 0.07 * u ** 1.5 * math.sin(ph - 5.0 * (t - 0.3))
+
+    def w(a, t):
+        return cx + (c(t) + a) * L, y0 + t * L
+    ts = [i / 40 * 0.8 for i in range(41)]
+    parts = {"body": [w(lerp_profile(TOP_W, t), t) for t in ts] + [w(-lerp_profile(TOP_W, t), t) for t in reversed(ts)],
+             "tail": [w(a, t) for a, t in TAIL]}
+    for name, pts in TOP_FINS.items():
+        parts[name + "R"] = [w(a, t) for a, t in pts]
+        parts[name + "L"] = [w(-a, t) for a, t in reversed(pts)]
+    region, mask = {}, set()
+    for y in range(32):
+        for x in range(32):
+            hits = {}
+            for j in range(4):
+                for i in range(4):
+                    px, py = x + (i + 0.5) / 4, y + (j + 0.5) / 4
+                    for name, poly in parts.items():
+                        if inside(poly, px, py):
+                            hits[name] = hits.get(name, 0) + 1
+                            break
+            n = sum(hits.values())
+            if n * 2 >= 16:
+                mask.add((x, y))
+                region[x, y] = "body" if hits.get("body", 0) * 3 >= n else max(hits, key=hits.get)
+    out = {}
+    for p in mask:
+        t = (p[1] + 0.5 - y0) / L
+        a = (p[0] + 0.5 - cx) / L - c(t)
+        r = region[p]
+        if r == "body":
+            half = lerp_profile(TOP_W, t)
+            # 등줄기(등지느러미를 위에서 본 것)는 짙게, 왼쪽 어깨에 빛을 받는다
+            out[p] = DARK if abs(a) < 0.02 and 0.27 < t < 0.45 else LIGHT if a < -0.35 * half else MID
+        elif r == "tail":
+            out[p] = DARK
+        else:
+            out[p] = DARK if abs(a) > 0.19 else MID
+    for p in mask:
+        x, y = p
+        if any(q not in mask for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))):
+            out[p] = OUT
+    for s in (-1, 1):   # 눈: 머리 양옆 가장자리
+        e = (math.floor(cx + (c(0.1) + s * 0.05) * L), math.floor(y0 + 0.1 * L))
+        if e in mask:
+            out[e] = OUT
+    return out, mask
+
+
+def swim_top() -> tuple[list[dict], tuple[int, int]]:
+    frames = []
+    for k in range(N):
+        body, mask = top(2 * math.pi * k / N)
+        frames.append(rim(body, mask))
+    return frames, (15, 12)
+
+
+# no: 빨간 금지 표지 안에서 등지느러미가 물 위로 솟았다 가라앉는다 — "여기선 못 헤엄쳐"
+SIGN, SIGN_D = hx("d64541ff"), hx("9e2b28ff")
+NO = (13.5, 12.5, 11.5, 8.6)   # 가운데 x, y · 바깥 반지름 · 안 반지름
+
+
+def sign() -> tuple[list[dict], tuple[int, int]]:
+    cx, cy, ro, ri = NO
+    ring = set()
+    for y in range(32):
+        for x in range(32):
+            d = math.hypot(x + 0.5 - cx, y + 0.5 - cy)
+            # 빗금은 왼쪽 위 → 오른쪽 아래
+            u = ((x + 0.5 - cx) - (y + 0.5 - cy)) / math.sqrt(2)
+            if ri <= d <= ro or (d < ri and abs(u) <= 1.5):
+                ring.add((x, y))
+    frames = []
+    for k in range(N):
+        ph = 2 * math.pi * k / N
+        lift = 2.5 + 2.5 * math.cos(ph)                 # 0–5칸 솟는다
+        wy = cy + 5                                     # 물낯 — 빗금 아래 왼쪽 반달에 지느러미가 보이게
+        fx = cx - 2 + 1.5 * math.sin(ph)                # 솟는 동안 조금 앞으로 나간다
+        f = {}
+        # 물낯: 고리 안쪽에만 옅은 물결, 지느러미 밑동 곁은 흰 물보라
+        for x in range(32):
+            if math.hypot(x + 0.5 - cx, wy + 0.5 - cy) < ri:
+                f[x, math.floor(wy)] = WAKE[1]
+                f[x, math.floor(wy) + 1] = WAKE[3] if (x + k) % 3 else WAKE[2]
+        h = 1.5 + lift * 1.4
+        poly = [(fx - x, wy + y) for x, y in fin_poly(10, h)]   # 왼쪽으로 헤엄친다
+        mask = set()
+        for y in range(32):
+            if y >= wy:
+                continue
+            for x in range(32):
+                if math.hypot(x + 0.5 - cx, y + 0.5 - cy) >= ri:
+                    continue
+                hit = sum(inside(poly, x + (i + 0.5) / 4, y + (j + 0.5) / 4) for i in range(4) for j in range(4))
+                if hit >= 8:
+                    mask.add((x, y))
+        for x, y in mask:
+            edge = any(q not in mask for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+            f[x, y] = OUT if edge else DARK if y < wy - h * 0.7 else MID
+        if mask:
+            xs = [x for x, _ in mask]
+            for x in range(min(xs) - 1, max(xs) + 2):
+                if math.hypot(x + 0.5 - cx, wy + 0.5 - cy) < ri:
+                    f[x, math.floor(wy)] = WAKE[0]
+        # 표지는 맨 위에: 테두리는 짙은 빨강, 속은 빨강
+        for x, y in ring:
+            edge = any(q not in ring for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+            f[x, y] = SIGN_D if edge else SIGN
+        frames.append(rim(f, ring | mask))
+    return frames, (13, 12)
+
+
 def main() -> None:
     roles = sys.argv[1:] or list(ROLES)
     d = WIN / "art" / SID
@@ -302,6 +446,10 @@ def main() -> None:
         src, hot, _ = S.read_art(old_art(rid))
         if rid == "wait":
             frames, hot = circle()
+        elif rid == "move":
+            frames, hot = swim_top()
+        elif rid == "no":
+            frames, hot = sign()
         elif rid in POSE:
             frames, _ = side(rid)
         elif rid in GLYPH:
