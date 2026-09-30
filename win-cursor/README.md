@@ -127,28 +127,6 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/matcha` | Matcha | Deep green matcha under a fine layer of foam. |
 | `art/cookie` | Cookie | Baked dough studded with chocolate chips. |
 
-**Sea life**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/whaleshark` | Whale shark | Dark blue-grey skin dotted with a grid of white spots, like a whale shark. |
-| `art/dolphin` | Dolphin | Sleek dolphin, dark blue-grey on the back fading to a pale belly. |
-| `art/shrimp` | Shrimp | Translucent pink-orange shrimp segments. |
-| `art/puffer` | Pufferfish | A yellow pufferfish with brown spots and little spines. |
-| `art/mola` | Ocean sunfish | The silver-grey disc of an ocean sunfish with faint mottling. |
-| `art/catshark` | Cloudy catshark | Sandy brown with dark saddle blotches, like a cloudy catshark. |
-
-**Sea life · Bodies**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/whalesharkbody` | Whale shark | The whale shark is the cursor: blunt head as the tip, crescent tail at the other end, dark blue-grey skin with a grid of white spots. |
-| `art/dolphinbody` | Dolphin | The creature is the cursor. A dolphin whose beak is the pointer tip, dark blue-grey back sharply meeting a pale belly. |
-| `art/shrimpbody` | Shrimp | The creature is the cursor. Translucent pink-orange shrimp segments. |
-| `art/pufferbody` | Pufferfish | The creature is the cursor. A yellow pufferfish with brown spots and little spines. |
-| `art/molabody` | Ocean sunfish | The creature is the cursor. A silver-grey, faintly mottled ocean sunfish whose long dark fins become the arrowheads. |
-| `art/catsharkbody` | Cloudy catshark | The creature is the cursor. Sandy brown with dark saddle blotches, like a cloudy catshark. |
-
 **Sea life · Animated**
 
 | Folder | Name | Style |
@@ -411,28 +389,6 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/honey` | 꿀 | 금빛 꿀이 들어찬 육각 벌집. |
 | `art/matcha` | 말차 | 진한 초록 말차에 거품이 곱게 올라옴. |
 | `art/cookie` | 쿠키 | 구운 반죽에 초코칩이 박힌 쿠키. |
-
-**해양 생물**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/whaleshark` | 고래상어 | 짙은 청회색 몸에 흰 점이 격자로 박힌 고래상어. |
-| `art/dolphin` | 돌고래 | 짙은 청회색 등에서 밝은 배로 번지는 매끈한 돌고래. |
-| `art/shrimp` | 새우 | 분홍 주황 마디가 비치는 새우. |
-| `art/puffer` | 복어 | 노란 몸에 갈색 점, 가시가 돋은 복어. |
-| `art/mola` | 개복치 | 은회색 원반 몸에 옅은 반점이 번진 개복치. |
-| `art/catshark` | 괴상어 | 모래 갈색에 짙은 안장 무늬가 얹힌 괴상어(두툽상어). |
-
-**해양 생물 · 몸**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/whalesharkbody` | 고래상어 | 몸이 곧 커서인 고래상어. 뭉툭한 머리 끝과 초승달 꼬리, 흰 점이 격자로 박힌 짙은 청회색 몸. |
-| `art/dolphinbody` | 돌고래 | 몸이 곧 커서인 돌고래. 뾰족한 부리 끝이 커서 끝이고, 짙은 청회색 등과 흰회색 배가 또렷이 갈리는 돌고래. |
-| `art/shrimpbody` | 새우 | 몸이 곧 커서인 새우. 분홍 주황 마디가 비치는 새우. |
-| `art/pufferbody` | 복어 | 몸이 곧 커서인 복어. 노란 몸에 갈색 점, 가시가 돋은 복어. |
-| `art/molabody` | 개복치 | 몸이 곧 커서인 개복치. 은회색 원반 몸에 옅은 반점, 짙은 등·뒷지느러미가 화살촉이 되는 개복치. |
-| `art/catsharkbody` | 괴상어 | 몸이 곧 커서인 괴상어. 모래 갈색에 짙은 안장 무늬가 얹힌 괴상어(두툽상어). |
 
 **해양 생물 · 애니**
 
