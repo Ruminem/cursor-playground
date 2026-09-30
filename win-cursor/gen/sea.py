@@ -308,6 +308,29 @@ def glyph(f: dict, rows: list, x0: int, y0: int, col: tuple) -> None:
 
 QMARK = [".###.", "#...#", "....#", "...#.", "..#..", ".....", "..#.."]
 
+HAND = ["....##......",
+        "...#hh#.....",
+        "...#hh#.....",
+        "...#hh#.....",
+        "...#hh###...",
+        "...#hh#hh##.",
+        ".###hh#hh#h#",
+        "#hh#hhhhhhh#",
+        "#hhhhhhhhhh#",
+        ".#hhhhhhhhh#",
+        ".#hhhhhhhhh#",
+        "..#hhhhhhh#.",
+        "..#hhhhhhh#.",
+        "...#######.."]
+
+
+def hand_at(f: dict, x0: int, y0: int, skin: tuple) -> None:
+    """검지를 세운 손(`HAND`). 손가락 끝이 (x0 + 4, y0) — 핫스팟 자리다"""
+    for j, row in enumerate(HAND):
+        for i, ch in enumerate(row):
+            if ch != ".":
+                f[x0 + i, y0 + j] = INK["out"] if ch == "#" else skin
+
 
 def write(sid: str, table: dict, roles=None) -> None:
     """table: 역할 → () → (프레임들, 핫스팟). roles 를 안 주면 table 전부"""

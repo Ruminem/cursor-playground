@@ -17,8 +17,8 @@ wait(플랑크톤 곁을 헤엄치는 옆모습) · move(위에서 본 몸) · n
 import math
 import sys
 
-from sea import (N, SIGN, WAKE, Body, bubble, crop, disc, edge, finish, hx, ink, line, phases, raster, side, solid,
-                 water, write)
+from sea import (N, QMARK, SIGN, WAKE, Body, bubble, crop, disc, edge, finish, hand_at, hx, ink, line, phases,
+                 raster, side, solid, water, write)
 
 SID = "whalesharkanim"
 ARROW = ((2, 1), (16, 20))   # 화살표 고래상어의 주둥이 한가운데(핫스팟) · 꼬리 끝
@@ -161,9 +161,6 @@ def busy() -> list[dict]:
         f.update(arrow_shark(ph, 0.74))
         frames.append(finish(f))
     return frames
-
-
-QMARK = [".###.", "#...#", "....#", "...#.", "..#..", ".....", "..#.."]
 
 
 def help_() -> list[dict]:
@@ -336,22 +333,6 @@ def pen() -> list[dict]:
     return frames
 
 
-HAND = ["....##......",
-        "...#hh#.....",
-        "...#hh#.....",
-        "...#hh#.....",
-        "...#hh###...",
-        "...#hh#hh##.",
-        ".###hh#hh#h#",
-        "#hh#hhhhhhh#",
-        "#hhhhhhhhhh#",
-        ".#hhhhhhhhh#",
-        ".#hhhhhhhhh#",
-        "..#hhhhhhh#.",
-        "..#hhhhhhh#.",
-        "...#######.."]
-
-
 def hand() -> list[dict]:
     """손가락 하나가 가리키고 그 아래로 작은 고래상어가 지나간다(만지지는 않는다 — 규칙이다)"""
     frames = []
@@ -361,10 +342,7 @@ def hand() -> list[dict]:
         x = -8 + 40 * ((k / N + 0.45) % 1)   # 첫 장에 손가락 밑
         body, _ = shark((round(x) + 12, 24), (round(x), 22), ph, 1.05, detail=False)
         f.update(body)
-        for j, row in enumerate(HAND):
-            for i, ch in enumerate(row):
-                if ch != ".":
-                    f[X0 + i, Y0 + j] = OUT if ch == "#" else SKIN
+        hand_at(f, X0, Y0, SKIN)
         frames.append(finish(f))
     return frames
 
