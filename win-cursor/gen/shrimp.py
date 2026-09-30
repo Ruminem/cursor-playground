@@ -230,13 +230,41 @@ def centred(c, heading, length, curl, side=1):
 
 
 def clip(f: dict) -> dict:
-    """판(테 한 칸을 남긴 1–30) 밖을 자른다"""
+    """판(테 한 칸을 남긴 1–30) 밖을 자른다. 잘린 칸 수는 `CUT` 에 쌓아 main 이 칸마다 알린다 —
+    잘린 새우는 판 끝에서 납작하게 깎여 보인다(2026-10-01 화살표가 86칸 잘린 채 올라갔다)"""
+    CUT[0] += sum(1 for p in f if not (1 <= p[0] <= 30 and 1 <= p[1] <= 30))
     return {p: c for p, c in f.items() if 1 <= p[0] <= 30 and 1 <= p[1] <= 30}
 
 
+CUT = [0]
+
+
+def _arrow(p0, ph, size):
+    return shrimp(p0, 0, 26 * size, ph, curl=3.3, flick=0.15,
+                  face="blink" if 7 <= ph / (2 * math.pi) * N < 8 else "smile")[0]
+
+
+_NOSE = {}
+MINI = 0.6                                   # 장면 칸 왼쪽 위에 곁들이는 작은 화살표 새우
+
+
+def arrow_nose(size: float = 1.0) -> tuple[int, int]:
+    """화살표 새우의 코끝 칸 = 핫스폿. 열두 장을 겹친 테두리 상자가 판 왼쪽 위(1, 1)에 닿게 잡는다.
+    코를 (2, 3) 에 박았더니 더듬이와 등이 판 위로 넘쳐 잘렸다(2026-10-01 사용자) — 말린 꼬리부채가 코보다
+    왼쪽으로, 더듬이가 머리보다 위로 나가서 코는 모서리가 될 수 없다"""
+    if size not in _NOSE:
+        xs, ys = [], []
+        for ph in phases():
+            f = _arrow((10, 10), ph, size)
+            xs += [p[0] for p in f]
+            ys += [p[1] for p in f]
+        _NOSE[size] = (10 - min(xs) + 1, 10 - min(ys) + 1)
+    return _NOSE[size]
+
+
 def arrow_shrimp(ph: float, size: float = 1.0) -> dict:
-    """화살표 새우: 코끝이 (2, 2), 비스듬히 내려가며 꼬리를 배 쪽으로 만다. 꼬리를 까딱이고 다리를 젓는다"""
-    return clip(shrimp((2, 3), 0, 26 * size, ph, curl=3.3, flick=0.15, face="blink" if 7 <= ph / (2 * math.pi) * N < 8 else "smile")[0])
+    """화살표 새우: 코끝이 핫스폿, 몸이 오른쪽으로 뻗다 꼬리를 배 쪽으로 만다. 꼬리를 까딱이고 다리를 젓는다"""
+    return clip(_arrow(arrow_nose(size), ph, size))
 
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
@@ -251,8 +279,8 @@ def busy() -> list[dict]:
     for k, ph in enumerate(phases()):
         f = {}
         hd = 360 * k / N
-        f.update(shrimp(centred((22.0, 22.0), hd, L, CURL), hd, L, ph * 2, curl=CURL, ant=None, beat=2.0)[0])
-        f.update(arrow_shrimp(ph, 0.7))
+        f.update(shrimp(centred((21.0, 21.0), hd, L, CURL), hd, L, ph * 2, curl=CURL, ant=None, beat=2.0)[0])
+        f.update(arrow_shrimp(ph, MINI))
         frames.append(finish(clip(f)))
     return frames
 
@@ -274,7 +302,7 @@ def help_() -> list[dict]:
         f = {}
         f.update(shrimp((19, 17), -90, L, ph, kap=kap, fat=0.55, ant=None, legs=False)[0])
         bubble(f, 23.0, 29.0 + (0.5 if k in (5, 6) else 0.0), 1.2)
-        f.update(arrow_shrimp(ph, 0.7))
+        f.update(arrow_shrimp(ph, MINI))
         frames.append(finish(clip(f)))
     return frames
 
@@ -290,7 +318,7 @@ def person() -> list[dict]:
         f[21, 20] = f[24, 20] = OUT
         f.update(shrimp((26, 13), 180, 14, ph, curl=3.0, side=-1, reach=0.6, beat=1.5,
                         face="blink" if k == 9 else "smile")[0])
-        f.update(arrow_shrimp(ph, 0.7))
+        f.update(arrow_shrimp(ph, MINI))
         frames.append(finish(clip(f)))
     return frames
 
@@ -307,7 +335,7 @@ def pin() -> list[dict]:
         line(f, (27.5, 29.5), (27.5, 14.5), OUT)   # 깃대 — 새우 더듬이 위로 깃발이 보이게 나중에 그린다
         wave = [0, 1, 1, 0, -1, -1][k % 6]
         solid(f, raster([(27.8, 14.2), (20.8, 16.5 + wave * 0.6), (27.8, 20.3)]), lambda p: SIGN, SIGN_D)
-        f.update(arrow_shrimp(ph, 0.7))
+        f.update(arrow_shrimp(ph, MINI))
         frames.append(finish(clip(f)))
     return frames
 
@@ -467,20 +495,27 @@ def ibeam() -> list[dict]:
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        f.update(shrimp((7, 3), 90, 24, ph, side=1, fat=0.55, ant="split", legs=False, reach=0.55)[0])
+        f.update(shrimp((7, 4), 90, 22, ph, side=1, fat=0.55, ant="split", legs=False, reach=0.55)[0])
         frames.append(finish(clip(f)))
     return frames
 
 
 SCENE = {"arrow": arrow, "busy": busy, "help": help_, "person": person, "pin": pin, "we": we, "ns": ns,
          "nesw": nesw, "nwse": nwse, "up": up, "pen": pen, "hand": hand, "cross": cross, "ibeam": ibeam}
-HOT = {"arrow": (2, 3), "busy": (2, 3), "help": (2, 3), "person": (2, 3), "pin": (2, 3),
+HOT = {"arrow": arrow_nose(), "busy": arrow_nose(MINI), "help": arrow_nose(MINI), "person": arrow_nose(MINI),
+       "pin": arrow_nose(MINI),
        "we": (15, 15), "ns": (16, 15), "nesw": (15, 15), "nwse": (15, 15), "up": (9, 13), "pen": (1, 29),
        "hand": (6, 1), "cross": (15, 15), "ibeam": (7, 15)}
 
 
 def main() -> None:
-    write(SID, {r: (lambda r=r: (SCENE[r](), HOT[r])) for r in SCENE}, sys.argv[1:] or None)
+    def scene(r):
+        CUT[0] = 0
+        frames = SCENE[r]()
+        if CUT[0]:
+            print(f"{r}: 판 밖으로 {CUT[0]}칸 잘림 — 자리나 크기를 줄일 것")
+        return frames, HOT[r]
+    write(SID, {r: (lambda r=r: scene(r)) for r in SCENE}, sys.argv[1:] or None)
 
 
 if __name__ == "__main__":
