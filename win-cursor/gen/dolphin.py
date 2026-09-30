@@ -18,8 +18,8 @@ import dataclasses
 import math
 import sys
 
-from sea import (BUB, N, SIGN, SIGN_D, WAKE, Body, bubble, disc, edge, finish, glyph, hx, ink, lerp_profile, phases,
-                 QMARK, raster, side, solid, splash, water, write)
+from sea import (BUB, N, SIGN, SIGN_D, WAKE, Body, bubble, crop, disc, finish, hx, ink, line, phases, raster,
+                 side, solid, splash, under, water, write)
 
 SID = "dolphinanim"
 ARROW = ((1, 2), (15, 21))   # 화살표 돌고래의 주둥이 끝(핫스팟) · 꼬리 끝
@@ -98,9 +98,7 @@ DOLPHIN = Body(
 
 def dolphin(head, tail, ph, size=None, flip=False, detail=True, body=DOLPHIN):
     """자세 하나 × 위상 하나 → ({좌표: 색}, 몸 칸 집합) — `sea.side` 참고. 판(테 한 칸을 남긴 1–30) 밖은 자른다"""
-    out, mask = side(body, head, tail, ph, size, 0.0, flip, detail)
-    keep = {p for p in mask if 1 <= p[0] <= 30 and 1 <= p[1] <= 30}
-    return {p: out[p] for p in keep}, keep
+    return crop(*side(body, head, tail, ph, size, 0.0, flip, detail))
 
 
 def arrow_dolphin(ph: float, size: float = 1.05) -> dict:
@@ -118,20 +116,6 @@ def ball(f: dict, cx: float, cy: float, r: float, spin: float) -> None:
             return HI
         return BALL[math.floor(a / (2 * math.pi) * 6) % 6]
     solid(f, m, col)
-
-
-def under(f: dict, y: int) -> dict:
-    """물낯 y 아래(물속)에 든 칸과 판 밖(테 한 칸을 남기고 1–30 밖)을 뺀다 — 물 밖으로 나온 몸만 남긴다"""
-    return {p: c for p, c in f.items() if p[1] < y and 1 <= p[0] <= 30 and 1 <= p[1] <= 30}
-
-
-def line(f: dict, a, b, col, w: float = 0.0) -> None:
-    """a → b 굵기 w 선"""
-    n = max(1, math.ceil(math.hypot(b[0] - a[0], b[1] - a[1]) * 2))
-    for i in range(n + 1):
-        x, y = a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n
-        for p in (disc(x, y, w) if w else {(math.floor(x), math.floor(y))}):
-            f[p] = col
 
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────

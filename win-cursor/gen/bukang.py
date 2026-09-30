@@ -24,7 +24,7 @@ no 는 빨간 금지 표지 안에서 등지느러미가 솟았다 가라앉는 
 import math
 import sys
 
-from sea import (BUB, N, QMARK, SIGN, SIGN_D, WAKE, Body, disc, bubble, edge, fin_poly, finish, glyph, hx, ink, inside,
+from sea import (N, QMARK, SIGN, SIGN_D, WAKE, Body, disc, bubble, edge, fin_poly, finish, hx, ink, inside,
                  lerp_profile, phases, raster, rim, side, solid, splash, water, write)
 
 SID = "bukanganim"

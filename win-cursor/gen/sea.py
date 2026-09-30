@@ -7,7 +7,7 @@
 """
 import math
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
@@ -24,17 +24,17 @@ def hx(s: str) -> tuple:
     return tuple(bytes.fromhex(s))
 
 
-RIM = hx("d2dde6c7")                          # 해양 애니 전부 같은 반투명 테
 WAKE = (hx("e8fcffff"), hx("7cc4d8ff"), hx("7cc4d8b0"), hx("7cc4d870"), hx("7cc4d838"))   # 물 · 물살. 짙은 것부터
 BUB = hx("3f8faeff")                          # 물방울 테
 SIGN, SIGN_D = hx("d64541ff"), hx("9e2b28ff")  # 빨강 (금지 표지 · 핀 · 조준점)
 
-# 동물마다 다른 테두리색과 흰 반짝. 한 프로세스가 한 동물만 그리므로 동물 모듈이 불러올 때 한 번 정한다(`ink`)
-INK = {"out": hx("000000ff"), "hi": hx("ffffffff")}
+# 동물마다 다른 테두리색 · 흰 반짝 · 반투명 테. 한 프로세스가 한 동물만 그리므로 동물 모듈이 불러올 때 한 번 정한다(`ink`).
+# 테는 구성표마다 옛 그림의 것을 이어 쓴다 — 안 그린 칸(wait 등)과 테가 달라지지 않게
+INK = {"out": hx("000000ff"), "hi": hx("ffffffff"), "rim": hx("d2dde6c7")}
 
 
-def ink(out: tuple, hi: tuple) -> None:
-    INK["out"], INK["hi"] = out, hi
+def ink(out: tuple, hi: tuple, rim: tuple = hx("d2dde6c7")) -> None:
+    INK["out"], INK["hi"], INK["rim"] = out, hi, rim
 
 
 def phases():
@@ -90,7 +90,7 @@ def rim(frame: dict, mask: set) -> dict:
             for dy in (-1, 0, 1):
                 q = (x + dx, y + dy)
                 if q not in mask and q not in f:
-                    f[q] = RIM
+                    f[q] = INK["rim"]
     return f
 
 
@@ -276,6 +276,26 @@ def water(f: dict, x0: int, x1: int, y: int, k: int) -> None:
     for x in range(x0, x1 + 1):
         f[x, y] = WAKE[1]
         f[x, y + 1] = WAKE[3] if (x + k) % 3 else WAKE[2]
+
+
+def under(f: dict, y: int) -> dict:
+    """물낯 y 아래(물속)에 든 칸과 판 밖(테 한 칸을 남기고 1–30 밖)을 뺀다 — 물 밖으로 나온 몸만 남긴다"""
+    return {p: c for p, c in f.items() if p[1] < y and 1 <= p[0] <= 30 and 1 <= p[1] <= 30}
+
+
+def crop(out: dict, mask: set) -> tuple[dict, set]:
+    """판(테 한 칸을 남긴 1–30) 밖을 자른다 — 판 가장자리에 걸친 몸"""
+    keep = {p for p in mask if 1 <= p[0] <= 30 and 1 <= p[1] <= 30}
+    return {p: out[p] for p in keep}, keep
+
+
+def line(f: dict, a, b, col, w: float = 0.0) -> None:
+    """a → b 굵기 w 선"""
+    n = max(1, math.ceil(math.hypot(b[0] - a[0], b[1] - a[1]) * 2))
+    for i in range(n + 1):
+        x, y = a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n
+        for p in (disc(x, y, w) if w else {(math.floor(x), math.floor(y))}):
+            f[p] = col
 
 
 def glyph(f: dict, rows: list, x0: int, y0: int, col: tuple) -> None:
