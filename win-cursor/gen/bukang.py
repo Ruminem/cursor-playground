@@ -131,17 +131,22 @@ def straight(head, tail, size=None, flip=False):
     return local, world, L
 
 
-def shark(head, tail, ph, size=None, m=0.0, flip=False):
+def shark(head, tail, ph, size=None, m=0.0, flip=False, detail=True):
     """자세 하나 × 위상 하나 → ({좌표: 색}, 몸 칸 집합). 몸 칸은 테를 두르기 전 불투명한 칸.
-    m 은 입을 벌린 정도(0–1) — 아래턱이 내려가고 윗잇몸에 흰 이빨 줄이 보인다. flip 은 등을 반대쪽으로"""
+    m 은 입을 벌린 정도(0–1) — 아래턱이 내려가고 윗잇몸에 흰 이빨 줄이 보인다. flip 은 등을 반대쪽으로.
+    detail 을 끄면 아가미구멍과 자잘한 지느러미(배·둘째 등·뒷)를 뺀다 — 줄여 그리거나 세로로 선 좁은 몸에서는
+    아가미 세 줄이 갈비뼈로, 줄줄이 튀어나온 지느러미가 가시로 읽혀 생선 뼈가 된다"""
     local, world, L = straight(head, tail, size, flip)
+    T = THICK * (1.0 if detail else 1.12)   # 줄여 그린 몸은 더 통통하게 — 안 그러면 꼬리자루가 실처럼 가늘다
     k = sweep(ph)
-    parts = {"body": [(fold(s, k), v * THICK) for s, v in body_poly()]}
+    parts = {"body": [(fold(s, k), v * T) for s, v in body_poly()]}
     for name, pts in FINS.items():
-        parts[name] = [(fold(s, k), v * THICK) for s, v in pts]
+        parts[name] = [(fold(s, k), v * T) for s, v in pts]
     order = ("pectoral", "body", "dorsal", "pelvic", "dorsal2", "anal", "caudal")
+    if not detail:
+        order = tuple(n for n in order if n not in ("pelvic", "dorsal2", "anal"))
     if m > 0:
-        parts["jaw"] = [(s, v * THICK) for s, v in JAW(m)]
+        parts["jaw"] = [(s, v * T) for s, v in JAW(m)]
         order = ("pectoral", "body", "jaw") + order[2:]
 
     SUB = 4
@@ -170,7 +175,7 @@ def shark(head, tail, ph, size=None, m=0.0, flip=False):
     out = {}
     for p in mask:
         s, v = local(p[0] + 0.5, p[1] + 0.5)
-        s, v = unfold(s, k), v / THICK
+        s, v = unfold(s, k), v / T
         r = region[p]
         if r == "jaw":
             out[p] = SHADE
@@ -199,7 +204,7 @@ def shark(head, tail, ph, size=None, m=0.0, flip=False):
             out[p] = OUT
 
     def at(s, v):
-        wx, wy = world(fold(s, k), v * THICK)
+        wx, wy = world(fold(s, k), v * T)
         return math.floor(wx), math.floor(wy)
 
     def paint(p, c):
@@ -219,19 +224,19 @@ def shark(head, tail, ph, size=None, m=0.0, flip=False):
             if edge(mask, p):
                 continue
             s, v = local(p[0] + 0.5, p[1] + 0.5)
-            v /= THICK
+            v /= T
             if not inside(wedge, s, v):
                 continue
             gum = v0 + (v1 - v0) * (s - s0) / (s1 - s0)
             low = v2 + (v1 - v2) * (s - s2) / (s1 - s2) if s >= s2 else v2
             tooth = math.floor(s * L) % 2 == 0
-            near = min(gum - v, v - low) * L * THICK < 1.1
+            near = min(gum - v, v - low) * L * T < 1.1
             out[p] = BELLY if near and tooth else GULLET
     else:
         for s in (0.07, 0.1, 0.13):
             paint(at(s, lerp_profile(BOT, s) * 0.45 - 0.004), DARK)
     # 아가미구멍 셋 — 2칸 간격 세로줄
-    for i in range(3):
+    for i in range(3 if detail else 0):
         gs = 0.17 + i * 2 / L
         for v in (-0.03, -0.01, 0.01, 0.03):
             paint(at(gs, v), DARK)
@@ -396,7 +401,7 @@ def sign() -> tuple[list[dict], tuple[int, int]]:
 # ── 칸마다 장면 ─────────────────────────────────────────────────────────────────────
 # 같은 상어를 방향만 돌려 놓으면 복제품으로 읽혀서(2026-09-30 사용자), 칸마다 그 칸의 뜻에 맞는 장면을 따로 그린다.
 # 화살표 상어가 기준이고 상어는 전부 입을 벌려 흰 이빨 줄을 보인다
-FISH, FISH_L = hx("f28c38ff"), hx("ffc36bff")
+FISH, FISH_L, FISH_D = hx("f28c38ff"), hx("ffc36bff"), hx("c0612aff")
 HOOD, MASK, GLASS = hx("2c343bff"), hx("f2c230ff"), hx("9ed8eaff")
 BUB = hx("3f8faeff")
 GUM = hx("e88a93ff")
@@ -440,7 +445,8 @@ def phases():
 
 
 def arrow_shark(ph: float, size: float = LEN, m: float = 1.0) -> dict:
-    return shark(*ARROW, ph, size, m)[0]
+    """화살표 상어. 줄여 그린 것(장면 곁의 작은 상어)은 detail 을 끈다"""
+    return shark(*ARROW, ph, size, m, detail=size >= LEN)[0]
 
 
 def bubble(f: dict, cx: float, cy: float, r: float) -> None:
@@ -456,7 +462,7 @@ def help_() -> list[dict]:
     for k, ph in enumerate(phases()):
         f = arrow_shark(ph, 0.78)
         dy = round(1.2 * math.sin(ph))
-        cx, cy = 23.0, 23.5 + dy
+        cx, cy = 22.0, 23.5 + dy
         bubble(f, cx, cy, 5.8)
         for j, row in enumerate(QMARK):
             for i, ch in enumerate(row):
@@ -464,7 +470,7 @@ def help_() -> list[dict]:
                     f[math.floor(cx) - 2 + i, math.floor(cy) - 3 + j] = OUT
         for j in range(2):   # 작은 물방울 둘이 번갈아 떠오른다
             t = (k / N + j / 2) % 1
-            bubble(f, 27.5 - 2 * j, 16.5 - 7 * t, 1.2)
+            bubble(f, 26.5 - 2 * j, 16.5 - 7 * t, 1.2)
         frames.append(finish(f))
     return frames
 
@@ -513,7 +519,7 @@ def busy() -> list[dict]:
     """화살표 상어 곁에서 작은 등지느러미가 물웅덩이를 빙빙 돈다 — wait 의 작은 판"""
     frames = []
     for k, ph in enumerate(phases()):
-        f, _ = orbit(k, (20.5, 25.0, 5.5, 2.4), 0.6)
+        f, _ = orbit(k, (19.5, 25.0, 5.5, 2.4), 0.6)
         f.update(arrow_shark(ph, 0.78))
         frames.append(finish(f))
     return frames
@@ -524,7 +530,7 @@ def person() -> list[dict]:
     frames = []
     for k, ph in enumerate(phases()):
         f = arrow_shark(ph, 0.76)
-        cx, cy = 22.5, 22.5
+        cx, cy = 21.5, 22.5
         body = {p for p in disc(cx, 31.5, 6.5) if p[1] <= 30}
         solid(f, body, HOOD)
         head = disc(cx, cy, 4.2)
@@ -550,7 +556,7 @@ def pin() -> list[dict]:
     for k, ph in enumerate(phases()):
         f = arrow_shark(ph, 0.78)
         dy = -round(2.5 * math.sin(math.pi * k / N))
-        cx, cy = 24.0, 20.0 + dy
+        cx, cy = 23.0, 20.0 + dy
         body = disc(cx, cy, 5.3) | raster([(cx - 4.6, cy + 2.5), (cx + 4.6, cy + 2.5), (cx, cy + 10)])
         solid(f, body, SIGN, SIGN_D)
         for p in raster([(cx + x, cy + 2 + y) for x, y in fin_poly(6, 5.5)]):
@@ -560,13 +566,16 @@ def pin() -> list[dict]:
 
 
 def fish(f: dict, fx: float, fy: float) -> None:
-    """왼쪽으로 달아나는 주황 물고기"""
-    body = {(x, y) for y in range(math.floor(fy) - 3, math.floor(fy) + 4) for x in range(math.floor(fx) - 5, math.floor(fx) + 5)
-            if ((x + 0.5 - fx) / 3.8) ** 2 + ((y + 0.5 - fy) / 2.6) ** 2 <= 1}
-    tail = raster([(fx + 2.5, fy), (fx + 6.5, fy - 3.2), (fx + 6.5, fy + 3.2)])
-    m = body | tail
-    solid(f, m, lambda p: FISH_L if p[1] + 0.5 > fy + 0.8 and p in body else FISH)
-    f[math.floor(fx - 2), math.floor(fy - 1)] = OUT
+    """왼쪽으로 달아나는 주황 물고기. 통통한 몸 · 갈라진 꼬리 · 등지느러미 · 아가미 줄 — 길쭉하면 당근으로 읽힌다"""
+    body = {(x, y) for y in range(math.floor(fy) - 4, math.floor(fy) + 5) for x in range(math.floor(fx) - 5, math.floor(fx) + 5)
+            if ((x + 0.5 - fx) / 4.0) ** 2 + ((y + 0.5 - fy) / 3.5) ** 2 <= 1}
+    tail = raster([(fx + 3.0, fy), (fx + 6.6, fy - 3.6), (fx + 5.4, fy), (fx + 6.6, fy + 3.6)])
+    top = raster([(fx - 1.4, fy - 2.8), (fx + 1.4, fy - 5.0), (fx + 2.8, fy - 2.2)])
+    m = body | tail | top
+    solid(f, m, lambda p: FISH_L if p[1] + 0.5 > fy + 0.6 and p in body else FISH)
+    for dy in (-1, 0, 1):   # 아가미 줄
+        f[math.floor(fx - 0.8 + 0.5 * abs(dy)), math.floor(fy + dy)] = FISH_D
+    f[math.floor(fx - 1.6), math.floor(fy - 1.0)] = OUT
 
 
 def we() -> list[dict]:
@@ -574,7 +583,7 @@ def we() -> list[dict]:
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        fish(f, 5.2 - 0.8 * math.sin(ph), 14.5)
+        fish(f, 5.0 - 0.8 * math.sin(ph), 14.5)
         f.update(shark((12, 15), (30, 12), ph, 1.0, 0.5 + 0.5 * math.cos(2 * ph))[0])
         frames.append(finish(f))
     return frames
@@ -585,8 +594,8 @@ def ns() -> list[dict]:
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        f.update(shark((9, 1), (9, 31), ph, 0.8, 0.8, flip=True)[0])
-        f.update(shark((21, 30), (21, 0), ph + math.pi, 0.8, 0.8)[0])
+        f.update(shark((8, 1), (8, 31), ph, 0.8, 0.8, flip=True, detail=False)[0])
+        f.update(shark((21, 30), (21, 0), ph + math.pi, 0.8, 0.8, detail=False)[0])
         frames.append(finish(f))
     return frames
 
@@ -641,7 +650,7 @@ def up() -> list[dict]:
         f = {}
         wy = 26
         water(f, 0, 18, wy, k)
-        sh, _ = shark((9, 1), (9, 30), ph, 1.0, 0.6 + 0.4 * math.cos(ph))
+        sh, _ = shark((9, 1), (9, 30), ph, 1.0, 0.6 + 0.4 * math.cos(ph), detail=False)
         f.update({p: c for p, c in sh.items() if p[1] < wy})
         splash(f, 9.5, wy - 1, k, 6, 8, 6)
         frames.append(finish(f))
@@ -649,33 +658,47 @@ def up() -> list[dict]:
 
 
 def pen() -> list[dict]:
-    """상어 이빨 한 개가 펜 — 톱니 날의 넓은 세모, 끝은 왼쪽 아래(핫스팟), 뿌리는 가운데가 파인 두 갈래.
-    끝에서 물결선이 그려져 나간다"""
-    tip, root = (1.5, 30.5), (17.5, 14.0)
-    L = math.hypot(root[0] - tip[0], root[1] - tip[1])
-    ux, uy = (root[0] - tip[0]) / L, (root[1] - tip[1]) / L
-    nx, ny = uy, -ux   # 날의 옆 (+ 는 오른쪽 아래)
+    """상어 연필 — 누구나 아는 대각선 연필 꼴에 몸통은 상어 색(짙은 등 · 흰 배), 등에 세모 지느러미,
+    끝은 꼬리지느러미, 깎은 나무 바로 뒤에 눈. 끝(핫스팟)에서 물결선이 써져 나간다.
+    상어 이빨 한 개로 그렸던 것은 32칸에서 치약 튜브·콘으로 읽혀 버렸다"""
+    tip, back = (1.5, 30.5), (25.5, 6.5)
+    L = math.hypot(back[0] - tip[0], back[1] - tip[1])
+    ux, uy = (back[0] - tip[0]) / L, (back[1] - tip[1]) / L
+    nx, ny = uy, -ux   # 연필의 옆 — + 가 왼쪽 위(등)
 
-    def at(a, b):   # a: 끝→뿌리 (0–1), b: 옆 (이빨 길이 단위)
-        bend = -0.08 * a * a   # 끝이 살짝 휜다
-        return tip[0] + (a * ux + (b + bend) * nx) * L, tip[1] + (a * uy + (b + bend) * ny) * L
-    SAW = 4
+    def at(a, b):   # a: 끝→꽁무니 (0–1), b: 옆 (칸)
+        return tip[0] + a * ux * L + b * nx, tip[1] + a * uy * L + b * ny
 
-    def half(a):   # 곧은 날 + 톱니 — 톱니 한 칸이 32칸에서 1칸은 튀어나와야 보인다
-        return 0.4 * a * (1 + 0.24 * ((a * SAW) % 1)) if a > 0.25 else 0.4 * a
-    aa = [i / 80 for i in range(81)]
-    blade = raster([at(a, half(a)) for a in aa] + [at(a, -half(a)) for a in reversed(aa)])
-    rootp = raster([at(0.97, 0.42), at(1.2, 0.36), at(1.22, 0.12), at(1.12, 0.0), at(1.22, -0.12), at(1.2, -0.36),
-                    at(0.97, -0.42)]) - blade
-
-    def shade(p):
+    def ab(p):
         dx, dy = p[0] + 0.5 - tip[0], p[1] + 0.5 - tip[1]
-        return SHADE if dx * nx + dy * ny > 0.05 * L else BELLY
+        return (dx * ux + dy * uy) / L, dx * nx + dy * ny
+    W, CONE, END = 3.3, 0.24, 0.84   # 반폭(칸) · 깎은 자리 끝 · 몸통 끝
+    body = raster([at(CONE, W), at(END, W), at(END, -W), at(CONE, -W)])
+    cone = raster([at(0.0, 0.0), at(CONE + 0.01, W), at(CONE + 0.01, -W)]) - body
+    fin = raster([at(0.4, W - 0.5), at(0.56, W + 6.5), at(0.6, W + 6.3), at(0.6, W + 3.0), at(0.64, W - 0.5)]) - body
+    # 꼬리: 윗날개가 길게 뒤로 젖고 아랫날개는 짧다 — 대칭이면 로켓 날개로 읽힌다
+    tail = raster([at(END - 0.02, 2.0), at(1.05, W + 4.6), at(1.02, W + 3.4), at(0.95, 0.3), at(0.97, -W - 1.8),
+                   at(0.93, -W - 1.6), at(END - 0.02, -1.8)]) - body
+
+    def skin(p):
+        a, b = ab(p)
+        return MID if b > 0.9 else LIGHT if b > 0.0 else BELLY if b > -W + 1.2 else SHADE
+
+    def wood(p):
+        a, b = ab(p)
+        return OUT if a < 0.08 else ROOT
     frames = []
     for k in range(N):
         f = {}
-        solid(f, rootp, ROOT)
-        solid(f, blade, shade)
+        solid(f, fin, lambda p: DARK if ab(p)[1] > W + 3 else MID)
+        solid(f, tail, lambda p: DARK if abs(ab(p)[1]) > W + 1.5 else MID)
+        solid(f, body, skin)
+        solid(f, cone, wood)
+        e = at(CONE + 0.07, 1.3)   # 눈
+        f[math.floor(e[0]), math.floor(e[1])] = OUT
+        for i in range(3):   # 아가미구멍 셋
+            g = at(CONE + 0.15 + i * 0.045, 0.2)
+            f[math.floor(g[0]), math.floor(g[1])] = DARK
         for x in range(3, 4 + round(24 * (k + 1) / N)):   # 물결선이 오른쪽으로 써진다
             f[x, 31 - (1 if math.sin(x * 0.9) > 0.3 else 0)] = WAKE[1]
         frames.append(finish(f))
@@ -689,43 +712,59 @@ def hand() -> list[dict]:
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        wy = 23
+        wy = 25
         bob = round(0.8 * math.sin(ph))
-        m = max(0.0, math.sin(2 * ph))
         top = 1 + bob
+        # 한 바퀴에 두 번 딱 문다 — 다 닫지는 않는다. 닫히면 이빨이 안 보여 그냥 둥근 머리가 된다
+        gape = 3.4 + 3.2 * (0.5 + 0.5 * math.cos(2 * ph))
+        my = 16.0 + bob
 
-        def half(y):
-            return 9.0 * math.sqrt(max(0.0, min(1.0, (y - top) / 12)))
-        head = {(x, y) for y in range(top, wy) for x in range(math.floor(cx - 10), math.ceil(cx + 10))
+        def half(y):   # 머리 반폭: 둥근 주둥이 끝에서 뺨까지 빨리 넓어진다
+            return 10.5 * math.sqrt(max(0.0, min(1.0, (y - top) / 11)))
+
+        def upper(x):   # 윗입술 — 입꼬리가 올라간 웃는 입
+            return my - gape / 2 - 0.03 * x * x
+
+        def lower(x):
+            return my + gape / 2 - 0.085 * x * x
+        head = {(x, y) for y in range(top, wy) for x in range(math.floor(cx - 11), math.ceil(cx + 11))
                 if abs(x + 0.5 - cx) <= half(y + 0.5)}
         fins = set()
-        for s in (-1, 1):
-            fins |= raster([(cx + s * 6, 15 + bob), (cx + s * 12.5, 20.5 + bob), (cx + s * 11, 22 + bob), (cx + s * 6, 20 + bob)])
+        for s in (-1, 1):   # 가슴지느러미: 뺨 아래에서 옆으로 뻗고 끝이 처진다
+            fins |= raster([(cx + s * 8, 17 + bob), (cx + s * 13.5, 21.5 + bob), (cx + s * 12.5, 23.5 + bob),
+                            (cx + s * 8, 22 + bob)])
         fins = {p for p in fins if p[1] < wy} - head
-        solid(f, fins, lambda p: DARK if abs(p[0] + 0.5 - cx) > 10 else MID)
-        my = 14.5 + bob
+        solid(f, fins, lambda p: DARK if abs(p[0] + 0.5 - cx) > 11.5 else MID)
 
-        def skin(p):
+        def skin(p):   # 등은 짙게 · 오른쪽 뺨은 빛 · 입 아래로는 흰 배
             x, y = p[0] + 0.5 - cx, p[1] + 0.5
-            if y > my:
-                return BELLY if abs(x) < 0.7 * half(y) else SHADE
-            return LIGHT if abs(x) > 0.6 * half(y) else MID
+            if y > upper(x) + 0.5:
+                return BELLY if abs(x) < 0.72 * half(y) else SHADE
+            if y < top + 3:
+                return DARK
+            return LIGHT if x > 0.45 * half(y) else MID
         solid(f, head, skin)
-        for s in (-1, 1):   # 눈: 머리 양옆 — 검은 2×2 에 흰 반짝 한 칸
+        for s in (-1, 1):   # 콧구멍: 주둥이 끝 가까이 짙은 점 둘
+            f[math.floor(cx + s * 1.6), top + 4] = DARK
+        for s in (-1, 1):   # 눈: 머리 양옆 — 검은 2×2 에 흰 반짝 한 칸 (둘 다 왼쪽 위에서 빛을 받는다)
             ex = math.floor(cx + s * 4.5) - (1 if s < 0 else 0)
+            ey = top + 7
             for dx in (0, 1):
                 for dy in (0, 1):
-                    f[ex + dx, 8 + bob + dy] = OUT
-            f[ex + (1 if s < 0 else 0), 8 + bob] = BELLY
-        # 입: 머리 폭 거의 전부. 위아래 잇몸에 세모 이빨(세 칸마다 끝이 한 칸 더 내려온다), 속은 검붉게
-        rx, ry = 6.6, 1.3 + 2.4 * m
-        mouth = {p for p in head if ((p[0] + 0.5 - cx) / rx) ** 2 + ((p[1] + 0.5 - my) / ry) ** 2 <= 1}
+                    f[ex + dx, ey + dy] = OUT
+            f[ex, ey] = BELLY
+        # 입: 웃는 초승달. 위아래 잇몸에 세모 이빨 — 세 칸에 하나씩 끝이 한 칸 더 나오고, 위아래가 엇갈려 맞물린다
+        mouth = {p for p in head if upper(p[0] + 0.5 - cx) < p[1] + 0.5 < lower(p[0] + 0.5 - cx)
+                 and abs(p[0] + 0.5 - cx) < half(p[1] + 0.5) - 1.5}
         for p in mouth:
-            col = [q for q in mouth if q[0] == p[0]]
-            y0, y1 = min(q[1] for q in col), max(q[1] for q in col)
-            tip = p[0] % 3 == 1
-            if p[1] == y0 or p[1] == y1 or (tip and (p[1] == y0 + 1 or p[1] == y1 - 1) and y1 - y0 >= 4):
+            x = p[0] + 0.5 - cx
+            du, dl = p[1] + 0.5 - upper(x), lower(x) - (p[1] + 0.5)
+            tu = 2.0 if p[0] % 3 == 0 else 1.0
+            tl = 2.0 if p[0] % 3 == 2 else 1.0
+            if du < tu or dl < tl:
                 f[p] = BELLY
+            elif abs(x) < 3 and dl < tl + 1.2:
+                f[p] = GUM   # 혀
             else:
                 f[p] = GULLET
         for p in head - mouth:   # 입술 선
@@ -738,24 +777,36 @@ def hand() -> list[dict]:
 
 
 def cross() -> list[dict]:
-    """조준경 — 동그라미 안 물낯을 작은 등지느러미가 가로지른다. 가운데 빨간 점이 핫스팟"""
+    """조준경 — 동그라미 안 물낯을 등지느러미가 좌우로 오가며 방향을 튼다. 지나온 자리에 물살 꼬리.
+    지느러미는 조준선 앞에 그린다 — 선에 가리면 32칸에서 안 보인다. 가운데 빨간 점이 핫스팟"""
     c = 15
+    R = 9.2
     frames = []
-    for k in range(N):
+    for k, ph in enumerate(phases()):
         f = {}
-        ring = {(x, y) for y in range(32) for x in range(32) if 9.2 <= math.hypot(x - c, y - c) < 10.2}
-        wy = c + 4
-        for x in range(32):
-            if math.hypot(x - c, wy - c) < 9:
-                f[x, wy] = WAKE[2]
-        fx = c - 8 + 16 * k / N
-        mask = {p for p in raster([(fx + x, wy + y) for x, y in fin_poly(5.5, 5)]) if math.hypot(p[0] - c, p[1] - c) < 8.8}
-        solid(f, mask, MID)
-        for p in ring:
-            f[p] = OUT
-        for d in range(3, 13):
+        wy = c + 5
+        for x in range(32):   # 물낯
+            if math.hypot(x + 0.5 - c - 0.5, wy + 0.5 - c - 0.5) < R - 0.6:
+                f[x, wy] = WAKE[1] if (x + k) % 3 else WAKE[2]
+        for d in range(3, 13):   # 조준선: 가운데는 비운다
             for q in ((c, c - d), (c, c + d), (c - d, c), (c + d, c)):
                 f[q] = OUT
+        fx = c + 0.5 + 4.0 * math.sin(ph)
+        d = 1 if math.cos(ph) > 0 else -1   # 가는 쪽
+        for i, col in enumerate(WAKE[:4]):   # 물살 꼬리: 지나온 쪽으로 옅어진다
+            q = (math.floor(fx - d * (3.5 + i)), wy)
+            if math.hypot(q[0] + 0.5 - c - 0.5, wy + 0.5 - c - 0.5) < R - 0.6:
+                f[q] = col
+        poly = [(fx + d * x, wy + 0.3 + y) for x, y in fin_poly(8.5, 9.0)]
+        if d < 0:
+            poly.reverse()
+        mask = {p for p in raster(poly) if math.hypot(p[0] + 0.5 - c - 0.5, p[1] + 0.5 - c - 0.5) < R - 0.6}
+        solid(f, mask, lambda p: LIGHT if (p[0] + 0.5 - fx) * d > 0.4 else MID)
+        ring = {(x, y) for y in range(32) for x in range(32) if R - 0.5 <= math.hypot(x - c, y - c) < R + 0.6}
+        for p in ring:
+            f[p] = OUT
+        for q in ((c, c - R - 2), (c, c + R + 2), (c - R - 2, c), (c + R + 2, c)):   # 눈금: 동그라미 밖으로 튀어나온 선
+            f[int(q[0]), int(q[1])] = OUT
         f[c, c] = SIGN
         frames.append(finish(f))
     return frames
