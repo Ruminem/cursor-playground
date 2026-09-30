@@ -56,4 +56,27 @@ index = json.loads((tmp / shape_id / "index.json").read_text(encoding="utf-8"))[
 assert all(e[0] == "" for roles in index.values() for e in roles.values()), "index 에 그림이 들었음 (모양을 바꿀 때 기다리는 파일이다)"
 arrows = json.loads((tmp / shape_id / "arrows.json").read_text(encoding="utf-8"))["data"]
 assert arrows == {sid: whole["data"][sid]["arrow"][0] for sid in sids}, "arrows.json 이 화살표 그림과 다름"
-print(f"갈아 끼우기 OK · {shape_id} · 구성표 {len(sids)}종 · {len(dump(whole))}바이트")
+
+# 구성표를 지우거나 더해도 나머지는 다시 그리지 않고, 결과는 통째로 만든 것과 같아야 한다.
+# 목록이 달라지면 전부 다시 그리던 때는 한 종을 지워도 64종 × 모양 9가지를 다시 그렸다
+full = build.SCHEMES
+build.SCHEMES = full[:2]                          # 마지막 한 종을 지웠다 치고
+assert build.data_missing(shape_id) == set(), "지우기만 했는데 새로 그릴 구성표가 생김"
+build.write_data(shape_id, {})
+fewer = {k: {sid: whole[k][sid] for sid in sids[:2]} for k in whole}
+assert dump(build.read_data(shape_id)) == dump(fewer), "지운 뒤의 데이터가 두 종으로 통째로 만든 것과 다름"
+assert not (tmp / shape_id / f"{sids[2]}.json").exists(), "지운 구성표의 파일이 남음 (Pages 에 계속 올라간다)"
+build.SCHEMES = full                              # 도로 더했다 치고
+assert build.data_missing(shape_id) == {sids[2]}, "더한 구성표만 새로 그려야 함"
+build.write_data(shape_id, {sids[2]: (whole["data"][sids[2]], whole["extra"][sids[2]])})
+assert dump(build.read_data(shape_id)) == dump(whole), "더한 뒤의 데이터가 통째로 만든 것과 다름"
+
+# 목록에 없는 구성표·모양의 dist·data 폴더만 지우고 나머지는 그대로 둔다
+build.HERE = here = Path(tempfile.mkdtemp())
+keep = [f"dist/{sids[0]}", f"dist/{shape_id}", f"dist/{shape_id}/{sids[0]}", f"data/{shape_id}"]
+drop = ["dist/gone", f"dist/{shape_id}/gone", "data/gone"]
+for d in keep + drop:
+    (here / d).mkdir(parents=True, exist_ok=True)
+assert sorted(build.prune()) == sorted(str(Path(d)) for d in drop), "지운 폴더 목록이 다름"
+assert all((here / d).is_dir() for d in keep) and not any((here / d).exists() for d in drop), "엉뚱한 폴더를 지우거나 남김"
+print(f"갈아 끼우기 OK · {shape_id} · 구성표 {len(sids)}종 · {len(dump(whole))}바이트 · 더하기·지우기·정리 OK")
