@@ -159,6 +159,7 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/pufferanim` | Pufferfish | A swimming pufferfish — tail beats, bubbles and caustic light, and it puffs up and deflates while you wait. |
 | `art/molaanim` | Ocean sunfish | A swimming ocean sunfish — its tall dorsal and anal fins beat in turn while caustic light drifts across the body. |
 | `art/catsharkanim` | Cloudy catshark | A cloudy catshark wriggling in an eel-like S — bubbles rise from its gills and caustic light drifts across the body. |
+| `art/bukanganim` | Bukang | The shark that spent twelve days in a Busan North Port canal in autumn 2026 — a dusky shark with a blue-grey back, white belly and tall dorsal fin, beating its tail and puffing bubbles from its gills. |
 
 <!-- /schemes:en -->
 
@@ -443,6 +444,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/pufferanim` | 복어 | 헤엄치는 복어. 꼬리질과 거품, 빛 물결이 지나가고 기다릴 때는 부풀었다 오그라드는 커서. |
 | `art/molaanim` | 개복치 | 헤엄치는 개복치. 등·뒷지느러미를 번갈아 흔들고 몸 위로 빛 물결이 지나가는 커서. |
 | `art/catsharkanim` | 괴상어 | 뱀장어처럼 S 자로 몸을 흔들며 헤엄치는 괴상어. 아가미에서 거품이 오르고 몸 위로 빛 물결이 지나가는 커서. |
+| `art/bukanganim` | 부캉이 | 2026년 가을 부산 북항 수로에 열이틀 머문 상어. 회청색 등에 흰 배, 세모 등지느러미를 세우고 꼬리를 까딱이며 아가미에서 거품을 올리는 무태상어 커서. |
 
 <!-- /schemes:ko -->
 
