@@ -58,7 +58,7 @@ arrows = json.loads((tmp / shape_id / "arrows.json").read_text(encoding="utf-8")
 assert arrows == {sid: whole["data"][sid]["arrow"][0] for sid in sids}, "arrows.json 이 화살표 그림과 다름"
 
 # 구성표를 지우거나 더해도 나머지는 다시 그리지 않고, 결과는 통째로 만든 것과 같아야 한다.
-# 목록이 달라지면 전부 다시 그리던 때는 한 종을 지워도 64종 × 모양 9가지를 다시 그렸다
+# 목록이 달라지면 전부 다시 그리던 때는 한 종을 지워도 64종 × 매끈한 모양 10가지를 다시 그렸다
 full = build.SCHEMES
 build.SCHEMES = full[:2]                          # 마지막 한 종을 지웠다 치고
 assert build.data_missing(shape_id) == set(), "지우기만 했는데 새로 그릴 구성표가 생김"

@@ -469,7 +469,7 @@ def read_data(shape_id: str) -> dict | None:
 def data_missing(shape_id: str) -> set[str] | None:
     """지난번 data/<모양>/ 에 없는 지금 구성표들 — 이것과 재료가 바뀐 구성표만 새로 그리면 된다.
     지난번 것을 못 읽으면 None (전부 그린다). 빠진 구성표는 splice 가 SCHEMES 로 이어 붙이며 저절로 떨어진다.
-    구성표 목록이 조금만 달라져도 None 이던 때는 한 종을 지워도 64종 × 모양 9가지를 다시 그렸다"""
+    구성표 목록이 조금만 달라져도 None 이던 때는 한 종을 지워도 64종 × 매끈한 모양 10가지를 다시 그렸다"""
     old = read_data(shape_id)
     return None if old is None else {s["id"] for s in SCHEMES} - set(old["data"])
 
