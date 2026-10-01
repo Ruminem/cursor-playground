@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import pickle
+import shutil
 import subprocess
 import sys
 import time
@@ -306,10 +307,7 @@ def build() -> str:
 
     # 기본 모양 그림도 다른 모양처럼 data/<기본>/ 로 내보내고, 페이지에는 칸 정보·목록 화살표와 START 그림만 남긴다.
     # 전부 박던 때는 페이지가 gzip 1.3MB 라 폰 회선에서 그것을 다 받을 때까지 첫 화면이 안 떴다
-    root = data_dir(SHAPES[0]["id"])
-    root.mkdir(parents=True, exist_ok=True)
-    for name, body in split_data({"data": data, "extra": extra_data}).items():
-        (root / name).write_text(json.dumps(body, separators=(",", ":")), encoding="utf-8", newline="\n")
+    write_split(SHAPES[0]["id"], {"data": data, "extra": extra_data})
     data = {sid: {rid: e if sid == START or rid == "arrow" else ["", *e[1:]] for rid, e in roles.items()}
             for sid, roles in data.items()}
     extra_data = {START: extra_data[START]}
@@ -468,22 +466,48 @@ def read_data(shape_id: str) -> dict | None:
         return None
 
 
-def data_whole(shape_id: str) -> bool:
-    """지난번 data/<모양>/ 을 조각 갈아 끼우기에 쓸 수 있나 — 없거나 구성표가 늘거나 줄었으면 못 쓴다"""
+def data_missing(shape_id: str) -> set[str] | None:
+    """지난번 data/<모양>/ 에 없는 지금 구성표들 — 이것과 재료가 바뀐 구성표만 새로 그리면 된다.
+    지난번 것을 못 읽으면 None (전부 그린다). 빠진 구성표는 splice 가 SCHEMES 로 이어 붙이며 저절로 떨어진다.
+    구성표 목록이 조금만 달라져도 None 이던 때는 한 종을 지워도 64종 × 매끈한 모양 10가지를 다시 그렸다"""
     old = read_data(shape_id)
-    return old is not None and set(old["data"]) == {s["id"] for s in SCHEMES}
+    return None if old is None else {s["id"] for s in SCHEMES} - set(old["data"])
+
+
+def write_split(shape_id: str, whole: dict) -> None:
+    """split_data 를 data/<모양>/ 에 쓰고, 이번에 안 쓴 .json(지운 구성표의 것)은 지운다.
+    남겨 두면 CI 캐시를 타고 Pages 에 계속 올라간다"""
+    root = data_dir(shape_id)
+    root.mkdir(parents=True, exist_ok=True)
+    files = split_data(whole)
+    for name, body in files.items():
+        (root / name).write_text(json.dumps(body, separators=(",", ":")), encoding="utf-8", newline="\n")
+    for f in root.glob("*.json"):
+        if f.name not in files:
+            f.unlink()
 
 
 def write_data(shape_id: str, pieces: dict[str, tuple[dict, dict]]) -> None:
     """모양 하나의 시안 페이지 데이터 data/<모양>/. 지난번 파일이 있으면 조각이 온 구성표만 갈아 끼운다.
     코드가 바뀌면 모든 구성표의 조각이 오므로(해시에 코드가 섞여 있다) 통째로 다시 쓰인다"""
-    root = data_dir(shape_id)
-    root.mkdir(parents=True, exist_ok=True)
     old = read_data(shape_id) if len(pieces) < len(SCHEMES) else None
-    for name, body in split_data(splice(pieces, old)).items():
-        (root / name).write_text(json.dumps(body, separators=(",", ":")), encoding="utf-8", newline="\n")
+    write_split(shape_id, splice(pieces, old))
     # 한 파일에 다 넣던 때의 data/<모양>.json. 남겨 두면 Pages 에 모양마다 24MB 씩 그대로 올라간다
     (HERE / "data" / f"{shape_id}.json").unlink(missing_ok=True)
+
+
+def prune() -> list[str]:
+    """지금 목록에 없는 구성표·모양의 dist·data 폴더를 지운다. 지운 경로를 돌려준다.
+    handler.ps1 은 적용할 때 받아 두므로 이미 쓰는 사람의 커서는 안 깨진다"""
+    sids, shps = {s["id"] for s in SCHEMES}, {s["id"] for s in SHAPES}
+    dist, data = HERE / "dist", HERE / "data"
+    gone = [d for d in dist.glob("*/") if d.name not in sids | shps] if dist.is_dir() else []
+    gone += [d for shp in shps - {SHAPES[0]["id"]} if (dist / shp).is_dir()
+             for d in (dist / shp).glob("*/") if d.name not in sids]
+    gone += [d for d in data.glob("*/") if d.name not in shps] if data.is_dir() else []
+    for d in gone:
+        shutil.rmtree(d)
+    return [str(d.relative_to(HERE)) for d in gone]
 
 
 def update_readme() -> None:
@@ -526,6 +550,8 @@ if __name__ == "__main__":
     # CI 는 늘 빈 체크아웃이라 표식이 없어 전부 다시 만든다. 손으로 그러려면 --all
     code, art, every, page_key = _hashes()
     was = {} if "--all" in sys.argv else json.loads(STAMP.read_text()) if STAMP.exists() else {}
+    for path in prune():
+        print(f"[{time.time() - t0:5.1f}초] 목록에 없어 지움: {path}")
 
     workers = getattr(os, "process_cpu_count", os.cpu_count)() or 1   # ProcessPoolExecutor 기본값과 같다
     with ProcessPoolExecutor(workers) as pool:
@@ -544,8 +570,12 @@ if __name__ == "__main__":
             skipped += len(SCHEMES) - len(stale)
             fresh: set[str] = set()                     # 시안 데이터 조각을 새로 그릴 구성표
             if not base and (was.get("*") != every or not (data_dir(shp["id"]) / "index.json").exists()):
-                fresh = set(changed) if changed and data_whole(shp["id"]) else {s["id"] for s in SCHEMES}
-                pieces[shp["id"]] = {}
+                missing = data_missing(shp["id"])
+                fresh = {s["id"] for s in SCHEMES} if missing is None else set(changed) | missing
+                if fresh:
+                    pieces[shp["id"]] = {}
+                else:                                   # 구성표를 지우기만 했다 — 그릴 것 없이 목록만 줄인다
+                    write_data(shp["id"], {})
             # (모양 × 구성표) 하나가 일감 하나. 커서와 시안 데이터를 한 일감에서 같이 만든다.
             # 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
             # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
