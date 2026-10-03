@@ -135,11 +135,16 @@ def _hashes() -> tuple[dict, dict, str]:
            for s in SCHEMES}
     keys = {f"{shp['id']}/{sid}": _sha(code[shp["id"]], art[sid]) for shp in SHAPES for sid in drawn(shp["id"])}
     marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
-    # 모양 데이터는 구성표 목록 차례까지 한 묶음이라 하나만 바뀌거나 빠져도 그 모양 data 를 다시 맞춘다
+    tree = _tree(HERE / "build.py")
+    # 모양 데이터는 구성표 목록 차례까지 한 묶음이라 하나만 바뀌거나 빠져도 그 모양 data 를 다시 맞춘다.
+    # data 파일을 나누고 쓰는 코드(부모가 돌린다)도 넣는다 — 빠졌을 때는 split_data 를 고쳐도 data 가 옛 꼴로 남았다
+    writer = _dump(_reach(tree, {"write_data", "data_missing"}))
     for shp in SHAPES:
-        marks[f"*data/{shp['id']}"] = _sha(*(keys[f"{shp['id']}/{sid}"] for sid in drawn(shp["id"])))
-    # 버전 표시를 해시에 넣는다 — 커밋이 바뀌면 그림이 그대로여도 페이지를 다시 만들어야 한다
-    return keys, marks, _sha(*keys.values(), (HERE / "preview.tpl.html").read_bytes(), version())
+        marks[f"*data/{shp['id']}"] = _sha(writer, *(keys[f"{shp['id']}/{sid}"] for sid in drawn(shp["id"])))
+    # 버전 표시를 해시에 넣는다 — 커밋이 바뀌면 그림이 그대로여도 페이지를 다시 만들어야 한다.
+    # 페이지를 짜는 코드와 모양 탭 이름(shapes.json)도 — 빠졌을 때는 커밋 전에 build() 를 고쳐 돌려도 페이지가 그대로였다
+    return keys, marks, _sha(*keys.values(), (HERE / "preview.tpl.html").read_bytes(), version(),
+                             _dump(_reach(tree, {"build"})), (HERE / "shapes.json").read_bytes())
 
 
 # dist/ 안에 두면 CI 의 커서 파일 점검이 이걸 커서로 알고 열어 보다 실패한다
@@ -643,7 +648,9 @@ if __name__ == "__main__":
                 fresh = set(sids) if missing is None else (changed | missing) & set(sids)
                 if fresh:
                     pieces[shp["id"]] = {}
-                elif not plan:                          # 구성표를 지우기만 했다 — 그릴 것 없이 목록만 줄인다
+                elif plan:
+                    print(f"{shp['id']}: 시안 데이터 다시 씀 (그리지 않고 지난 것을 옮김)")
+                else:                                   # 구성표를 지웠거나 data 쓰는 코드만 바뀌었다 — 그릴 것 없이 다시 쓴다
                     write_data(shp["id"], {})
             # (모양 × 구성표) 하나가 일감 하나. 커서와 시안 데이터를 한 일감에서 같이 만든다.
             # 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
@@ -658,7 +665,8 @@ if __name__ == "__main__":
                           f" (구성표 {len(sids)}종 중)" + ("" if len(mine) > 8 else " — " + " ".join(j[1] for j in mine)))
         if plan:
             print(f"다시 그릴 일감 {len(jobs_of)}개 · 그대로 둘 구성표 {skipped}개 (모양별 합)"
-                  + (" · 스텐실 다시 구움" if was.get("*stencil") != marks["*stencil"] else ""))
+                  + (" · 스텐실 다시 구움" if was.get("*stencil") != marks["*stencil"] else "")
+                  + (" · 페이지 다시 만듦" if was.get("*page") != page_key else ""))
             raise SystemExit
 
         # 매끈한 모양의 스텐실(테마와 무관한 160벌)을 먼저 병렬로 구워 한 파일에 모은다. 워커마다 굽게 두면

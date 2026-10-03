@@ -88,6 +88,8 @@
   **코드를 고쳐도 그 코드를 읽는 일감만 다시 그린다** (2026-10-03 부터, `_hashes()`) — 일감 해시에는 그 구성표 그림·schemes.json 줄,
   make_cur.py·shape.py, build.py 중 `build_one`·`bake` 에서 이름으로 닿는 정의, 매끈한 모양이면 smooth.py(`SHAPES` 는 제 모양 줄만)만
   들어간다. 주석·docstring 은 빼고 구문 나무로 재서 주석만 고치면 아무것도 안 그린다. 미리 보기는 `python build.py --plan`.
+  data 표식에는 data 파일을 나눠 쓰는 코드(`write_data`·`data_missing` 에서 닿는 것)가, 페이지 해시에는 `build()` 에서 닿는 코드와
+  shapes.json 이 같이 든다 — 그 코드만 고치면 그리지 않고 data·페이지만 다시 쓴다(컨테이너 18초). 빠지면 `test_stamp.py` 가 실패한다.
   getattr 처럼 문자열로 이름을 찾는 코드는 못 따라간다. 그 전에는 주석 한 줄(8ce80f86)에도 CI 15분이었다.
   run #219 는 그림만 고친 커밋인데 옛 캐시(`fbf9b49f…`)를 받아 전부 다시 그렸다 — main 이 1분 전에 저장한 `c041ea13…` 이 아니라.
   restore-keys 가 제 브랜치 캐시를 먼저 찾기 때문으로 추정(안 확인). 캐시 한 벌은 zstd 압축 후

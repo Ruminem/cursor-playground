@@ -4,6 +4,7 @@
 
 사용법: python test_stamp.py — 구성표 세 종·모양 하나로 줄여서 몇 초 안에 끝난다.
 """
+import ast
 import json
 import re
 import tempfile
@@ -14,6 +15,23 @@ import build
 # 제목 옆 버전 표시. 여기가 비거나 형식이 깨지면 Pages 에 실렸는지 볼 자가 없어진다
 ver = build.version()
 assert re.fullmatch(r"v\d+\.\d+\.\d+( · [0-9a-f]{7,})?", ver), f"버전 표시가 이상함: {ver!r}"
+
+# data 표식·페이지 해시가 부모 쪽 코드를 품는지. 빠지면 그 코드를 고쳐도 data·preview.html 이 옛것으로 남는다
+# split_data 에 문장 하나를 더한 나무로 해시를 다시 떠서, 커서 일감은 그대로이고 data 표식·페이지만 바뀌는지 본다
+plain = build._tree
+def bent(path):
+    tree = plain(path)
+    for node in tree.body if path.name == "build.py" else ():
+        if getattr(node, "name", None) == "split_data":
+            node.body.insert(0, ast.Pass())
+    return tree
+keys0, marks0, page0 = build._hashes()
+build._tree = bent
+keys1, marks1, page1 = build._hashes()
+build._tree = plain
+assert keys0 == keys1, "data 쓰는 코드만 바꿨는데 커서 일감을 다시 그림"
+assert all(marks0[k] != marks1[k] for k in marks0 if k.startswith("*data/")), "data 쓰는 코드가 data 표식에 안 들어감"
+assert page0 != page1, "페이지 짜는 코드가 페이지 해시에 안 들어감"
 
 # 주소 줄에 붙여넣은 주소를 읽는 정규식이, 그 줄이 스스로 뱉는 주소를 도로 읽는지.
 # 둘이 갈리면 복사한 주소를 다시 붙여넣었을 때 "못 읽음" 이 된다
