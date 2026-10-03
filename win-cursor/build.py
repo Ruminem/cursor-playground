@@ -85,7 +85,8 @@ ROLES = [
     ("move", "이동", "move"),
     ("hand", "링크 선택", "pointer"),
 ]
-# 나머지 11칸. 테마 화살표·모래시계에서 만든 것이라 시안에는 작은 그림으로만 보여 준다
+# 나머지 11칸. 테마 화살표·모래시계에서 만든 것이지만 시안에는 여섯 칸처럼 카드(핫스팟·크기)로 펼친다 —
+# 작은 그림으로만 보이던 때는 핫스팟이 어디인지 안 보였다
 EXTRA = [
     ("help", "도움말 선택", "help"),
     ("busy", "백그라운드 작업", "progress"),
@@ -256,12 +257,11 @@ def favicon() -> str:
 def build() -> str:
     css, panels = [], []
     data: dict[str, dict[str, list]] = {}
-    extra_data: dict[str, dict[str, list]] = {}
     groups: dict[str, list[str]] = {}
     for scheme in SCHEMES:
         sid, sname, sdesc = scheme["id"], scheme["name"], scheme["desc"]
         cards = []
-        for rid, rlabel, fallback in ROLES:
+        for rid, rlabel, fallback in ROLES + EXTRA:
             # 그림은 프레임을 이은 한 장(strip)으로 넘기고 페이지 스크립트가 카드에 깔고 자리를 옮긴다.
             # 카드에 미리 박아 두면 같은 그림이 페이지에 두 번 들어간다. CSS 커서 기본값은 첫 프레임
             entry = data_bit(sid, rid, None, {})
@@ -284,10 +284,6 @@ def build() -> str:
             <p class="coords">{w}×{h} · hotspot <b>{hx},{hy}</b></p>
           </div>
         </article>""")
-        extras = []
-        for rid, rlabel, _ in EXTRA:
-            extra_data.setdefault(sid, {})[rid] = data_bit(sid, rid, None, {})
-            extras.append(f'<div class="extra s-{sid} e-{rid}"><span class="pic"><i></i></span>{rlabel}</div>')
         search = " ".join((sid, sname, scheme["name_en"], scheme["category"], scheme["category_en"])).lower()
         groups.setdefault(scheme["category"], []).append(f"""
       <div class="pick-wrap" data-scheme-item="{sid}" data-search="{search}">
@@ -303,8 +299,8 @@ def build() -> str:
         <p class="desc"><b>cursor-playground {sname}</b> — {sdesc}</p>
         <button type="button" class="register c-hand" data-apply="{sid}" data-name="{sname}">이 구성표 적용</button>
       </div>
-      <div class="grid">{"".join(cards)}</div>
-      <div class="extras"><h4>나머지 11칸</h4><div class="extra-grid">{"".join(extras)}</div></div>
+      <div class="grid">{"".join(cards[:len(ROLES)])}</div>
+      <div class="extras"><h4>나머지 11칸</h4><div class="grid">{"".join(cards[len(ROLES):])}</div></div>
     </div>""")
 
     # 모양 탭. 단추에 붙는 그림은 첫 구성표의 화살표를 그 모양으로 그린 것
@@ -316,20 +312,19 @@ def build() -> str:
 
     # 기본 모양 그림도 다른 모양처럼 data/<기본>/ 로 내보내고, 페이지에는 칸 정보·목록 화살표와 START 그림만 남긴다.
     # 전부 박던 때는 페이지가 gzip 1.3MB 라 폰 회선에서 그것을 다 받을 때까지 첫 화면이 안 떴다
-    write_split(SHAPES[0]["id"], {"data": data, "extra": extra_data})
+    write_split(SHAPES[0]["id"], {"data": data})
     data = {sid: {rid: e if sid == START or rid == "arrow" else ["", *e[1:]] for rid, e in roles.items()}
             for sid, roles in data.items()}
-    extra_data = {START: extra_data[START]}
 
     page = (
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*START*/", json.dumps(START))
         .replace("/*CLASSIC_ONLY*/", json.dumps(sorted(CLASSIC_ONLY)))
+        .replace("/*KEEP*/", json.dumps(sorted(KEEP)))
         .replace("<!--SHAPES-->", "".join(tabs))
         .replace("/*SHAPE_LIST*/", json.dumps([{k: s[k] for k in ("id", "name", "desc")} for s in SHAPES], ensure_ascii=False, separators=(",", ":")))
         .replace("/*CURSOR_CSS*/", "\n".join(css))
         .replace("/*CURSOR_DATA*/", json.dumps(data, separators=(",", ":")))
-        .replace("/*EXTRA_DATA*/", json.dumps(extra_data, separators=(",", ":")))
         .replace("<!--FAVICON-->", favicon())
         .replace("<!--COUNT-->", str(len(SCHEMES)))
         .replace("<!--VERSION-->", version())
@@ -350,22 +345,18 @@ def build() -> str:
 
 
 def data_bit(sid: str, rid: str, shape: str | None, cache: dict, ats: dict | None = None) -> list:
-    """시안 데이터의 칸 하나. ROLES 칸은 [스트립, 핫스팟 x, y, 대체 커서, rate, 폭, 높이, 프레임 수, 잉크 상자],
-    EXTRA 칸은 [스트립, rate, 프레임 수]. 잉크 상자는 화살표만 (나머지는 0)"""
+    """시안 데이터의 칸 하나. [스트립, 핫스팟 x, y, 대체 커서, rate, 폭, 높이, 프레임 수, 잉크 상자].
+    잉크 상자는 화살표만 (나머지는 0)"""
     pngs, hx, hy, rate, w, h = page_bits(sid, rid, shape, cache, ats)
     uri, box = strip(pngs, rid == "arrow")
-    fallback = next((f for r, _, f in ROLES if r == rid), None)
-    return [uri, hx, hy, fallback, rate, w, h, len(pngs), box] if fallback is not None else [uri, rate, len(pngs)]
+    fallback = next(f for r, _, f in ROLES + EXTRA if r == rid)
+    return [uri, hx, hy, fallback, rate, w, h, len(pngs), box]
 
 
-def splice(pieces: dict[str, tuple[dict, dict]], old: dict | None, sids: list[str]) -> dict:
-    """구성표별 조각 {구성표: (칸들, 덧칸들)} 을 sids 차례로 이어 {"data": …, "extra": …} 로.
+def splice(pieces: dict[str, dict], old: dict | None, sids: list[str]) -> dict:
+    """구성표별 조각 {구성표: 칸들} 을 sids 차례로 이어 {"data": …} 로.
     old 를 주면 조각이 없는 구성표는 지난번 것을 그대로 옮긴다"""
-    data: dict[str, dict[str, list]] = {}
-    extra: dict[str, dict[str, list]] = {}
-    for sid in sids:
-        data[sid], extra[sid] = pieces[sid] if sid in pieces else (old["data"][sid], old["extra"][sid])
-    return {"data": data, "extra": extra}
+    return {"data": {sid: pieces[sid] if sid in pieces else old["data"][sid] for sid in sids}}
 
 
 def shape_data(shape_id: str, sids: list[str], old: dict | None) -> dict:
@@ -376,8 +367,7 @@ def shape_data(shape_id: str, sids: list[str], old: dict | None) -> dict:
     pieces = {}
     for sid in drawn(shape_id):
         if old is None or sid in sids:
-            pieces[sid] = ({rid: data_bit(sid, rid, shape, cache) for rid, _, _ in ROLES},
-                           {rid: data_bit(sid, rid, shape, cache) for rid, _, _ in EXTRA})
+            pieces[sid] = {rid: data_bit(sid, rid, shape, cache) for rid, _, _ in ROLES + EXTRA}
             cache.pop(sid, None)
     return splice(pieces, old, drawn(shape_id))
 
@@ -423,7 +413,7 @@ def build_one(job: tuple[str, str, bool, bool]) -> tuple[int, tuple | None]:
     out = (HERE / "dist" if shape is None else HERE / "dist" / shape_id) / sid
     if want_dist:
         out.mkdir(parents=True, exist_ok=True)
-    count, data, extra = 0, {}, {}
+    count, data = 0, {}
     for rid, _, _ in ROLES + EXTRA:
         ats: dict = {}                                  # 칸마다 새로 — 한 칸 그림만 들고 있게 (메모리)
         # 모양이 안 건드리는 칸은 기본 모양 파일과 바이트까지 같다. 두 번 쓰지 않고
@@ -433,8 +423,8 @@ def build_one(job: tuple[str, str, bool, bool]) -> tuple[int, tuple | None]:
             (out / f"{rid}.{ext}").write_bytes(blob)
             count += 1
         if want_data:
-            (data if any(r == rid for r, _, _ in ROLES) else extra)[rid] = data_bit(sid, rid, shape, cache, ats)
-    return count, ((data, extra) if want_data else None)
+            data[rid] = data_bit(sid, rid, shape, cache, ats)
+    return count, (data if want_data else None)
 
 
 def data_dir(shape_id: str) -> Path:
@@ -455,7 +445,7 @@ def split_data(whole: dict) -> dict[str, dict]:
     for sid, roles in whole["data"].items():
         index[sid] = {rid: ["", *e[1:]] for rid, e in roles.items()}
         arrows[sid] = roles["arrow"][0]
-        files[f"{sid}.json"] = {"data": {rid: e[0] for rid, e in roles.items()}, "extra": whole["extra"][sid]}
+        files[f"{sid}.json"] = {"data": {rid: e[0] for rid, e in roles.items()}}
     return files
 
 
@@ -464,12 +454,11 @@ def read_data(shape_id: str) -> dict | None:
     root = data_dir(shape_id)
     try:
         index = json.loads((root / "index.json").read_text(encoding="utf-8"))["data"]
-        data, extra = {}, {}
+        data = {}
         for sid, roles in index.items():
             one = json.loads((root / f"{sid}.json").read_text(encoding="utf-8"))
             data[sid] = {rid: [one["data"][rid], *e[1:]] for rid, e in roles.items()}
-            extra[sid] = one["extra"]
-        return {"data": data, "extra": extra}
+        return {"data": data}
     except (OSError, KeyError, ValueError):
         return None
 
@@ -495,7 +484,7 @@ def write_split(shape_id: str, whole: dict) -> None:
             f.unlink()
 
 
-def write_data(shape_id: str, pieces: dict[str, tuple[dict, dict]]) -> None:
+def write_data(shape_id: str, pieces: dict[str, dict]) -> None:
     """모양 하나의 시안 페이지 데이터 data/<모양>/. 지난번 파일이 있으면 조각이 온 구성표만 갈아 끼운다.
     코드가 바뀌면 모든 구성표의 조각이 오므로(해시에 코드가 섞여 있다) 통째로 다시 쓰인다"""
     sids = drawn(shape_id)

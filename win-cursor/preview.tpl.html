@@ -61,7 +61,7 @@ body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding
   .pane{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:36px;min-height:0;overflow-y:auto;padding:32px 4px 32px 0}
   .pane.menu{scrollbar-gutter:stable;padding-right:16px}
   .pane.view{overscroll-behavior:contain}
-  /* 오른쪽 통은 한 화면에 다 들어가게 줄인다: 여섯 칸은 세 줄로 그림 위·이름 아래(3배), 나머지 11칸은 한 줄,
+  /* 오른쪽 통은 되도록 한 화면에 들어가게 줄인다: 카드는 세 줄로 그림 위·이름 아래(3배) — 나머지 11칸 카드는 통 안에서 스크롤,
      만져 보기는 입력칸과 끄는 영역을 나란히. 파일 경로는 왼쪽 README 에도 있어 뺀다 */
   .pane.view{gap:18px;padding-block:20px}
   .pane.view h2{margin-bottom:8px}
@@ -77,10 +77,6 @@ body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding
   .pane.view .meta .coords{font-size:12px}
   .pane.view .extras{margin-top:8px;padding:8px 10px}
   .pane.view .extras h4{margin-bottom:6px}
-  .pane.view .extra-grid{grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}
-  .pane.view .extra{font-size:11px;line-height:1.25;gap:3px}
-  .pane.view .extra span.pic,.pane.view .extra span.pic i{width:40px;height:40px;--s:40px}
-  .pane.view .extra span.pic{background-size:5px 5px}
   .pane.view .reg-status{margin-top:6px}
   .pane.view .legend{margin-top:4px;font-size:12px}
   .pane.view .play{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 14px;padding:12px 14px;align-items:end}
@@ -133,7 +129,7 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .shape:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .shape i{width:22px;height:22px;background:50%/contain no-repeat;image-rendering:pixelated}
 /* 매끈한 모양은 픽셀을 각지게 키우면 오히려 거칠어 보여서 부드럽게 늘린다 */
-.shape.smooth i,body.smooth .thumb,body.smooth .sprite,body.smooth .extra span.pic i{image-rendering:auto}
+.shape.smooth i,body.smooth .thumb,body.smooth .sprite{image-rendering:auto}
 /* 단 모양이 안 바꾸는 칸은 테마가 그린 픽셀 그대로라 각지게 키운다 (build.py 의 KEEP 과 같은 목록) */
 body.smooth .c-hand .sprite,body.smooth .e-cross i,body.smooth .e-pen i,body.smooth .e-ns i,
 body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-up i{image-rendering:pixelated}
@@ -194,22 +190,21 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .sprite{--s:calc(32 * var(--px));position:absolute;inset:0;background-repeat:no-repeat;image-rendering:pixelated}
 /* 그림은 프레임을 세로로 이은 한 장(프레임 --n 장, 프레임 뒤마다 판의 1/8 만큼 빈 줄이라 한 칸이 판의 1.125배).
    움직임은 그림을 바꿔 끼우지 않고 --f(프레임 번호)로 자리만 옮긴다 */
-.sprite,.extra span.pic i{background-size:var(--s) calc(var(--s) * 1.125 * var(--n,1));background-position:0 calc(var(--s) * -1.125 * var(--f,0))}
+.sprite{background-size:var(--s) calc(var(--s) * 1.125 * var(--n,1));background-position:0 calc(var(--s) * -1.125 * var(--f,0))}
 /* 움직이는 그림은 제 레이어에 둬서 한 장 넘길 때 그 칸만 다시 칠한다. 안 그러면 장마다 페이지 전체를 다시 칠했다 */
-.sprite,.extra span.pic i,.thumb{will-change:transform}
+.sprite,.thumb{will-change:transform}
 .hot{position:absolute;width:var(--px);height:var(--px);left:calc(var(--hx) * var(--px));top:calc(var(--hy) * var(--px));
   outline:2px solid var(--hot);outline-offset:1px}
 /* 링크 클릭 점을 켠 구성표의 손 카드는 핫스팟 테 대신 적용될 점(파란 칸 + 흰 테)을 그대로 보인다 */
 .card.dotted .hot{background:rgb(30,110,255);box-shadow:0 0 0 var(--px) #fff;outline:none}
-/* 칸마다 클릭 점 단추. 카드·나머지 칸 오른쪽 위 구석의 작은 동그라미, 켜면 적용될 점(파랑 + 흰 테) 모양 */
-.card,.extra{position:relative}
+/* 칸마다 클릭 점 단추. 카드 오른쪽 위 구석의 작은 동그라미, 켜면 적용될 점(파랑 + 흰 테) 모양 */
+.card{position:relative}
 .dotbtn{position:absolute;top:4px;right:4px;width:18px;height:18px;padding:0;border:1px solid var(--line);border-radius:50%;
   background:var(--surface);display:grid;place-items:center;opacity:.55;transition:opacity .15s}
 .dotbtn::after{content:"";width:6px;height:6px;border-radius:50%;border:1px solid var(--muted)}
-.card:hover .dotbtn,.extra:hover .dotbtn,.dotbtn:focus-visible,.dotbtn[aria-pressed="true"]{opacity:1}
+.card:hover .dotbtn,.dotbtn:focus-visible,.dotbtn[aria-pressed="true"]{opacity:1}
 .dotbtn[aria-pressed="true"]{border-color:rgb(30,110,255)}
 .dotbtn[aria-pressed="true"]::after{background:rgb(30,110,255);border:2px solid #fff;width:6px;height:6px;border-radius:1px}
-.extra .dotbtn{top:0;right:0}
 .dot-count{font-family:var(--mono);font-size:12px}
 .apply-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .dot-toggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
@@ -220,10 +215,6 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .coords b{color:var(--hot);font-weight:600}
 .extras{margin-top:12px;border:1px dashed var(--line);border-radius:6px;padding:12px}
 .extras h4{margin:0 0 10px;font:600 13px/1 var(--body);color:var(--muted)}
-.extra-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
-.extra{display:grid;justify-items:center;gap:4px;font-size:12px;color:var(--muted);text-align:center}
-.extra span.pic{width:64px;height:64px;background:repeating-conic-gradient(var(--check-a) 0 25%,var(--check-b) 0 50%) 0 0/8px 8px}
-.extra span.pic i{--s:64px;display:block;width:64px;height:64px;background-repeat:no-repeat;image-rendering:pixelated}
 .editor{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
 .editor canvas{width:min(384px,100%);height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:6px;background:var(--surface);touch-action:none}
 .tools{flex:1 1 260px;display:grid;gap:12px;align-content:start}
@@ -486,14 +477,15 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
 // 색조 돌리는 식은 handler.ps1 의 C# Recolor 와 같아야 페이지와 윈도우의 색이 같다.
 (function(){
   var DATA = /*CURSOR_DATA*/;
-  var EXTRA = /*EXTRA_DATA*/;
   // 모양 목록. 기본 모양도 다른 모양처럼 구성표마다 data/<모양>/<구성표>.json 에서 받는다. 페이지에 박힌 것은
   // 칸 정보·목록 썸네일(화살표)과 처음 여는 구성표 하나의 그림뿐 — 전부 박던 때는 페이지가 gzip 1.1MB 라
   // 폰 회선에서 그것을 다 받고 풀 때까지 첫 화면이 안 떴다
   var SHAPES = /*SHAPE_LIST*/;
   var packs = {}, shape = SHAPES[0].id;
-  packs[shape] = { data: DATA, extra: EXTRA, arrows: true, full: {}, asking: {} };
-  Object.keys(EXTRA).forEach(function(sid){ packs[shape].full[sid] = true; });
+  packs[shape] = { data: DATA, arrows: true, full: {}, asking: {} };
+  packs[shape].full[/*START*/] = true;
+  // 모양이 안 건드리는 칸(build.KEEP). 다른 모양 탭에서도 테마 그림 그대로라 카드 밑 파일 이름을 art 로 둔다
+  var KEEP = /*KEEP*/;
   // 기본 모양으로만 내는 구성표(해양 생물 · 애니, build.CLASSIC_ONLY). data/<모양>/ 에 없어서
   // 다른 모양 탭에서도 기본 모양 묶음의 그림을 빌려 보이고, 적용 주소에 모양을 안 붙인다
   var CLASSIC_ONLY = {};
@@ -502,7 +494,6 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   // 클릭 점. 구성표마다 17칸을 하나씩 켜고 끄며 기본은 다 끔. 켜면 적용 주소 끝에 점 토큰이 붙어 handler.ps1 이
   // 받은 커서의 그 칸들 핫스팟에 점을 찍는다. 토큰은 링크(손) 칸만이면 예전 그대로 dot, 아니면 dot.arrow.hand 꼴이고
   // 칸 차례는 handler.ps1 의 $slots 차례다. 여기서는 카드와 그 위 커서에 같은 점을 그려 미리 보인다
-  // (나머지 11칸은 페이지 데이터에 핫스팟이 없어 단추만 켜진다)
   var DOT_SLOTS = ['arrow', 'help', 'busy', 'wait', 'cross', 'ibeam', 'pen', 'no', 'ns', 'we', 'nwse', 'nesw', 'move', 'up', 'hand', 'pin', 'person'];
   var DOTS = {};
   try { DOTS = JSON.parse(localStorage.getItem('cp-dots') || '{}') || {}; } catch (e) {}
@@ -525,8 +516,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   };
   function showDot(sid){
     var on = window.cpDots(sid);
-    document.querySelectorAll('.card.s-' + sid + ',.extra.s-' + sid).forEach(function(c){
-      var rid = (/(?:^| )[ce]-([a-z]+)/.exec(c.className) || [])[1];
+    document.querySelectorAll('.card.s-' + sid).forEach(function(c){
+      var rid = (/(?:^| )c-([a-z]+)/.exec(c.className) || [])[1];
       c.classList.toggle('dotted', on.indexOf(rid) >= 0);
     });
     document.querySelectorAll('[data-dotfor="' + sid + '"]').forEach(function(b){
@@ -537,11 +528,11 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       b.parentNode.querySelector('.dot-count').textContent = on.length && on.length < DOT_SLOTS.length ? on.length + '칸' : '';
     });
   }
-  // 카드·나머지 칸마다 단추 하나. 칸 이름은 그 칸 제목에서 따 온다
-  document.querySelectorAll('.card[class*=" s-"],.extra[class*=" s-"]').forEach(function(c){
-    var sid = (/(?:^| )s-([a-z]+)/.exec(c.className) || [])[1], rid = (/(?:^| )[ce]-([a-z]+)/.exec(c.className) || [])[1];
+  // 카드마다 단추 하나. 칸 이름은 그 카드 제목에서 따 온다
+  document.querySelectorAll('.card[class*=" s-"]').forEach(function(c){
+    var sid = (/(?:^| )s-([a-z]+)/.exec(c.className) || [])[1], rid = (/(?:^| )c-([a-z]+)/.exec(c.className) || [])[1];
     if (!sid || DOT_SLOTS.indexOf(rid) < 0) return;
-    var b = document.createElement('button'), name = (c.querySelector('h3') || c).textContent.trim();
+    var b = document.createElement('button'), name = c.querySelector('h3').textContent.trim();
     b.type = 'button'; b.className = 'dotbtn c-hand';
     b.setAttribute('data-dotfor', sid); b.setAttribute('data-dotslot', rid); b.setAttribute('aria-pressed', 'false');
     b.title = name + ' 클릭 지점에 파란 점을 찍어 적용함';
@@ -675,11 +666,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     return cache[key];
   }
   function animated(sid){
-    return Object.keys(DATA[sid] || {}).some(function(r){ return DATA[sid][r][7] > 1; })
-      || Object.keys(EXTRA[sid] || {}).some(function(r){ return EXTRA[sid][r][2] > 1; });
+    return Object.keys(DATA[sid] || {}).some(function(r){ return DATA[sid][r][7] > 1; });
   }
 
-  // 페이지를 열 때 카드·덧칸·목록 썸네일에 기본 모양 그림을 깐다. 페이지에 두 번 박지 않으려고 HTML 에는 안 넣었다.
+  // 페이지를 열 때 카드·목록 썸네일에 기본 모양 그림을 깐다. 페이지에 두 번 박지 않으려고 HTML 에는 안 넣었다.
   // 여기서 깐 값이 "원래 값"이라 다른 모양·색조를 입혔다가 restore 하면 이리로 돌아온다
   // 그림을 늦게 받은 구성표는 다른 모양·색조가 이미 칸을 덮었을 수 있다. 덮인 값은 되돌릴 자리만 고친다
   function lay(el, uri, n){
@@ -690,16 +680,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   }
   var base = packs[SHAPES[0].id];
   function lend(pack){
-    if (pack !== base) Object.keys(CLASSIC_ONLY).forEach(function(sid){
-      pack.data[sid] = base.data[sid];
-      if (base.extra[sid]) pack.extra[sid] = base.extra[sid];
-    });
+    if (pack !== base) Object.keys(CLASSIC_ONLY).forEach(function(sid){ pack.data[sid] = base.data[sid]; });
   }
   // 매끈한 모양 탭(body.smooth)에서도 빌린 픽셀아트는 뭉개지 않는다
   if (Object.keys(CLASSIC_ONLY).length) {
     var pix = document.createElement('style');
     pix.textContent = Object.keys(CLASSIC_ONLY).map(function(sid){
-      return 'body.smooth .s-' + sid + ' .sprite,body.smooth .extra.s-' + sid + ' span.pic i,body.smooth [data-scheme-item="' + sid + '"] .thumb';
+      return 'body.smooth .s-' + sid + ' .sprite,body.smooth [data-scheme-item="' + sid + '"] .thumb';
     }).join(',') + '{image-rendering:pixelated}';
     document.head.appendChild(pix);
   }
@@ -709,14 +696,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       var d = base.data[sid] && base.data[sid][rid], el = card.querySelector('.sprite');
       if (d && d[0] && el) lay(el, d[0], d[7]);
     });
-    document.querySelectorAll('.extra.s-' + sid).forEach(function(box){
-      var rid = (/(?:^| )e-([a-z]+)/.exec(box.className) || [])[1];
-      var d = base.extra[sid] && base.extra[sid][rid], el = box.querySelector('i');
-      if (d && el) lay(el, d[0], d[2]);
-    });
   }
   var cards = new Map();
-  Object.keys(EXTRA).forEach(layScheme);
+  Object.keys(base.full).forEach(layScheme);
   var thumbOf = {};
   document.querySelectorAll('[data-scheme-item]').forEach(function(item){
     var sid = item.getAttribute('data-scheme-item'), el = item.querySelector('.thumb');
@@ -762,7 +744,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   var nudge = document.createElement('style'); document.head.appendChild(nudge);
   function nudgeHue(){
     var d = hue - shownDeg;
-    nudge.textContent = d ? '.card .sprite,.extra span.pic i{filter:hue-rotate(' + d + 'deg)}' : '';
+    nudge.textContent = d ? '.card .sprite{filter:hue-rotate(' + d + 'deg)}' : '';
   }
   function tick(){
     var sid = app.getAttribute('data-scheme'), px = size, deg = hue;
@@ -794,14 +776,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       });
     }
     // 장 번호부터 세어 지난번과 같으면 아무것도 안 만든다. 화면 주사율마다 불리니 여기서 끝나는 때가 대부분이다
-    var fr = {}, fx = {};
+    var fr = {};
     Object.keys(DATA[sid]).forEach(function(rid){
       var d = DATA[sid][rid];
       if (d[0]) parts.push(fr[rid] = moving ? Math.floor(now / d[4]) % d[7] : 0);   // 빈 것은 다른 모양의 그림을 아직 받는 중
-    });
-    Object.keys(EXTRA[sid] || {}).forEach(function(rid){
-      var d = EXTRA[sid][rid];
-      parts.push(fx[rid] = moving ? Math.floor(now / d[1]) % d[2] : 0);
     });
     var key = sid + '|' + shape + '|' + px + '|' + deg + '|' + (hid || '') + '|' + dots.join('.') + '|' + parts.join(',');
     if (key === lastKey) return;
@@ -814,12 +792,6 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
           if (r[0] && over === hovered) set(hoverBook, over, 'cursor', 'url(' + r[0].uri + ') ' + hx + ' ' + hy + ',' + d[3]);
           put('.card.s-' + sid + '.c-' + rid + ' .sprite', r[1], d[7], f);
         };
-      }));
-    });
-    Object.keys(fx).forEach(function(rid){
-      var d = EXTRA[sid][rid], f = fx[rid];
-      jobs.push((plain ? Promise.resolve(null) : bgOf(d[0], deg)).then(function(u){
-        return function(){ put('.extra.s-' + sid + '.e-' + rid + ' i', u, d[2], f); };
       }));
     });
     var mine = ++asked;
@@ -869,7 +841,6 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     if (motionOK && !document.hidden) {
       if (DATA[sid] && animated(sid)) {
         Object.keys(DATA[sid]).forEach(function(rid){ if (DATA[sid][rid][7] > 1) at(DATA[sid][rid][4]); });
-        Object.keys(EXTRA[sid] || {}).forEach(function(rid){ if (EXTRA[sid][rid][2] > 1) at(EXTRA[sid][rid][1]); });
       }
       MOVING.forEach(function(m){ if (!window.IntersectionObserver || seen[m]) at(thumbData[m].arrow[4]); });
     }
@@ -949,7 +920,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       var rid = (/(?:^| )c-([a-z]+)/.exec(card.className) || [])[1];
       var d = DATA[sid] && DATA[sid][rid];
       if (!d) return;
-      var own = plain || rid === 'hand' || CLASSIC_ONLY[sid];  // 링크 칸은 테마가 그린 것을 그대로 쓴다
+      var own = plain || KEEP.indexOf(rid) >= 0 || CLASSIC_ONLY[sid];  // 링크·크기 조정 칸 등은 테마가 그린 것을 그대로 쓴다
       card.querySelector('code').textContent = own ? 'art/' + sid + '/' + rid + '.txt' : 'art/' + sid + ' 색 + smooth.py ' + shape;
       card.querySelector('.coords').innerHTML = d[5] + '×' + d[6] + ' · hotspot <b>' + d[1] + ',' + d[2] + '</b>';
       var stage = card.querySelector('.stage');
@@ -977,7 +948,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     pack.asking[sid] = true;
     getJSON('data/' + mine + '/' + sid + '.json').then(function(one){
       Object.keys(one.data).forEach(function(rid){ pack.data[sid][rid][0] = one.data[rid]; });
-      pack.extra[sid] = one.extra; pack.full[sid] = true;
+      pack.full[sid] = true;
       if (pack === base) { layScheme(sid); Object.keys(packs).forEach(function(k){ lend(packs[k]); }); }
       if (shape === mine || CLASSIC_ONLY[sid]) { lastKey = ''; tick(); }
     }, function(){ setTimeout(function(){ pack.asking[sid] = false; }, 5000); });
@@ -991,7 +962,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     var pick = SHAPES.filter(function(s){ return s.id === id; })[0] || SHAPES[0];
     function put(pack){
       lend(pack);
-      DATA = pack.data; EXTRA = pack.extra; shape = pick.id;
+      DATA = pack.data; shape = pick.id;
       lastKey = ''; restore(cards); restore(hoverBook);
       document.querySelectorAll('[data-shape]').forEach(function(b){ b.setAttribute('aria-selected', String(b.getAttribute('data-shape') === pick.id)); });
       noteShape(app.getAttribute('data-scheme'));
@@ -1011,7 +982,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     var sid = app.getAttribute('data-scheme');
     if (sid) getJSON('data/' + pick.id + '/' + sid + '.json').catch(function(){});   // 지금 구성표는 목록과 같이 받는다
     getJSON('data/' + pick.id + '/index.json').then(function(index){
-      packs[pick.id] = packs[pick.id] || { data: index.data, extra: {}, full: {}, asking: {} };
+      packs[pick.id] = packs[pick.id] || { data: index.data, full: {}, asking: {} };
       put(packs[pick.id]);
     }).catch(function(){ shapeNote.textContent = pick.name + ' 모양을 받지 못함 (새로고침해 볼 것)'; });
   }
