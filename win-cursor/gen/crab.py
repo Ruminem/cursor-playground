@@ -10,16 +10,17 @@ wait · move · no 까지 17칸을 다 그린다.
   기다림   입에서 물방울을 뽀글뽀글 불어 올린다. 물방울은 양옆으로 번갈아 오르다 꼭대기에서 터진다
   이동     옆걸음으로 좌우를 오가며 통통 튀고, 네 방향 끝에 작은 화살촉
   좌우     두 집게를 좌우로 쭉 뻗고 옆걸음 — 집게 끝이 ↔ 의 화살촉이다
-  위아래 · 대각선  디스코 춤 — 한 집게는 위(대각 위), 한 집게는 아래로 뻗고 그 축을 따라 몸을 까딱인다
+  위아래 · 대각선  디스코 춤 — 한 집게는 위(대각 위), 한 집게는 아래로 뻗고 그 축을 따라 몸을 까딱인다.
+           위아래는 다리를 좌우 옆으로 들고 팔을 등딱지 가운데에서 내어 아래 집게와 다리가 안 엉킨다
   I빔     I 기둥을 두 집게로 붙잡고 오르내린다. 핫스팟은 기둥 가운데
   금지     빨간 고리 안에서 두 집게를 엇갈려 ✕ — 고개(몸)를 도리도리
   손      집게를 곧게 세워 콕 집는다. 위 끝이 핫스팟이고 집을 때 반짝인다
   도움말   작은 화살표 꽃게 + 물음표가 든 물방울
   펜      제 몸만 한 연필을 집게로 쥐고 물결 글씨를 쓴다. 연필심 끝(왼쪽 아래)이 핫스팟
-  사람     작은 화살표 꽃게 + 머리에 꽃게를 모자처럼 얹은 사람
-  핀      작은 화살표 꽃게 + 머리가 꽃게인 지도 핀
+  사람     작은 화살표 꽃게 + 갈색 머리 위에 꽃게(눈자루 · 집게까지 통째로)를 모자처럼 얹은 사람
+  핀      작은 화살표 꽃게 + 파란 물방울 지도 핀, 핀 머리 동그라미 속에 꽃게 얼굴
   위      두 집게를 머리 위로 모아 ^ — 맞닿은 집게 끝이 핫스팟이다(만세)
-  십자     가는 조준선 + 오른쪽 아래에서 눈자루를 세우고 과녁을 노려보는 꽃게
+  십자     가는 조준선 + 오른쪽 아래에서 눈자루를 세우고 집게를 든 채 과녁을 노려보는 꽃게(다리는 짧게)
 거미로 읽히지 않게 다리는 한쪽에 셋만, 짧고 굵게 그린다. 주인공은 큰 집게와 눈자루 끝의 큰 눈이다.
 색은 새우(분홍·주황)와 갈리게 빨강 쪽으로 가고, 배 쪽 테두리는 크림색이다.
 이 파일은 빌드 코드 해시와 CI 캐시 키에 안 들어간다 — 고쳐도 빌드는 아무것도 다시 안 그리니 돌려서 art 를 고친다.
@@ -38,6 +39,7 @@ ink(OUT, HI, hx("ffd6c8c7"))
 SKIN, HAIR, SHIRT, SHIRT_D = hx("f2c9a0ff"), hx("4a3226ff"), hx("4a7fb5ff"), hx("2e5a88ff")
 PENCIL, PENCIL_D, WOOD, LEAD = hx("f2c230ff"), hx("c8961cff"), hx("e9c9a0ff"), hx("3a3a3aff")
 SAND = hx("e8d3a0ff")
+PIN, PIN_L, PIN_D, PIN_W = hx("3d8fd6ff"), hx("7cc0f0ff"), hx("173c6eff"), hx("cfe8faff")   # 지도 핀 — 꽃게 빨강과 갈리게 파랑
 
 
 def clip(f: dict) -> dict:
@@ -138,12 +140,15 @@ def tip_cell(tip, ang, sz, mv=1) -> tuple:
 
 # ── 몸 ───────────────────────────────────────────────────────────────────────
 def crab(f: dict, cx: float, cy: float, s: float = 1.0, claws=(), ph: float = 0.0, shut: bool = False,
-         look=(0, 0), walk: float = 1.0, mouth: str = "smile", stalk: float = 1.0, hug: bool = False) -> None:
+         look=(0, 0), walk: float = 1.0, mouth: str = "smile", stalk: float = 1.0, hug: bool = False,
+         leg: float = 1.0, splay: float = 0.0, mid: bool = False) -> None:
     """앞에서 본 꽃게 한 마리를 f 에 얹는다. (cx, cy) 는 등딱지 가운데, s 는 크기(1 이면 등딱지 17×12칸).
     claws 는 [(끝 점, 각, 크기, 벌림, mv)] — 어깨에서 손바닥까지 굵은 팔을 잇고 집게는 맨 앞에 그린다.
     다리는 한쪽에 셋, 짧고 굵은 몽당다리. walk 는 걷는 발놀림 세기. look 은 눈동자를 미는 방향(-1–1),
     mouth 는 "smile" · "o"(물방울 부는 입) · "frown". stalk 는 눈자루 길이 배수.
-    hug 면 팔을 반대쪽 어깨에서 내어 등딱지 앞에서 엇갈린다(✕)"""
+    hug 면 팔을 반대쪽 어깨에서 내어 등딱지 앞에서 엇갈린다(✕). leg 는 다리 길이 배수,
+    splay 는 다리를 옆으로 들어 올리는 각(라디안) — 아래로 뻗는 집게와 다리가 안 겹치게 할 때 쓴다.
+    mid 면 팔을 어깨가 아니라 등딱지 가운데에서 낸다 — 집게를 곧게 위아래로 뻗을 때 팔이 배를 비스듬히 안 가른다"""
     rx, ry = 8.4 * s, 5.8 * s
     layers = []
     # 다리 — 등딱지 아래 양옆으로 셋씩 비스듬히. 한 발씩 번갈아 든다
@@ -152,7 +157,8 @@ def crab(f: dict, cx: float, cy: float, s: float = 1.0, claws=(), ph: float = 0.
         for i, (root, out_) in enumerate(((0.05, 0.35), (0.45, 0.75), (0.85, 1.15))):
             lift = max(0.0, math.sin(ph * 2 + i * 2.1 + (side > 0) * math.pi)) * 1.2 * walk
             r0 = (cx + side * rx * math.cos(root) * 0.85, cy + ry * math.sin(root) * 0.85)
-            ft = (r0[0] + side * 3.6 * s * math.cos(out_), r0[1] + 3.6 * s * math.sin(out_) - lift)
+            out_ -= splay
+            ft = (r0[0] + side * 3.6 * s * leg * math.cos(out_), r0[1] + 3.6 * s * leg * math.sin(out_) - lift)
             lm = {}
             line(lm, r0, ft, DEEP, lw)
             layers.append(fill(lm, DEEP))
@@ -160,7 +166,7 @@ def crab(f: dict, cx: float, cy: float, s: float = 1.0, claws=(), ph: float = 0.
     arms = []
     for tip, ang, sz, _, mv in claws:
         _, _, (px, py) = claw_frame(tip, ang, sz, mv)
-        sx = cx + (rx * 0.7 if (px > cx) != hug else -rx * 0.7)
+        sx = cx if mid else cx + (rx * 0.7 if (px > cx) != hug else -rx * 0.7)
         am = {}
         line(am, (sx, cy - ry * 0.1), (px, py), RED, max(0.7, 1.3 * s))
         arms.append(fill(am, RED))
@@ -372,9 +378,9 @@ def we() -> list[dict]:
     return frames
 
 
-def disco(axis: float, hot=(15, 15)) -> list[dict]:
+def disco(axis: float, hot=(15, 15), splay: float = 0.0, leg: float = 1.0, mid: bool = False) -> list[dict]:
     """디스코 춤: 한 집게는 axis 쪽(위·대각 위), 한 집게는 반대쪽으로 뻗고 몸을 그 축을 따라 까딱인다.
-    axis 는 위로 뻗는 집게의 각(라디안, 화면 좌표)"""
+    axis 는 위로 뻗는 집게의 각(라디안, 화면 좌표). splay · leg · mid 는 `crab` 에 그대로 넘긴다"""
     frames = []
     ux, uy = math.cos(axis), math.sin(axis)
     for k, ph in enumerate(phases()):
@@ -385,13 +391,14 @@ def disco(axis: float, hot=(15, 15)) -> list[dict]:
         crab(f, cx, cy, 0.66, claws=[
             ((15.5 + ux * reach, 15.5 + uy * reach), axis, 0.62, snap(ph, 0.5), 1),
             ((15.5 - ux * reach, 15.5 - uy * reach), axis + math.pi, 0.62, snap(ph + math.pi, 0.5), 1),
-        ], ph=ph, walk=0.4, shut=blink(k), look=(ux, uy))
+        ], ph=ph, walk=0.4, shut=blink(k), look=(ux, uy), splay=splay, leg=leg, mid=mid)
         frames.append(finish(clip(f)))
     return frames
 
 
 def ns() -> list[dict]:
-    return disco(math.radians(-90))
+    """다리를 좌우 옆으로 들어 아래 집게 팔과 안 엉키게 한다 — 집게만 위아래로 가야 ↕ 로 읽힌다"""
+    return disco(math.radians(-90), splay=0.75, leg=1.15, mid=True)
 
 
 def nwse() -> list[dict]:
@@ -506,38 +513,46 @@ def pen() -> list[dict]:
 
 
 def person() -> list[dict]:
-    """머리에 꽃게를 모자처럼 얹은 사람 — 꽃게가 집게를 딱딱"""
+    """머리에 꽃게를 모자처럼 얹은 사람 — 꽃게가 집게를 딱딱. 꽃게는 얼굴 뒤가 아니라 머리털 위에 앉는다.
+    처음엔 얼굴 뒤에 꽃게를 숨겨 등딱지 윗부분과 집게만 보였는데 빨간 머리털 · 왕관으로 읽혀서,
+    꽃게를 키워 통째로(눈자루 · 큰 눈 · 크림색 배까지) 갈색 머리 위에 얹고 다리는 뺐다"""
     frames = []
+    hx_, hy, hr = 25.0, 24.8, 3.7
     for k, ph in enumerate(phases()):
         f = {}
-        solid(f, raster([(16.2, 30.9), (17.0, 27.8), (19.5, 26.4), (27.5, 26.4), (30.0, 27.8), (30.8, 30.9)]),
-              lambda p: SHIRT if p[0] < 23 else SHIRT_D)
-        crab(f, 23.5, 18.0, 0.42, claws=[
-            ((18.0, 14.5), math.radians(-150), 0.4, snap(ph, 0.6), 1),
-            ((30.0, 14.5), math.radians(-30), 0.4, snap(ph + math.pi, 0.6), -1),
-        ], ph=ph, walk=0.0, shut=blink(k))
-        solid(f, disc(23.5, 23.0, 3.6), SKIN)   # 얼굴은 꽃게 뒤가 아니라 앞 — 꽃게 아랫배와 다리가 머리 뒤로 숨어 모자가 된다
-        f[22, 23] = f[25, 23] = OUT
-        f[23, 25] = f[24, 25] = BLUSH
+        solid(f, raster([(18.4, 30.9), (19.2, 28.8), (21.4, 27.6), (28.6, 27.6), (30.8, 28.8), (31.2, 30.9)]),
+              lambda p: SHIRT if p[0] < 25 else SHIRT_D)
+        solid(f, disc(hx_, hy, hr), lambda p: HAIR if p[1] + 0.5 < hy - 0.2 else SKIN)
+        ey = math.floor(hy) + 1
+        f[math.floor(hx_) - 2, ey] = f[math.floor(hx_) + 1, ey] = OUT
+        f[math.floor(hx_) - 3, ey + 1] = f[math.floor(hx_) + 2, ey + 1] = BLUSH
+        bob = round(0.6 * math.sin(ph))
+        ccx, ccy = hx_, 19.6 + bob
+        crab(f, ccx, ccy, 0.56, claws=[   # 팔 없이 등딱지 어깨에 바로 붙은 집게 — 팔이 길면 테두리색 막대만 남는다
+            ((ccx - 6.0, ccy - 4.4), math.radians(-130), 0.46, snap(ph, 0.6), 1),
+            ((ccx + 6.0, ccy - 4.4), math.radians(-50), 0.46, snap(ph + math.pi, 0.6), -1),
+        ], ph=ph, walk=0.0, shut=blink(k), leg=0.0, stalk=0.8)
         f.update(arrow_crab(ph, MINI, k))
         frames.append(finish(clip(f)))
     return frames
 
 
 def pin() -> list[dict]:
-    """머리가 꽃게인 지도 핀 — 꽂힌 바늘 위에서 꽃게가 집게를 흔든다"""
+    """파란 물방울 지도 핀 + 핀 머리 옅은 동그라미 속 꽃게 얼굴(눈자루 · 큰 눈) — 핀이 통통 튄다.
+    처음엔 꽃게 밑에 가는 바늘만 꽂았는데 막대사탕으로 읽혀서 해달 핀처럼 물방울꼴 핀을 그렸다.
+    꽃게가 빨강이라 빨간 핀이면 묻혀서 핀은 파랑이다. 동그라미 속을 흰색으로 하면 흰 눈이 묻혀 옅은 파랑이고,
+    집게까지 넣으면 팔 · 집게가 테두리색 덩어리가 되어 얼굴만 넣었다"""
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        for x in range(20, 29):
-            f[x, 30] = WAKE[3]
-        line(f, (24.5, 29.5), (24.5, 23.0), OUT, 0.0)
-        f[24, 29] = f[24, 28] = LEAD
-        bob = round(0.8 * math.sin(ph))
-        crab(f, 24.5, 21.0 + bob, 0.5, claws=[
-            ((18.5, 15.5 + bob), math.radians(-130), 0.45, snap(ph, 0.6), 1),
-            ((30.5, 15.5 + bob), math.radians(-60), 0.45, snap(ph + math.pi, 0.6), -1),
-        ], ph=ph, walk=0.0, shut=blink(k))
+        dy = -round(2 * math.sin(math.pi * k / N))
+        cx, cy = 24.0, 16.0 + dy
+        for x in range(21, 28):   # 그림자 — 핀이 높을수록 옅게
+            f[x, 30] = WAKE[3] if dy else WAKE[2]
+        drop = disc(cx, cy, 6.9) | raster([(cx - 5.4, cy + 3.9), (cx + 5.4, cy + 3.9), (cx, cy + 13.4)])
+        solid(f, drop, lambda p: PIN_L if (p[0] + 0.5 - cx) + (p[1] + 0.5 - cy) < -7.0 else PIN, PIN_D)
+        solid(f, disc(cx, cy, 5.2), PIN_W, PIN_D)
+        crab(f, cx, cy + 1.8, 0.56, ph=ph, walk=0.0, shut=blink(k), leg=0.0, stalk=0.7)
         f.update(arrow_crab(ph, MINI, k))
         frames.append(finish(clip(f)))
     return frames
@@ -564,7 +579,7 @@ HAND_TIP = (8.5, 1.6)
 
 
 def cross() -> list[dict]:
-    """가는 조준선 + 오른쪽 아래에서 눈자루를 세우고 과녁을 노려보는 꽃게"""
+    """가는 조준선 + 오른쪽 아래에서 눈자루를 세우고 과녁(왼쪽 위)을 노려보는 꽃게"""
     frames = []
     C = (15, 15)
     for k, ph in enumerate(phases()):
@@ -578,10 +593,10 @@ def cross() -> list[dict]:
             p = (math.floor(C[0] + 0.5 + r * math.cos(a)), math.floor(C[1] + 0.5 + r * math.sin(a)))
             if p[0] != C[0] and p[1] != C[1]:
                 f[p] = CORAL
-        crab(f, 24.0, 26.0, 0.42, claws=[
-            ((17.0, 22.0), math.radians(-140), 0.4, snap(ph, 0.6), 1),
-            ((30.5, 22.0), math.radians(-40), 0.4, snap(ph + math.pi, 0.6), -1),
-        ], ph=ph, walk=0.0, shut=blink(k), stalk=1.6)
+        crab(f, 23.5, 25.0, 0.5, claws=[   # 눈자루 · 큰 눈 · 집게가 읽히게 키우고 다리는 짧게 — 작으면 거미로 읽혔다
+            ((16.4, 19.4), math.radians(-125), 0.5, snap(ph, 0.6), 1),
+            ((30.6, 19.4), math.radians(-55), 0.5, snap(ph + math.pi, 0.6), -1),
+        ], ph=ph, walk=0.0, shut=blink(k), stalk=1.2, leg=0.6, look=(-1, -1))
         f[C] = OUT
         frames.append(finish(clip(f)))
     return frames

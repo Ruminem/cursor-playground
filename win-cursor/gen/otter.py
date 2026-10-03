@@ -13,8 +13,9 @@
   hand    자다가(눈 감은 ^^) 손잡자고 앞발 하나를 높이 든 해달 — 해달은 잘 때 손을 잡는다. 발끝이 핫스팟
   help    작은 화살표 해달 + 물방울로 찍은 물음표
   ibeam   세로 다시마 줄기를 끌어안은 해달 — 해달은 떠내려가지 않게 다시마를 몸에 감는다. 줄기가 I, 핫스팟은 줄기
-  move    물 위에서 데굴데굴 도는(위에서 본) 해달 + 네 방향 물결 화살촉
-  nesw · ns · nwse · we   조개를 안고 누운(위에서 본) 해달이 그 축으로 둥실 오간다 — 양 끝 물결 화살촉
+  move    물 위에서 데굴데굴 도는(위에서 본) 작은 해달 + 네 방향 물결 화살촉
+  nesw · ns · nwse · we   배 위 조개를 두 앞발로 안고 누운(위에서 본) 작은 해달이 그 축으로 둥실 오간다 — 양 끝
+          물결 화살촉. move 와 같이 머리가 몸보다 큰 치비(`chibi`)라 얼굴이 cross 처럼 콩알 눈 · 볼터치 · 코 · ω 입이다
   no      두 앞발로 얼굴을 가린 해달(부끄러운 거절) — 뒤에 빨간 금지 표지. 가끔 발 사이로 빼꼼 본다
   pen     연필을 끌어안은 해달 — 연필심(왼쪽 아래)이 핫스팟
   person  작은 화살표 해달 + 사람 아이콘 꼴로 선 아기 해달
@@ -24,6 +25,7 @@
 
 몸은 부위(타원·굵기가 변하는 막대)를 해달 제 좌표에 놓고 화면으로 돌려 찍는다(`Rig`, `draw`).
 옆모습(`side`)과 위에서 본 모습(`top`) 두 벌이고, 앞모습 얼굴은 `top` 의 머리를 그대로 쓴다.
+이동 · 크기 조절 칸의 작은 해달은 `top` 을 줄이면 얼굴이 뭉개져 따로 칸 단위로 그린다(`chibi`).
 이 파일은 빌드 코드 해시와 CI 캐시 키에 안 들어간다 — 고쳐도 빌드는 아무것도 다시 안 그리니 돌려서 art 를 고친다.
 """
 import math
@@ -215,6 +217,44 @@ def top(rig: Rig, paws=((-2.0, -2.2), (2.0, -2.2)), feet=((-4.6, 11.0), (4.6, 11
     return out, mask
 
 
+def chibi(rig: Rig, mood="smile", tail=0.0) -> tuple[dict, set]:
+    """작은 칸(이동 · 크기 조절)에 눕힌 위에서 본 해달 — 머리가 몸보다 큰 치비 비율. 배 위 조개를 두 앞발로
+    안고, 짧은 뒷발 둘 사이로 꼬리가 나온다. rig 은 k=1 로 칸 단위 그대로 쓰고 원점(u=0)이 칸 가운데라
+    얼굴 점을 칸에 딱 맞춰 찍는다(코 한 칸이 가운데 줄, 눈은 가운데에서 ±2 칸).
+    처음엔 `top` 을 0.56 배로 줄여 썼는데 머리가 크림 5칸 너비라 눈 · 코 · 입과 그 밑 팔 · 조개 테두리가
+    가로줄로 붙어 콧수염(수염 난 아저씨)으로 읽혔다 — 머리를 9칸 속으로 키우고 몸 쪽 부위는 테두리를 뺐다"""
+    hw = -3.8                                    # 머리 가운데 (w)
+    head = any_of(ell(0, hw - 0.4, 5.2, 4.4), ell(0, hw + 0.9, 5.6, 3.4))   # 둥근 이마 · 옆으로 퍼진 볼
+
+    def skin(a, b):
+        return CREAM_D if b > hw + 2.6 else CREAM
+
+    def body(a, b):
+        return FUR_L if (a / 3.0) ** 2 + ((b - 3.4) / 3.0) ** 2 <= 1 else FUR
+    # 조개 · 앞발에 테두리를 그으면 작은 몸이 짙은 줄투성이가 되어 다시 수염처럼 보인다 — 색으로만 가른다
+    parts = [("paw", any_of(ell(-2.5, 2.5, 1.1, 1.1), ell(2.5, 2.5, 1.1, 1.1)), PAW, False),
+             ("clam", ell(0, 3.0, 2.4, 1.7), lambda a, b: CLAM_D if b > 3.9 else CLAM, False),
+             ("head", head, skin, True),
+             # 귀는 머리 옆에 작게 — 위 모서리에 달면 양 갈래 머리 · 곰으로 읽힌다
+             ("ears", any_of(ell(-5.0, hw - 1.8, 1.2, 1.2), ell(5.0, hw - 1.8, 1.2, 1.2)), FUR, False),
+             ("foot", any_of(ell(-2.5, 6.8, 1.2, 1.4, 0.3), ell(2.5, 6.8, 1.2, 1.4, -0.3)), PAW, False),
+             # 어깨를 머리 밑까지 넓혀 머리와 몸이 공 두 개(눈사람)로 끊겨 보이지 않게
+             ("body", any_of(ell(0, 3.6, 4.2, 3.4), ell(0, 1.0, 4.6, 2.0)), body, False),
+             ("tail", bar((0, 6.0), (tail, 8.6), 1.5, 0.8), FUR, False)]
+    out, mask, _ = draw(rig, parts)
+    for sg in (-1, 1):
+        if mood == "blink":   # 감은 눈 — 가로 두 칸
+            dot(out, rig, sg * 2.0, hw - 0.5, EYE)
+            dot(out, rig, sg * 2.9, hw - 0.5, EYE)
+        else:                 # 콩알 눈 — 세로 두 칸
+            dot(out, rig, sg * 2.0, hw - 1.1, EYE)
+            dot(out, rig, sg * 2.0, hw - 0.1, EYE)
+        dot(out, rig, sg * 3.0, hw + 0.9, BLUSH)   # 볼터치
+        dot(out, rig, sg * 1.0, hw + 1.9, FUR)     # ω 입 양 끝
+    dot(out, rig, 0.0, hw + 0.9, EYE)              # 코
+    return out, mask
+
+
 # ── 옆모습(배를 하늘로 하고 뜬): a 는 코끝 0 → 꼬리 끝, b 는 + 가 등(물) 쪽 ─────────────────
 def side(rig: Rig, ph: float = 0.0, mood="smile", paws=None, extra=()) -> tuple[dict, set]:
     """옆모습 해달 한 장. 코끝이 원점. ph 로 뒷발·꼬리가 까딱인다. paws 는 앞발 끝 둘(a, b).
@@ -317,7 +357,7 @@ def wait() -> list[dict]:
 
 def drift(ang: float) -> list[dict]:
     """조개를 안은 해달(위에서 본)이 ang 축을 따라 둥실 오간다 — 양 끝 물결 화살촉이 가는 쪽으로 두근댄다.
-    배 가운데가 판 가운데. 처음엔 머리 위로 팔을 쭉 뻗는 기지개였는데, 든 앞발의 분홍 젤리가 토끼 귀로 읽혔다"""
+    해달 가운데가 판 가운데. 처음엔 머리 위로 팔을 쭉 뻗는 기지개였는데, 든 앞발의 분홍 젤리가 토끼 귀로 읽혔다"""
     frames = []
     t = math.radians(ang)
     ex, ey = -math.sin(t), math.cos(t)          # 머리 → 발 쪽 (화면)
@@ -330,9 +370,8 @@ def drift(ang: float) -> list[dict]:
             o = 1 if sg * d > 0.3 else 0
             chevron(f, 15 + (1 if sg * dx > 0 else 0) + sg * dx * (R + o) - (1 if sg * dx > 0 else 0),
                     15 + sg * dy * (R + o), sg * dx, sg * dy, WAKE[1] if o else WAKE[2])
-        rig = Rig(15.5 + ex * d, 15.5 + ey * d, ang, 0.56)
-        o_, _ = top(rig, paws=((-3.4, 1.0), (3.4, 1.0)), extra=(CLAM_PART,), mood="blink" if k == 3 else "smile",
-                    tail=0.8 * math.sin(2 * ph))
+        rig = Rig(15.5 + ex * d, 15.5 + ey * d, ang, 1.0)
+        o_, _ = chibi(rig, mood="blink" if k == 3 else "smile", tail=0.8 * math.sin(2 * ph))
         f.update(o_)
         frames.append(finish(f))
     return frames
@@ -599,14 +638,15 @@ def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col) -> None:
 
 
 def move() -> list[dict]:
-    """물 위에서 데굴데굴 도는 해달(한 바퀴에 1초) — 네 방향 물결 화살촉이 바깥으로 두근댄다"""
+    """물 위에서 데굴데굴 도는 작은 해달(한 바퀴에 1초) — 네 방향 물결 화살촉이 바깥으로 두근댄다.
+    처음엔 감은 눈(^^)이었는데 작은 얼굴에서 눈 · 코가 한 줄로 붙어 콧수염으로 읽혀 뜬 눈으로 바꿨다"""
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
         o = 1 if k % 6 < 3 else 0
         for dx, dy in ((0, -1), (1, 0), (0, 1), (-1, 0)):
             chevron(f, 15 + dx * (13 + o), 15 + dy * (13 + o), dx, dy, WAKE[1])
-        o_, _ = top(Rig(15.5, 15.5, 360.0 * k / N, 0.6), mood="sleep", tail=0.0)
+        o_, _ = chibi(Rig(15.5, 15.5, 360.0 * k / N, 1.0))
         f.update(o_)
         frames.append(finish(f))
     return frames
