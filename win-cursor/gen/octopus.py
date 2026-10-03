@@ -14,12 +14,16 @@
   help    작은 화살표 문어 + 다리를 말아 만든 물음표(점은 먹물 방울)
   ibeam   빨판이 줄지은 문어 다리 I 기둥. 위아래 가로획은 다리 끝을 양쪽으로 만 것, 빨판 빛이 기둥을 타고 내려간다
   move    위에서 본 문어가 다리 넷을 네 방향으로 뻗었다 오므린다(끝을 말아 화살촉처럼). 머리 가운데가 핫스팟
-  no      빨간 금지 고리 안에서 문어가 다리 둘을 ✕ 로 엇갈려 막는다. 가운데가 핫스팟
-  pen     문어가 연필을 다리로 감아 쥐고 쓴다 — 연필심에서 먹물이 똑똑 떨어진다(제 먹물로 쓰는 문어). 연필심이 핫스팟
+  no      빨간 금지 고리 안에서 문어가 다리 둘을 입 앞에서 ✕ 로 크게 엇갈려 막는다(위 끝은 눈 옆까지), 나머지 다리는
+          ✕ 아래로 짧게 — ✕ 가 몸 아래에 있으면 퍼진 다리와 합쳐 치마로 읽혔다. 가운데가 핫스팟
+  pen     노란 연필(분홍 지우개 · 은색 띠 · 나무색 깎은 원뿔 · 짙은 심)을 촉수 하나로 감아 쥐고 쓴다 — 연필과 문어가
+          연필심을 축으로 까딱인다. 보라·분홍 막대는 요술봉으로 읽혀서 수달 pen 의 연필 색을 쓴다. 연필심이 핫스팟
   person  작은 화살표 문어 + 머리에 문어를 모자처럼 얹은 사람
   pin     작은 화살표 문어 + 빨간 지도 핀 머리를 끌어안은 문어
-  we · ns · nwse · nesw  앞에서 본 문어가 다리 둘을 그 축 양쪽으로 쭉 늘였다 줄인다 — 늘일 때 끝을 펴고 눈을 질끈,
+  we · nwse · nesw  앞에서 본 문어가 다리 둘을 그 축 양쪽으로 쭉 늘였다 줄인다 — 늘일 때 끝을 펴고 눈을 질끈,
           줄일 때 끝을 동그랗게 만다. 머리 가운데가 핫스팟
+  ns      둥근 머리 위아래로 다리 하나씩 곧게 뻗어 끝을 세모 화살촉으로 편 ↕ — 늘였다 줄인다, 나머지 다리 넷은 짧게
+          옆으로. 위로 든 다리를 말면 머리 위 뾰족한 끝이 휘어 마법사 모자로 읽혔다. 머리 가운데가 핫스팟
   up      위로 물을 뿜어 솟는다 — 다리를 모았다 폈다 하고 아래로 물방울. 머리 꼭대기가 핫스팟
   cross   앞에서 본 문어 얼굴에서 가는 다리 넷이 조준선으로 뻗는다. 입(가운데)이 핫스팟
 몸은 `octo` 하나로 그린다 — 머리 타원 + 다리마다 굵기가 줄어드는 말린 곡선(`Arm`), 얼굴은 머리 기준 자리에 찍는다.
@@ -29,7 +33,7 @@ import math
 import sys
 from dataclasses import dataclass
 
-from sea import N, SIGN, SIGN_D, WAKE, bubble, disc, finish, hx, ink, line, phases, raster, solid, write
+from sea import N, SIGN, SIGN_D, WAKE, bubble, disc, finish, hx, ink, phases, raster, solid, write
 
 SID = "octopusanim"
 
@@ -41,7 +45,9 @@ HI = hx("ffffffff")
 INKC = hx("2a1f45ff")                                                # 먹물
 ink(OUT, HI, hx("eadcf6c7"))
 SKIN, HAIR, SHIRT, SHIRT_D = hx("f2c9a0ff"), hx("4a3226ff"), hx("4aa0a8ff"), hx("2e7078ff")
-PENCIL, PENCIL_D, WOOD, LEAD = hx("e070c0ff"), hx("a8448eff"), hx("e9c9a0ff"), hx("3a3a3aff")
+# 노란 연필 — 보라·분홍 막대는 요술봉으로 읽혀서 수달(otter.py)의 연필 색을 쓴다
+PENCIL, PENCIL_D, WOOD, LEAD = hx("f5c842ff"), hx("c8961cff"), hx("efd2a8ff"), hx("3a3a3aff")
+ERASER, FERRULE = hx("f2a0a8ff"), hx("b8b8c0ff")
 
 
 def fade(c: tuple, a: int) -> tuple:
@@ -448,55 +454,93 @@ def move() -> list[dict]:
 def no() -> list[dict]:
     """빨간 금지 고리 안에서 문어가 다리 둘을 ✕ 로 엇갈려 막는다 — 고개를 도리도리 젓는다"""
     frames = []
+    hy, r = 12.6, 5.8
     for k, ph in enumerate(phases()):
         f = {}
         ring = {p for p in disc(15.5, 15.5, 14.5)} - disc(15.5, 15.5, 11.2)
         solid(f, ring, SIGN, SIGN_D)
-        shake = 0.7 * math.sin(2 * ph)
-        # 🙅 — 머리 밑에서 나온 다리 둘이 턱 아래에서 엇갈려 고리 아래쪽까지 뻗는다. 얼굴은 가리지 않는다.
-        # 옆 다리 둘은 허리에 손을 얹듯 바깥으로 말려 있다
-        arms = [Arm(-0.85, 0.45, 160, 0.9, 160, w0=1.9, w1=0.8, wav=10),
-                Arm(0.85, 0.45, 20, 0.9, -160, w0=1.9, w1=0.8, wav=10, off=1),
-                Arm(-0.4, 0.85, 0, 0, 0, w0=2.7, w1=1.3, front=True, wav=6, tip=(24 + round(shake), 25)),
-                Arm(0.4, 0.85, 0, 0, 0, w0=2.7, w1=1.3, front=True, wav=6, off=2, tip=(7 + round(shake), 25))]
-        octo(f, 15.5 + shake, 11.0, 5.6, ph, arms=arms, eyes=eyes_at(k, 10), mouth="frown")
+        shake = 0.6 * math.sin(2 * ph)
+        hx_ = 15.5 + shake
+        # 🙅 — 앞 다리 둘이 입 앞에서 엇갈린다. 위 끝은 눈 옆까지 들어 올려 ✕ 의 위 반쪽이 아래 반쪽만큼
+        # 보이게 — ✕ 가 몸 아래에 있으면 아래로 퍼진 다리와 합쳐 치마로 읽혔다. ✕ 가 머리 밑에 붙으면 해골과
+        # 뼈다귀(☠)로 읽혀서 머리를 내려 ✕ 위아래로 몸이 보이게 하고, 획 두 끝은 가늘게 줄여 바깥으로 만다.
+        # 나머지 다리 셋은 ✕ 아래 틈으로 끝만 짧게 내민다
+        arms = [Arm(-0.4, 0.8, 100, 1.05, 190, w0=1.7, w1=0.8, wav=10),
+                Arm(0.4, 0.8, 80, 1.05, -190, w0=1.7, w1=0.8, wav=10, off=1),
+                Arm(0.0, 0.85, 90, 0.95, 160, w0=1.7, w1=0.8, wav=14, off=2)]
+        octo(f, hx_, hy, r, ph, arms=arms, eyes=eyes_at(k, 10), mouth="none")
+        for s in (1, -1):   # 왼쪽 아래 → 오른쪽 위 획을 먼저, 그 위에 반대 획
+            w = 0.5 * math.sin(ph + (s > 0) * 2.0)
+            pts = spline([(15.5 - s * 9.2, 19.8 + w), (15.5 - s * 8.2, 21.0), (hx_, 16.3),
+                          (15.5 + s * 8.2, 11.6), (15.5 + s * 9.2, 12.8 - w)], 10)
+            cells = set()
+            for x, y, t in pts:
+                cells |= disc(x, y, 0.7 + 1.0 * math.sin(math.pi * t) ** 0.5)
+            solid(f, cells, BODY)
+            for t in (0.3, 0.4, 0.6, 0.7):   # 획 아래쪽 가장자리에 빨판
+                x, y, _ = pts[round(t * (len(pts) - 1))]
+                q = (math.floor(x), math.floor(y + 0.9))
+                if f.get(q) == BODY:
+                    f[q] = SUCK
         frames.append(finish(f))
     return frames
 
 
-PEN_TIP, PEN_BACK = (1.5, 29.5), (15.0, 16.0)
+PEN_TIP, PEN_BACK = (1.5, 29.5), (10.5, 11.0)
+
+
+def pencil(f: dict, tip, back, r: float = 1.6) -> tuple:
+    """노란 연필 — 짙은 심 · 나무색 깎은 원뿔 · 노란 몸통(아래쪽 반은 짙게) · 은색 띠 · 분홍 지우개.
+    색은 축을 따라 잰 자리로 고른다(수달 pen 과 같은 꼴). 축 단위 벡터 (ux, uy) 와 길이를 돌려준다"""
+    L = math.hypot(back[0] - tip[0], back[1] - tip[1])
+    ux, uy = (back[0] - tip[0]) / L, (back[1] - tip[1]) / L
+    nx, ny = -uy, ux
+    cone = (tip[0] + ux * 3.6, tip[1] + uy * 3.6)
+    mask = raster([tip, (cone[0] + nx * r, cone[1] + ny * r), (back[0] + nx * r, back[1] + ny * r),
+                   (back[0] - nx * r, back[1] - ny * r), (cone[0] - nx * r, cone[1] - ny * r)])
+
+    def col(p):
+        dx, dy = p[0] + 0.5 - tip[0], p[1] + 0.5 - tip[1]
+        t, s = dx * ux + dy * uy, dx * nx + dy * ny
+        if t < 1.4:
+            return LEAD
+        if t < 3.8:
+            return WOOD
+        if t > L - 1.8:
+            return ERASER
+        if t > L - 3.4:
+            return FERRULE
+        return PENCIL_D if s > 0.5 else PENCIL
+    solid(f, mask, col)
+    f[math.floor(tip[0]), math.floor(tip[1])] = LEAD
+    return ux, uy, L
 
 
 def pen() -> list[dict]:
-    """연필을 다리 둘로 감아 쥔 문어 — 제 먹물로 쓴다: 먹물 방울이 연필을 타고 심으로 흘러내린다. 연필심이 핫스팟"""
+    """노란 연필을 촉수 하나로 감아 쥐고 쓰는 문어 — 연필과 문어가 연필심을 축으로 살짝 까딱인다. 연필심이 핫스팟"""
     frames = []
-    TIP, BACK = PEN_TIP, PEN_BACK
-    ux, uy = BACK[0] - TIP[0], BACK[1] - TIP[1]
-    d = math.hypot(ux, uy)
-    ux, uy = ux / d, uy / d
+    TIP = PEN_TIP
     for k, ph in enumerate(phases()):
         f = {}
-        cone = (TIP[0] + ux * 3.5, TIP[1] + uy * 3.5)
-        line(f, (cone[0] - uy * 0.9, cone[1] + ux * 0.9), (BACK[0] - uy * 0.9, BACK[1] + ux * 0.9), PENCIL_D)
-        line(f, cone, BACK, PENCIL)
-        line(f, (cone[0] + uy * 0.9, cone[1] - ux * 0.9), (BACK[0] + uy * 0.9, BACK[1] - ux * 0.9), PENCIL_D)
-        for p in raster([(TIP[0] - 0.3, TIP[1] + 0.3), (cone[0] - uy * 1.6, cone[1] + ux * 1.6),
-                         (cone[0] + uy * 1.6, cone[1] - ux * 1.6)], 5):
-            f[p] = WOOD
-        f[math.floor(TIP[0] + ux * 0.8), math.floor(TIP[1] + uy * 0.8)] = INKC
-        f[math.floor(TIP[0]), math.floor(TIP[1])] = INKC
-        for j in range(2):   # 연필을 타고 흐르는 먹물
-            t = (k / N + j / 2) % 1
-            dd = 3.0 + (1 - t) * 9.0
-            x, y = TIP[0] + ux * dd + uy * 0.2, TIP[1] + uy * dd - ux * 0.2
-            for p in disc(x, y, 0.9):
-                f[p] = INKC
-        bob = 0.5 * math.sin(ph)
-        arms = [Arm(-0.6, 0.55, -12, 0, 0, w0=2.0, w1=1.0, front=True, wav=6, tip=(9, 22)),
-                Arm(-0.15, 0.75, -12, 0, 0, w0=2.0, w1=1.0, front=True, wav=6, off=1.5, tip=(12, 19)),
-                Arm(0.3, 0.75, 85, 1.2, -170, w0=2.0, w1=0.9, wav=12, off=0.5),
-                Arm(0.75, 0.55, 60, 1.3, -220, w0=2.0, w1=0.9, wav=12, off=2.0)]
-        octo(f, 22.0, 8.5 + bob, 6.0, ph, arms=arms, eyes=eyes_at(k, 6))
+        d = math.radians(3.0 * math.sin(2 * ph))   # 연필심을 축으로 까딱
+        bx, by = PEN_BACK[0] - TIP[0], PEN_BACK[1] - TIP[1]
+        back = (TIP[0] + bx * math.cos(d) - by * math.sin(d), TIP[1] + bx * math.sin(d) + by * math.cos(d))
+        ux, uy, L = pencil(f, TIP, back, 1.6)
+        nx, ny = -uy, ux
+        # 연필은 문어 왼쪽을 가파르게 지나간다 — 문어 쪽으로 겨누면 쥐는 촉수가 연필을 따라 길게 덮어 다시 보라 막대가 됐다.
+        # 쥐는 촉수는 머리 왼쪽에서 나와 연필을 앞으로 가로질러 감고(그 자리만 연필 위에 띠), 한 바퀴 더 감은 띠가 그 아래에
+        g = (TIP[0] + ux * L * 0.5, TIP[1] + uy * L * 0.5)
+        grip = Arm(-0.8, 0.55, 20, 0, 0, w0=2.0, w1=1.3, front=True, wav=0,
+                   tip=(g[0] - nx * 2.4 - 0.5, g[1] - ny * 2.4 - 0.5))
+        arms = [Arm(0.0, 0.8, 95, 0.9, 170, w0=2.0, w1=0.9, wav=12, off=0.5),
+                Arm(0.6, 0.65, 60, 1.0, -200, w0=2.0, w1=0.9, wav=12, off=2.0),
+                grip]
+        octo(f, 19.0, 14.0 + 0.4 * math.sin(ph), 5.6, ph, arms=arms, eyes=eyes_at(k, 6))
+        band = set()   # 한 바퀴 더 감은 띠 — 연필을 비스듬히 가로지른다
+        ax, ay = g[0] - ux * 2.4, g[1] - uy * 2.4
+        band |= tube(spline([(ax - nx * 2.6 + ux * 0.8, ay - ny * 2.6 + uy * 0.8),
+                             (ax + nx * 2.4 - ux * 0.8, ay + ny * 2.4 - uy * 0.8)], 8), 1.0, 1.0)
+        solid(f, band, BODY)
         frames.append(finish(f))
     return frames
 
@@ -533,6 +577,41 @@ def pin() -> list[dict]:
                Arm(0.7, 0.55, 60, 1.5, 150, w0=1.4, w1=0.8, front=True, wav=10, off=2)]
         octo(f, cx, 14.5 + bob, 4.0, ph, arms=hug, eyes=eyes_at(k, 3))
         arrow_octo(f, ph, 0.68, blink=k == 8)
+        frames.append(finish(f))
+    return frames
+
+
+def ns() -> list[dict]:
+    """↕ 문어 — 둥근 머리 위아래로 다리 하나씩 곧게 뻗고 끝을 세모 화살촉으로 편다. 늘일 때 눈을 질끈.
+    나머지 다리 넷은 짧게 옆으로 말린다. `stretch(-90)` 으로 그리면 머리 뒤로 든 굵은 다리가 머리 위에서
+    뾰족하게 솟아 휘어 마법사 모자로 읽혀서 따로 그린다 — 위 다리는 가늘고 곧게, 머리와 닿는 자리는 머리 테두리가 가른다"""
+    frames = []
+    cx, cy, r = 15.5, 15.5, 5.0
+    for k, ph in enumerate(phases()):
+        f = {}
+        pull = 0.5 + 0.5 * math.sin(ph)                 # 0 줄임 · 1 늘임
+        reach = 11.6 + 1.4 * pull                       # 머리 가운데 → 화살촉 끝
+        head_h = 5.6                                    # 화살촉 높이
+        stalk = set()
+        for s in (-1, 1):
+            end, base = cy + s * reach, cy + s * (reach - head_h)
+            stalk |= raster([(cx - 1.8, cy), (cx + 1.8, cy), (cx + 1.5, base), (cx - 1.5, base)])
+            stalk |= raster([(cx - 5.0, base), (cx + 5.0, base), (cx, end)])
+
+        def col(p):
+            x, y = p
+            if abs(y + 0.5 - cy) > reach - head_h:      # 화살촉
+                return LIGHT if x + 0.5 < cx else BODY
+            if x == math.floor(cx) + 1 and y % 2 == 1:   # 줄지은 빨판
+                return SUCK
+            return LIGHT if x + 0.5 < cx - 0.6 else BODY
+        solid(f, stalk, col)
+        arms = []
+        for s in (-1, 1):
+            arms.append(Arm(0.85 * s, 0.25, 90 - 85 * s, 0.75, -s * 150, w0=1.8, w1=0.8, wav=14, off=2 + s))
+            arms.append(Arm(0.6 * s, 0.7, 90 - 55 * s, 0.7, -s * 170, w0=1.8, w1=0.8, wav=14, off=1 - s))
+        eyes = "shut" if pull > 0.85 else eyes_at(k, 7)
+        octo(f, cx, cy, r, ph, arms=arms, eyes=eyes, mouth="smile")
         frames.append(finish(f))
     return frames
 
@@ -598,7 +677,7 @@ def cross() -> list[dict]:
 
 
 SCENE = {"arrow": arrow, "busy": busy, "cross": cross, "hand": hand, "help": help_, "ibeam": ibeam, "move": move,
-         "nesw": lambda: stretch(-45), "no": no, "ns": lambda: stretch(-90), "nwse": lambda: stretch(-135), "pen": pen,
+         "nesw": lambda: stretch(-45), "no": no, "ns": ns, "nwse": lambda: stretch(-135), "pen": pen,
          "person": person, "pin": pin, "up": up, "wait": wait, "we": lambda: stretch(180)}
 HOT = {"arrow": ARROW_TIP, "busy": ARROW_TIP, "cross": (15, 15), "hand": HAND_TIP, "help": ARROW_TIP,
        "ibeam": (IBEAM_X, 15), "move": (15, 15), "nesw": (15, 15), "no": (15, 15), "ns": (15, 15), "nwse": (15, 15),
