@@ -15,7 +15,8 @@
           부엉이는 윈도우 화살표 그대로(12 × 19)의 화살촉 밑에 작은 부엉이가 앉은 꼴이다
   busy    작은 화살표 부엉이 + 오른쪽 아래 도토리 둘레를 도는 나뭇잎 여덟 고리
   cross   앞모습 얼굴. 위아래 · 양옆 잔가지가 조준선이고, 두 눈이 가운데(부리 위)를 몰아 본다
-  hand    한쪽 날개를 위로 들어 깃 끝으로 콕 — 닿는 순간 눈을 질끈(^^) 감고 끝에 반짝. 깃 끝이 핫스팟
+  hand    한쪽 날개를 왼쪽 위로 비스듬히 넓게 뻗어 깃 끝으로 콕(다른 날개는 허리에) — 위로 곧게 세우면 귀깃으로
+          읽혀 손인지 날개인지 귀인지 모르겠다는 말을 들었다. 닿는 순간 눈을 질끈(^^) 감고 끝에 반짝. 깃 끝이 핫스팟
   help    작은 화살표 부엉이가 고개를 화살표 쪽으로 크게 갸웃 + 나뭇잎 물음표(점은 도토리)
   ibeam   위아래 나뭇가지 사이에 길쭉하게 꼿꼿이 선 부엉이 — 가지가 I 의 가로획, 몸이 세로획
   move    날갯짓하며 둥실 뜬 작은 부엉이 + 네 방향 나뭇잎 화살촉
@@ -665,21 +666,25 @@ def pin() -> list[dict]:
     return frames
 
 
+HAND_TIP = (3, 9)
+
+
 def hand() -> list[dict]:
-    """한쪽 날개를 위로 들어 깃 끝으로 콕 — 몸이 끝 쪽으로 쑥 다가갔다 물러난다(끝은 제자리). 닿는 순간 눈을 ^^ 감고
-    깃 끝에 반짝. 깃 끝이 핫스팟"""
+    """한쪽 날개를 왼쪽 위로 비스듬히 쭉 뻗어 깃 끝으로 콕 — 위로 곧게 세우면 귀깃 · 뿔로 읽혀서 옆으로 비스듬히 눕히고
+    톱니 날개깃이 아래로 보이게 넓게 편다. 반대쪽 날개는 허리에 짚는다. 몸이 끝 쪽으로 쑥 다가갔다
+    물러난다(끝은 제자리). 닿는 순간 눈을 ^^ 감고 깃 끝에 반짝. 깃 끝이 핫스팟"""
     frames = []
-    tipw = (8.3, 0.7)
+    tipw = HAND_TIP
     for k, ph in enumerate(phases()):
         f = {}
         poke = max(0.0, math.sin(ph))                 # 1 이면 콕
-        rig = Rig(18.5 - 0.8 * poke, 19.6 - 1.2 * poke, -6.0 * poke, 0.78)
-        o_, _ = owl(rig, wings=(("back", rig.local(*tipw), 0.36), None), mood="happy" if poke > 0.8 else "open",
-                    gaze=(-1, -1))
+        rig = Rig(21.0 - 1.0 * poke, 20.0 - 0.6 * poke, -5.0 * poke, 0.74)
+        o_, _ = owl(rig, wings=(("back", rig.local(tipw[0] + 0.5, tipw[1] + 0.5), 0.4), ("back", (11.0, 5.5 - 1.5 * poke), 0.4)),
+                    mood="happy" if poke > 0.8 else "open", gaze=(-1, -1))
         f.update(o_)
         if poke > 0.8:
-            for d in ((-2, 0), (-3, 0), (2, 0), (3, 0), (1, -1)):
-                f.setdefault((8 + d[0], 1 + d[1] + (1 if abs(d[0]) == 3 else 0)), IRIS)
+            for d in ((-2, 0), (2, 0), (0, -2), (0, 2)):
+                f.setdefault((tipw[0] + d[0], tipw[1] + d[1]), IRIS)
         frames.append(finish(f))
     return frames
 
@@ -768,7 +773,7 @@ SCENE = {"arrow": arrow, "busy": busy, "cross": cross, "hand": hand, "help": hel
 HOT = {"arrow": (1, 1), "busy": (1, 1), "help": (1, 1), "person": (1, 1), "pin": (1, 1),
        "wait": (15, 15), "we": (15, 15), "ns": (15, 15), "nwse": (15, 15), "nesw": (15, 15),
        "no": (15, 15), "cross": (15, 15), "move": (15, 15), "ibeam": (15, 15),
-       "pen": (math.floor(TIP[0]), math.floor(TIP[1])), "hand": (8, 1), "up": top_cell}
+       "pen": (math.floor(TIP[0]), math.floor(TIP[1])), "hand": HAND_TIP, "up": top_cell}
 
 
 def check(rid: str, frames: list[dict], hot: tuple) -> None:
