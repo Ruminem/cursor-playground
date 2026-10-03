@@ -1,26 +1,40 @@
 # Changelog
 
-## 1.4.0 — 2026-09-22
+## 1.4.0 — 2026-10-03
 
 - Smooth shapes are lit from a height field. The body's height is blurred, the surface normal is read from its gradient, and the shading is a diffuse term plus a specular highlight and a rim light — so the creases that used to survive along the edges at the larger sizes are gone
 - Every scheme now has a **material**: plastic, metal, glass, glow or cloth. Metal tints its highlight with the body colour, glass is bright through the middle with a lit edge, glow lifts the whole body, and cloth kills the gloss. 39 of the schemes carry one; the rest stay plastic
 - Detached bits — Gold's sparkles, snowflakes, petals — are scattered as round dots around the new body instead of being welded into it. Gold used to grow two lumps on its side
-- The scheme list is 57, down from 121. Four groups (hand-drawn and minimal, colour and pattern, nature and seasons, light and screen) were dropped because a full build had grown past four minutes
+- The scheme list is 67, down from 121. Four groups (hand-drawn and minimal, colour and pattern, nature and seasons, light and screen) were dropped because a full build had grown past four minutes, and ten animated sea creatures came in
 - Animated cursors on the smooth shapes run at about 30 frames per second instead of 8 to 15. In-between frames are blended from the ones on either side, and **the loop takes exactly as long as before** — a frame's time is split rather than shortened, so a 5-tick frame becomes 3 + 2 and the animation is smoother, not faster
 - Electric is a current now, not blinking dots. Two white-headed pulses run around the yellow outline and now and then throw sparks that trail behind them, at a true 30 fps on every shape — 32 frames, 1.07 seconds a loop, with no blended in-between frames. On the smooth shapes a spark is a thin forked bolt with a blue glow, rooted on the new outline, so it discharges from the body instead of sticking out of it like a rod. Gold's sparkles are crosses again, the way the source art draws them
 - Lava drips. Drops gather at the tail tip and the left wing tip, stretch, break off, speed up as they fall and darken as they cool. The tail drips every 0.8 seconds and the wing once in 1.6, out of step, while the pattern keeps flowing underneath — 24 frames, 1.6 seconds a loop. On the smooth shapes the drop hangs from the smooth tail tip and falls from right under it
 - Glitch and Rainfall got their in-between frames drawn rather than blended. Glitch tears along a scanline, the way a real one does, and Rainfall's droplets step down one row at a time — for Rainfall this costs nothing, because three of its six frames were duplicates
+- **Sea life · Animated**, a new group of ten: Bukang (the shark that spent twelve days in Busan's North Port channel), dolphin, whale shark, catshark, pufferfish, sunfish, shrimp, sea otter, crab and a chibi octopus. Every slot is its own scene rather than one sprite turned around — the otter taps a clam on its tummy and covers its face to say no, the crab scuttles sideways and blows bubbles, the octopus waves eight legs and puffs ink while you wait. They are drawn in the default shape only; the other shape tabs borrow the default art
+- More animated schemes were redrawn with real frames so they flow at about 30 fps: Neon Pulse breathes (36 frames), Rainbow Flow moves half a band at a time (24), and Scan, Firework, Snowfall, Chameleon, Ripple and Marquee were redrawn. Bubbles rise through water and pop at the surface, Spinner is a four-blade red-green-yellow-blue pinwheel, and Barber Pole, Matrix (formerly Code Rain), Rainfall, Flickering flame, Twinkling stars, Glitch jitter and Wave got new art
+- The material schemes were redrawn so the material reads: velvet is a pile that darkens toward the edge, brick is a running bond, rubber is matte black with sparse studs, and rust, steel, amber, ice and the rest got sharper outlines and move/no slots that hold up on the smooth shapes. The nine pixel classics got the outline and shading that only their arrow used to have
+- New link cursors: Heartbeat shoots a Cupid's arrow, and the seven star schemes point with a shooting star whose sparkle is the hotspot, so you can see where a click lands
+- **Click dots.** On the preview page you can turn on a blue dot with a white ring at the hotspot of any of the 17 slots, per scheme, with Select all and Clear all. The dot is stamped when the scheme is applied, so the downloads stay the same
+- **Mac.** The preview page can hand you the current scheme, shape and tint as a `.cape` for Mousecape. On anything other than Windows the apply buttons step aside and the page is preview only
+- The preview page splits in two on wide screens — the list scrolls on the left while the preview stays pinned on the right — and its header stays put while you scroll. All 17 slots are shown as cards with the hotspot marked. The page loads much lighter (0.8 MB, about 240 KB gzipped), animations follow the real frame timing, and they no longer flicker in Safari. Thumbnails no longer clip the tails of smooth-shape, flame, lava and glitch cursors, and diagonal outlines lost their jagged steps
 
 **한국어**
 
 - 매끈한 모양의 음영을 높이장으로 바꿈. 몸의 높이를 뭉갠 뒤 그 기울기로 법선을 내고 그 위에 확산광·광택·테빛을 얹음 — 큰 크기에서 가장자리를 따라 남던 접힌 자국이 없어짐
 - 구성표마다 **재질**이 생김: 플라스틱·금속·유리·발광·천. 금속은 광택이 몸 색을 띠고, 유리는 속이 밝고 테가 빛나고, 발광은 몸 전체가 뜨고, 천은 광택이 죽음. 39종에 붙어 있고 나머지는 플라스틱임
 - 몸에서 떨어져 나온 조각(골드의 반짝이·눈송이·꽃잎)을 몸에 붙이지 않고 새 몸 둘레에 둥근 점으로 다시 흩음. 전에는 골드 옆구리에 혹이 두 개 났음
-- 구성표가 121종에서 57종이 됨. 전체 빌드가 4분을 넘겨서 네 갈래(손그림·미니멀, 색과 무늬, 자연·계절, 빛과 화면)를 뺌
+- 구성표가 121종에서 67종이 됨. 전체 빌드가 4분을 넘겨서 네 갈래(손그림·미니멀, 색과 무늬, 자연·계절, 빛과 화면)를 빼고, 움직이는 해양 생물 10종을 더함
 - 매끈한 모양의 움직이는 커서가 8~15fps 에서 30fps 안팎으로 촘촘해짐. 사이 프레임을 양옆에서 섞어 넣고, **한 바퀴 도는 시간은 그대로임** — 한 프레임이 머무는 시간을 줄이는 게 아니라 쪼개므로 5틱짜리는 3+2 가 됨. 빨라진 게 아니라 부드러워진 것임
 - 전기가 깜빡이는 점이 아니라 흐르는 전류가 됨. 흰 머리의 펄스 둘이 노란 외곽선을 따라 돌며 이따금 뒤로 끌리는 불똥을 튀김. 모든 모양에서 사이를 섞지 않은 30fps 임 — 32프레임, 한 바퀴 1.07초. 매끈한 모양에서는 불똥을 푸른 번짐을 두른 가는 ⚡ 꺾은선으로 그리고 뿌리를 새 외곽선에 붙여, 막대처럼 삐죽 나오지 않고 몸에서 방전되는 것처럼 보임. 골드의 반짝이도 원본 그림대로 다시 십자가 됨
 - 용암이 뚝뚝 떨어짐. 꼬리 끝과 왼쪽 날개 끝에 방울이 맺혀 늘어지다 끊기고, 가속하며 떨어지면서 식어 어두워짐. 꼬리는 0.8초마다, 날개는 1.6초에 한 번 엇박으로 떨어지고 그 밑으로 무늬는 계속 흐름 — 24프레임, 한 바퀴 1.6초. 매끈한 모양에서도 방울이 매끈한 꼬리 끝에 맺혀 그 바로 밑으로 떨어짐
 - 글리치와 빗줄기는 사이 프레임을 섞지 않고 그림으로 그림. 글리치는 실제 글리치처럼 가로줄을 따라 찢어지고, 빗줄기는 물방울이 한 줄씩 내려옴 — 빗줄기는 여섯 장 중 셋이 복사본이었던 자리를 채운 것이라 용량이 안 늚
+- **해양 생물 · 애니** 10종이 새로 생김: 부캉이(부산 북항 수로에 열이틀 머문 상어)·돌고래·고래상어·괴상어·복어·개복치·새우·해달·꽃게·문어 치비. 그림 하나를 돌려 쓰지 않고 칸마다 장면을 따로 그림 — 해달은 배 위 조개를 콩콩 두드리고 거절할 때 얼굴을 가리고, 꽃게는 옆걸음 치며 거품을 올리고, 문어는 다리 여덟 개를 흔들다 기다릴 때 먹물을 퐁 뿜음. 기본 모양으로만 그리고 다른 모양 탭에서는 기본 그림을 빌려 보임
+- 움직이는 구성표를 더 많이 프레임째 다시 그려 30fps 안팎으로 흐르게 함: 네온 맥박은 숨 쉬듯 부풀고(36장), 무지개 흐름은 띠가 반 줄씩 흐르고(24장), 스캔·폭죽·눈 내림·카멜레온·파문·전구 간판도 새로 그림. 기포는 물속을 올라와 수면에서 터지고, 회전은 빨강·초록·노랑·파랑 네 날 바람개비가 됨. 이발소 기둥·매트릭스(옛 글자비)·빗줄기·일렁이는 불꽃·반짝이는 별·글리치 떨림·파도도 그림이 바뀜
+- 재질 구성표를 재질이 읽히게 다시 그림: 벨벳은 가장자리로 짙어지는 융단, 벽돌은 엇갈려 쌓은 러닝 본드, 고무는 돌기가 성긴 검은 무광 고무가 됐고, 녹·강철·호박·얼음 등은 테가 또렷해지고 이동·금지 칸이 매끈한 모양에서도 버팀. 픽셀 클래식 아홉 종은 화살표에만 있던 테두리·음영을 나머지 칸에도 입음
+- 링크 커서가 새로 생김: 두근두근은 큐피드 화살을 쏘고, 별 7종은 별똥별로 가리키며 반짝이가 핫스팟이라 어디를 누르는지 보임
+- **클릭 점.** 시안 페이지에서 구성표마다 17칸 중 아무 칸이나 핫스팟에 흰 테 두른 파란 점을 켤 수 있음. 전체 선택·전체 해제도 있음. 점은 적용할 때 찍으므로 받는 파일은 그대로임
+- **맥.** 시안 페이지에서 지금 고른 구성표·모양·색조를 Mousecape 용 `.cape` 로 받을 수 있음. 윈도우가 아니면 적용 단추가 물러나고 미리 보기만 됨
+- 시안 페이지가 넓은 화면에서 좌우로 나뉨 — 왼쪽 목록만 스크롤되고 미리 보기는 오른쪽에 붙박임 — 머리도 스크롤해도 위에 붙어 있음. 17칸 전부를 카드로 펼쳐 핫스팟 자리를 표시함. 첫 로딩이 훨씬 가벼워졌고(0.8MB, gzip 240KB 안팎) 움직임은 그림 장이 바뀌는 때에 맞춰 넘어가며 사파리에서 깜빡이지 않음. 썸네일이 매끈한 모양·불꽃·용암·글리치 커서의 꼬리를 자르지 않고, 대각선 테두리의 톱니가 없어짐
 
 ## 1.3.0 — 2026-09-19
 
