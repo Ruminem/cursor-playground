@@ -111,6 +111,15 @@ KEEPS = {s["id"]: KEEP | set(s.get("keep", ())) for s in SCHEMES}
 # 몸이 장마다 흔들리는 그림(헤엄) — 매끈한 모양의 번짐 테를 그 장 몸 밖에서만 뜬다 (smooth.samplers_of).
 # 비율만으로 켜면 반짝이·폭죽 move 처럼 몸에서 튀는 것도 걸려서 표식을 단 구성표만
 SWAYS = {s["id"] for s in SCHEMES if s.get("sway")}
+# 기본 모양으로만 내는 구성표(해양 생물 · 애니). 매끈한 모양으로 다시 그리지 않아 dist/<모양>/·data/<모양>/ 에
+# 없고, 시안 페이지는 어느 모양 탭에서든 이것의 기본 그림을 보이고 적용 주소에 모양을 안 붙인다.
+# 그래서 지금은 SWAYS 로 그릴 일이 없다 — 표식을 떼면 다시 그려진다
+CLASSIC_ONLY = {s["id"] for s in SCHEMES if s.get("classic_only")}
+
+
+def drawn(shape_id: str) -> list[str]:
+    """그 모양으로 그리는 구성표들. 테스트가 SCHEMES 를 갈아 끼우므로 부를 때마다 센다"""
+    return [s["id"] for s in SCHEMES if shape_id == SHAPES[0]["id"] or s["id"] not in CLASSIC_ONLY]
 
 
 def shape_of(shape_id: str) -> str | None:
@@ -315,6 +324,7 @@ def build() -> str:
     page = (
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*START*/", json.dumps(START))
+        .replace("/*CLASSIC_ONLY*/", json.dumps(sorted(CLASSIC_ONLY)))
         .replace("<!--SHAPES-->", "".join(tabs))
         .replace("/*SHAPE_LIST*/", json.dumps([{k: s[k] for k in ("id", "name", "desc")} for s in SHAPES], ensure_ascii=False, separators=(",", ":")))
         .replace("/*CURSOR_CSS*/", "\n".join(css))
@@ -348,13 +358,12 @@ def data_bit(sid: str, rid: str, shape: str | None, cache: dict, ats: dict | Non
     return [uri, hx, hy, fallback, rate, w, h, len(pngs), box] if fallback is not None else [uri, rate, len(pngs)]
 
 
-def splice(pieces: dict[str, tuple[dict, dict]], old: dict | None) -> dict:
-    """구성표별 조각 {구성표: (칸들, 덧칸들)} 을 SCHEMES 차례로 이어 {"data": …, "extra": …} 로.
+def splice(pieces: dict[str, tuple[dict, dict]], old: dict | None, sids: list[str]) -> dict:
+    """구성표별 조각 {구성표: (칸들, 덧칸들)} 을 sids 차례로 이어 {"data": …, "extra": …} 로.
     old 를 주면 조각이 없는 구성표는 지난번 것을 그대로 옮긴다"""
     data: dict[str, dict[str, list]] = {}
     extra: dict[str, dict[str, list]] = {}
-    for scheme in SCHEMES:
-        sid = scheme["id"]
+    for sid in sids:
         data[sid], extra[sid] = pieces[sid] if sid in pieces else (old["data"][sid], old["extra"][sid])
     return {"data": data, "extra": extra}
 
@@ -365,13 +374,12 @@ def shape_data(shape_id: str, sids: list[str], old: dict | None) -> dict:
     old 를 주면 sids 에 든 구성표만 새로 그리고 나머지는 지난번 것을 그대로 옮긴다."""
     shape, cache = shape_of(shape_id), {}
     pieces = {}
-    for scheme in SCHEMES:
-        sid = scheme["id"]
+    for sid in drawn(shape_id):
         if old is None or sid in sids:
             pieces[sid] = ({rid: data_bit(sid, rid, shape, cache) for rid, _, _ in ROLES},
                            {rid: data_bit(sid, rid, shape, cache) for rid, _, _ in EXTRA})
             cache.pop(sid, None)
-    return splice(pieces, old)
+    return splice(pieces, old, drawn(shape_id))
 
 
 def timed(fn, job) -> tuple:
@@ -468,10 +476,10 @@ def read_data(shape_id: str) -> dict | None:
 
 def data_missing(shape_id: str) -> set[str] | None:
     """지난번 data/<모양>/ 에 없는 지금 구성표들 — 이것과 재료가 바뀐 구성표만 새로 그리면 된다.
-    지난번 것을 못 읽으면 None (전부 그린다). 빠진 구성표는 splice 가 SCHEMES 로 이어 붙이며 저절로 떨어진다.
+    지난번 것을 못 읽으면 None (전부 그린다). 빠진 구성표는 splice 가 drawn 차례로 이어 붙이며 저절로 떨어진다.
     구성표 목록이 조금만 달라져도 None 이던 때는 한 종을 지워도 64종 × 매끈한 모양 10가지를 다시 그렸다"""
     old = read_data(shape_id)
-    return None if old is None else {s["id"] for s in SCHEMES} - set(old["data"])
+    return None if old is None else set(drawn(shape_id)) - set(old["data"])
 
 
 def write_split(shape_id: str, whole: dict) -> None:
@@ -490,20 +498,21 @@ def write_split(shape_id: str, whole: dict) -> None:
 def write_data(shape_id: str, pieces: dict[str, tuple[dict, dict]]) -> None:
     """모양 하나의 시안 페이지 데이터 data/<모양>/. 지난번 파일이 있으면 조각이 온 구성표만 갈아 끼운다.
     코드가 바뀌면 모든 구성표의 조각이 오므로(해시에 코드가 섞여 있다) 통째로 다시 쓰인다"""
-    old = read_data(shape_id) if len(pieces) < len(SCHEMES) else None
-    write_split(shape_id, splice(pieces, old))
+    sids = drawn(shape_id)
+    old = read_data(shape_id) if len(pieces) < len(sids) else None
+    write_split(shape_id, splice(pieces, old, sids))
     # 한 파일에 다 넣던 때의 data/<모양>.json. 남겨 두면 Pages 에 모양마다 24MB 씩 그대로 올라간다
     (HERE / "data" / f"{shape_id}.json").unlink(missing_ok=True)
 
 
 def prune() -> list[str]:
-    """지금 목록에 없는 구성표·모양의 dist·data 폴더를 지운다. 지운 경로를 돌려준다.
+    """지금 목록에 없는 구성표·모양의 dist·data 폴더를 지운다. 기본 모양으로만 내는 구성표의 모양 폴더도. 지운 경로를 돌려준다.
     handler.ps1 은 적용할 때 받아 두므로 이미 쓰는 사람의 커서는 안 깨진다"""
     sids, shps = {s["id"] for s in SCHEMES}, {s["id"] for s in SHAPES}
     dist, data = HERE / "dist", HERE / "data"
     gone = [d for d in dist.glob("*/") if d.name not in sids | shps] if dist.is_dir() else []
     gone += [d for shp in shps - {SHAPES[0]["id"]} if (dist / shp).is_dir()
-             for d in (dist / shp).glob("*/") if d.name not in sids]
+             for d in (dist / shp).glob("*/") if d.name not in sids - CLASSIC_ONLY]
     gone += [d for d in data.glob("*/") if d.name not in shps] if data.is_dir() else []
     for d in gone:
         shutil.rmtree(d)
@@ -565,13 +574,13 @@ if __name__ == "__main__":
         for shp in SHAPES:
             base = shp["id"] == SHAPES[0]["id"]
             root = HERE / "dist" if base else HERE / "dist" / shp["id"]
-            stale = {s["id"] for s in SCHEMES
-                     if s["id"] in changed or not (root / s["id"]).is_dir()}
-            skipped += len(SCHEMES) - len(stale)
+            sids = drawn(shp["id"])
+            stale = {sid for sid in sids if sid in changed or not (root / sid).is_dir()}
+            skipped += len(sids) - len(stale)
             fresh: set[str] = set()                     # 시안 데이터 조각을 새로 그릴 구성표
             if not base and (was.get("*") != every or not (data_dir(shp["id"]) / "index.json").exists()):
                 missing = data_missing(shp["id"])
-                fresh = {s["id"] for s in SCHEMES} if missing is None else set(changed) | missing
+                fresh = set(sids) if missing is None else (set(changed) | missing) & set(sids)
                 if fresh:
                     pieces[shp["id"]] = {}
                 else:                                   # 구성표를 지우기만 했다 — 그릴 것 없이 목록만 줄인다
@@ -580,8 +589,7 @@ if __name__ == "__main__":
             # 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
             # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
             # 마지막 모양의 묶음만 남아 워커 8개가 20초 넘게 놀았다 (2026-09-24, 5600X 262초 중 22초)
-            mine = [(shp["id"], s["id"], s["id"] in stale, s["id"] in fresh) for s in SCHEMES
-                    if s["id"] in stale or s["id"] in fresh]
+            mine = [(shp["id"], sid, sid in stale, sid in fresh) for sid in sids if sid in stale or sid in fresh]
             if mine:
                 left[shp["id"]] = len(mine)
                 jobs_of += mine
@@ -630,7 +638,7 @@ if __name__ == "__main__":
             if not left[shape_id]:
                 what = f"{shape_id} 커서 {made[shape_id]}개"
                 if shape_id in pieces:
-                    what += f" · data/{shape_id}/" + ("" if len(pieces[shape_id]) == len(SCHEMES)
+                    what += f" · data/{shape_id}/" + ("" if len(pieces[shape_id]) == len(drawn(shape_id))
                                                           else f" (구성표 {len(pieces[shape_id])}종만)")
                     write_data(shape_id, pieces.pop(shape_id))
                 print(f"[{time.time() - t0:5.1f}초] {what} · 워커 시간 {_dur(spent[shape_id])}")

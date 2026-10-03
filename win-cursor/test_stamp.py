@@ -71,10 +71,13 @@ assert build.data_missing(shape_id) == {sids[2]}, "더한 구성표만 새로 �
 build.write_data(shape_id, {sids[2]: (whole["data"][sids[2]], whole["extra"][sids[2]])})
 assert dump(build.read_data(shape_id)) == dump(whole), "더한 뒤의 데이터가 통째로 만든 것과 다름"
 
-# 목록에 없는 구성표·모양의 dist·data 폴더만 지우고 나머지는 그대로 둔다
+# 목록에 없는 구성표·모양의 dist·data 폴더만 지우고 나머지는 그대로 둔다.
+# 기본 모양으로만 내는 구성표(classic_only)는 기본 폴더만 남고 모양 폴더는 지운다
 build.HERE = here = Path(tempfile.mkdtemp())
-keep = [f"dist/{sids[0]}", f"dist/{shape_id}", f"dist/{shape_id}/{sids[0]}", f"data/{shape_id}"]
-drop = ["dist/gone", f"dist/{shape_id}/gone", "data/gone"]
+build.CLASSIC_ONLY = {sids[1]}
+assert build.drawn(shape_id) == [sids[0], sids[2]] and build.drawn(build.SHAPES[0]["id"]) == sids, "기본 모양만 내는 구성표가 모양 쪽에 그려짐"
+keep = [f"dist/{sids[0]}", f"dist/{sids[1]}", f"dist/{shape_id}", f"dist/{shape_id}/{sids[0]}", f"data/{shape_id}"]
+drop = ["dist/gone", f"dist/{shape_id}/gone", f"dist/{shape_id}/{sids[1]}", "data/gone"]
 for d in keep + drop:
     (here / d).mkdir(parents=True, exist_ok=True)
 assert sorted(build.prune()) == sorted(str(Path(d)) for d in drop), "지운 폴더 목록이 다름"

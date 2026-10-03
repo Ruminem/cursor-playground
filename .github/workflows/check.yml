@@ -110,6 +110,8 @@ jobs:
             # 모양이 안 바꾸는 칸은 기본 모양 파일과 같아서 모양 쪽에 두지 않는다 (받을 때 기본 것으로 넘어간다)
             $keep = 'ns','we','nwse','nesw','up','cross','pen','hand'
             foreach ($s in $schemes) {
+              # 기본 모양만 있는 구성표(classic_only)는 모양 폴더가 없다. 적용할 때 기본 것으로 넘어간다
+              if ($shape.id -ne $shapes[0].id -and $s.classic_only) { continue }
               foreach ($slot in $slots) {
                 if ($shape.id -ne $shapes[0].id -and $keep -contains $slot) { continue }
                 $ext = if ($s.animated) { 'ani' } else { 'cur' }

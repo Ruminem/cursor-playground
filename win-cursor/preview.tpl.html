@@ -76,7 +76,7 @@ body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding
 @media (min-width:1100px) and (max-height:900px){
   .pane.view{padding-block:14px;gap:14px}
   .pane.view .stage{--px:2px}
-  .pane.view .legend,.pane.view .play .note{display:none}
+  .pane.view .legend,.pane.view .play .note,.pane.view .tune .size-note{display:none}
 }
 header{display:grid;gap:10px}
 .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -121,6 +121,9 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 body.smooth .c-hand .sprite,body.smooth .e-cross i,body.smooth .e-pen i,body.smooth .e-ns i,
 body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-up i{image-rendering:pixelated}
 .huebar{margin-top:10px;padding-top:0;border-top:0}
+/* 크기·색조는 미리보기 통 맨 위에 — 고르면 바로 아래 여섯 칸이 바뀌는 것이 보이게 */
+.tune{display:grid;gap:10px}
+.tune .sizebar{margin-top:0;padding-top:0;border-top:0}
 .huebar input[type="range"]{width:220px;max-width:100%;accent-color:var(--accent)}
 .huebar input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .huebar output{font:600 14px/1 var(--mono);min-width:3.5em}
@@ -300,25 +303,6 @@ pre .c{color:var(--muted)}
       <span class="find-note" id="find-note"></span>
     </div>
     <div class="groups" role="group" aria-label="구성표"><!--PICKER--></div>
-    <div class="sizebar">
-      <span class="size-label" id="size-label">커서 크기</span>
-      <div class="sizes" role="group" aria-labelledby="size-label">
-        <button type="button" class="size c-hand" data-size="32" aria-pressed="true">기본</button>
-        <button type="button" class="size c-hand" data-size="48" aria-pressed="false">1.5배</button>
-        <button type="button" class="size c-hand" data-size="64" aria-pressed="false">2배</button>
-        <button type="button" class="size c-hand" data-size="96" aria-pressed="false">3배</button>
-        <button type="button" class="size c-hand" data-size="128" aria-pressed="false">4배</button>
-      </div>
-      <button type="button" class="ghost c-hand" data-action="size">크기만 적용</button>
-      <span class="size-note">고르면 이 페이지 커서가 바로 그 크기가 됨. <b>이 구성표 적용</b> 은 크기까지 같이 적용함.</span>
-    </div>
-    <div class="sizebar huebar">
-      <label class="size-label" for="hue">색조</label>
-      <input type="range" id="hue" class="c-hand" min="0" max="355" step="5" value="0">
-      <output id="hue-out" for="hue">0°</output>
-      <button type="button" class="ghost c-hand" id="hue-reset">원래 색</button>
-      <span class="size-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. <b>이 구성표 적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
-    </div>
     <div class="sizebar schedbar">
       <span class="size-label">시간대별 자동 전환</span>
       <div class="sched" id="sched"></div>
@@ -372,6 +356,28 @@ pre .c{color:var(--muted)}
  </div>
 
  <div class="pane view">
+  <section class="tune" aria-label="커서 크기와 색조">
+    <div class="sizebar">
+      <span class="size-label" id="size-label">커서 크기</span>
+      <div class="sizes" role="group" aria-labelledby="size-label">
+        <button type="button" class="size c-hand" data-size="32" aria-pressed="true">기본</button>
+        <button type="button" class="size c-hand" data-size="48" aria-pressed="false">1.5배</button>
+        <button type="button" class="size c-hand" data-size="64" aria-pressed="false">2배</button>
+        <button type="button" class="size c-hand" data-size="96" aria-pressed="false">3배</button>
+        <button type="button" class="size c-hand" data-size="128" aria-pressed="false">4배</button>
+      </div>
+      <button type="button" class="ghost c-hand" data-action="size">크기만 적용</button>
+      <span class="size-note">고르면 이 페이지 커서가 바로 그 크기가 됨. <b>이 구성표 적용</b> 은 크기까지 같이 적용함.</span>
+    </div>
+    <div class="sizebar huebar">
+      <label class="size-label" for="hue">색조</label>
+      <input type="range" id="hue" class="c-hand" min="0" max="355" step="5" value="0">
+      <output id="hue-out" for="hue">0°</output>
+      <button type="button" class="ghost c-hand" id="hue-reset">원래 색</button>
+      <span class="size-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. <b>이 구성표 적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
+    </div>
+  </section>
+
   <section>
     <h2>여섯 칸</h2>
     <!--PANELS-->
@@ -430,6 +436,11 @@ pre .c{color:var(--muted)}
   var packs = {}, shape = SHAPES[0].id;
   packs[shape] = { data: DATA, extra: EXTRA, arrows: true, full: {}, asking: {} };
   Object.keys(EXTRA).forEach(function(sid){ packs[shape].full[sid] = true; });
+  // 기본 모양으로만 내는 구성표(해양 생물 · 애니, build.CLASSIC_ONLY). data/<모양>/ 에 없어서
+  // 다른 모양 탭에서도 기본 모양 묶음의 그림을 빌려 보이고, 적용 주소에 모양을 안 붙인다
+  var CLASSIC_ONLY = {};
+  /*CLASSIC_ONLY*/.forEach(function(sid){ CLASSIC_ONLY[sid] = true; });
+  window.cpClassicOnly = function(sid){ return !!CLASSIC_ONLY[sid]; };
   var SIZES = [32, 48, 64, 96, 128];
   var size = 32, hue = 0, cache = {};
   try {
@@ -542,6 +553,20 @@ pre .c{color:var(--muted)}
     if ('--n' in o) o['--n'] = [String(n), '']; else el.style.setProperty('--n', n);
   }
   var base = packs[SHAPES[0].id];
+  function lend(pack){
+    if (pack !== base) Object.keys(CLASSIC_ONLY).forEach(function(sid){
+      pack.data[sid] = base.data[sid];
+      if (base.extra[sid]) pack.extra[sid] = base.extra[sid];
+    });
+  }
+  // 매끈한 모양 탭(body.smooth)에서도 빌린 픽셀아트는 뭉개지 않는다
+  if (Object.keys(CLASSIC_ONLY).length) {
+    var pix = document.createElement('style');
+    pix.textContent = Object.keys(CLASSIC_ONLY).map(function(sid){
+      return 'body.smooth .s-' + sid + ' .sprite,body.smooth .extra.s-' + sid + ' span.pic i,body.smooth [data-scheme-item="' + sid + '"] .thumb';
+    }).join(',') + '{image-rendering:pixelated}';
+    document.head.appendChild(pix);
+  }
   function layScheme(sid){
     document.querySelectorAll('.card.s-' + sid).forEach(function(card){
       var rid = (/(?:^| )c-([a-z]+)/.exec(card.className) || [])[1];
@@ -611,13 +636,14 @@ pre .c{color:var(--muted)}
     regen(px, deg);
     var moving = animated(sid) && motionOK;
     // 페이지를 열 때 깐 그림이 곧 기본 모양·기본 크기·원래 색이라, 그 상태면 따로 그릴 것이 없다
-    if (px === 32 && deg === 0 && !moving && shape === SHAPES[0].id) {
+    var own = shape === SHAPES[0].id || CLASSIC_ONLY[sid];   // 기본 모양 그림을 보이는 경우
+    if (px === 32 && deg === 0 && !moving && own) {
       if (lastKey) { restore(cards); restore(hoverBook); lastKey = ''; }
       shownDeg = 0; nudgeHue();
       return;
     }
     var now = performance.now(), jobs = [], parts = [], at = spots(sid);
-    var plain = !deg && shape === SHAPES[0].id;   // 깐 그림을 그대로 두고 자리만 옮기면 되는 경우
+    var plain = !deg && own;   // 깐 그림을 그대로 두고 자리만 옮기면 되는 경우
     var over = hovered, hid = FINE && over && (/(?:^| )c-([a-z]+)/.exec(hovered.className) || [])[1];
     if (hid && !over.closest('[data-scheme="' + sid + '"]') && !over.matches('.card.s-' + sid)) hid = null;
     function put(sel, uri, n, f){
@@ -763,8 +789,8 @@ pre .c{color:var(--muted)}
     if (!fitRules[mine]) {
       // 여백은 두지 않는다 — 2px 만 둬도 21칸 화살표(스티커·폭죽 등)가 3배(63px)에서 2배로, 31칸 용암이 1배로 떨어진다
       var cs = getComputedStyle(el), W = parseFloat(cs.width), H = parseFloat(cs.height);
-      var pixel = mine === SHAPES[0].id;
       fitRules[mine] = Object.keys(pack).map(function(sid){
+        var pixel = mine === SHAPES[0].id || CLASSIC_ONLY[sid];
         var b = pack[sid].arrow[8], n = b[4], bw = b[2] - b[0] + 1, bh = b[3] - b[1] + 1;
         var s = Math.min(96 / n, W / bw, H / bh);   // 원래 배율은 판을 96px 로
         if (pixel && s >= 1) s = Math.floor(s);
@@ -786,7 +812,7 @@ pre .c{color:var(--muted)}
       var rid = (/(?:^| )c-([a-z]+)/.exec(card.className) || [])[1];
       var d = DATA[sid] && DATA[sid][rid];
       if (!d) return;
-      var own = plain || rid === 'hand';  // 링크 칸은 테마가 그린 것을 그대로 쓴다
+      var own = plain || rid === 'hand' || CLASSIC_ONLY[sid];  // 링크 칸은 테마가 그린 것을 그대로 쓴다
       card.querySelector('code').textContent = own ? 'art/' + sid + '/' + rid + '.txt' : 'art/' + sid + ' 색 + smooth.py ' + shape;
       card.querySelector('.coords').innerHTML = d[5] + '×' + d[6] + ' · hotspot <b>' + d[1] + ',' + d[2] + '</b>';
       var stage = card.querySelector('.stage');
@@ -809,14 +835,14 @@ pre .c{color:var(--muted)}
     restore(thumbs); paintThumbs(id, thumbData); fitThumbs(id, thumbData);
   }
   function need(sid){
-    var pack = packs[shape], mine = shape;
+    var mine = CLASSIC_ONLY[sid] ? SHAPES[0].id : shape, pack = packs[mine];
     if (!pack.full || pack.full[sid] || pack.asking[sid]) return;
     pack.asking[sid] = true;
     getJSON('data/' + mine + '/' + sid + '.json').then(function(one){
       Object.keys(one.data).forEach(function(rid){ pack.data[sid][rid][0] = one.data[rid]; });
       pack.extra[sid] = one.extra; pack.full[sid] = true;
-      if (pack === base) layScheme(sid);
-      if (shape === mine) { lastKey = ''; tick(); }
+      if (pack === base) { layScheme(sid); Object.keys(packs).forEach(function(k){ lend(packs[k]); }); }
+      if (shape === mine || CLASSIC_ONLY[sid]) { lastKey = ''; tick(); }
     }, function(){ setTimeout(function(){ pack.asking[sid] = false; }, 5000); });
   }
   // 누르기 전에 손가락·마우스가 닿는 때부터 그 구성표 그림을 받아 둔다
@@ -827,10 +853,11 @@ pre .c{color:var(--muted)}
   function useShape(id, done){
     var pick = SHAPES.filter(function(s){ return s.id === id; })[0] || SHAPES[0];
     function put(pack){
+      lend(pack);
       DATA = pack.data; EXTRA = pack.extra; shape = pick.id;
       lastKey = ''; restore(cards); restore(hoverBook);
       document.querySelectorAll('[data-shape]').forEach(function(b){ b.setAttribute('aria-selected', String(b.getAttribute('data-shape') === pick.id)); });
-      shapeNote.textContent = pick.desc;
+      noteShape(app.getAttribute('data-scheme'));
       try { localStorage.setItem('cp-shape', pick.id); } catch (e) {}
       relabel(); tick();
       // 목록 썸네일(구성표 57종의 화살표)은 모양을 바꾼 뒤에 받는다. 받기 전까지는 전 모양 그림 그대로
@@ -853,6 +880,13 @@ pre .c{color:var(--muted)}
   }
   document.querySelectorAll('[data-shape]').forEach(function(b){
     b.addEventListener('click', function(){ useShape(b.getAttribute('data-shape')); });
+  });
+  function noteShape(sid){
+    var pick = SHAPES.filter(function(s){ return s.id === shape; })[0];
+    shapeNote.textContent = pick.desc + (CLASSIC_ONLY[sid] && shape !== SHAPES[0].id ? ' — 이 구성표는 기본 모양만 있어 기본 그림 그대로 보이고 적용됨' : '');
+  }
+  document.querySelectorAll('[data-pick]').forEach(function(b){
+    b.addEventListener('click', function(){ noteShape(b.getAttribute('data-pick')); });
   });
   window.cpSize = function(){ return size; };
   window.cpSetSize = chooseSize;
@@ -884,13 +918,13 @@ pre .c{color:var(--muted)}
     restore: { title: '원래대로 되돌릴까요?', body: '이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아가고, 지금 안 쓰는 구성표 파일은 지움.', ok: '되돌리기' },
     unlink: { title: '완전 제거할까요?', body: '한 줄 설치할 때의 커서로 되돌린 뒤, 이 페이지 버튼 연결과 설치 폴더까지 지움. 다시 쓰려면 한 줄 설치부터 다시 해야 함.', ok: '완전 제거' }
   };
-  function shapeTail(){
+  function shapeTail(id){
     var s = window.cpShape();
-    return s === window.cpShapes()[0].id ? '' : '/' + s;
+    return s === window.cpShapes()[0].id || window.cpClassicOnly(id) ? '' : '/' + s;
   }
   // 적용 주소를 만드는 곳은 여기 하나다. 아래 고정 줄이 보여 주는 것과 버튼이 보내는 것이 갈리지 않게
   // (기본 모양은 예전 형식 그대로 보낸다 — 이미 깔린 처리 스크립트가 알아듣게)
-  function applySpec(id){ return 'apply/' + id + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue() + shapeTail(); }
+  function applySpec(id){ return 'apply/' + id + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue() + shapeTail(id); }
   window.cpUrl = function(id){ return 'cursor-playground://' + applySpec(id); };
   var notWin = document.documentElement.classList.contains('not-win');
   function send(action){
@@ -1168,7 +1202,7 @@ pre .c{color:var(--muted)}
   window.cpScheduleSpec = function(){
     var hue = window.cpHue(), shape = window.cpShape();
     var tail = shape === window.cpShapes()[0].id ? '' : '-' + shape;
-    return current().map(function(r){ return '/' + r[0] + '-' + r[1] + '-' + hue + tail; }).join('');
+    return current().map(function(r){ return '/' + r[0] + '-' + r[1] + '-' + hue + (window.cpClassicOnly(r[1]) ? '' : tail); }).join('');
   };
   document.getElementById('sched-on').addEventListener('click', function(){
     try { localStorage.setItem('cp-sched', JSON.stringify(current())); } catch (e) {}
@@ -1325,7 +1359,7 @@ pre .c{color:var(--muted)}
     var chosen = document.querySelector('[data-pick][aria-pressed="true"]');
     if (!chosen) return Promise.reject(new Error('고른 구성표 없음'));
     var sid = chosen.getAttribute('data-pick'), deg = window.cpHue(), shape = window.cpShape();
-    var base = window.cpShapes()[0].id === shape ? null : shape, ext = window.cpAnimated(sid) ? 'ani' : 'cur';
+    var base = window.cpShapes()[0].id === shape || window.cpClassicOnly(sid) ? null : shape, ext = window.cpAnimated(sid) ? 'ani' : 'cur';
     var card = document.querySelector('[data-apply="' + sid + '"]'), sname = card ? card.getAttribute('data-name') : sid;
     var shapeName = base ? ' ' + window.cpShapes().filter(function(s){ return s.id === shape; })[0].name : '';
     // 모양이 안 바꾸는 칸은 모양 쪽에 파일이 없다. 없으면 기본 것을 받는다 (handler.ps1 과 같은 규칙)

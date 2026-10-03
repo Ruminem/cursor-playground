@@ -44,6 +44,7 @@ function press(sid, shape, hue) {
     };
     const window = {
       cpHue: () => hue, cpShape: () => shape, cpShapes: () => shapes, cpAnimated: () => animated(sid),
+      cpClassicOnly: id => !!(schemes.find(x => x.id === id) || {}).classic_only,
       cpRotate(d, deg) { if (deg !== hue) bad.push('색조가 안 넘어감'); },
     };
     const document = {
@@ -105,6 +106,8 @@ function check(xml) {
     const why = [...r.bad];
     // 모양 쪽에 없는 칸은 기본 것으로 넘어가는 게 정상이라, 넘어갈 데도 없는 파일만 적는다
     const lost = r.missing.filter(u => !u.includes(`/${sh.id}/`));
+    // 기본 모양으로만 내는 구성표는 모양 폴더가 없다 — 거기를 찾으러 가면 페이지가 모양을 붙여 보낸 것
+    if (s.classic_only && sh !== shapes[0] && r.missing.length) why.push(`모양 폴더를 찾음: ${r.missing[0]}`);
     if (!r.xml) why.push(`구워지지 않음: ${r.err && r.err.message}` + (lost.length ? ` (없는 파일 ${lost.join(', ')})` : ''));
     else why.push(...check(r.xml));
     if (why.length) fails.push(`${s.id} × ${sh.id}: ${[...new Set(why)].slice(0, 5).join(' · ')}`);
