@@ -208,6 +208,11 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .dot-count{font-family:var(--mono);font-size:12px}
 .apply-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .dot-toggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
+/* 클릭 점 전체 선택 · 전체 해제. 이미 그 상태면 흐리게 */
+.dot-bulk{display:inline-flex;gap:4px}
+.dot-bulk button{font:600 12px/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:5px 8px}
+.dot-bulk button:hover:not(:disabled){border-color:var(--muted)}
+.dot-bulk button:disabled{opacity:.4;cursor:default}
 .meta{min-width:0}
 .meta h3{margin:0 0 2px;font-size:16px;font-weight:700}
 .meta p{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
@@ -527,6 +532,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       b.checked = on.length === DOT_SLOTS.length; b.indeterminate = on.length > 0 && on.length < DOT_SLOTS.length;
       b.parentNode.querySelector('.dot-count').textContent = on.length && on.length < DOT_SLOTS.length ? on.length + '칸' : '';
     });
+    document.querySelectorAll('[data-dotbulk="' + sid + '"]').forEach(function(b){
+      b.disabled = b.getAttribute('data-all') ? on.length === DOT_SLOTS.length : !on.length;
+    });
   }
   // 카드마다 단추 하나. 칸 이름은 그 카드 제목에서 따 온다
   document.querySelectorAll('.card[class*=" s-"]').forEach(function(c){
@@ -554,7 +562,18 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     box.type = 'checkbox'; box.className = 'c-hand'; box.setAttribute('data-dot', sid);
     box.addEventListener('change', function(){ window.cpSetDots(sid, box.checked ? DOT_SLOTS : []); });
     lab.appendChild(box); lab.appendChild(document.createTextNode('클릭 점')); lab.appendChild(count);
-    b.parentNode.insertBefore(grp, b); grp.appendChild(lab); grp.appendChild(b);
+    // 상자는 몇 칸만 켜진 때 한 번 눌러야 전부가 되고 또 눌러야 해제라, 바로 가는 단추 둘을 옆에 둔다
+    var bulk = document.createElement('span');
+    bulk.className = 'dot-bulk';
+    [['전체 선택', DOT_SLOTS], ['전체 해제', []]].forEach(function(d){
+      var k = document.createElement('button');
+      k.type = 'button'; k.className = 'c-hand'; k.textContent = d[0]; k.setAttribute('data-dotbulk', sid);
+      if (d[1].length) k.setAttribute('data-all', '1');
+      k.title = '이 구성표 17칸 클릭 점 ' + (d[1].length ? '전부 켬' : '전부 끔');
+      k.addEventListener('click', function(){ window.cpSetDots(sid, d[1]); });
+      bulk.appendChild(k);
+    });
+    b.parentNode.insertBefore(grp, b); grp.appendChild(lab); grp.appendChild(bulk); grp.appendChild(b);
     showDot(sid);
   });
   var SIZES = [32, 48, 64, 96, 128];
