@@ -9,12 +9,14 @@
 눈이 얼굴의 주인공이라 몸을 줄여도 눈은 칸 단위 글자판(`EYES`)으로 크게 찍는다 — 같이 줄이면 32칸에서 점이 된다.
 해양의 물낯 · 물보라 자리는 숲 소품(나뭇가지 · 나뭇잎 · 도토리)이 대신하고, 금지 칸은 sea.py 의 빨간 표지(SIGN)를 쓴다.
 
-  arrow   날개를 접은 부엉이가 몸을 왼쪽 위로 갸웃 기울여 그쪽을 빤히 본다 — 쫑긋 세운 앞 귀깃 끝이 핫스팟(화살 끝),
-          뒤 귀깃은 눕혀 쫑긋거린다. 한쪽 날개를 왼쪽 위로 쭉 뻗던 판은 어색하고 hand(날개 들어 콕)와 실루엣이 같았다
+  arrow   흰 클래식 화살표 커서(윈도우 기본 꼴, 15 × 24)의 대를 큰 눈 부엉이가 왼날개로 껴안고 화살 끝을 올려다본다 —
+          화살 끝이 핫스팟. 고개 갸웃 · 끔뻑 · 날개로 대를 토닥. 날개나 귀깃을 화살처럼 뻗던 판은 막대기 같다
+          (짜치다)는 말을 들었고, hand(날개 들어 콕)와도 실루엣이 겹쳤다. busy · help · person · pin 의 작은 화살표
+          부엉이는 윈도우 화살표 그대로(12 × 19)의 화살촉 밑에 작은 부엉이가 앉은 꼴이다
   busy    작은 화살표 부엉이 + 오른쪽 아래 도토리 둘레를 도는 나뭇잎 여덟 고리
   cross   앞모습 얼굴. 위아래 · 양옆 잔가지가 조준선이고, 두 눈이 가운데(부리 위)를 몰아 본다
   hand    한쪽 날개를 위로 들어 깃 끝으로 콕 — 닿는 순간 눈을 질끈(^^) 감고 끝에 반짝. 깃 끝이 핫스팟
-  help    작은 화살표 부엉이가 고개를 빙글 갸웃 + 나뭇잎 물음표(점은 도토리)
+  help    작은 화살표 부엉이가 고개를 화살표 쪽으로 크게 갸웃 + 나뭇잎 물음표(점은 도토리)
   ibeam   위아래 나뭇가지 사이에 길쭉하게 꼿꼿이 선 부엉이 — 가지가 I 의 가로획, 몸이 세로획
   move    날갯짓하며 둥실 뜬 작은 부엉이 + 네 방향 나뭇잎 화살촉
   ns      놀라서 몸을 길쭉하게 늘였다 둥글게 줄였다 하는 부엉이(부엉이의 경계 자세) — 위아래 화살촉
@@ -356,47 +358,48 @@ def blink_mood(k: int, at: int = 7) -> str:
     return "shut" if k == at else "half" if k in (at - 1, at + 1) else "open"
 
 
-ARROW_TIP = (0.7, 0.7)                       # 화살표 날개 깃 끝(화면) — (1, 1) 칸을 반 넘게 덮게 칸 밖으로 민다
-ARROW = (19.5, 19.0, 0.82)                   # 날개 뻗은 큰 부엉이(small=False) — 옛 arrow 칸, 지금은 안 씀
-ARROW_S = (9.5, 12.4, 0.5)                   # 작은 화살표 부엉이 (busy · help · person · pin)
+# 클래식 화살표 커서(윈도우 기본 화살표 꼴) 글자판 — 끝이 왼쪽 위. 작은 것은 윈도우 32칸 화살표 그대로(12 × 19),
+# 큰 것은 같은 꼴을 15 × 24 로 키웠다. 다각형을 찍으면 대(꼬리)가 뭉개져서 칸을 손으로 놓았다
+CURSOR_S = ["#", "##", "#w#", "#ww#", "#www#", "#wwww#", "#wwwww#", "#wwwwww#", "#wwwwwww#", "#wwwwwwww#",
+            "#wwwwwwwww#", "#wwwwww#####", "#www#ww#", "#ww##ww#", "#w#..#ww#", "##...#ww#", "#.....#ww#",
+            "......#ww#", ".......##"]
+CURSOR_B = ["#" + "w" * (r - 1) + "#" if r else "#" for r in range(14)] + [
+            "#wwwwwwww######", "#wwww#www#", "#www##www#", "#ww#..#www#", "#w#...#www#", "##.....#www#",
+            "#......#www#", "........#www#", "........#www#", ".........###"]
+CURSOR_W = hx("ffffffff")
+# 화살표 부엉이 자리: (화살표 글자판, 부엉이 원점 x, y, 부엉이 배율, 안는 날개 끝(화면) 또는 None)
+ARROW = (CURSOR_B, 21.2, 20.4, 0.82, (10.6, 18.6))     # arrow 칸
+ARROW_S = (CURSOR_S, 9.2, 21.4, 0.4, None)             # 작은 것 (busy · help · person · pin)
 
 
-def arrow_owl(ph: float, small: bool = False, tilt: float = 0.0, mood=None) -> dict:
-    """왼날개를 왼쪽 위로 쭉 뻗은 부엉이(작은 것은 busy · help · person · pin 의 화살표). 몸이 살짝 들썩여도 깃 끝은 제자리,
-    눈은 깃 끝을 본다. arrow 칸은 날개를 안 뻗는 `arrow()` 가 따로 그린다"""
-    ox, oy, kk = ARROW_S if small else ARROW
+def cursor(f: dict, rows: list) -> None:
+    """끝이 (1, 1) 칸인 흰 화살표 — 테는 부엉이 테두리색"""
+    glyph(f, rows, 1, 1, {"#": OUT, "w": CURSOR_W})
+
+
+def arrow_owl(ph: float, small: bool = False, tilt=None, mood=None) -> dict:
+    """흰 클래식 화살표 커서 + 그 앞의 동글동글한 부엉이(arrow 칸, 작은 것은 busy · help · person · pin 의 화살표).
+    화살표는 늘 제자리라 끝 (1, 1) 이 핫스팟이고, 부엉이는 화살 끝을 올려다보며 고개를 갸웃 · 눈을 끔뻑한다.
+    큰 것은 화살표 오른쪽 아래에서 왼날개로 화살표 대를 감싸 안고 토닥이고, 작은 것은 화살촉 바로 밑에 앉는다
+    (오른쪽은 소품 자리라 날개를 뻗을 틈이 없다). 몸 일부(날개 · 귀깃)를 화살처럼 뻗던 판은 막대기 같다(짜치다)는
+    말을 들어서, 화살표는 누구나 아는 커서 꼴로 따로 그린다"""
+    rows, ox, oy, kk, hug = ARROW_S if small else ARROW
     k = round(N * ph / (2 * math.pi)) % N
-    rig = Rig(ox, oy + (0.0 if small else 0.5 * math.sin(ph)), 0.0, kk)
-    out, _ = owl(rig, wings=(rig.local(*ARROW_TIP), None), mood=mood or blink_mood(k, 9),
-                 gaze=(0, 0) if tilt else (-1, -1), tilt=tilt, tsx=1.0 + 0.05 * math.sin(2 * ph),
-                 eyes="small" if small else None)
-    # 작은 부엉이는 날개 최소 폭 때문에 깃 끝 둘레가 (1, 1) 바깥 줄까지 번진다 — 깃 끝이 맨 끝이게 잘라 낸다
-    return {p: c for p, c in out.items() if p[0] >= 1 and p[1] >= 1} if small else out
-
-
-LEAN = (-18.0, 0.96)                         # 화살표 부엉이가 왼쪽 위로 기운 각도(도) · 배율
-
-
-def lean_tufts(back: float):
-    """기운 부엉이의 짝짝이 귀깃(머리 좌표). 앞(왼쪽) 귀깃은 쫑긋 길게 세워 바깥 갈래가 화살 끝 — 안쪽 갈래는 짧게 둬서
-    끝이 하나다(두 갈래가 비슷하면 기울였을 때 안쪽 갈래나 뒤 귀깃이 더 위로 나와 끝이 둘이 된다). 뒤 귀깃은 back 만큼 눕힌다"""
-    front = poly([(-2.4, -10.4), (-4.8, -14.6), (-5.9, -13.5), (-10.4, -19.6), (-9.2, -5.6)])
-    return any_of(front, poly([(2.4, -10.4), (5.6, -12.0 - back), (6.6, -11.2 - 0.6 * back),
-                               (9.4, -9.6 - back), (8.8, -5.6)]))
+    f = {}
+    cursor(f, rows)
+    rig = Rig(ox, oy, 0.0, kk)
+    pat = max(0.0, math.sin(2 * ph))                     # 토닥 — 날개 끝이 화살표 대를 살짝 쓸어내린다
+    wings = (("front", rig.local(hug[0] - 0.3 * pat, hug[1] + 0.8 * pat), 0.4), None) if hug else (None, None)
+    o_, _ = owl(rig, wings=wings, mood=mood or blink_mood(k, 9), gaze=(-1, -1),
+                tilt=6.0 * math.sin(ph) if tilt is None else tilt, tsx=1.0 + 0.05 * math.sin(2 * ph),
+                eyes="small" if small else None)
+    f.update(o_)
+    return {p: c for p, c in f.items() if p[0] >= 1 and p[1] >= 1}
 
 
 def arrow() -> list[dict]:
-    """왼쪽 위로 몸을 기울여 그쪽을 빤히 보는 부엉이 — 쫑긋 세운 앞 귀깃 끝이 핫스팟(화살 끝). 날개는 접은 채,
-    뒤 귀깃이 쫑긋거리고 눈을 끔뻑. 한 장을 그려 그 귀깃 끝을 (1, 1) 로 칸 단위로 옮긴다(끝은 제자리)"""
-    ang, kk = LEAN
-    raw = []
-    for k, ph in enumerate(phases()):
-        o_, _ = owl(Rig(17.0, 17.0, ang, kk), mood=blink_mood(k, 9), gaze=(-1, -1),
-                    tuft=lean_tufts(0.5 * max(0.0, math.sin(2 * ph))))
-        raw.append({p: c for p, c in o_.items() if c[3] == 255})
-    dx = 1 - min(x for x, _ in raw[0])
-    dy = 1 - min(y for _, y in raw[0])
-    return [finish({(x + dx, y + dy): c for (x, y), c in f.items()}) for f in raw]
+    """흰 화살표 커서의 대를 왼날개로 껴안은 큰 부엉이 — 화살표 끝이 핫스팟. 고개 갸웃 · 끔뻑 · 날개로 토닥"""
+    return [finish(arrow_owl(ph)) for ph in phases()]
 
 
 def falling_leaf(f: dict, k: int, x0: float, y0: float, y1: float) -> None:
@@ -598,7 +601,7 @@ QMARK_L = [".###.", "#...#", "....#", "...#.", "..#..", ".....", "..o.."]
 
 
 def help_() -> list[dict]:
-    """작은 화살표 부엉이가 고개를 빙글 갸웃 + 나뭇잎 물음표(점은 도토리) — 잎이 글자 차례로 하나씩 부푼다"""
+    """작은 화살표 부엉이가 고개를 화살표 쪽으로 크게 갸웃(물음표와 안 닿게 한쪽으로만) + 나뭇잎 물음표(점은 도토리) — 잎이 글자 차례로 하나씩 부푼다"""
     frames = []
     cells = [(18.2 + 2.2 * i, 9.6 + 2.2 * j) for j, row in enumerate(QMARK_L) for i, ch in enumerate(row) if ch == "#"]
     for k, ph in enumerate(phases()):
@@ -609,7 +612,7 @@ def help_() -> list[dict]:
             m |= disc(x, y, 1.2 + (0.5 if d < 1.5 else 0.0))
         solid(f, m, LEAF, LEAF_D)
         acorn(f, 21, 22)
-        f.update(arrow_owl(ph, small=True, tilt=28.0 * math.sin(ph), mood="open"))
+        f.update(arrow_owl(ph, small=True, tilt=-26.0 * (0.5 - 0.5 * math.cos(ph)), mood="open"))   # 물음표 반대쪽으로만
         frames.append(finish(f))
     return frames
 

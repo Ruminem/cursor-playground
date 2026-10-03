@@ -9,8 +9,10 @@
 털은 연크림 바탕에 옅은 주황 줄(치즈냥보다 연하고 밝다) · 흰 배와 주둥이 · 분홍 코. 소품의 주인공은 금빛 방울이고,
 화살촉 같은 신호색도 방울의 금색이다. 다리가 짧아 몸통 밑으로 발만 빼꼼 보이게 그린다 — 다리를 길게 그리면 치즈냥이 된다.
 
-  arrow   미어캣처럼 뒷발로 꼿꼿이 선 먼치킨 — 앞발은 가슴 앞에 모으고 고개를 좌우로 두리번. 왼 귀 끝이 핫스팟,
-          바닥에 깐 꼬리 끝이 까딱
+  arrow   미어캣처럼 뒷발로 선 먼치킨이 짧은 앞발 하나를 귀 옆으로 번쩍 들어 금빛 화살촉 막대를 왼쪽 위로 쳐든다 —
+          화살촉 끝이 핫스팟(귀 끝을 찍던 때는 찍는 점이 안 보였다). 다른 앞발은 가슴에 방울을 안고 딸랑, 눈 깜빡,
+          바닥에 깐 꼬리 끝이 까딱. 곁들이 칸(busy · help · person · pin)의 작은 냥은 볼 옆에 든 발과 손으로 찍은
+          화살촉, 앉은 빵 몸 — 판을 덜 써서 옆 장면에 안 닿게
   busy    작은 화살표 먼치킨 + 오른쪽 아래 동그라미를 따라 데굴데굴 구르는 금빛 방울(지나간 자리에 반짝이가 남는다)
   cross   가는 조준선 가운데 리본에 매달린 방울(핫스팟) — 아래에서 먼치킨이 짧은 앞발 둘을 뻗어 허우적대지만 안 닿는다
   hand    까치발로 서서 짧은 앞발 하나를 왼쪽 위로 쭉 내밀어 톡톡 — 젤리가 보이는 발끝이 핫스팟, 짧은 뒷발이 바들바들
@@ -459,36 +461,89 @@ def diag_chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col=GOLD[0]) -> No
             f[cx - dx * i, cy - dy * j] = col
 
 
-def anchor(frames: list[dict]) -> tuple[list[dict], tuple]:
-    """맨 위 불투명 칸(왼 귀 끝, 같은 줄이면 왼쪽)을 y=1 로, 맨 왼쪽 불투명 칸을 x=1 로 옮긴다 → (장들, 귀 끝 칸).
-    둥근 볼이 귀 끝보다 한두 칸 왼쪽으로 나와서 귀 끝을 (1, 1) 에 두면 볼이 판 밖으로 나간다"""
-    op = [p for p, c in frames[0].items() if c[3] == 255]
-    tip = min(op, key=lambda p: (p[1], p[0]))
-    x0 = min(p[0] for f in frames for p, c in f.items() if c[3] == 255)
-    dx, dy = 1 - x0, 1 - tip[1]
-    return [{(x + dx, y + dy): c for (x, y), c in f.items()} for f in frames], (tip[0] + dx, tip[1] + dy)
+def anchor(frames: list[dict], tip: tuple) -> tuple[list[dict], tuple]:
+    """tip 칸(막대 끝)을 (1, 1) 로 옮긴다 → (장들, (1, 1)). 그보다 왼쪽 · 위로 나온 불투명 칸은 check 가 잡는다"""
+    dx, dy = 1 - tip[0], 1 - tip[1]
+    return [{(x + dx, y + dy): c for (x, y), c in f.items()} for f in frames], (1, 1)
 
 
 # ── 화살표 먼치킨 ────────────────────────────────────────────────────────────
 LOOK = [0, 0, -1.6, -2.0, -2.0, -1.6, 0, 0, 1.6, 2.0, 2.0, 1.6]   # 두리번 — 얼굴이 돈 정도(u)
+WAND_TIP, WAND_GRIP = (-18.0, -20.8), (-11.4, -13.8)   # 화살촉 막대 끝 · 쥔 발 (고양이 좌표)
+SMALL_GRIP = (-7.8, -11.6)   # 작은 것의 든 발 — 볼 옆에 붙여 판을 덜 쓴다(높이 들수록 고양이가 아래로 밀린다)
+# 작은 것의 화살촉 — 칸을 손으로 찍는다. 배율 0.54 로 세모를 그리면 3칸이 다 테가 되어 금빛이 안 남는다
+# (s 짙은 금빛 테 · g 금빛 · l 빛). 왼쪽 위 꼭짓점이 핫스팟
+SMALL_HEAD = ["sssss", "slgg.", "sgg..", "sg...", "s...."]
 
 
-def arrow_cat(k: int, ph: float, scale: float) -> dict:
-    """미어캣처럼 선 먼치킨. 귀는 돌리지 않아 왼 귀 끝(맨 왼쪽 위)이 장마다 같은 칸이다"""
+def arrow_cat(k: int, ph: float, scale: float) -> tuple[dict, tuple]:
+    """미어캣처럼 선 먼치킨이 짧은 앞발 하나를 귀 옆으로 번쩍 들어 금빛 화살촉 막대를 왼쪽 위로 쳐든다 — 화살촉 끝
+    한 칸이 핫스팟. 귀 끝을 찍던 때는 무엇이 찍는 점인지 안 보였다. 화살촉은 45° 로 둔다 — 비탈을 세우면 화살촉 날개
+    한쪽이 끝보다 왼쪽으로 나온다. 든 팔은 머리 뒤로 지나가게 해서 발만 머리 옆에 보인다(머리 앞으로 그으면 볼과 귀가
+    팔 털빛에 묻힌다). 다른 앞발은 가슴에 금빛 방울을 꼭 안고, 방울이 딸랑 · 눈 깜빡 · 꼬리 살랑만 움직인다 — 막대와
+    든 발은 장마다 그 자리라 핫스팟 칸이 안 움직인다. → (장, 끝 칸)"""
     rig = Rig(16.0, 18.0, 0.0, scale)
+    small = scale < 0.7
     tw = 0.8 * math.sin(2 * ph)
     fy = 3.0 + 6.0 * 0.95
     tail = [(3.2, fy - 0.6), (7.4, fy + 0.2), (9.8, fy - 0.8 - max(0.0, tw))]
-    # 작게 그리면 앞발이 통째로 테가 되어 가슴에 검은 덩이가 생긴다 — 작은 것은 앞발을 뺀다
-    out, _, _ = draw(rig, stand_parts(turn=LOOK[k], tail_pts=tail, arms=None if scale > 0.7 else []))
-    face(out, rig, mood="blink" if k == 6 else "open", turn=LOOK[k])
-    if scale > 0.7:
-        whiskers(out, rig, turn=LOOK[k], skip=(-1,))
-    return out
+    if small:   # 귀 옆에 든 발 하나 + 손으로 찍은 화살촉. 팔은 머리 뒤라 안 보이므로 안 그린다
+        paw = ("paw", ell(*SMALL_GRIP, 2.8, 2.8), CREAM, True)
+        # 화살촉을 든 만큼 판을 더 쓰므로 몸을 짧게(앉은 빵 자세), 꼬리는 왼쪽(화살촉 밑 빈자리)으로 세운다 — 미어캣 키
+        # 그대로거나 꼬리를 오른쪽 바닥에 깔면 옆 장면(낚싯대 끝 방울 · 방울 길)에 닿는다
+        body = (0.0, 1.8, 5.0, 4.6)
+        fy = body[1] + body[3] * 0.95
+        tail = [(-3.0, fy - 0.6), (-5.6, fy - 0.6), (-6.6 - 0.5 * tw, fy - 3.6)]
+        out, _, _ = draw(rig, [paw] + stand_parts(turn=-0.8, tail_pts=tail, arms=[], body=body))
+        face(out, rig, mood="blink" if k == 6 else "open", turn=-0.8)
+        for sg in (-1, 1):   # 귀 속 분홍 한 칸 — 이 배율에선 귀 세모가 다 테가 되어 검은 뿔로 읽힌다
+            q = rig.cell(sg * 4.6, -12.0)
+            if out.get(q) == OUT:
+                out[q] = PINK
+        px, py = rig.cell(*SMALL_GRIP)
+        tip = (px - 4, py - 4)
+        for j, row in enumerate(SMALL_HEAD):
+            for i, ch in enumerate(row):
+                if ch != ".":
+                    out[tip[0] + i, tip[1] + j] = {"s": BELL_S, "g": BELL, "l": BELL_L}[ch]
+        return out, tip
+    tx, ty = WAND_TIP
+    ux, uy = WAND_GRIP[0] - tx, WAND_GRIP[1] - ty
+    L = math.hypot(ux, uy)
+    ux, uy = ux / L, uy / L
+    hl, hw = 7.0, 3.9                                  # 화살촉 길이 · 날개 반폭
+    bx_, by_ = tx + ux * hl, ty + uy * hl
+    head_ = ("arrowhead", tri((tx, ty), (bx_ - uy * hw, by_ + ux * hw), (bx_ + uy * hw, by_ - ux * hw)),
+             lambda a, b: BELL_L if (a - tx) * ux + (b - ty) * uy < hl * 0.45 else BELL, True)
+    shaft = ("shaft", bar((bx_ - ux * 0.6, by_ - uy * 0.6), WAND_GRIP, 1.25), ROD, True)
+    paw = ("paw", ell(*WAND_GRIP, 2.2, 2.3), CREAM, True)
+    arm = ("raise", chain([(-3.8, -0.8), (-7.6, -5.6), WAND_GRIP], 1.9, 1.8), FUR, False)
+    sw = math.sin(2 * ph)
+    parts = stand_parts(turn=-0.8, tail_pts=tail, arms=[[(3.6, -0.4), (1.6 + 0.3 * sw, 2.2)]],
+                        extra=[paw, head_, shaft], pr=2.0, front=[bell_part(-0.2, 3.4, 3.4)])
+    i = next(j for j, p in enumerate(parts) if p[0] == "head_ear") + 1
+    parts.insert(i, arm)   # 든 팔은 머리 뒤
+    out, _, region = draw(rig, parts)
+    for p, r in region.items():   # 화살촉 테는 짙은 금빛 — 검은 테면 금빛 속이 + 자로 남아 반짝이로 읽힌다
+        if r == "arrowhead" and out[p] == OUT:
+            out[p] = BELL_S
+    face(out, rig, mood="blink" if k == 6 else "open", turn=-0.8)
+    whiskers(out, rig, turn=-0.8, skip=(-1,))
+    x0, y0 = rig.world(-0.2, 3.4)
+    jingle(out, x0, y0, 3.4 * scale, k)
+    return out, rig.cell(tx + ux * 0.3, ty + uy * 0.3)
+
+
+SMALL = 0.54   # 곁들이 칸 고양이 배율 — 화살촉을 든 만큼 판을 더 써서 귀 끝을 찍던 때(0.6)보다 줄였다
 
 
 def arrow_frames(small=False) -> tuple[list[dict], tuple]:
-    return anchor([arrow_cat(k, ph, 0.6 if small else 0.86) for k, ph in enumerate(phases())])
+    got = [arrow_cat(k, ph, SMALL if small else 0.86) for k, ph in enumerate(phases())]
+    f0 = got[0][0]
+    # 막대 끝 칸 — 끝 좌표에서 가장 가까운 불투명 칸(가늘게 깎은 끝은 반 넘게 덮이지 않아 빌 수 있다)
+    tx, ty = got[0][1]
+    tip = min((p for p, c in f0.items() if c[3] == 255), key=lambda p: (p[0] + p[1], abs(p[0] - tx) + abs(p[1] - ty)))
+    return anchor([f for f, _ in got], tip)
 
 
 def arrow():

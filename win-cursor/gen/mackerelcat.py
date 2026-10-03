@@ -9,8 +9,9 @@
 몸 · 꼬리에 굵은 가로 줄(32칸에서 잘면 회색 덩어리라 2–3개로 굵게) · 흰 주둥이와 가슴은 조금 · 초록 눈 · 회색 발.
 화살촉 같은 신호색은 눈 색(초록)이다.
 
-  arrow   덮치는 고등어냥 — 엉덩이를 씰룩이다가 앞발 하나를 왼쪽 위로 쭉 뻗는다(그 발끝이 핫스팟).
-          몸은 오른쪽 아래로 비스듬히 뻗고 고리 무늬 꼬리가 위로 서서 살랑인다
+  arrow   하이파이브 고등어냥 — 앞을 보고 앉아 왼 앞발을 머리 옆으로 번쩍 든다. 든 발은 분홍 젤리가 보이는 큰
+          손바닥이고 그 왼쪽 위 모서리가 핫스팟. 장 4–6 에 발끝으로 몸을 쭉 펴며 ^^ 눈 · 벌린 입으로 "냥!",
+          10 에 깜빡, 짧고 통통한 꼬리가 살랑. 예전의 비스듬히 덮치는 자세는 "어정쩡하다"고 해서 바꿨다
   busy    작은 화살표 고등어냥 + 오른쪽 아래 물그릇 둘레를 도는 젖은 발자국 여덟 개(물그릇에 발을 담갔다)
   cross   앞모습 얼굴 — 사냥 눈(동공이 커졌다 줄었다). 긴 수염이 가로 조준선, 귀 사이 · 턱 밑 초록 눈금이 세로선.
           코가 핫스팟
@@ -347,31 +348,85 @@ def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col, n: int = 3) -> Non
 
 
 # ── 화살표 고등어냥 ──────────────────────────────────────────────────────────
-TAIL0 = (11.6, 4.2)      # 덮치는 고등어냥 꼬리 밑동 (help 가 여기서 물음표 꼬리를 뺀다)
+TAIL0 = (5.0, 7.4)       # 하이파이브 고등어냥 꼬리 밑동 (help 가 여기서 물음표 꼬리를 뺀다)
+HI5 = (-11.0, -15.4)     # 번쩍 든 앞발 가운데 — 귀 끝(w -17.4)보다 발 위끝이 높아야 발이 맨 왼쪽 위다
+NYANG = (4, 5, 6)        # "냥!" 하는 장 — 발끝으로 몸을 쭉 펴고 ^^ 눈에 입을 벌린다
 
 
-def arrow_cat(ph: float, k: float = 0.8, blink=False, tail=True) -> tuple[dict, Rig]:
-    """덮치는 고등어냥 — 얼굴은 똑바로, 몸은 오른쪽 아래로 비스듬히, 왼 앞발을 머리 옆으로 해서 왼쪽 위로 쭉 뻗는다.
-    오른 앞발은 땅을 짚고, 엉덩이가 씰룩이고 꼬리가 살랑인다"""
+def squircle(cu, cw, r, p=2.8):
+    """모서리가 조금 찬 동그라미 — 든 앞발. 원이면 왼쪽 위 모서리 칸이 비어 발끝(핫스팟)이 한 칸으로 안 선다"""
+    return lambda a, b: abs((a - cu) / r) ** p + abs((b - cw) / r) ** p <= 1
+
+
+def beans(f: dict, region: dict, name: str) -> None:
+    """든 앞발 바닥에 분홍 젤리 — 위에 발가락 셋, 아래에 큰 젤리. 발 속(테두리 뺀 칸)이 좁으면 큰 젤리 한 칸만"""
+    cells = [p for p, r in region.items() if r == name and f.get(p) != OUT]
+    if not cells:
+        return
+    rows = {}
+    for x, y in cells:
+        rows.setdefault(y, []).append(x)
+    full = sorted(y for y, xs in rows.items() if len(xs) >= 5)
+    if len(full) >= 4:   # 발가락 셋은 넉넉한 첫 줄, 큰 젤리는 끝 두 줄
+        cx = (min(rows[full[0]]) + max(rows[full[0]])) // 2
+        pads = [(cx + d, full[0]) for d in (-2, 0, 2)] + [(cx + d, y) for y in full[-2:] for d in (-1, 0, 1)]
+    else:
+        ys = sorted(rows)
+        y = ys[len(ys) // 2]
+        pads = [((min(rows[y]) + max(rows[y])) // 2, y)]
+    for p in pads:
+        if p in cells:
+            f[p] = PINK
+
+
+def arrow_cat(ph: float, k: float = 0.8, mood="open", lift=0.0, tail=True) -> tuple[dict, Rig]:
+    """하이파이브 고등어냥 — 큰 머리 · 동그란 몸으로 앞을 보고 앉아 왼 앞발을 머리 옆으로 번쩍 든다(손바닥 젤리가 보인다).
+    발은 핫스팟이라 그 자리에 두고, "냥!" 하는 장(lift)에 발끝으로 몸을 쭉 편다. 다른 앞발은 가슴 앞, 짧고 통통한
+    꼬리가 오른쪽에서 살랑"""
     rig = Rig(16.0, 16.0, 0.0, k)
     sw = math.sin(ph)
-    wig = 0.7 * math.sin(2 * ph)
-    reach = [(-4.4, -2.4), (-8.6, -9.8), (-10.8, -17.6)]
-    down = [(-0.6, 0.0), (-1.4, 6.6)]
-    rp = leg_part(reach, name="reach", pr=2.1, lined=False)
-    hind = [("hind", any_of(ell(10.2 + wig, 10.0, 2.2, 1.4), ell(5.0, 9.8, 2.2, 1.4)), FUR_L, True),
-            ("haunch", ell(8.6 + wig, 6.4, 3.4, 3.4), lambda a, b: STRIPE if (b - 4.6) % 3.2 < 1.2 else FUR, True)]
-    body = body_part((4.6, 3.0), 7.6, 4.6, chest=False, rot=0.62, stripes="along")
-    parts = [rp[0]] + leg_part(down, name="down", pr=1.9) + head_parts() + [rp[1]] + hind + [body]
+    up = -lift
+    hc = (HC[0], HC[1] + up)
+    small = k < 0.7      # 작게 그리면 팔 · 발을 굵혀야 테두리에 먹히지 않고 회색 속이 남는다
+    paw = ("hi5_paw", squircle(*HI5, 4.6 if small else 3.8, 5.0), FUR_L, True)
+    arm = leg_part([(-5.0, -0.6 + up), (-10.2, -5.0 + up * 0.5), (HI5[0], HI5[1] + 2.0)], name="hi5",
+                   r=3.0 if small else 2.3, lined=False)[1]
+    feet = ("feet", any_of(ell(-3.8, 9.0, 2.2, 1.5), ell(4.0, 9.0, 2.2, 1.5)), FUR_L, True)
+    haunch = ("haunch", any_of(ell(-4.0, 6.6 + up * 0.5, 2.5, 2.5), ell(4.2, 6.6 + up * 0.5, 2.5, 2.5)), FUR, True)
+    body = body_part((0.2, 3.6 + up * 0.7), 5.0, 5.2 + lift * 0.3)
+    parts = [paw] + head_parts(hc) + [arm, feet, haunch, body]
     if tail:
-        parts.append(tail_part([TAIL0, (14.6, 0.4 + 0.5 * sw), (14.2 + 1.2 * sw, -5.0)]))
-    out, _, _ = draw(rig, parts)
-    face(out, rig, mood="blink" if blink else "open", look=(-1, -1))
+        parts.append(tail_part([TAIL0, (9.4, 5.6), (10.2 + 0.9 * sw, 1.2 - 0.4 * sw)], 2.0, 1.8))
+    out, mask, region = draw(rig, parts)
+    # 발끝: 그림 전체의 맨 왼쪽 · 맨 위가 만나는 칸을 채워 핫스팟을 한 칸으로 세운다
+    xs = min(x for x, _ in mask)
+    ys = min(y for _, y in mask)
+    own = [p for p, r in region.items() if r == "hi5_paw"]
+    assert min(x for x, _ in own) == xs and min(y for _, y in own) == ys, "든 앞발이 맨 왼쪽 위가 아님"
+    x, y = xs, ys
+    while (x, ys) not in mask:     # 위 변을 발 끝까지 잇는다
+        out[x, ys] = OUT
+        x += 1
+    while (xs, y) not in mask:     # 왼 변도
+        out[xs, y] = OUT
+        y += 1
+    beans(out, region, "hi5_paw")
+    face(out, rig, hc, mood="happy" if mood == "nyang" else mood, look=(-1, -1))
+    if mood == "nyang" and k >= 0.7:   # 입을 벌려 "냥!" — ㅅ 입 자리에 분홍 입
+        nx, ny = rig.world(hc[0], hc[1] + HR * 0.16)
+        nl, ny = round(nx) - 1, math.floor(ny)
+        out[nl, ny + 2] = PINK
+        out[nl + 1, ny + 2] = PINK
+    if k >= 0.7:
+        whiskers(out, rig, hc, n=2, skip=(-1,))
     return out, rig
 
 
 def arrow_frames(small=False, tail=True):
-    fr = [arrow_cat(ph, 0.5 if small else 0.8, blink=k in (7,), tail=tail)[0] for k, ph in enumerate(phases())]
+    fr = []
+    for k, ph in enumerate(phases()):
+        mood = "nyang" if k in NYANG else "blink" if k == 10 else "open"
+        fr.append(arrow_cat(ph, 0.5 if small else 0.9, mood, 1.25 if k in NYANG else 0.0, tail)[0])
     return anchor(fr)
 
 

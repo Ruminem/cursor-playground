@@ -9,16 +9,18 @@
 흰 주둥이와 콧등 줄 · 흰 양말 네 발 · 초록 눈 · 빨간 나비넥타이(실루엣의 표식) · 길고 곧게 선 꼬리.
 새침한 성격이라 코를 치켜들고 눈을 내리깐다. 소품도 신사의 것(회중시계 · 깃펜 · 지팡이 · 찻잔)이다.
 
-  arrow   등을 돌려 오른쪽을 보고 앉아 코를 치켜든 옆모습 — 곧게 세운 긴 꼬리가 왼쪽 위로 뻗어 꼬리 끝이 핫스팟.
-          귀를 쫑긋, 눈을 깜빡, 고개를 흥 하고 든다
+  arrow   흰 화살표 커서 오른쪽에 앉아 두 앞발로 화살표 기둥을 껴안고 볼을 기댄다 — 화살표 끝이 핫스팟.
+          고개를 갸웃, 눈을 지그시 감았다 깜빡, 꼬리를 살랑 (긴 꼬리 끝을 핫스팟으로 들던 판은 꼬리가 별로라 바꿨다)
   busy    작은 화살표 턱시도냥 + 오른쪽 아래 찻잔(김이 오른다) 둘레를 도는 분홍 젤리 발자국 여덟
   cross   가는 조준선 가운데 빨간 레이저 점(핫스팟) — 오른쪽 아래에서 동공이 커진 턱시도냥이 엉덩이를 씰룩이며 노린다
   hand    옆으로 앉아 흰 양말 앞발 하나를 왼쪽 위로 쭉 들어 콕 누른다 — 분홍 젤리가 보이는 발끝이 핫스팟
   help    작은 화살표 턱시도냥 + 분홍 젤리 발자국으로 찍은 물음표(차례로 꾹꾹)
-  ibeam   위 판 · 밧줄 기둥 · 아래 받침이 I 인 스크래처 — 옆에 매달린 턱시도냥이 박박 긁는다. 핫스팟은 기둥 가운데
+  ibeam   위 판 · 밧줄 기둥 · 아래 받침이 I 인 스크래처 — 옆에 선 턱시도냥이 앞발을 번갈아 머리 위에서
+          아래로 박박 내리긁고 밧줄에 발톱 자국이 남는다(두 발이 같이 움직이면 박수로 읽힌다). 핫스팟은 기둥 가운데
   move    앞모습으로 앉아 앞발을 번갈아 들며 사뿐사뿐 제자리 걸음 — 네 방향 빨간 화살촉
   ns      제자리에서 수직 점프 — 웅크렸다 쭉 늘어나 뜨고 다시 내려앉는다. 위아래 화살촉
-  nwse · nesw  옆모습 기지개(앞발을 쭉 뻗고 엉덩이를 들고 꼬리는 곧게) — 몸이 그 대각선을 따라 늘었다 줄었다
+  nwse · nesw  옆모습으로 그 대각선을 따라 다다닥 달린다 — 한쪽 끝으로 갔다가 돌아서 반대쪽으로, 가는 쪽 화살촉이 깜빡
+          (기지개로 늘었다 줄었다 하던 판은 몸통이 늘어나는 것으로 읽혀 바꿨다)
   no      빨간 금지 표지 안에서 코를 치켜들고 눈을 감은 채 앞발 하나를 내밀어 '사양하겠소'
   pen     깃펜을 쥐고 글씨를 쓰는 신사 — 펜촉(왼쪽 아래)이 핫스팟
   person  작은 화살표 턱시도냥 + 나비넥타이를 맨 신사 고양이 흉상(사람 아이콘 꼴)
@@ -31,7 +33,7 @@
 (`Rig`, `draw` — 해달 생성기와 같은 방식이지만 다른 생성기에 기대지 않게 여기 따로 둔다). 앞모습(`front`)과
 옆모습(`side`) 두 벌이고, 머리는 제 좌표(`Sub`)로 따로 돌려 코를 치켜들 수 있다. 눈 · 코 · 입은 화면 칸에 직접 찍는다.
 화살표 끝을 귀 끝으로 잡으면 몸을 기울일 때 반대쪽 귀가 더 올라가고, 동그란 머리는 코끝이 모서리가 못 된다 —
-그래서 곧게 세운 꼬리 끝을 쓴다.
+그래서 몸이 아니라 껴안은 흰 화살표의 끝을 쓴다.
 이 파일은 빌드 코드 해시와 CI 캐시 키에 안 들어간다 — 고쳐도 빌드는 아무것도 다시 안 그리니 돌려서 art 를 고친다.
 """
 import math
@@ -400,6 +402,26 @@ def side(rig: Rig, pose="walk", ph=0.0, mood="open", head_ang=0.0, tail_pts=None
         parts = [legs[0], legs[1], bow_side((hc[0] + 1.8, hc[1] + hr * 0.9), hr)] + \
             head_side(Sub(hc, hr, head_ang)) + \
             [("torso", torso, lambda a, b: WHITE if bib(a, b) else FUR, False), legs[2], legs[3], tail(tp, *tr)]
+    elif pose == "run":
+        # 내달리기 — e=1 이면 앞다리는 앞으로 · 뒷다리는 뒤로 쭉, e=-1 이면 네 다리를 배 밑에 모은다.
+        # 몸통 길이는 그대로 두고 다리와 높이만 바꾼다(몸이 늘어나 보이면 달리기가 아니라 기지개다)
+        e = math.cos(ph)
+        bob = -0.7 * e
+        hc, hr = (-8.0, -3.6 + bob), 5.0
+        t = (1 + e) / 2
+
+        def lerp(p, q):
+            return (q[0] + (p[0] - q[0]) * t, q[1] + (p[1] - q[1]) * t)
+        legs = [limb("legF", (-4.6, 1.0 + bob), lerp((-11.6, 3.2), (-1.8, 6.4)), 1.25, 1.15, fur=FUR_L),
+                limb("legH", (5.0, 1.0 + bob), lerp((12.0, 3.6), (0.8, 6.2)), 1.35, 1.15, fur=FUR_L),
+                limb("legF2", (-3.4, 1.2 + bob), lerp((-10.2, 4.6), (-0.6, 6.6)), 1.15, 1.05, fur=FUR_D, lined=False),
+                limb("legH2", (6.2, 1.0 + bob), lerp((10.6, 5.0), (2.2, 6.6)), 1.25, 1.05, fur=FUR_D, lined=False)]
+        torso = any_of(ell(0.4, 0.2 + bob, 6.6, 3.0, 0.06 * e), ell(-4.4, -0.8 + bob, 2.8, 2.9))
+        bib = ell(-6.0, 0.8 + bob, 2.2, 2.6)
+        tp = tail_pts or [(6.8, -0.6 + bob), (10.0, -2.4 + bob), (13.4, -3.4 + 0.9 * math.sin(ph))]
+        parts = [legs[0], legs[1], bow_side((hc[0] + 1.4, hc[1] + hr * 0.95), hr)] + \
+            head_side(Sub(hc, hr, head_ang)) + \
+            [("torso", torso, lambda a, b: WHITE if bib(a, b) else FUR, False), legs[2], legs[3], tail(tp, *tr)]
     if not ears:
         parts = [p for p in parts if p[0] not in ("ear", "ear2")]
     out, mask, _ = draw(rig, parts)
@@ -409,34 +431,33 @@ def side(rig: Rig, pose="walk", ph=0.0, mood="open", head_ang=0.0, tail_pts=None
     return out, mask
 
 
-# ── 화살표 턱시도냥: 오른쪽을 보고 앉아 꼬리를 왼쪽 위로 곧게 ──────────────────────────────
-ATAIL = [(5.6, 7.4), (9.0, 5.4), (19.4, -21.0)]   # 엉덩이 → 꼬리 끝(제 좌표, 오른쪽을 보므로 뒤집혀 왼쪽 위로)
+# ── 화살표 턱시도냥: 흰 화살표 커서를 껴안는다 ─────────────────────────────────────────
+
+
+# 윈도우 기본 화살표 꼴 — 끝이 (0, 0), 1 이 한 칸
+CURSOR = [(0, 0), (0, 15.4), (4.0, 11.8), (6.6, 17.6), (9.2, 16.6), (6.8, 11.0), (11.6, 11.0)]
+HUG = {False: (1.25, Rig(20.2, 23.4, 0.0, 0.7)), True: (0.86, Rig(13.6, 16.6, 0.0, 0.47))}
 
 
 def arrow_cat(k: int, small: bool = False) -> dict:
-    """화살표 턱시도냥 한 장 — 꼬리 끝이 (1, 1). 판 안 자리는 첫 장 꼬리 끝에 맞춰 옮긴다"""
-    rig = ARROW_S if small else ARROW
-    blink = k in (7,)
-    nod = 6.0 * max(0.0, math.sin(2 * math.pi * (k - 2) / N)) if k in range(2, 8) else 0.0
-    f, _ = side(rig, "sit", mood="blink" if blink else "smug", head_ang=10.0 + nod, tail_pts=ATAIL, tr=(1.5, 1.0))
-    if k in (9, 10):   # 귀를 쫑긋 — 귀 끝 한 칸을 지운다
-        pass
-    return moved(f, *SHIFT[small])
-
-
-ARROW = Rig(12.0, 17.0, 0.0, 0.78, flip=True)
-ARROW_S = Rig(12.0, 17.0, 0.0, 0.5, flip=True)
-SHIFT = {}
-
-
-def _anchor() -> None:
-    """꼬리 끝(맨 왼쪽 위 불투명 칸)을 (1, 1) 로 옮길 칸 수"""
-    for small in (False, True):
-        SHIFT[small] = (0, 0)
-        f = arrow_cat(0, small)
-        op = [p for p, c in f.items() if c[3] == 255]
-        tx, ty = min(op, key=lambda p: (p[0] + p[1], p[1]))
-        SHIFT[small] = (1 - tx, 1 - ty)
+    """화살표 턱시도냥 한 장 — 흰 화살표 커서 오른쪽에 앉아 두 앞발로 화살표 기둥을 꼭 껴안고 볼을 기댄다.
+    화살표 끝이 (1, 1) 이라 찍는 점이 곧 화살표 끝이다. 화살표는 그대로 두고 고개 갸웃 · 꼬리 살랑 · 눈 깜빡만.
+    옆모습에 긴 꼬리를 곧게 세운 판(V 자 막대)과 앞발을 번쩍 든 판(가는 막대)은 화살표로 안 읽혀 바꿨다"""
+    s, rig = HUG[small]
+    ph = 2 * math.pi * k / N
+    f = {}
+    solid(f, raster([(1 + x * s, 1 + y * s) for x, y in CURSOR]), WHITE, OUT)
+    f[1, 1] = OUT
+    # 두 앞발이 화살표 꼬리 기둥을 감싼다 — 몸 앞으로 지나가게 팔을 몸보다 먼저 놓는다
+    sx, sy = 1 + 7.6 * s, 1 + 14.4 * s
+    grip = rig.local(sx, sy)
+    arms = (((-2.6, -0.8), (grip[0] + 0.6, grip[1] - 1.4)), ((2.4, -0.4), (grip[0] + 1.6, grip[1] + 1.4)))
+    sw = math.sin(ph)
+    tp = [(3.6, 8.6), (6.8, 7.4), (8.4 + 0.6 * sw, 3.0), (7.4 + 1.2 * sw, 0.0)]
+    mood = "blink" if k == 7 else ("closed" if k in (3, 4, 5) else "open")
+    g, _ = front(rig, mood=mood, arms=arms, tail_pts=tp, head_ang=-12.0 + 4.0 * sw, beans=(0, 1))
+    f.update({p: c for p, c in g.items() if p[0] >= 1 and p[1] >= 1})
+    return f
 
 
 # ── 소품 ─────────────────────────────────────────────────────────────────────
@@ -650,11 +671,31 @@ def ibeam() -> list[dict]:
         for x in range(X - 5, X + 6):
             f[x, 1], f[x, 2] = PLANK, PLANK_D
             f[x, 29], f[x, 30] = PLANK, PLANK_D
-        scr = 1.2 * math.sin(2 * ph)
         rig = Rig(15.6, 15.0, 0.0, 0.64)
-        arms = (((-2.6, -0.6), (-11.0, -2.0 + scr)), ((2.4, -0.6), (-10.6, 2.0 - scr)))
-        tp = [(2.0, 9.0), (6.0, 11.0), (9.0, 16.0)]
-        o, _ = front(rig, mood="blink" if k == 8 else "open", body="stand", arms=arms, tail_pts=tp, head_ang=-8.0)
+        arms, marks = [], []
+        for i, sh in enumerate(((-2.6, -1.2), (2.4, -0.8))):
+            # 한 앞발이 기둥 높이 박혀 아래로 죽 긁어내리는 동안 다른 앞발은 떼어 위로 올린다 — 번갈아.
+            # 두 발이 같은 높이에서 마주 오가면 박수로 읽힌다
+            t = (k / 6 + i / 2) % 1
+            if t < 0.66:
+                s = t / 0.66
+                tip = (-11.2, -15.0 + 12.0 * s)
+                marks.append((tip, s))
+            else:
+                s = (t - 0.66) / 0.34
+                tip = (-8.4, -3.0 - 12.0 * s)
+            arms.append((sh, tip))
+        tp = [(2.0, 9.0), (6.0, 11.0), (9.0 + 0.8 * math.sin(2 * ph), 16.0)]
+        o, _ = front(rig, mood="smug" if k % 6 < 4 else "closed", body="stand", arms=tuple(arms), tail_pts=tp,
+                     head_ang=-8.0, beans=(0, 1))
+        # 긁는 발이 지나온 자리에 밧줄이 일어난 흰 자국 세 줄
+        for (a, b), s in marks:
+            x0, y0 = rig.cell(-11.2, -15.0)
+            x1, y1 = rig.cell(a, b)
+            for y in range(y0, y1):
+                for dx in (-1, 1):
+                    if (X + dx, y) in f:
+                        f[X + dx, y] = hx("fff4dcff")
         f.update(o)
         frames.append(finish(f))
     return frames
@@ -808,18 +849,29 @@ def ns() -> list[dict]:
     return frames
 
 
-def stretch_diag(flip: bool) -> list[dict]:
-    """옆모습 기지개를 대각선으로 — 앞발이 왼쪽 위(flip 이면 오른쪽 위), 엉덩이가 오른쪽 아래. 늘었다 줄었다"""
+def run_diag(flip: bool) -> list[dict]:
+    """대각선으로 내달린다 — 앞 반은 왼쪽 위로(flip 이면 오른쪽 위로), 뒤 반은 돌아서 오른쪽 아래로.
+    한 걸음에 다리를 쭉 폈다 배 밑에 모았다 하고 몸이 들썩인다. 가는 쪽 화살촉이 두근댄다.
+    기지개로 몸을 늘였다 줄였다 하던 판은 몸통이 늘어나는 것으로 읽혀 달리기로 바꿨다"""
     frames = []
-    for k, ph in enumerate(phases()):
+    h = N // 2
+    for k in range(N):
         f = {}
-        s = 0.5 - 0.5 * math.cos(ph)
-        rig = Rig(16.6, 17.0, 45.0, 0.74)
-        g, _ = side(rig, "stretch", s=s, mood="closed" if s > 0.5 else "blink", head_ang=-10.0)
+        half = k < h
+        j = k % h
+        d = 1.6 - 3.2 * j / (h - 1)                # 대각선을 따라 앞으로 3칸쯤
+        if half:
+            rig = Rig(16.4 + d * 0.7071, 16.0 + d * 0.7071, 22.0, 0.7)
+        else:
+            rig = Rig(14.6 - d * 0.7071, 15.0 - d * 0.7071, 22.0, 0.7, flip=True)
+        g, _ = side(rig, "run", ph=2 * math.pi * j / h, mood="open", head_ang=4.0)
         f.update(g)
-        o = 1 if s > 0.5 else 0
-        diag_chevron(f, 2 - o, 2 - o, -1, -1)
-        diag_chevron(f, 28 + o, 28 + o, 1, 1)
+        for sg in (-1, 1):
+            o = 1 if (sg < 0) == half and j % 3 < 2 else 0
+            if sg < 0:
+                diag_chevron(f, 2 - o, 2 - o, -1, -1)
+            else:
+                diag_chevron(f, 28 + o, 28 + o, 1, 1)
         if flip:
             f = mirror(f)
         frames.append(finish(f))
@@ -827,11 +879,11 @@ def stretch_diag(flip: bool) -> list[dict]:
 
 
 def nwse():
-    return stretch_diag(False)
+    return run_diag(False)
 
 
 def nesw():
-    return stretch_diag(True)
+    return run_diag(True)
 
 
 SCENE = {"arrow": arrow, "busy": busy, "cross": cross, "hand": hand, "help": help_, "ibeam": ibeam, "move": move,
@@ -870,7 +922,6 @@ def check(rid: str, frames: list[dict], hot: tuple) -> None:
 
 
 def main() -> None:
-    _anchor()
 
     def job(r):
         def run():

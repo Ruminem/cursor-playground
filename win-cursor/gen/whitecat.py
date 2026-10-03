@@ -7,10 +7,11 @@
 해양 애니처럼 칸마다 흰냥이 그 칸 뜻에 맞는 짓을 따로 그린다(`SCENE`). '냥이 · 애니' 묶음 중 흰냥은
 **새하얀 털에 짝짝이 눈** — 보는 쪽 왼눈은 파랑, 오른눈은 금색이다(눈이 실루엣의 표식이라 감는 장도 한쪽씩 감는다).
 흰 몸이 흰 바탕에서 사라지지 않게 그늘(연한 푸른 회색, `fur` 가 부위마다 오른쪽 아래를 칠한다)과 차가운 연회색 테를 두른다.
-분홍 귀 속 · 코 · 젤리. 소품의 주인공은 파란 우유 접시 · 우유 · 햇살(노란 볕 웅덩이 · 반짝이)이다.
+분홍 귀 속 · 코 · 젤리. 소품의 주인공은 파란 우유 접시 · 우유 · 햇살(노란 반짝이)이다.
 머리 · 귀 · 몸 비율과 작은 화살표 동반 꼴 · 분홍 발자국 고리는 삼색냥을 따른다.
 
-  arrow   똑바로 앉아 앞발 하나를 머리 뒤로 해서 왼쪽 위로 쭉 뻗는다 — 그 발끝이 핫스팟. 꼬리가 살랑, 가끔 금눈만 찡긋
+  arrow   클래식 흰 화살표(짙은 테) 옆에 붙어 앉아 두 앞발을 빗변에 걸치고 기댄다 — 화살표 끝이 핫스팟.
+          꼬리가 살랑, 고개가 화살표 쪽으로 갸웃, 가끔 금눈만 찡긋
   busy    작은 화살표 흰냥 + 오른쪽 아래 우유 접시(물결이 돈다) 둘레를 도는 분홍 발자국 여덟
   cross   앞모습 얼굴(짝짝이 눈) — 양 볼 수염이 가로 조준선, 위 줄과 턱 밑 줄이 세로선. 턱 밑 줄을 따라 우유 방울이
           또르르 떨어진다. 분홍 코가 핫스팟
@@ -20,8 +21,9 @@
   ibeam   옆으로 누운 우유갑(위 가로획)에서 쏟아지는 우유 줄기(세로획)가 아래 접시(아래 가로획)로 — I.
           오른쪽에 앉은 흰냥이 혀를 내밀어 줄기를 할짝. 핫스팟은 줄기 가운데
   move    앉은 흰냥 둘레를 볕 조각(노란 반짝)이 빙글 돌고 흰냥이 고개를 돌려 눈으로 쫓는다 — 네 방향 분홍 화살촉
-  nesw · ns · nwse · we   볕 웅덩이에 등을 대고 벌러덩 누운 흰냥 — 앞발 · 뒷발을 하늘로 들고(젤리가 보인다) 버둥대며
-          몸이 그 축으로 쭉 늘었다 줄었다(뒹굴 기지개). 양 끝 화살촉. 얼굴은 늘 똑바로 둔다(기운 얼굴은 칸 위에서 뭉개진다)
+  nesw · ns · nwse · we   배를 깔고 엎드려 앞발은 앞으로 · 뒷발은 뒤로 쭉 뻗는 기지개 — 몸이 그 축을 따라 놓여
+          늘었다 줄었다, 발은 늘 몸 아래. 세로는 같은 자세를 세워 벽 짚고 위로 뻗는 꼴. 양 끝 화살촉.
+          얼굴은 늘 똑바로 둔다(기운 얼굴은 칸 위에서 뭉개진다)
   no      빨간 금지 표지 안에서 우유 접시를 앞발로 쓱 밀어내며 눈을 감고 고개를 도리도리 — 밀린 접시에서 우유가 출렁
   pen     파란 분필을 두 앞발로 쥐고 바닥에 쓴다 — 분필 끝(왼쪽 아래)이 핫스팟, 파랑 · 금색(눈 색) 분필 줄이 길어진다
   person  작은 화살표 흰냥 + 머리 위에 흰냥이 식빵 자세로 올라앉은 사람(꼬리가 사람 이마 옆으로 살랑)
@@ -49,7 +51,6 @@ ink(OUT, HI, hx("e6e8f0c7"))
 MILK, MILK_D = hx("ffffffff"), hx("dbe8f5ff")                  # 우유 · 우유 그늘
 DISH, DISH_D, DISH_L = hx("6f9fd8ff"), hx("4b77b4ff"), hx("a8c8eeff")   # 우유 접시
 SUN, SUN_L = hx("ffd24aff"), hx("fff0a8ff")                    # 볕 반짝이
-POOL = (hx("ffe27a70"), hx("ffe27a40"))                        # 볕 웅덩이 (반투명)
 CHALK, CHALK_L, CHALK_D = hx("8ec4f4ff"), hx("c8e2faff"), hx("5d97d2ff")   # 분필
 SHIRT, SHIRT_D, SKIN, HAIR = hx("e88f7aff"), hx("c46d5aff"), hx("f7d7bcff"), hx("5a4034ff")
 GLOW = (hx("f4a0b0ff"), hx("f4a0b0b0"), hx("f4a0b060"))   # 발자국 · 화살촉 (짙은 것부터) — 냥이 묶음 공통
@@ -57,18 +58,21 @@ GLOW = (hx("f4a0b0ff"), hx("f4a0b0b0"), hx("f4a0b060"))   # 발자국 · 화살�
 
 # ── 그리개: 고양이 제 좌표 (u, w) → 화면 ─────────────────────────────────────────
 class Rig:
-    """원점(ox, oy) · 각도 ang(도) · 배율 k. ang=0 이면 u 가 오른쪽, w 가 아래. ang 만큼 시계 방향으로 돈다"""
+    """원점(ox, oy) · 각도 ang(도) · 배율 k. ang=0 이면 u 가 오른쪽, w 가 아래. ang 만큼 시계 방향으로 돈다.
+    flip=True 면 w 를 뒤집는다(거울) — 기운 축에서도 발(+w)이 화면 아래쪽에 오게"""
 
-    def __init__(self, ox: float, oy: float, ang: float = 0.0, k: float = 1.0):
+    def __init__(self, ox: float, oy: float, ang: float = 0.0, k: float = 1.0, flip: bool = False):
         t = math.radians(ang)
         self.ox, self.oy, self.c, self.s, self.k = ox, oy, math.cos(t), math.sin(t), k
+        self.fl = -1.0 if flip else 1.0
 
     def world(self, a: float, b: float) -> tuple:
+        b *= self.fl
         return self.ox + (a * self.c - b * self.s) * self.k, self.oy + (a * self.s + b * self.c) * self.k
 
     def local(self, x: float, y: float) -> tuple:
         dx, dy = (x - self.ox) / self.k, (y - self.oy) / self.k
-        return dx * self.c + dy * self.s, -dx * self.s + dy * self.c
+        return dx * self.c + dy * self.s, (-dx * self.s + dy * self.c) * self.fl
 
     def cell(self, a: float, b: float) -> tuple:
         x, y = self.world(a, b)
@@ -277,13 +281,6 @@ def head_only(rig, hc=HC, r=HR, mood="open", turn=0.0, whisk=True) -> dict:
     return f
 
 
-def anchor(frames: list[dict], target=(1, 1)) -> list[dict]:
-    """맨 왼쪽 위 불투명 칸(x+y 가 가장 작은 것, 같으면 위)을 target 으로 옮긴다 — 화살표 꼴 칸의 발끝"""
-    tip = min((p for p, c in frames[0].items() if c[3] == 255), key=lambda p: (p[0] + p[1], p[1]))
-    dx, dy = target[0] - tip[0], target[1] - tip[1]
-    return [{(x + dx, y + dy): c for (x, y), c in f.items()} for f in frames]
-
-
 def clip(f: dict) -> dict:
     """판(테 한 칸을 남긴 1–30) 밖을 자른다"""
     return {p: c for p, c in f.items() if 1 <= p[0] <= 30 and 1 <= p[1] <= 30}
@@ -345,30 +342,43 @@ def sign(f: dict, cx=15.5, cy=15.5, R=13.5) -> set:
 
 
 # ── 화살표 흰냥 ──────────────────────────────────────────────────────────────
-def arrow_cat(ph: float, k: float = 0.8, mood="open") -> dict:
-    """똑바로 앉은 흰냥이 앞발 하나를 머리 뒤로 해서 왼쪽 위로 쭉 뻗는다 — 발끝이 왼쪽 위 끝.
-    다른 앞발은 배 앞에 가지런히, 꼬리는 살랑"""
-    rig = Rig(16.0, 16.0, 0.0, k)
+ARROW = [(0.0, 0.0), (0.0, 19.6), (4.4, 15.2), (7.8, 22.6), (10.8, 21.2), (7.4, 14.0), (13.8, 14.0)]   # 끝 (0, 0)
+
+
+def arrow_cat(ph: float, sc: float = 1.0, ck: float = 0.62, mood="open") -> dict:
+    """클래식 흰 화살표(짙은 테) 옆에 흰냥이 붙어 앉아 두 앞발을 화살표 빗변에 걸치고 기댄다 — 화살표 끝이 (1, 1).
+    화살표는 통째로 보이게 두고 앞발만 그 위에 겹친다. 꼬리가 살랑, 고개가 화살표 쪽으로 갸웃, 가끔 금눈 찡긋.
+    sc 는 화살표 · 자리 배율, ck 는 고양이 배율(작은 판은 고양이를 화살표보다 덜 줄여 얼굴을 살린다).
+    처음엔 앞발 하나를 왼쪽 위로 쭉 뻗어 발끝을 핫스팟으로 삼았는데 '팔인지 꼬리인지 들고 있는 거' 로 읽혔다.
+    화살표 꼬리 막대를 껴안게도 해 봤는데 팔이 막대를 가로질러 선이 엉키고 막대가 가려 세모로만 보였다"""
+    f = {}
+    solid(f, raster([(1 + sc * x, 1 + sc * y) for x, y in ARROW]), WHITE, OUT)
+    f[1, 1] = OUT
+    hug = ck >= 0.55            # 작은 판은 앞발이 한두 칸이라 덩이로 읽혀 팔 없이 화살표 옆에 붙어 앉는다
+    rig = Rig(1 + sc * 19.6 + (0.0 if hug else 1.4), 1 + sc * 14.6, 0.0, ck)
     sw = math.sin(ph)
-    reach = [(-4.2, -2.0), (-8.4, -9.6), (-10.6, -17.6)]
-    down = [(2.6, 1.0), (2.6, 8.2)]
-    tail = [(5.6, 8.2), (9.6, 7.2 + 0.6 * sw), (11.0 + 0.8 * sw, 3.6 + 0.8 * sw)]
-    reach_parts = arm_part(reach, r=2.0, name="reach", pr=2.3)
-    parts = [reach_parts[0]] + arm_part(down, name="down", pr=1.9) + head_parts() + [reach_parts[1]] + \
-        [("feet", any_of(ell(-5.0, 8.9, 2.2, 1.4), ell(5.0, 8.9, 2.2, 1.4)), WHITE, True),
-         ("haunch", any_of(ell(-5.0, 6.2, 2.9, 2.8), ell(5.0, 6.2, 2.9, 2.8)),
-          lambda a, b: SHADE if a > 0 else WHITE, True),
-         body_part(), tail_part(tail)]
-    out, mask, _ = draw(rig, parts)
-    face(out, rig, mood=mood)
-    if k >= 0.7:
-        whiskers(out, rig, n=2, skip=(-1,))
-    return out
+    tilt = -0.5 + 0.5 * math.sin(2 * ph)                  # 화살표 쪽(-u)으로 갸웃
+    hc = (-2.0, -7.6)
+    paws = [rig.local(1 + sc * x, 1 + sc * y) for x, y in ((11.0, 11.4), (13.2, 13.6))]   # 빗변 위 두 점
+    arms = [("paw0", ell(*paws[0], 2.2, 2.0), WHITE, True), ("paw1", ell(*paws[1], 2.2, 2.0), WHITE, True),
+            ("arm0", bar((-3.4, -0.6), paws[0], 2.0, 1.9), fur(-4, 0, 3, 0.2), True),
+            ("arm1", bar((-2.6, 2.2), paws[1], 2.0, 1.9), fur(-4, 2, 3, 0.2), True)] if hug else []
+    parts = arms[:2] + head_parts(hc, 6.6, turn=tilt) + arms[2:] + \
+        [("feet", any_of(ell(-2.6, 8.9, 2.2, 1.4), ell(4.4, 8.9, 2.2, 1.4)), WHITE, True),
+         ("haunch", ell(4.8, 6.2, 2.9, 2.8), SHADE, True),
+         body_part((0.6, 3.4), 6.4, 6.0),
+         tail_part([(5.4, 8.2), (9.4, 7.2 + 0.6 * sw), (10.6 + 0.8 * sw, 3.6 + 0.8 * sw)])]
+    out, _, _ = draw(rig, parts)
+    f.update(out)
+    face(f, rig, hc, 6.6, mood=mood, turn=tilt)
+    if hug:
+        whiskers(f, rig, hc, 6.6, turn=tilt, skip=(-1,))
+    return f
 
 
 def arrow_frames(small=False) -> list[dict]:
-    return anchor([arrow_cat(ph, 0.5 if small else 0.8, "wink" if k in (7, 8) else "open")
-                   for k, ph in enumerate(phases())])
+    return [arrow_cat(ph, 0.6 if small else 1.0, 0.44 if small else 0.62, "wink" if k in (7, 8) else "open")
+            for k, ph in enumerate(phases())]
 
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
@@ -749,60 +759,64 @@ def arrows2(f: dict, dx: int, dy: int, ph: float) -> None:
         chevron(f, 15 + sg * dx * (R + o), 15 + sg * dy * (R + o), sg * dx, sg * dy, GLOW[0] if o else GLOW[1], 3)
 
 
-def sunbathe(ang: float) -> list[dict]:
-    """볕 웅덩이에 배를 드러내고 벌러덩 누운 흰냥 — 몸통이 ang 축(도, 0 이면 머리가 왼쪽)으로 쭉 늘었다 줄었다.
-    배 쪽(-w)으로 굽은 앞발 하나 · 뒷발 하나를 하늘로 들고 버둥댄다(젤리가 보인다 — 벌러덩 누운 고양이의 표식).
-    배는 희고 바닥에 닿은 등은 그늘, 등 밑에 노란 볕 웅덩이. 머리는 한쪽 끝에 늘 똑바로, 꼬리는 반대 끝에서 살랑.
-    처음엔 위에서 본 몸에 네 발을 가슴 위로 접어 얹었는데 32칸에서 발이 테두리에 묻혀 빗살 · 캡슐로 읽혔다"""
+def stretch(ang: float, flip: bool = False) -> list[dict]:
+    """배를 깔고 엎드려 앞발을 앞으로 쭉 뻗는 기지개 — 옆에서 본 몸이 ang 축(도, 0 이면 머리가 왼쪽)을 따라 놓인다.
+    앞발 하나는 머리 쪽 끝으로, 뒷발 하나는 반대 끝으로 바닥을 따라 쭉 뻗고, 꼬리는 위로 살랑. 늘 때(장 0–5)
+    앞발 · 엉덩이 · 뒷발이 더 나간다. 발은 늘 몸 아래(+w) — 기운 축에서 +w 가 화면 위로 가면 flip 으로 거울.
+    세로(90)는 같은 자세를 세운 것이라 벽을 짚고 서서 앞발을 위로 뻗는 꼴이 된다. 머리는 앞발 위에 늘 똑바로
+    (기운 얼굴은 칸 위에서 뭉개진다). 다리는 안쪽 테 없이 몸과 한 실루엣으로 — 32칸에서 다리마다 테를 두르면
+    검은 막대가 얽혀 읽히지 않았다.
+    처음엔 볕 웅덩이에 벌러덩 누워 버둥대는 꼴이었는데 '팔다리가 왜 위에 있냐'는 말을 들었다. 세로를 앞모습으로
+    세워 두 앞발을 머리 위로 들면 팔이 토끼 귀로 읽혔다"""
     frames = []
     t = math.radians(ang)
     dx, dy = round(math.cos(t)), round(math.sin(t))
+    G = 5.6                                               # 바닥선 (w)
     for k, ph in enumerate(phases()):
         f = {}
-        rig = Rig(15.5 - 1.6 * math.cos(t), 15.5 - 1.6 * math.sin(t), ang, 0.74)   # 머리~꼬리 가운데가 판 가운데로
-        s = 1.6 * math.sin(ph)
-        e = 9.0 + s                                       # 몸통 끝
-        u0, u1 = -12.4, e + 5.0                          # 볕 웅덩이: 등 밑 바닥에 깔린 노란 타원
-        for p in raster([rig.world((u0 + u1) / 2 + (u1 - u0) / 2 * math.cos(i * math.pi / 16),
-                                   2.8 + 4.6 * math.sin(i * math.pi / 16)) for i in range(32)], 6):
-            f[p] = POOL[0]
+        rig = Rig(15.5, 15.5, ang, 0.7, flip)
+        s = math.sin(ph)
+        e = 8.0 + 1.4 * s                                 # 엉덩이 (u)
+        tip = -14.6 - 1.0 * s                             # 앞발 끝 (u)
         arrows2(f, dx, dy, ph)
 
-        def belly(a, b):         # 하늘을 본 배(-w 쪽)는 희고 바닥에 닿은 등(+w 쪽)은 그늘
-            return WHITE if b < 1.2 else SHADE
-        body = ("body", bar((-3.6, 0.0), (e, 0.0), 4.4, 4.0), belly, False)
-        legs, beans = [], []
-        kick = 0.7 * math.sin(2 * ph)
-        for i, (u, curl) in enumerate(((1.0, -1.8), (e - 1.0, 1.2))):     # 접어 든 앞발 · 벌려 든 뒷발
-            tip = (u + curl + (kick if i else -kick) * 0.6, -7.4)
-            legs += arm_part([(u, -2.4), (u + curl * 0.2, -5.2), tip], r=1.8, pr=2.1, name=f"leg{i}")
-            beans.append(tip)
+        def belly(a, b):         # 위는 흰 등, 바닥 쪽 배는 그늘
+            line = 1.2 + (0.4 - 1.2) * (a + 2.6) / (e + 2.6)
+            return SHADE if b - line > 1.4 else WHITE
         tw = 0.8 * math.sin(2 * ph)
-        tail = tail_part([(e + 1.2, 1.0), (e + 3.8, 0.6), (e + 4.8 + tw * 0.4, -2.4 + tw)], 1.4, 1.2)
-        o, _, _ = draw(rig, legs + [body, tail])
-        for tip in beans:        # 하늘로 든 발바닥 젤리
-            o[rig.cell(tip[0], tip[1] - 0.4)] = PINK
+        # 다리는 굵게(반지름 2.1–2.3) — 더 가늘면 32칸에서 테만 남아 검은 막대로 읽힌다
+        back = e + 6.0 + 0.6 * s                          # 뒷발 끝 (u)
+        # 세로(벽 짚고 선 기지개)는 꼬리를 등 쪽으로 말아 올린다 — 엉덩이 뒤로 뻗으면 발 하나로 읽힌다
+        curl = [(e + 2.2, -1.8), (e + 1.8, -5.4), (e - 1.8 + tw, -6.6)] if dx == 0 else None
+        parts = [("fore_p", ell(tip + 1.4, G - 1.0, 2.6, 1.9), WHITE, False),
+                 ("fore", bar((-2.0, 2.4), (tip + 2.4, G - 1.4), 2.3, 2.1), fur(-6, 3, 4, 0.3), False),
+                 ("hind_p", ell(back - 1.4, G - 1.0, 2.6, 1.9), WHITE, False),
+                 ("hind", any_of(ell(e - 0.6, 1.6, 3.0, 3.2), bar((e, 2.6), (back - 2.4, G - 1.4), 2.3, 2.1)),
+                  fur(e, 1.6, 3.2, 0.3), False),
+                 ("body", bar((-2.6, 1.2), (e, 0.4), 4.0, 3.8), belly, False),
+                 tail_part(curl or [(e + 2.6, -1.6), (e + 4.6, -4.0), (e + 3.8 + tw, -7.2)], 1.6, 1.3)]
+        o, _, _ = draw(rig, parts)
         f.update(o)
-        hr = Rig(*rig.world(-5.2, 0.0), 0.0, 0.74)
-        f.update(head_only(hr, (0.0, 0.0), 6.6, "happy" if k % 6 < 2 else "open", whisk=False))
+        hr = Rig(*rig.world(-4.6 - 0.3 * s, -2.6), 0.0, 0.7)
+        f.update(head_only(hr, (0.0, 0.0), 6.2, "blink" if k in (5, 11) else "open", whisk=False))
         frames.append(finish(clip(f)))
     return frames
 
 
 def ns():
-    return sunbathe(90.0)
+    return stretch(90.0)
 
 
 def we():
-    return sunbathe(0.0)
+    return stretch(0.0)
 
 
 def nwse():
-    return sunbathe(45.0)
+    return stretch(45.0)
 
 
 def nesw():
-    return sunbathe(135.0)
+    return stretch(135.0, flip=True)
 
 
 SCENE = {"arrow": arrow, "busy": busy, "cross": cross, "hand": hand, "help": help_, "ibeam": ibeam, "move": move,

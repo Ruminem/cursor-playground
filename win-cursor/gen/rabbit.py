@@ -9,7 +9,10 @@
 풀 덤불 · 나뭇잎 · 도토리다. 귀는 실루엣의 주인공이지만 머리 위 V 자 둘만 남으면 브이 손 · 가위로 읽히니
 거의 나란히 세우고 굵게 그려 얼굴과 한 덩이로 보이게 한다.
 
-  arrow   왼쪽 위로 깡총 뛰는 옆모습 — 분홍 코끝이 핫스팟. 뛸 때 뒷발을 차고 귀를 접었다가 내려앉으면 귀를 쫑긋
+  arrow   왼쪽 위 풀밭 비탈을 깡총깡총 달려 올라가는 옆모습 — 분홍 코끝이 핫스팟. 뒷발로 박차 몸을 쭉 펴고 → 공중 →
+          앞발이 먼저 닿고 → 뒷발이 앞발보다 앞에 디디는 토끼 뜀(GAIT 12장). 귀는 뒤로 날리며 팔랑이고, 코끝을 축으로
+          몸이 끄덕이며 땅이 멀어졌다 다가와 통통 튄다. 풀포기·노란 꽃이 발밑으로 흘러가고 박찰 때 흙먼지·풀잎이 튄다.
+          busy·help·person·pin 의 작은 토끼는 같은 뜀을 폭을 줄여 그린다(늘이면 생선으로 읽힘)
   busy    작은 화살표 토끼 + 오른쪽 아래 당근 둘레를 도토리 · 나뭇잎 여덟이 차례로 빛나며 돈다
   cross   앞모습 얼굴. 수염이 가로 조준선, 턱 밑 · 두 귀 사이 가는 줄이 세로 조준선. 오물거리는 코가 핫스팟
   hand    뒷발로 서서 앞발 하나를 높이 들어 콕 — 다른 앞발은 당근을 안았다. 든 앞발 끝이 핫스팟
@@ -49,6 +52,7 @@ SOIL, SOIL_D = hx("8a6a44ff"), hx("5e4628ff")                                  #
 SKIN, SHIRT, SHIRT_D = hx("f4e2c4ff"), hx("4a7fb5ff"), hx("2e5a88ff")          # 사람
 WOOD, LEAD = hx("efd2a8ff"), hx("3a3a3aff")                                    # 깎은 당근 연필
 PUFF = hx("ffffffa0")                                                         # 흙먼지 · 김
+FLOWER = hx("f6d24aff")                                                       # 풀밭 노란 꽃
 
 
 # ── 그리개: 토끼 제 좌표 (a, b) → 화면 ─────────────────────────────────────────
@@ -250,26 +254,34 @@ def front(rig: Rig, mood: str = "smile", ears=((6, 0), (6, 0)), paws=((-1.9, 6.2
 
 # ── 옆모습: a 는 코끝 0 → 꼬리, b 는 + 가 배(발) 쪽 ─────────────────────────────
 def side(rig: Rig, hop: float = 0.0, ear_up: float = 1.0, nose: int = 0, shut: bool = False, stretch: float = 1.0,
-         extra=(), big_eye: bool = True, simple: bool = False) -> tuple[dict, set]:
+         extra=(), big_eye: bool = True, simple: bool = False, fp=None, fp2=None, hp=None,
+         ears=None) -> tuple[dict, set]:
     """옆모습 토끼 한 장. 코끝이 원점 근처. hop 은 뛴 정도(0 웅크림 – 1 앞발 · 뒷발을 쭉 뻗음), ear_up 은 귀를
     세운 정도(1 쫑긋 – 0 등에 납작), nose 는 코가 오물거린 칸, stretch 는 머리 뒤 몸을 a 축으로 늘인 배율,
-    extra 는 맨 앞 부위. 먼 귀 · 먼 뒷발은 짙은 그늘로 몸 뒤에 둔다. simple 이면 작게 그릴 때라 뒷발 · 솜꼬리 선과
-    먼 앞발을 뺀다 — 0.6 배에서 선이 다 남으면 몸이 까만 줄 덩어리다"""
+    extra 는 맨 앞 부위. 먼 귀 · 먼 앞발은 짙은 그늘로 몸 뒤에 둔다. simple 이면 작게 그릴 때라 뒷발 · 솜꼬리 선과
+    먼 앞발을 뺀다 — 0.6 배에서 선이 다 남으면 몸이 까만 줄 덩어리다.
+    fp · fp2 · hp 를 주면 앞발 · 먼 앞발 · 뒷발 끝을 hop 대신 그 자리(토끼 제 좌표)에 두고, ears 를 (밑 마디 각,
+    윗 마디 각, 도) 로 주면 ear_up 대신 그 각으로 귀를 눕힌다 — 달리기(arrow)가 한 장씩 자세를 정한다"""
     S = stretch
 
     def ax(a):   # 머리 뒤를 늘인다
         return 8.0 + (a - 8.0) * S
     # 귀는 25°(살짝 선) – 85°(등에 납작), 밑동은 머리 뒤 꼭대기. 화살표로 눕히면 25° 가 화면에서 오른쪽 조금 위라
     # 판 위로 안 나간다 — 머리 꼭대기에 세우면 판 위에 잘려 납작한 막대가 된다
-    ea = math.radians(25 + 60 * (1 - ear_up))
-    droop = math.radians(12 * (1 - ear_up))
-    near_o, near_i, _ = ear((9.0, -2.6), ea, ea + droop, 4.4, 4.4, 1.7)
-    far_o, _, _ = ear((10.4, -2.2), ea + 0.18, ea + 0.18 + droop, 4.2, 4.2, 1.6, inner=False)
+    if ears is None:
+        ea = math.radians(25 + 60 * (1 - ear_up))
+        droop = math.radians(12 * (1 - ear_up))
+        e1, e2, f1, f2 = ea, ea + droop, ea + 0.18, ea + 0.18 + droop
+    else:
+        e1, e2 = math.radians(ears[0]), math.radians(ears[1])
+        f1, f2 = e1 + 0.18, e2 + 0.18
+    near_o, near_i, _ = ear((9.0, -2.6), e1, e2, 4.4, 4.4, 1.7)
+    far_o, _, _ = ear((10.4, -2.2), f1, f2, 4.2, 4.2, 1.6, inner=False)
     reach = hop
     fpaw0 = (ax(9.6), 3.6)
-    fpaw1 = (ax(9.6) - 1.0 - 2.8 * reach, 6.0 - 0.6 * reach)
+    fpaw1 = fp or (ax(9.6) - 1.0 - 2.8 * reach, 6.0 - 0.6 * reach)
     hind0 = (ax(16.0), 5.0)
-    hind1 = (ax(16.0) + 3.0 + 3.4 * reach, 6.4 - 1.4 * reach)
+    hind1 = hp or (ax(16.0) + 3.0 + 3.4 * reach, 6.4 - 1.4 * reach)
     tail_c = (ax(20.2) + 0.6 * reach, 0.4 - 0.6 * reach)
     hc = (ax(15.6), 2.8, 3.4 + 0.4 * reach, 3.0)
 
@@ -293,7 +305,7 @@ def side(rig: Rig, hop: float = 0.0, ear_up: float = 1.0, nose: int = 0, shut: b
         ("fpaw", bar(fpaw0, fpaw1, 1.5, 1.4), FUR, False),
         ("haunch", ell(*hc), haunchc, False),
         ("body", ell(ax(12.6), 1.6, 6.4 * S + 0.6 * reach, 4.4 - 0.5 * reach), bodyc, False),
-        ("far_paw", bar((ax(10.6), 3.6), (fpaw1[0] + 1.2, fpaw1[1] - 0.2), 1.1), FUR_D, False),
+        ("far_paw", bar((ax(10.6), 3.6), fp2 or (fpaw1[0] + 1.2, fpaw1[1] - 0.2), 1.1), FUR_D, False),
         ("far_ear", far_o, FUR_D, False)]
     if simple:
         parts = [(n, h, c, ln and n == "head") for n, h, c, ln in parts if n != "far_paw"]
@@ -304,14 +316,46 @@ def side(rig: Rig, hop: float = 0.0, ear_up: float = 1.0, nose: int = 0, shut: b
     return out, mask
 
 
-ARROW = Rig(1.4, 1.3, 47.0, 0.85)      # 화살표 토끼: 코끝이 (1, 1)
-ARROW_S = Rig(1.4, 1.3, 47.0, 0.62)    # 작은 화살표 토끼 (busy · help · person · pin)
+SLOPE = 42.0                           # 언덕 비탈(땅 좌표 a 축)이 화면에서 기운 각
+ARROW = Rig(1.4, 1.3, SLOPE, 0.95)     # 화살표 토끼의 땅 좌표: 코끝이 (1, 1)
+ARROW_S = Rig(1.4, 1.3, SLOPE, 0.62)   # 작은 화살표 토끼 (busy · help · person · pin)
+G0 = 8.0                               # 땅에 디딘 발 가운데의 b (땅 좌표). 땅 줄은 발 반지름만큼 더 아래
+
+# 깡총 달리기 한 바퀴 — 땅 좌표(코끝이 원점, a 는 비탈을 따라 뒤로, b 는 비탈에 수직으로 아래)로 적는다.
+# (몸 늘임, 끄덕(도, + 가 코를 들고 엉덩이를 내림), 뜬 높이(땅이 멀어진 만큼), 앞발, 먼 앞발, 뒷발, 귀 밑 마디 각)
+# 0–2 뒷발로 박참(몸 쭉) · 3–4 공중 · 5–6 앞발이 하나씩 착지 · 7–8 앞발을 뒤로 밀며 몸을 둥글게 모음 ·
+# 9 뒷발이 앞발보다 앞에 착지(토끼 뜀) · 10–11 웅크렸다 다시 박찬다. 땅에 디딘 발은 b = G0 + 뜬 높이.
+# 앞발은 a ≥ 1.3 + 0.9·b 여야 화면 왼쪽(x < 1) 밖으로 안 나간다 — 코끝이 왼쪽 위 끝이라 턱 밑이 곧 판 가장자리다
+GAIT = [
+    (1.02, 3.0, 0.0, (7.5, 5.2), (8.3, 5.0), (20.0, 8.0), 84),
+    (1.12, 5.0, 0.0, (6.6, 5.0), (7.4, 4.8), (24.0, 8.0), 88),
+    (1.18, 4.0, 1.0, (6.4, 5.2), (7.2, 5.0), (26.5, 7.4), 90),
+    (1.20, 1.0, 2.0, (6.6, 5.6), (7.4, 5.4), (27.0, 6.6), 88),
+    (1.15, -1.0, 2.0, (7.8, 7.4), (8.0, 6.6), (26.0, 5.8), 82),
+    (1.06, -2.0, 1.0, (9.6, 9.0), (9.0, 7.8), (23.5, 5.2), 76),
+    (0.98, -3.0, 0.3, (10.6, 8.3), (10.2, 8.3), (19.5, 4.8), 70),
+    (0.90, -2.5, 0.0, (11.6, 8.0), (11.0, 8.0), (15.5, 5.4), 72),
+    (0.85, -1.5, 0.0, (13.0, 7.2), (12.4, 8.0), (12.5, 6.6), 76),
+    (0.84, 0.0, 0.0, (13.4, 6.0), (13.0, 6.8), (10.2, 8.0), 78),
+    (0.88, 1.0, 0.0, (11.0, 5.4), (11.6, 5.2), (13.0, 8.0), 82),
+    (0.94, 2.0, 0.0, (9.0, 5.2), (9.8, 5.0), (16.5, 8.0), 84),
+]
 
 
 def arrow_bun(k: int, small: bool = False) -> dict:
-    ph = 2 * math.pi * k / N
-    hop = (0.5 - 0.5 * math.cos(ph)) * (0.6 if small else 1.0)
-    return side(ARROW_S if small else ARROW, hop=hop, ear_up=1.0 - 0.5 * hop, nose=1 if k % 4 == 1 else 0,
+    """왼쪽 위 비탈을 깡총깡총 달려 올라가는 옆모습 한 장(`GAIT` k 번째). 코끝을 축으로 몸이 끄덕이고,
+    발 자리는 땅 좌표에서 토끼 제 좌표로 옮겨 넘긴다"""
+    S, pitch, _, fp, fp2, hp, ea = GAIT[k]
+    g = ARROW_S if small else ARROW
+    if small:   # 작게 그리면 쭉 뻗은 뒷발이 몸과 한 덩이가 돼 꼬리지느러미 달린 생선으로 읽힌다 — 폭을 줄인다
+        S = 1.0 + (S - 1.0) * 0.5
+        hp = (16.0 + (hp[0] - 16.0) * 0.6, hp[1])
+    rig = Rig(g.ox, g.oy, SLOPE + pitch, g.k)
+
+    def own(p):
+        return rig.local(*g.world(*p))
+    flap = 10 if k % 2 else -4          # 귀 끝이 바람에 파닥
+    return side(rig, hop=0.6, stretch=S, ears=(ea, ea + flap), fp=own(fp), fp2=own(fp2), hp=own(hp),
                 shut=(k == 9), simple=small)[0]
 
 
@@ -407,16 +451,50 @@ def sign(f: dict, R: float = 13.5, ring: bool = True, slash: bool = True) -> Non
 
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
+RUN = 2.5        # 한 장에 풀밭이 뒤로 흐르는 거리(땅 좌표). 풀잎 간격 7.5 × 4 = 12장 × 2.5 라 이음매가 없다
+BLADES = (4, 3, 5, 3)   # 풀잎 키(칸) — 4 개 주기라 12장 뒤 같은 풀잎이 같은 자리에 온다
+
+
+def meadow(f: dict, k: int, lift: float) -> None:
+    """비탈 풀밭: 비탈을 따라 놓인 풀포기가 곧게 서서 장마다 RUN 만큼 뒤(오른쪽 아래)로 흐른다. 땅 줄은
+    긋지 않는다 — 비탈과 나란히 선을 그으면 토끼가 막대에 올라탄 것으로 읽힌다. 토끼가 뜨면 땅이 그만큼
+    멀어진다 — 코끝(핫스팟)이 제자리라 몸 대신 땅이 오르내려 통통 뛰는 것이 보인다. 코 가까이(a < 12)는
+    비워 왼쪽 위 끝이 코끝 하나로 남게 한다. 네 포기에 하나는 끝에 노란 꽃을 단다"""
+    bl = G0 + 1.3 + lift
+    for j in range(-5, 6):
+        a = 12.0 + j * 7.5 + RUN * k
+        if not 12.0 <= a < 44.0:
+            continue
+        n = j % 4
+        x, y = ARROW.cell(a, bl)
+        h = BLADES[n]
+        for dx, hh in ((-1, h - 1), (0, h), (1, h - 1)):   # 풀포기: 가운데가 길고 양옆이 부채꼴로
+            for t in range(0, hh):
+                lean = dx if t == hh - 1 and hh > 1 else 0
+                f[x + dx + lean, y - t] = GRASS_D if t == 0 else GRASS_L if t == hh - 1 else GRASS
+        if n == 2:
+            f[x, y - h] = FLOWER
+
+
 def arrow() -> list[dict]:
-    """왼쪽 위로 깡총 — 뛸 때 앞발 · 뒷발을 쭉 뻗고 귀를 등에 접었다가, 내려앉으면 귀를 쫑긋 세운다.
-    코끝은 제자리(핫스팟)이고 코가 오물거린다. 뒷발을 찰 때 흙먼지가 인다"""
+    """왼쪽 위 풀밭 비탈을 깡총깡총 달려 올라간다 — 뒷발로 박차 몸을 쭉 펴고, 공중에 떴다가, 앞발이 하나씩
+    내려앉고, 몸을 둥글게 모으며 뒷발이 앞발보다 앞에 디딘다. 귀는 등 뒤로 휘날리며 끝이 파닥이고, 착지하면
+    살짝 들린다. 코끝은 제자리(핫스팟)라 몸이 코를 축으로 끄덕이고 땅이 멀어졌다 다가오며(통통) 풀잎이 뒤로
+    흐른다. 박찰 때 흙먼지와 풀잎 조각이 뒤로 튄다"""
     frames = []
     for k in range(N):
-        f = arrow_bun(k)
-        if k in (1, 2, 3):
+        lift = GAIT[k][2]
+        f = {}
+        meadow(f, k, lift)
+        f.update(arrow_bun(k))
+        if k in (1, 2, 3):   # 박찬 뒷발 뒤로 흙먼지 · 풀잎 조각
             t = k - 1
-            for d in (0, 1):
-                f.setdefault(ARROW.cell(24.0 + t * 1.5 + d, 7.5 + d * 1.2 - t * 0.3), PUFF)
+            a0 = GAIT[1][5][0] + 1.5
+            bl = G0 + 1.0 + lift
+            for d in range(t + 1):
+                f.setdefault(ARROW.cell(a0 + 1.2 * t + 1.3 * d, bl - 0.4 * d), PUFF)
+            if t:
+                f.setdefault(ARROW.cell(a0 + 2.0 + 2.2 * t, bl - 1.6 - 1.4 * t), GRASS_L)
         frames.append(finish(clip(f)))
     return frames
 
