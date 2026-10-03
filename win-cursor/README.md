@@ -142,6 +142,36 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/crabanim` | Crab | A sideways-scuttling crab — it lifts and snaps its claws and blows little bubbles while you wait. |
 | `art/octopusanim` | Octopus | A round chibi octopus — its eight arms ripple as it moves, and it puffs a cloud of ink while you wait. |
 
+**Forest friends · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/squirrelanim` | Squirrel | A chubby-cheeked chibi squirrel — it stuffs an acorn into its cheeks and out again, and swishes its big tail. |
+| `art/hedgehoganim` | Hedgehog | A chestnut-burr chibi hedgehog — it sniffs about with its little nose, and curls into a spiky ball to say no. |
+| `art/owlanim` | Owl | A big-eyed chibi owl — it blinks slowly, and swivels its head right round when it's puzzled. |
+
+**Cats · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/cheesecatanim` | Ginger cat | A round ginger cat — it loafs while you wait and presses with a squishy toe-bean paw when you click. |
+| `art/tuxedocatanim` | Tuxedo cat | A tuxedo cat in a bow tie — a prim little gentleman who walks with his tail held straight up. |
+| `art/blackcatanim` | Black cat | A black cat with round yellow eyes — it bats a ball of yarn about, and puffs up and hisses when startled. |
+
+**Forest friends · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/rabbitanim` | Rabbit | A long-eared chibi rabbit — it twitches its nose, flops its ears up and down, and hops about. |
+| `art/foxanim` | Fox | A fluffy-tailed chibi fox — it swishes its big brush, tilts its ears to listen, then pounces. |
+
+**Cats · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/mackerelcatanim` | Grey tabby | A grey striped tabby — it curls its tail into a question mark and grooms itself while you wait. |
+| `art/calicocatanim` | Calico cat | A calico cat in white with orange and black patches — it kneads with its paws and squeezes into boxes. |
+
 <!-- /schemes:en -->
 
 Every scheme fills all 17 slots. Six are drawn per theme; the other 11 are made from that theme's arrow, hourglass and colours.
@@ -407,6 +437,36 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/otteranim` | 해달 | 등을 대고 둥실 떠 있는 해달. 배 위 조개를 돌로 콩콩 두드리고, 거절할 때는 두 앞발로 얼굴을 가리는 커서. |
 | `art/crabanim` | 꽃게 | 옆걸음 치는 꽃게. 집게를 들었다 벌렸다 하고 입에서 거품을 뽀글뽀글 올리는 커서. |
 | `art/octopusanim` | 문어 | 동글동글한 치비 문어. 다리 여덟 개를 물결치듯 흔들고, 기다릴 때는 먹물을 퐁 뿜는 커서. |
+
+**숲속 친구들 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/squirrelanim` | 다람쥐 | 볼이 빵빵한 치비 다람쥐. 도토리를 볼에 넣었다 뺐다 오물거리고 큰 꼬리를 살랑이는 커서. |
+| `art/hedgehoganim` | 고슴도치 | 밤송이 같은 치비 고슴도치. 콧등을 킁킁거리고, 거절할 때는 가시를 세운 채 공처럼 몸을 마는 커서. |
+| `art/owlanim` | 부엉이 | 눈이 큰 치비 부엉이. 눈을 끔뻑이고, 모를 때는 고개를 빙글 갸웃하는 커서. |
+
+**냥이 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/cheesecatanim` | 치즈냥 | 통통한 치즈 고양이. 기다릴 때는 식빵을 굽고, 누를 때는 젤리 발바닥으로 꾹 누르는 커서. |
+| `art/tuxedocatanim` | 턱시도냥 | 나비넥타이를 맨 턱시도 고양이. 꼬리를 곧게 세우고 새침하게 걷는 신사 커서. |
+| `art/blackcatanim` | 까망이 | 노란 눈이 동그란 까만 고양이. 털실 공을 굴리며 놀고, 놀라면 털을 부풀려 하악하는 커서. |
+
+**숲속 친구들 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/rabbitanim` | 토끼 | 귀가 긴 치비 토끼. 코를 오물오물하고 긴 귀를 쫑긋 세웠다 접으며 깡총 뛰는 커서. |
+| `art/foxanim` | 여우 | 꼬리가 복슬복슬한 치비 여우. 큰 꼬리를 살랑이고 귀를 기울여 듣다가 폴짝 뛰어드는 커서. |
+
+**냥이 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/mackerelcatanim` | 고등어냥 | 회색 줄무늬 고등어 고양이. 꼬리로 물음표를 그리고, 기다릴 때는 그루밍을 하는 커서. |
+| `art/calicocatanim` | 삼색냥 | 흰 바탕에 주황·까만 얼룩 삼색 고양이. 꾹꾹이를 하고 상자에 쏙 들어가는 커서. |
 
 <!-- /schemes:ko -->
 
