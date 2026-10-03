@@ -522,21 +522,25 @@ def pen() -> list[dict]:
     return frames
 
 
+WHITE = hx("ffffffff")
+SPARK = ((11, 1), (12, 1), (11, 2), (12, 2))
+
+
 def hand() -> list[dict]:
-    """물 위로 얼굴을 쏙 내민 부캉이를 앞에서 — 양옆 눈, 톱니 이빨로 딱딱 무는 입. 왼쪽 가슴지느러미를
-    "저요!" 하듯 번쩍 들어 그 뾰족한 끝이 핫스팟이다. 예전엔 둥근 이마 꼭대기가 핫스팟이었는데, 넓은 이마엔
-    찍는 점이 안 보이고 눈은 빨간 입(15칸 아래)을 겨눠서 엉뚱한 링크가 눌렸다. 머리는 까딱여도 끝은 안 움직인다"""
-    cx = 17.5
-    tip = (5, 1)
+    """물 위로 얼굴을 쏙 내민 부캉이를 앞에서 — 양옆 눈, 톱니 이빨로 딱딱 무는 입, 옆으로 편 가슴지느러미.
+    핫스팟은 이마 꼭대기의 흰 2×2 반짝 왼쪽 위 칸이고, 꼭대기는 안 까딱인다(입·지느러미만). 머리째 까딱이던
+    때는 3–5장에서 핫스팟이 머리 밖 반투명 테(알파 199)에 걸렸다. 지느러미를 번쩍 든 판도 있었는데 옛 얼굴이
+    더 귀엽다고 해서 되돌렸다. 찍는 점을 더 또렷이 보려면 시안 페이지의 핫스팟 점 토글을 켠다"""
+    cx = 11.5
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        wy = 29
+        wy = 25
         bob = round(0.8 * math.sin(ph))
-        top = 8 + bob
+        top = 1   # 꼭대기는 고정 — 핫스팟 픽셀이 장마다 같은 자리에 불투명하게 남는다. 까딱임은 입·지느러미만
         # 한 바퀴에 두 번 딱 문다 — 다 닫지는 않는다. 닫히면 이빨이 안 보여 그냥 둥근 머리가 된다
         gape = 3.4 + 3.2 * (0.5 + 0.5 * math.cos(2 * ph))
-        my = top + 15.0
+        my = 16.0 + bob
 
         def half(y):   # 머리 반폭: 둥근 주둥이 끝에서 뺨까지 빨리 넓어진다
             return 10.5 * math.sqrt(max(0.0, min(1.0, (y - top) / 11)))
@@ -548,16 +552,12 @@ def hand() -> list[dict]:
             return my + gape / 2 - 0.085 * x * x
         head = {(x, y) for y in range(top, wy) for x in range(math.floor(cx - 11), math.ceil(cx + 11))
                 if abs(x + 0.5 - cx) <= half(y + 0.5)}
-        # 오른쪽 가슴지느러미: 뺨 아래에서 옆으로 뻗고 끝이 처진다 (판 오른쪽 끝에 닿지 않게 짧게)
-        fins = raster([(cx + 8, top + 15), (cx + 12, top + 19), (cx + 11.5, top + 20.5), (cx + 8, top + 20)])
+        fins = set()
+        for s in (-1, 1):   # 가슴지느러미: 뺨 아래에서 옆으로 뻗고 끝이 처진다
+            fins |= raster([(cx + s * 8, 17 + bob), (cx + s * 13.5, 21.5 + bob), (cx + s * 12.5, 23.5 + bob),
+                            (cx + s * 8, 22 + bob)])
         fins = {p for p in fins if p[1] < wy} - head
-        solid(f, fins, lambda p: DARK if p[0] + 0.5 - cx > 11.5 else MID)
-        # 든 지느러미: 뺨에서 왼쪽 위로 휘어 올라가 tip 에서 뾰족해진다. 뿌리만 머리와 같이 까딱인다
-        # 앞전(왼쪽)은 불룩, 뒷전(오른쪽)은 오목 — 곧게 세우면 막대기·창으로 읽힌다
-        raised = raster([(tip[0] + 0.6, tip[1] + 0.2), (tip[0] + 2.6, 6), (tip[0] + 4.8, 10), (cx - 6, top + 10),
-                         (cx - 8, top + 16), (2.8, 21), (1.6, 15), (2.0, 9), (tip[0] - 0.6, 4)]) | {tip, (tip[0], tip[1] + 1)}
-        raised -= head
-        solid(f, raised, lambda p: LIGHT if (p[0] + 2, p[1]) not in raised else MID)   # 오른쪽 가장자리는 빛
+        solid(f, fins, lambda p: DARK if abs(p[0] + 0.5 - cx) > 11.5 else MID)
 
         def skin(p):   # 등은 짙게 · 오른쪽 뺨은 빛 · 입 아래로는 흰 배
             x, y = p[0] + 0.5 - cx, p[1] + 0.5
@@ -594,7 +594,9 @@ def hand() -> list[dict]:
             x, y = p
             if any(q in mouth for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))):
                 f[p] = OUT
-        water(f, 4, 30, wy, k)
+        for p in SPARK:   # 이마 꼭대기 반짝 — 찍는 점이 여기라는 표시. 핫스팟이 왼쪽 위 칸
+            f[p] = WHITE
+        water(f, 0, 23, wy, k)
         frames.append(finish(f))
     return frames
 
@@ -665,7 +667,7 @@ def ibeam() -> list[dict]:
 SCENE = {"help": help_, "busy": busy, "person": person, "pin": pin, "we": we, "ns": ns, "nesw": nesw,
          "nwse": nwse, "up": up, "pen": pen, "hand": hand, "cross": cross, "ibeam": ibeam}
 HOT = {"help": (1, 2), "busy": (1, 2), "person": (1, 2), "pin": (1, 2), "we": (16, 14), "ns": (15, 15),
-       "nesw": (16, 14), "nwse": (16, 16), "up": (9, 1), "pen": (1, 30), "hand": (5, 1), "cross": (15, 15),
+       "nesw": (16, 14), "nwse": (16, 16), "up": (9, 1), "pen": (1, 30), "hand": (11, 1), "cross": (15, 15),
        "ibeam": (5, 12)}
 
 

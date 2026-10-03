@@ -23,8 +23,11 @@ assert src, "preview.tpl.html 에서 주소를 읽는 정규식을 못 찾음"
 parse = re.compile(src.group(1).replace(r"\/", "/"))
 visit = "a1b2c3d4e5f60789"
 for url, want in [
-    (f"cursor-playground://apply/electric/{visit}/48/270", ("electric", "48", "270", None)),
-    (f"apply/electric/{visit}/48/270/cutout", ("electric", "48", "270", "cutout")),
+    (f"cursor-playground://apply/electric/{visit}/48/270", ("electric", "48", "270", None, None)),
+    (f"apply/electric/{visit}/48/270/cutout", ("electric", "48", "270", "cutout", None)),
+    # 링크 클릭 점. 모양 없이 붙으면 dot 을 모양으로 읽지 않아야 한다
+    (f"apply/electric/{visit}/48/270/dot", ("electric", "48", "270", None, "dot")),
+    (f"apply/electric/{visit}/48/270/cutout/dot", ("electric", "48", "270", "cutout", "dot")),
 ]:
     m = parse.fullmatch(url)
     assert m and m.groups() == want, f"주소를 못 읽음: {url}"

@@ -5,18 +5,19 @@
 # 받는 주소는 아래 여섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
 #   cursor-playground://apply/<구성표>/<방문>[/<크기>[/<색조>]]  커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
 #                                              <색조> 가 0 이 아니면 색상환을 그만큼 돌린 새 구성표(예: 네온 색조120)로 만든다
+#                                              그 뒤에 /<모양>, 맨 끝에 /dot 을 붙이면 링크(손) 칸의 핫스팟에 파란 점을 찍는다
 #   cursor-playground://size/<크기>/<방문>      포인터 크기만 바꿈. <크기> 는 32, 48, 64, 96, 128 중 하나
 #   cursor-playground://restore/<방문>          그 방문에서 처음 적용하기 직전 상태로 되돌림
 #   cursor-playground://status                  지금 상태를 알림 창으로 보여 줌
 #   cursor-playground://settings                마우스 속성 창을 포인터 탭으로 엶
-#   cursor-playground://schedule/<방문>/<시>-<구성표>-<색조>/...  정한 시각마다 그 구성표로 바꾸는 작업을 등록 (최대 6칸)
+#   cursor-playground://schedule/<방문>/<시>-<구성표>-<색조>[-<모양>][-dot]/...  정한 시각마다 그 구성표로 바꾸는 작업을 등록 (최대 6칸)
 #   cursor-playground://unschedule              등록한 자동 전환 작업을 지움
 #   cursor-playground://unlink                  설치할 때 상태로 되돌린 뒤 주소 연결과 설치 폴더까지 지움
 # <방문> 은 페이지를 열 때마다 새로 만드는 16자리 번호. 같은 방문 안에서 여러 번 적용해도 백업은 처음 한 번만 뜬다.
 #
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
 [CmdletBinding(PositionalBinding = $false)]
-param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue, [string]$Shape)  # -Apply 는 자동 전환 작업이 부른다
+param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue, [string]$Shape, [switch]$Dot)  # -Apply 는 자동 전환 작업이 부른다
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # 내려받기 진행 표시가 꽤 느리게 만든다
 
@@ -60,11 +61,12 @@ function Get-Shape($id) {
     if ($entry -and $entry.id -cne $script:shapes[0].id -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
 }
 
-# 레지스트리에 들어갈 구성표 이름: 테마 + 모양 + 색조
-function Get-SchemeName($entry, [int]$hue, $shape) {
+# 레지스트리에 들어갈 구성표 이름: 테마 + 모양 + 색조 + 점
+function Get-SchemeName($entry, [int]$hue, $shape, $dot) {
     $name = $entry.name
     if ($shape) { $name = "$name $($shape.name)" }
     if ($hue) { $name = "$name 색조$hue" }
+    if ($dot) { $name = "$name 점" }
     $name
 }
 
@@ -197,14 +199,27 @@ namespace CursorPlayground {
                 bgra[i] = ToByte(Hue2(p, q, h - 1.0 / 3));
             }
         }
-        public static byte[] Png(byte[] png, int deg) {
+        // 링크 클릭 점: 핫스팟 칸에 파란 칸, 둘레에 흰 테. 굵기는 32px 마다 한 칸 (preview.tpl.html 의 mark() 와 같다)
+        public static void Mark(byte[] bgra, int stride, int w, int h, int hx, int hy) {
+            int k = Math.Max(1, (w + 16) / 32);
+            for (int y = hy - k; y < hy + 2 * k; y++) {
+                for (int x = hx - k; x < hx + 2 * k; x++) {
+                    if (x < 0 || y < 0 || x >= w || y >= h) continue;
+                    bool core = x >= hx && x < hx + k && y >= hy && y < hy + k;
+                    int i = y * stride + x * 4;
+                    bgra[i] = 255; bgra[i + 1] = (byte)(core ? 110 : 255); bgra[i + 2] = (byte)(core ? 30 : 255); bgra[i + 3] = 255;
+                }
+            }
+        }
+        public static byte[] Png(byte[] png, int deg, int hx, int hy, bool dot) {
             using (var input = new MemoryStream(png))
             using (var bmp = new Bitmap(input)) {
                 var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                 var data = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
                 var buf = new byte[Math.Abs(data.Stride) * bmp.Height];
                 Marshal.Copy(data.Scan0, buf, 0, buf.Length);
-                Rotate(buf, deg);
+                if (deg != 0) Rotate(buf, deg);
+                if (dot) Mark(buf, Math.Abs(data.Stride), bmp.Width, bmp.Height, hx, hy);
                 Marshal.Copy(buf, 0, data.Scan0, buf.Length);
                 bmp.UnlockBits(data);
                 using (var output = new MemoryStream()) {
@@ -213,8 +228,8 @@ namespace CursorPlayground {
                 }
             }
         }
-        // .cur: 6바이트 머리 + 이미지마다 16바이트 항목(크기·위치) + PNG 들
-        public static byte[] Cur(byte[] cur, int deg) {
+        // .cur: 6바이트 머리 + 이미지마다 16바이트 항목(핫스팟·크기·위치) + PNG 들
+        public static byte[] Cur(byte[] cur, int deg, bool dot) {
             int count = BitConverter.ToUInt16(cur, 4);
             var entries = new List<byte[]>();
             var images = new List<byte[]>();
@@ -223,7 +238,7 @@ namespace CursorPlayground {
                 int size = BitConverter.ToInt32(cur, e + 8), offset = BitConverter.ToInt32(cur, e + 12);
                 var image = new byte[size];
                 Buffer.BlockCopy(cur, offset, image, 0, size);
-                images.Add(Png(image, deg));
+                images.Add(Png(image, deg, BitConverter.ToUInt16(cur, e + 4), BitConverter.ToUInt16(cur, e + 6), dot));
                 var entry = new byte[16];
                 Buffer.BlockCopy(cur, e, entry, 0, 16);
                 entries.Add(entry);
@@ -248,7 +263,7 @@ namespace CursorPlayground {
             if (data.Length % 2 == 1) s.WriteByte(0);
         }
         // .ani: RIFF ACON 안의 LIST fram 에 든 icon 조각(= .cur)마다 다시 칠하고 나머지 조각은 그대로 둔다
-        public static byte[] Ani(byte[] ani, int deg) {
+        public static byte[] Ani(byte[] ani, int deg, bool dot) {
             using (var body = new MemoryStream()) {
                 body.Write(ani, 8, 4);
                 int pos = 12;
@@ -264,7 +279,7 @@ namespace CursorPlayground {
                                 int cs = BitConverter.ToInt32(ani, p + 4);
                                 var chunk = new byte[cs];
                                 Buffer.BlockCopy(ani, p + 8, chunk, 0, cs);
-                                Chunk(list, cid, cid == "icon" ? Cur(chunk, deg) : chunk);
+                                Chunk(list, cid, cid == "icon" ? Cur(chunk, deg, dot) : chunk);
                                 p += 8 + cs + (cs % 2);
                             }
                             Chunk(body, "LIST", list.ToArray());
@@ -291,10 +306,12 @@ namespace CursorPlayground {
 }
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
-function Install-Scheme($id, $name, $ext, [int]$hue, $shape) {
+function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dot) {
     $key = if ($shape) { "$shape-$id" } else { $id }
-    $dest = Join-Path $root $(if ($hue) { "$key-h$hue" } else { $key })
-    if ($hue) { Initialize-Recolor }
+    if ($hue) { $key = "$key-h$hue" }
+    if ($dot) { $key = "$key-dot" }
+    $dest = Join-Path $root $key
+    if ($hue -or $dot) { Initialize-Recolor }
     New-Item -ItemType Directory -Force $dest | Out-Null
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $paths = foreach ($slot in $slots.Keys) {
@@ -312,8 +329,10 @@ function Install-Scheme($id, $name, $ext, [int]$hue, $shape) {
         if (-not (($ext -eq 'cur' -and $isCur) -or ($ext -eq 'ani' -and $isAni))) {
             Remove-Item $cur; throw "$file.$ext 가 커서 파일이 아님"
         }
-        if ($hue) {
-            $colored = if ($isAni) { [CursorPlayground.Recolor]::Ani($head, $hue) } else { [CursorPlayground.Recolor]::Cur($head, $hue) }
+        # 점은 링크 칸에만 찍는다 (시안 페이지의 '링크 클릭 점')
+        $mark = [bool]$dot -and $file -eq 'hand'
+        if ($hue -or $mark) {
+            $colored = if ($isAni) { [CursorPlayground.Recolor]::Ani($head, $hue, $mark) } else { [CursorPlayground.Recolor]::Cur($head, $hue, $mark) }
             [IO.File]::WriteAllBytes($cur, $colored)
         }
         $cur
@@ -323,8 +342,8 @@ function Install-Scheme($id, $name, $ext, [int]$hue, $shape) {
     $paths
 }
 
-function Set-Scheme($id, $name, $ext, [int]$hue, $shape) {
-    $paths = @(Install-Scheme $id $name $ext $hue $shape)
+function Set-Scheme($id, $name, $ext, [int]$hue, $shape, $dot) {
+    $paths = @(Install-Scheme $id $name $ext $hue $shape $dot)
     $i = 0
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value $paths[$i] -PropertyType ExpandString -Force | Out-Null
@@ -410,6 +429,7 @@ function Set-Schedule($slots) {
         $argument = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Apply $($slot.Id)"
         if ($slot.Hue) { $argument += " -Hue $($slot.Hue)" }
         if ($slot.Shape) { $argument += " -Shape $($slot.Shape)" }
+        if ($slot.Dot) { $argument += ' -Dot' }
         $action = New-ScheduledTaskAction -Execute "$PSHOME\powershell.exe" -Argument $argument
         $trigger = New-ScheduledTaskTrigger -Daily -At ([datetime]::Today.AddHours($slot.Hour))
         # 배터리로 돌 때도, 컴퓨터가 꺼져 있어 놓친 시각도 켜지면 한 번 실행
@@ -449,8 +469,8 @@ if ($Apply) {
     # $Shape 는 [string] 파라미터라 같은 이름(대소문자 무시)의 변수에 객체를 넣으면 문자열이 된다
     $shapeEntry = if ($Shape) { Get-Shape $Shape } else { $null }
     if ($Shape -and -not $shapeEntry) { return }
-    $name = Get-SchemeName $entry $Hue $shapeEntry
-    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue $(if ($shapeEntry) { $shapeEntry.id })
+    $name = Get-SchemeName $entry $Hue $shapeEntry $Dot.IsPresent
+    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue $(if ($shapeEntry) { $shapeEntry.id }) $Dot.IsPresent
     return
 }
 
@@ -460,17 +480,17 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3})(?:/([a-z]{1,12}))?)?)?/?$' -and [int]('0' + $Matches[4]) -lt 360) {
-        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4]); $shapeId = $Matches[5]
+    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3})(?:/(?!dot/?$)([a-z]{1,12}))?(?:/(dot))?)?)?/?$' -and [int]('0' + $Matches[4]) -lt 360) {
+        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4]); $shapeId = $Matches[5]; $withDot = [bool]$Matches[6]
         $entry = Get-Scheme $id
         if (-not $entry) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
         $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
         if ($shapeId -and -not $shapeEntry) { Notify "알 수 없는 모양이라 무시함`n$shapeId" -IsError; return }
-        $name = Get-SchemeName $entry $hue $shapeEntry
+        $name = Get-SchemeName $entry $hue $shapeEntry $withDot
         $ext = if ($entry.animated -eq $true) { 'ani' } else { 'cur' }
         Save-VisitBackup $visit
         if ($size) { Set-Size $size }
-        Set-Scheme $id $name $ext $hue $(if ($shapeEntry) { $shapeEntry.id })
+        Set-Scheme $id $name $ext $hue $(if ($shapeEntry) { $shapeEntry.id }) $withDot
         if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $prefix$name" }
     }
     elseif ($Url -cmatch '^cursor-playground://size/(32|48|64|96|128)/([a-z0-9]{16})/?$') {
@@ -497,14 +517,18 @@ try {
     elseif ($Url -cmatch '^cursor-playground://status/?$') {
         Notify (Get-StatusText)
     }
-    elseif ($Url -cmatch '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:-[a-z]{1,12})?){1,6})/?$') {
+    elseif ($Url -cmatch '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:-[a-z]{1,12})?(?:-dot)?){1,6})/?$') {
         $slots = @()
         foreach ($part in ($Matches[2] -split '/' | Where-Object { $_ })) {
-            $hour, $id, $hue, $shapeId = $part -split '-'
+            # 맨 끝 -dot 은 링크 클릭 점. 모양이 없으면 넷째 칸이 dot 이라 먼저 떼어 낸다
+            $bits = @($part -split '-')
+            $withDot = $bits.Count -gt 3 -and $bits[-1] -ceq 'dot'
+            if ($withDot) { $bits = $bits[0..($bits.Count - 2)] }
+            $hour, $id, $hue, $shapeId = $bits
             $entry = Get-Scheme $id
             $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
             if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359 -or ($shapeId -and -not $shapeEntry)) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
-            $slots += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Name = Get-SchemeName $entry ([int]$hue) $shapeEntry }
+            $slots += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Dot = $withDot; Name = Get-SchemeName $entry ([int]$hue) $shapeEntry $withDot }
         }
         Set-Schedule $slots
         Notify "시간대별 자동 전환을 켬.`n`n$((Get-Schedule | ForEach-Object { $_.TaskName } | Sort-Object) -join "`n")"

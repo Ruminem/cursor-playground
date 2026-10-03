@@ -88,6 +88,12 @@ jobs:
           if ($bad.Count) { $bad | ForEach-Object { Write-Host $_ }; exit 1 }
           if ($files.Count -lt 100) { Write-Host '커서 파일이 너무 적음'; exit 1 }
 
+      # handler.ps1 의 C#(색조·링크 클릭 점)은 윈도우 PowerShell 에서만 컴파일된다. handler 가 실제로 도는 5.1 로 돌린다
+      - name: 링크 클릭 점을 찍은 손 커서를 윈도우가 읽는지
+        shell: pwsh
+        working-directory: win-cursor
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File test_dot.ps1
+
       - name: 구성표 목록과 그림·커서가 맞는지
         shell: pwsh
         working-directory: win-cursor

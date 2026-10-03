@@ -182,6 +182,10 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .sprite,.extra span.pic i,.thumb{will-change:transform}
 .hot{position:absolute;width:var(--px);height:var(--px);left:calc(var(--hx) * var(--px));top:calc(var(--hy) * var(--px));
   outline:2px solid var(--hot);outline-offset:1px}
+/* 링크 클릭 점을 켠 구성표의 손 카드는 핫스팟 테 대신 적용될 점(파란 칸 + 흰 테)을 그대로 보인다 */
+.card.c-hand.dotted .hot{background:rgb(30,110,255);box-shadow:0 0 0 var(--px) #fff;outline:none}
+.apply-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dot-toggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
 .meta{min-width:0}
 .meta h3{margin:0 0 2px;font-size:16px;font-weight:700}
 .meta p{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
@@ -441,6 +445,33 @@ pre .c{color:var(--muted)}
   var CLASSIC_ONLY = {};
   /*CLASSIC_ONLY*/.forEach(function(sid){ CLASSIC_ONLY[sid] = true; });
   window.cpClassicOnly = function(sid){ return !!CLASSIC_ONLY[sid]; };
+  // 링크 커서 핫스팟 점. 구성표마다 켜고 끄며 기본은 끔. 켜면 적용 주소 끝에 /dot 이 붙어 handler.ps1 이
+  // 받은 커서의 손 칸에 점을 찍는다. 여기서는 손 카드와 링크 위 커서에 같은 점을 그려 미리 보인다
+  var DOTS = {};
+  try { DOTS = JSON.parse(localStorage.getItem('cp-dots') || '{}') || {}; } catch (e) {}
+  window.cpDot = function(sid){ return DOTS[sid] === true; };
+  window.cpSetDot = function(sid, on){
+    if (on) DOTS[sid] = true; else delete DOTS[sid];
+    try { localStorage.setItem('cp-dots', JSON.stringify(DOTS)); } catch (e) {}
+    showDot(sid);
+    restore(hoverBook); lastKey = ''; tick();
+  };
+  function showDot(sid){
+    var on = window.cpDot(sid);
+    document.querySelectorAll('.card.s-' + sid + '.c-hand').forEach(function(c){ c.classList.toggle('dotted', on); });
+    document.querySelectorAll('[data-dot="' + sid + '"]').forEach(function(b){ b.checked = on; });
+  }
+  document.querySelectorAll('[data-apply]').forEach(function(b){
+    var sid = b.getAttribute('data-apply'), grp = document.createElement('span'), lab = document.createElement('label');
+    var box = document.createElement('input');
+    grp.className = 'apply-group'; lab.className = 'dot-toggle c-hand';
+    lab.title = '링크(손) 커서의 클릭 지점에 파란 점을 찍어 적용함. 구성표마다 따로 기억';
+    box.type = 'checkbox'; box.className = 'c-hand'; box.setAttribute('data-dot', sid);
+    box.addEventListener('change', function(){ window.cpSetDot(sid, box.checked); });
+    lab.appendChild(box); lab.appendChild(document.createTextNode('링크 클릭 점'));
+    b.parentNode.insertBefore(grp, b); grp.appendChild(lab); grp.appendChild(b);
+    showDot(sid);
+  });
   var SIZES = [32, 48, 64, 96, 128];
   var size = 32, hue = 0, cache = {};
   try {
@@ -523,8 +554,15 @@ pre .c{color:var(--muted)}
   }
   // f 가 0 이상이면 스트립에서 그 프레임 하나를 px 크기로 잘라 낸다(커서용, px 0 이면 판 크기).
   // f 가 -1 이면 스트립 통째로 색조만 돌린다(카드용) — 프레임마다 돌리던 것을 한 번에
-  function paint(uri, px, deg, f){
-    var key = px + '|' + deg + '|' + f + '|' + uri;
+  // handler.ps1 의 Mark 와 같은 점: 파랑 m×m 에 흰 테 m칸, 파랑 왼쪽 위 칸이 핫스팟(m 은 32px 마다 1칸)
+  function mark(g, k, dot){
+    var n = g.canvas.width, m = Math.max(1, Math.floor((n + 16) / 32)), x = Math.floor(dot[0] * k), y = Math.floor(dot[1] * k);
+    g.fillStyle = '#fff'; g.fillRect(x - m, y - m, 3 * m, 3 * m);
+    g.fillStyle = 'rgb(30,110,255)'; g.fillRect(x, y, m, m);
+  }
+  // dot 이 [x, y](판 칸)이면 커서용 프레임에 핫스팟 점을 찍는다
+  function paint(uri, px, deg, f, dot){
+    var key = px + '|' + deg + '|' + f + '|' + uri + (dot ? '|' + dot : '');
     if (!cache[key]) {
       cache[key] = imgOf(uri).then(function(img){
         if (!img || (f < 0 && !deg)) return { uri: uri, k: 1 };
@@ -533,6 +571,7 @@ pre .c{color:var(--muted)}
         var g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
         if (f < 0) g.drawImage(img, 0, 0); else g.drawImage(img, 0, f * B * K, B, B, 0, 0, n, n);
         if (deg) { var data = g.getImageData(0, 0, cv.width, cv.height); rotate(data.data, deg); g.putImageData(data, 0, 0); }
+        if (dot) mark(g, n / B, dot);
         return { uri: cv.toDataURL('image/png'), k: n / B, made: true };
       });
     }
@@ -637,7 +676,8 @@ pre .c{color:var(--muted)}
     var moving = animated(sid) && motionOK;
     // 페이지를 열 때 깐 그림이 곧 기본 모양·기본 크기·원래 색이라, 그 상태면 따로 그릴 것이 없다
     var own = shape === SHAPES[0].id || CLASSIC_ONLY[sid];   // 기본 모양 그림을 보이는 경우
-    if (px === 32 && deg === 0 && !moving && own) {
+    var dotted = window.cpDot(sid);   // 링크 위 커서에 점을 찍어야 해서 깐 그림만으로는 안 된다
+    if (px === 32 && deg === 0 && !moving && own && !dotted) {
       if (lastKey) { restore(cards); restore(hoverBook); lastKey = ''; }
       shownDeg = 0; nudgeHue();
       return;
@@ -666,12 +706,12 @@ pre .c{color:var(--muted)}
       var d = EXTRA[sid][rid];
       parts.push(fx[rid] = moving ? Math.floor(now / d[1]) % d[2] : 0);
     });
-    var key = sid + '|' + shape + '|' + px + '|' + deg + '|' + (hid || '') + '|' + parts.join(',');
+    var key = sid + '|' + shape + '|' + px + '|' + deg + '|' + (hid || '') + '|' + (dotted ? 'dot' : '') + '|' + parts.join(',');
     if (key === lastKey) return;
     lastKey = key;
     Object.keys(fr).forEach(function(rid){
       var d = DATA[sid][rid], f = fr[rid];
-      jobs.push(Promise.all([rid === hid ? paint(d[0], px, deg, f) : null, plain ? null : bgOf(d[0], deg)]).then(function(r){
+      jobs.push(Promise.all([rid === hid ? paint(d[0], px, deg, f, rid === 'hand' && dotted ? [d[1], d[2]] : null) : null, plain ? null : bgOf(d[0], deg)]).then(function(r){
         var hx = r[0] && Math.floor(d[1] * r[0].k), hy = r[0] && Math.floor(d[2] * r[0].k);
         return function(){
           if (r[0] && over === hovered) set(hoverBook, over, 'cursor', 'url(' + r[0].uri + ') ' + hx + ' ' + hy + ',' + d[3]);
@@ -924,7 +964,7 @@ pre .c{color:var(--muted)}
   }
   // 적용 주소를 만드는 곳은 여기 하나다. 아래 고정 줄이 보여 주는 것과 버튼이 보내는 것이 갈리지 않게
   // (기본 모양은 예전 형식 그대로 보낸다 — 이미 깔린 처리 스크립트가 알아듣게)
-  function applySpec(id){ return 'apply/' + id + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue() + shapeTail(id); }
+  function applySpec(id){ return 'apply/' + id + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue() + shapeTail(id) + (window.cpDot(id) ? '/dot' : ''); }
   window.cpUrl = function(id){ return 'cursor-playground://' + applySpec(id); };
   var notWin = document.documentElement.classList.contains('not-win');
   function send(action){
@@ -933,7 +973,7 @@ pre .c{color:var(--muted)}
     else if (action === 'size') action = 'size/' + window.cpSize() + '/' + visit;
     else if (action === 'schedule') action = 'schedule/' + visit + window.cpScheduleSpec();
     else if (/^apply\/[a-z]+$/.test(action)) action = applySpec(action.slice(6));
-    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}\/(32|48|64|96|128)\/([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(\/[a-z]{1,12})?|size\/(32|48|64|96|128)\/[a-z0-9]{16}|schedule\/[a-z0-9]{16}(\/([0-9]|1[0-9]|2[0-3])-[a-z]{1,20}-([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(-[a-z]{1,12})?){1,6}|unschedule|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
+    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}\/(32|48|64|96|128)\/([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(\/[a-z]{1,12})?(\/dot)?|size\/(32|48|64|96|128)\/[a-z0-9]{16}|schedule\/[a-z0-9]{16}(\/([0-9]|1[0-9]|2[0-3])-[a-z]{1,20}-([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(-[a-z]{1,12})?(-dot)?){1,6}|unschedule|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
     status.innerHTML = '요청을 보냄. 브라우저가 앱을 열지 물으면 <b>열기</b>. 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 맨 위 <b>처음 한 번</b>부터.';
     window.location.href = 'cursor-playground://' + action;
   }
@@ -949,7 +989,7 @@ pre .c{color:var(--muted)}
       var name = b.getAttribute('data-name');
       ask('apply/' + b.getAttribute('data-apply'), {
         title: name + ' 구성표를 적용할까요?',
-        body: '커서를 내려받아' + (window.cpHue() ? ' 색조를 ' + window.cpHue() + '° 돌린 새 구성표로' : ' 포인터 구성표에') + ' 추가하고, 고른 크기(' + window.cpSize() + 'px)로 바로 적용함. 원래대로 버튼으로 페이지를 열기 전 커서와 크기로 돌아갈 수 있음.',
+        body: '커서를 내려받아' + (window.cpHue() ? ' 색조를 ' + window.cpHue() + '° 돌린 새 구성표로' : ' 포인터 구성표에') + ' 추가하고, 고른 크기(' + window.cpSize() + 'px)로' + (window.cpDot(b.getAttribute('data-apply')) ? ', 링크 커서에 클릭 점을 찍어' : '') + ' 바로 적용함. 원래대로 버튼으로 페이지를 열기 전 커서와 크기로 돌아갈 수 있음.',
         ok: '적용'
       });
     });
@@ -1202,7 +1242,7 @@ pre .c{color:var(--muted)}
   window.cpScheduleSpec = function(){
     var hue = window.cpHue(), shape = window.cpShape();
     var tail = shape === window.cpShapes()[0].id ? '' : '-' + shape;
-    return current().map(function(r){ return '/' + r[0] + '-' + r[1] + '-' + hue + (window.cpClassicOnly(r[1]) ? '' : tail); }).join('');
+    return current().map(function(r){ return '/' + r[0] + '-' + r[1] + '-' + hue + (window.cpClassicOnly(r[1]) ? '' : tail) + (window.cpDot(r[1]) ? '-dot' : ''); }).join('');
   };
   document.getElementById('sched-on').addEventListener('click', function(){
     try { localStorage.setItem('cp-sched', JSON.stringify(current())); } catch (e) {}
@@ -1224,8 +1264,8 @@ pre .c{color:var(--muted)}
   // 붙여넣은 주소 읽기: 방문 번호는 그 PC 의 것이라 버리고 구성표·크기·색조·모양만 가져온다.
   // 값이 실재하는지는 cpUse 가 백업과 같은 검사로 본다
   function parse(text){
-    var m = /^(?:cursor-playground:\/\/)?apply\/([a-z]+)\/[a-z0-9]+\/([0-9]+)\/([0-9]+)(?:\/([a-z]+))?$/.exec(text.trim());
-    return m && { id: m[1], size: +m[2], hue: +m[3], shape: m[4] || window.cpShapes()[0].id };
+    var m = /^(?:cursor-playground:\/\/)?apply\/([a-z]+)\/[a-z0-9]+\/([0-9]+)\/([0-9]+)(?:\/(?!dot$)([a-z]+))?(?:\/(dot))?$/.exec(text.trim());
+    return m && { id: m[1], size: +m[2], hue: +m[3], shape: m[4] || window.cpShapes()[0].id, dot: !!m[5] };
   }
   var apply = document.getElementById('urlbar-apply');
   // 윈도우는 바로 적용, 맥(윈도우 아닌 곳)은 같은 자리에서 지금 조합을 .cape 로 받는다 — 목적이 같아 자리도 같게
@@ -1395,7 +1435,7 @@ pre .c{color:var(--muted)}
   var SIZES = [].slice.call(document.querySelectorAll('[data-size]')).map(function(b){ return parseInt(b.getAttribute('data-size'), 10); });
   var list = [];
 
-  function key(b){ return b.id + '/' + b.shape + '/' + b.hue + '/' + b.size; }
+  function key(b){ return b.id + '/' + b.shape + '/' + b.hue + '/' + b.size + (b.dot ? '/dot' : ''); }
   // 가져온 파일도 예전에 저장해 둔 것도 그대로 믿지 않는다. 네 값이 다 이 페이지에 실재하는 것이어야 통과
   function ok(b){
     return !!b && typeof b === 'object'
@@ -1407,7 +1447,7 @@ pre .c{color:var(--muted)}
   function clean(arr){
     var seen = {};
     return (Array.isArray(arr) ? arr : []).filter(ok).map(function(b){
-      return { id: b.id, shape: b.shape, hue: b.hue, size: b.size };
+      return { id: b.id, shape: b.shape, hue: b.hue, size: b.size, dot: b.dot === true };
     }).filter(function(b){
       var k = key(b); if (seen[k]) return false; seen[k] = 1; return true;
     }).slice(0, MAX);
@@ -1418,6 +1458,7 @@ pre .c{color:var(--muted)}
     if (sh.id !== shapes[0].id) parts.push(sh.name);
     if (b.hue) parts.push(b.hue + '°');
     parts.push(b.size + 'px');
+    if (b.dot) parts.push('클릭 점');
     return parts.join(' · ');
   }
   function say(text){
@@ -1444,6 +1485,7 @@ pre .c{color:var(--muted)}
     document.querySelector('[data-pick="' + b.id + '"]').click();
     window.cpSetHue(b.hue);
     window.cpSetSize(b.size);
+    window.cpSetDot(b.id, b.dot === true);
     window.cpSetShape(b.shape, function(){ window.cpApply(b.id); });
   }
   // 아래 주소 줄에 붙여넣은 설정도 같은 검사를 거쳐 같은 길로 간다
@@ -1454,7 +1496,7 @@ pre .c{color:var(--muted)}
   document.getElementById('bak-save').addEventListener('click', function(){
     var pick = document.querySelector('[data-pick][aria-pressed="true"]');
     if (!pick) return;
-    var b = { id: pick.getAttribute('data-pick'), shape: window.cpShape(), hue: window.cpHue(), size: window.cpSize() };
+    var b = { id: pick.getAttribute('data-pick'), shape: window.cpShape(), hue: window.cpHue(), size: window.cpSize(), dot: window.cpDot(pick.getAttribute('data-pick')) };
     if (!ok(b)) return;
     if (list.some(function(x){ return key(x) === key(b); })) { say('같은 조합이 이미 있음.'); return; }
     if (list.length >= MAX) { say(MAX + '개가 다 찼음. 하나 지우고 저장할 것.'); return; }
