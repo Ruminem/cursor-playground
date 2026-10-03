@@ -8,6 +8,7 @@ preview.html 에는 기본 모양의 칸 정보·목록 화살표와 처음 여�
 dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려받는다 (기본 모양은 dist/<구성표>/,
 나머지는 dist/<모양>/<구성표>/). art/ 나 shapes/ 를 고치면 이걸 다시 돌리고 결과까지 커밋해야 웹에 반영된다.
 """
+import ast
 import base64
 import hashlib
 import json
@@ -59,19 +60,86 @@ def version() -> str:
     return f"v{ver} · {sha}" if sha else f"v{ver}"
 
 
-def _hashes() -> tuple[str, dict, str, str]:
-    """(코드 해시, 구성표별 재료 해시, 전부 합친 해시, 시안 페이지 해시). 지난번과 같으면 그 산출물은 건너뛴다"""
+def _tree(path: Path) -> ast.Module:
+    """주석·docstring 을 걷어 낸 구문 나무. 해시를 여기서 떠서 주석만 고친 커밋은 커서를 다시 그리지 않는다
+    (2026-09-30 주석 한 줄 고친 8ce80f86 이 CI 에서 75종을 전부 다시 그렸다)"""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        body = getattr(node, "body", None)
+        if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and body \
+                and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) \
+                and isinstance(body[0].value.value, str):
+            node.body = body[1:] or [ast.Pass()]
+    return tree
+
+
+def _dump(nodes) -> str:
+    return "\n".join(ast.dump(n) for n in nodes)      # 줄 번호는 안 들어간다 — 위에 줄을 더해도 그대로
+
+
+def _reach(tree: ast.Module, roots: set[str]) -> list:
+    """roots 에서 이름으로 닿는 맨 윗단 정의(함수·대입·import)만, 소스 차례대로.
+    워커가 부르는 것만 해시에 넣으려고 — 시안 페이지·README·main 을 고쳐도 커서는 다시 그리지 않는다"""
+    named: dict[str, list] = {}
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names = [node.name]
+        elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            names = [n.id for t in targets for n in ast.walk(t) if isinstance(n, ast.Name)]
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            names = [(a.asname or a.name).split(".")[0] for a in node.names]
+        else:
+            continue
+        for name in names:
+            named.setdefault(name, []).append(node)
+    seen, todo = set(), list(roots)
+    while todo:
+        for node in named.get(todo.pop(), ()):
+            if id(node) not in seen:
+                seen.add(id(node))
+                todo += [n.id for n in ast.walk(node) if isinstance(n, ast.Name)]
+    return [n for n in tree.body if id(n) in seen]
+
+
+def _only_shape(tree: ast.Module, shape: str) -> ast.Module:
+    """smooth.py 의 SHAPES 표에서 이 모양 줄만 남긴 나무 — 둥근 모양 숫자를 고치면 둥근 모양만 다시 그린다.
+    smooth 는 SHAPES 를 늘 SHAPES[모양] 으로만 읽는다 (stencil_keys 의 목록 돌기는 스텐실 해시가 따로 본다)"""
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "SHAPES" for t in node.targets) \
+                and isinstance(node.value, ast.Dict):
+            keep = [(k, v) for k, v in zip(node.value.keys, node.value.values)
+                    if isinstance(k, ast.Constant) and k.value == shape]
+            node.value = ast.Dict(keys=[k for k, _ in keep], values=[v for _, v in keep])
+    return tree
+
+
+def _hashes() -> tuple[dict, dict, str]:
+    """(일감별 재료 해시 {"<모양>/<구성표>": …}, 따로 쓰는 표식 {"*stencil", "*data/<모양>"}, 시안 페이지 해시).
+    지난번과 같은 일감은 건너뛴다.
+
+    일감마다 그 일감이 실제로 읽는 것만 넣는다 — 구성표의 그림·schemes.json 줄, make_cur·shape,
+    build.py 중 워커가 부르는 부분, 매끈한 모양이면 smooth.py(SHAPES 는 제 모양 줄만).
+    코드는 주석·docstring 을 걷어 낸 구문 나무로 잰다. 코드 한 줄이 구성표 전부를 다시 그리게 하던 때는
+    CI 미스가 잡 20분이 넘었다 (2026-10-03 run #219, 워커 시간 82분)"""
     # 파이썬·zlib 버전도 코드로 친다. PNG 바이트가 버전마다 달라서, 다른 파이썬이 만든 캐시를
     # 받으면(러너의 3.14 패치가 올라간 날 등) 섞이지 않고 전부 다시 그려야 한다 — 릴리스가 캐시를 쓴다
-    code = _sha(sys.version, zlib.ZLIB_RUNTIME_VERSION,
-                *((HERE / n).read_bytes() for n in ("build.py", "make_cur.py", "shape.py", "smooth.py", "shapes.json")))
-    art = {s["id"]: _sha(code, json.dumps(s, sort_keys=True),
+    env = _sha(sys.version, zlib.ZLIB_RUNTIME_VERSION)
+    base = _sha(env, *(_dump([_tree(HERE / n)]) for n in ("make_cur.py", "shape.py")),
+                _dump(_reach(_tree(HERE / "build.py"), {"build_one", "bake"})))
+    code = {shp["id"]: base if shape_of(shp["id"]) is None
+            else _sha(base, shp["id"], _dump([_only_shape(_tree(HERE / "smooth.py"), shp["id"])]))
+            for shp in SHAPES}
+    art = {s["id"]: _sha(json.dumps(s, sort_keys=True),
                          *(f.read_bytes() for f in sorted((HERE / "art" / s["id"]).iterdir())))
            for s in SCHEMES}
-    # 시안 페이지와 모양 데이터는 구성표 전부를 한 파일에 담아서 하나만 바뀌어도 다시 만든다
-    every = _sha(*(art[s["id"]] for s in SCHEMES))
+    keys = {f"{shp['id']}/{sid}": _sha(code[shp["id"]], art[sid]) for shp in SHAPES for sid in drawn(shp["id"])}
+    marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
+    # 모양 데이터는 구성표 목록 차례까지 한 묶음이라 하나만 바뀌거나 빠져도 그 모양 data 를 다시 맞춘다
+    for shp in SHAPES:
+        marks[f"*data/{shp['id']}"] = _sha(*(keys[f"{shp['id']}/{sid}"] for sid in drawn(shp["id"])))
     # 버전 표시를 해시에 넣는다 — 커밋이 바뀌면 그림이 그대로여도 페이지를 다시 만들어야 한다
-    return code, art, every, _sha(every, (HERE / "preview.tpl.html").read_bytes(), version())
+    return keys, marks, _sha(*keys.values(), (HERE / "preview.tpl.html").read_bytes(), version())
 
 
 # dist/ 안에 두면 CI 의 커서 파일 점검이 이걸 커서로 알고 열어 보다 실패한다
@@ -557,15 +625,15 @@ if __name__ == "__main__":
     t0 = time.time()
     # 지난번 빌드가 남긴 표식. 재료가 그대로인 산출물은 다시 그리지 않는다.
     # CI 는 늘 빈 체크아웃이라 표식이 없어 전부 다시 만든다. 손으로 그러려면 --all
-    code, art, every, page_key = _hashes()
+    # --plan 은 무엇을 다시 그릴지만 찍고 끝낸다 (아무것도 안 지우고 안 쓴다)
+    keys, marks, page_key = _hashes()
+    plan = "--plan" in sys.argv
     was = {} if "--all" in sys.argv else json.loads(STAMP.read_text()) if STAMP.exists() else {}
-    for path in prune():
+    for path in [] if plan else prune():
         print(f"[{time.time() - t0:5.1f}초] 목록에 없어 지움: {path}")
 
     workers = getattr(os, "process_cpu_count", os.cpu_count)() or 1   # ProcessPoolExecutor 기본값과 같다
     with ProcessPoolExecutor(workers) as pool:
-        # 재료가 바뀐 구성표. dist 는 여기에 "폴더가 없는 것"을 더하고, data 는 이 목록만 갈아 끼운다
-        changed = [s["id"] for s in SCHEMES if was.get(s["id"]) != art[s["id"]]]
         jobs_of, skipped = [], 0
         # 일감 차례를 정할 어림 값 — 그림 프레임 수. 움직이는 구성표 몇이 일의 대부분이다
         frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES for rid, _, _ in ROLES + EXTRA}
@@ -575,15 +643,18 @@ if __name__ == "__main__":
             base = shp["id"] == SHAPES[0]["id"]
             root = HERE / "dist" if base else HERE / "dist" / shp["id"]
             sids = drawn(shp["id"])
+            # 재료가 바뀐 일감. dist 는 여기에 "폴더가 없는 것"을 더하고, data 는 이 목록만 갈아 끼운다
+            changed = {sid for sid in sids if was.get(f"{shp['id']}/{sid}") != keys[f"{shp['id']}/{sid}"]}
             stale = {sid for sid in sids if sid in changed or not (root / sid).is_dir()}
             skipped += len(sids) - len(stale)
             fresh: set[str] = set()                     # 시안 데이터 조각을 새로 그릴 구성표
-            if not base and (was.get("*") != every or not (data_dir(shp["id"]) / "index.json").exists()):
+            mark = f"*data/{shp['id']}"
+            if not base and (was.get(mark) != marks[mark] or not (data_dir(shp["id"]) / "index.json").exists()):
                 missing = data_missing(shp["id"])
-                fresh = set(sids) if missing is None else (set(changed) | missing) & set(sids)
+                fresh = set(sids) if missing is None else (changed | missing) & set(sids)
                 if fresh:
                     pieces[shp["id"]] = {}
-                else:                                   # 구성표를 지우기만 했다 — 그릴 것 없이 목록만 줄인다
+                elif not plan:                          # 구성표를 지우기만 했다 — 그릴 것 없이 목록만 줄인다
                     write_data(shp["id"], {})
             # (모양 × 구성표) 하나가 일감 하나. 커서와 시안 데이터를 한 일감에서 같이 만든다.
             # 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
@@ -593,12 +664,19 @@ if __name__ == "__main__":
             if mine:
                 left[shp["id"]] = len(mine)
                 jobs_of += mine
+                if plan:
+                    print(f"{shp['id']}: 커서 {sum(j[2] for j in mine)}종 · 시안 데이터 {sum(j[3] for j in mine)}종"
+                          f" (구성표 {len(sids)}종 중)" + ("" if len(mine) > 8 else " — " + " ".join(j[1] for j in mine)))
+        if plan:
+            print(f"다시 그릴 일감 {len(jobs_of)}개 · 그대로 둘 구성표 {skipped}개 (모양별 합)"
+                  + (" · 스텐실 다시 구움" if was.get("*stencil") != marks["*stencil"] else ""))
+            raise SystemExit
 
         # 매끈한 모양의 스텐실(테마와 무관한 160벌)을 먼저 병렬로 구워 한 파일에 모은다. 워커마다 굽게 두면
         # 같은 것을 2.7배 다시 굽고, 그 값은 구성표 수와 무관해서 구성표를 줄여도 안 줄었다 (2026-09-20)
         # 스텐실은 테마와 무관해서 코드에만 기댄다 — 그림만 고쳤으면 다시 굽지 않는다
         if any(shape_of(j[0]) is not None for j in jobs_of) \
-                and (was.get("*stencil") != code or not STENCILS.exists()):
+                and (was.get("*stencil") != marks["*stencil"] or not STENCILS.exists()):
             baked = dict(pool.map(bake, smoothlib.stencil_keys()))
             STENCILS.write_bytes(pickle.dumps(baked, protocol=pickle.HIGHEST_PROTOCOL))
             print(f"[{time.time() - t0:5.1f}초] 스텐실 {len(baked)}벌 구움")
@@ -660,6 +738,6 @@ if __name__ == "__main__":
             top = sorted(per_sid.items(), key=lambda kv: -kv[1])[:5]
             print("무거운 구성표 (모양 전부 합친 워커 시간): " + " · ".join(f"{k} {_dur(v)}" for k, v in top))
 
-    STAMP.write_text(json.dumps({**art, "*": every, "*page": page_key, "*stencil": code}), encoding="utf-8", newline="\n")
+    STAMP.write_text(json.dumps({**keys, **marks, "*page": page_key}, indent=0), encoding="utf-8", newline="\n")
     update_readme()
     print(f"dist/ 커서 {total}개 만듦 (그대로 둔 구성표 {skipped}개) · 전부 {time.time() - t0:.1f}초")
