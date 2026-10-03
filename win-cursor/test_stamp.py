@@ -54,9 +54,9 @@ assert list(spliced["data"]) == sids, f"구성표 차례가 어긋남: {list(spl
 # 파일로 쪼개 쓰고(index.json + arrows.json + 구성표마다 한 파일) 도로 읽으면 같아야 한다. 한 종만 다시 써도
 tmp = Path(tempfile.mkdtemp())
 build.data_dir = lambda s: tmp / s
-build.write_data(shape_id, {sid: (whole["data"][sid], whole["extra"][sid]) for sid in sids})
+build.write_data(shape_id, {sid: whole["data"][sid] for sid in sids})
 assert dump(build.read_data(shape_id)) == dump(whole), "쪼개 쓴 데이터를 도로 읽으니 다름"
-build.write_data(shape_id, {sid: (whole["data"][sid], whole["extra"][sid]) for sid in sids[1:2]})
+build.write_data(shape_id, {sid: whole["data"][sid] for sid in sids[1:2]})
 assert dump(build.read_data(shape_id)) == dump(whole), "한 종만 갈아 쓴 파일이 통째로 쓴 것과 다름"
 index = json.loads((tmp / shape_id / "index.json").read_text(encoding="utf-8"))["data"]
 assert all(e[0] == "" for roles in index.values() for e in roles.values()), "index 에 그림이 들었음 (모양을 바꿀 때 기다리는 파일이다)"
@@ -74,7 +74,7 @@ assert dump(build.read_data(shape_id)) == dump(fewer), "지운 뒤의 데이터�
 assert not (tmp / shape_id / f"{sids[2]}.json").exists(), "지운 구성표의 파일이 남음 (Pages 에 계속 올라간다)"
 build.SCHEMES = full                              # 도로 더했다 치고
 assert build.data_missing(shape_id) == {sids[2]}, "더한 구성표만 새로 그려야 함"
-build.write_data(shape_id, {sids[2]: (whole["data"][sids[2]], whole["extra"][sids[2]])})
+build.write_data(shape_id, {sids[2]: whole["data"][sids[2]]})
 assert dump(build.read_data(shape_id)) == dump(whole), "더한 뒤의 데이터가 통째로 만든 것과 다름"
 
 # 목록에 없는 구성표·모양의 dist·data 폴더만 지우고 나머지는 그대로 둔다.
