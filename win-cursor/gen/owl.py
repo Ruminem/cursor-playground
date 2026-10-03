@@ -9,7 +9,8 @@
 눈이 얼굴의 주인공이라 몸을 줄여도 눈은 칸 단위 글자판(`EYES`)으로 크게 찍는다 — 같이 줄이면 32칸에서 점이 된다.
 해양의 물낯 · 물보라 자리는 숲 소품(나뭇가지 · 나뭇잎 · 도토리)이 대신하고, 금지 칸은 sea.py 의 빨간 표지(SIGN)를 쓴다.
 
-  arrow   나뭇가지 없이 앉은 부엉이가 한쪽 날개를 왼쪽 위로 쭉 뻗는다 — 날개 깃 끝이 핫스팟. 눈은 그 끝을 본다
+  arrow   날개를 접은 부엉이가 몸을 왼쪽 위로 갸웃 기울여 그쪽을 빤히 본다 — 쫑긋 세운 앞 귀깃 끝이 핫스팟(화살 끝),
+          뒤 귀깃은 눕혀 쫑긋거린다. 한쪽 날개를 왼쪽 위로 쭉 뻗던 판은 어색하고 hand(날개 들어 콕)와 실루엣이 같았다
   busy    작은 화살표 부엉이 + 오른쪽 아래 도토리 둘레를 도는 나뭇잎 여덟 고리
   cross   앞모습 얼굴. 위아래 · 양옆 잔가지가 조준선이고, 두 눈이 가운데(부리 위)를 몰아 본다
   hand    한쪽 날개를 위로 들어 깃 끝으로 콕 — 닿는 순간 눈을 질끈(^^) 감고 끝에 반짝. 깃 끝이 핫스팟
@@ -236,12 +237,13 @@ NECK = (0.0, 1.5)                # 머리를 키우고 돌리는 축
 
 
 def owl(rig: Rig, wings=(None, None), mood="open", gaze=(0, 0), tilt=0.0, squash=(1.0, 1.0), feet=True,
-        front=(), back=(), blush=True, eyes=None, tsx=1.0, tsy=1.0) -> tuple[dict, set]:
+        front=(), back=(), blush=True, eyes=None, tsx=1.0, tsy=1.0, tuft=None) -> tuple[dict, set]:
     """앞모습 부엉이 한 장. wings 는 (왼쪽, 오른쪽) 날개: None 이면 몸 옆에 접고, (a, b) 면 그 깃 끝으로 몸 뒤에서 편다,
     ("front" 또는 "back", (a, b), 폭) 이면 몸 앞 · 뒤로(앞이면 엇갈린 X · 끌어안기). gaze 가 "in" 이면 두 눈이 가운데로 몰린다.
     mood 는 눈(open · half · shut · happy · wide), gaze 는 눈동자를 옮길 칸,
     tilt 는 고개를 갸웃한 각도(도, 목을 축으로 머리만 돈다), squash 는 (가로, 세로) 늘림(놀라서 길쭉해진 몸),
-    front · back 은 몸 앞 · 뒤에 놓을 부위, eyes 는 눈 크기(big · small, 안 주면 k 로 고른다), tsx 는 귀깃 벌림.
+    front · back 은 몸 앞 · 뒤에 놓을 부위, eyes 는 눈 크기(big · small, 안 주면 k 로 고른다), tsx 는 귀깃 벌림,
+    tuft 는 귀깃 대신 쓸 머리 좌표 부위(짝짝이 귀깃).
     눈은 칸 단위로 크기가 정해져 있어서 작은 부엉이는 머리를 키운다(hr) — 머리가 몸보다 큰 치비가 되고,
     얼굴판 둘레에 갈색 깃이 남는다(안 키우면 얼굴판이 머리를 다 덮어 병아리 · 햄스터로 읽힌다)"""
     kx, ky = squash
@@ -295,7 +297,7 @@ def owl(rig: Rig, wings=(None, None), mood="open", gaze=(0, 0), tilt=0.0, squash
         if w is None:
             parts.append((f"fold{sg}", body_xf(ell(sg * 6.6, 3.4, 2.5, 5.4, -sg * 0.18)), FEATHER_D, True))
     parts += [("body", any_of(head_xf(ell(0, -4.0, 8.6, 7.2)), body_xf(ell(0, 4.6, 7.0, 6.6))), body_col, True),
-              ("tufts", head_xf(tufts(tsx, tsy)), FEATHER_D, False)]
+              ("tufts", head_xf(tuft or tufts(tsx, tsy)), FEATHER_D, False)]
     for sg, w in zip((-1, 1), ws):
         if w is not None and not w[1]:
             parts.append(wing_part(sg, w[0], w[2], kx, ky, rig.k))
@@ -355,12 +357,13 @@ def blink_mood(k: int, at: int = 7) -> str:
 
 
 ARROW_TIP = (0.7, 0.7)                       # 화살표 날개 깃 끝(화면) — (1, 1) 칸을 반 넘게 덮게 칸 밖으로 민다
-ARROW = (19.5, 19.0, 0.82)                   # 화살표 부엉이 몸 가운데 · 배율
+ARROW = (19.5, 19.0, 0.82)                   # 날개 뻗은 큰 부엉이(small=False) — 옛 arrow 칸, 지금은 안 씀
 ARROW_S = (9.5, 12.4, 0.5)                   # 작은 화살표 부엉이 (busy · help · person · pin)
 
 
 def arrow_owl(ph: float, small: bool = False, tilt: float = 0.0, mood=None) -> dict:
-    """왼날개를 왼쪽 위로 쭉 뻗은 부엉이. 몸이 살짝 들썩여도 깃 끝은 제자리, 눈은 깃 끝을 본다"""
+    """왼날개를 왼쪽 위로 쭉 뻗은 부엉이(작은 것은 busy · help · person · pin 의 화살표). 몸이 살짝 들썩여도 깃 끝은 제자리,
+    눈은 깃 끝을 본다. arrow 칸은 날개를 안 뻗는 `arrow()` 가 따로 그린다"""
     ox, oy, kk = ARROW_S if small else ARROW
     k = round(N * ph / (2 * math.pi)) % N
     rig = Rig(ox, oy + (0.0 if small else 0.5 * math.sin(ph)), 0.0, kk)
@@ -371,9 +374,29 @@ def arrow_owl(ph: float, small: bool = False, tilt: float = 0.0, mood=None) -> d
     return {p: c for p, c in out.items() if p[0] >= 1 and p[1] >= 1} if small else out
 
 
+LEAN = (-18.0, 0.96)                         # 화살표 부엉이가 왼쪽 위로 기운 각도(도) · 배율
+
+
+def lean_tufts(back: float):
+    """기운 부엉이의 짝짝이 귀깃(머리 좌표). 앞(왼쪽) 귀깃은 쫑긋 길게 세워 바깥 갈래가 화살 끝 — 안쪽 갈래는 짧게 둬서
+    끝이 하나다(두 갈래가 비슷하면 기울였을 때 안쪽 갈래나 뒤 귀깃이 더 위로 나와 끝이 둘이 된다). 뒤 귀깃은 back 만큼 눕힌다"""
+    front = poly([(-2.4, -10.4), (-4.8, -14.6), (-5.9, -13.5), (-10.4, -19.6), (-9.2, -5.6)])
+    return any_of(front, poly([(2.4, -10.4), (5.6, -12.0 - back), (6.6, -11.2 - 0.6 * back),
+                               (9.4, -9.6 - back), (8.8, -5.6)]))
+
+
 def arrow() -> list[dict]:
-    """왼날개를 왼쪽 위로 쭉 — 깃 끝이 핫스팟. 몸이 살짝 들썩이고 귀깃이 까딱인다"""
-    return [finish(arrow_owl(ph)) for ph in phases()]
+    """왼쪽 위로 몸을 기울여 그쪽을 빤히 보는 부엉이 — 쫑긋 세운 앞 귀깃 끝이 핫스팟(화살 끝). 날개는 접은 채,
+    뒤 귀깃이 쫑긋거리고 눈을 끔뻑. 한 장을 그려 그 귀깃 끝을 (1, 1) 로 칸 단위로 옮긴다(끝은 제자리)"""
+    ang, kk = LEAN
+    raw = []
+    for k, ph in enumerate(phases()):
+        o_, _ = owl(Rig(17.0, 17.0, ang, kk), mood=blink_mood(k, 9), gaze=(-1, -1),
+                    tuft=lean_tufts(0.5 * max(0.0, math.sin(2 * ph))))
+        raw.append({p: c for p, c in o_.items() if c[3] == 255})
+    dx = 1 - min(x for x, _ in raw[0])
+    dy = 1 - min(y for _, y in raw[0])
+    return [finish({(x + dx, y + dy): c for (x, y), c in f.items()}) for f in raw]
 
 
 def falling_leaf(f: dict, k: int, x0: float, y0: float, y1: float) -> None:
