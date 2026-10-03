@@ -5,6 +5,8 @@
 // 적용은 윈도우에서만 된다 (cursor-playground:// 를 받는 것이 handler.ps1). 다른 OS 는 미리보기만 두고 적용 버튼을 끈다.
 // 첫 그림 전에 표시를 달아야 버튼이 켜졌다 꺼지며 깜빡이지 않는다
 if (!/Win/.test(navigator.platform || '') && !/Windows/.test(navigator.userAgent)) document.documentElement.classList.add('not-win');
+// 페이지 테마(기본·터미널)도 첫 그림 전에 입혀야 기본 색으로 한 번 번쩍이지 않는다
+try { if (localStorage.getItem('cp-skin') === 'terminal') document.documentElement.setAttribute('data-skin', 'terminal'); } catch (e) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +29,21 @@ if (!/Win/.test(navigator.platform || '') && !/Windows/.test(navigator.userAgent
   --ground:#18151A; --surface:#221E24; --ink:#F1ECF2; --muted:#A99DAC; --line:#37303A;
   --accent:#F27DBE; --accent-ink:#F7A6D3; --check-a:#2A252D; --check-b:#332D36; --hot:#6FB1FF;
 }
+/* 터미널 테마: 검정 바탕에 형광 초록 글자. 밝기 설정과 상관없이 늘 어둡다. 커서 그림은 그대로 두고 페이지 옷만 바꾼다 */
+:root[data-skin="terminal"]{
+  --ground:#030603; --surface:#081008; --ink:#3BFF6E; --muted:#22B04C; --line:#1A5A2A;
+  --accent:#3BFF6E; --accent-ink:#9DFFB5; --check-a:#0A150C; --check-b:#0E1D11; --hot:#F2FF5A;
+  --display:"Silkscreen", ui-monospace, monospace;
+  --body:"IBM Plex Mono", "D2Coding", Consolas, ui-monospace, monospace;
+  color-scheme:dark;
+}
+:root[data-skin="terminal"] body{text-shadow:0 0 6px color-mix(in srgb,var(--ink) 35%,transparent)}
+/* 옅은 주사선. 눌리는 것을 막지 않게 pointer-events 를 끈다 */
+:root[data-skin="terminal"] body::after{content:"";position:fixed;inset:0;z-index:50;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,transparent 0 2px,rgb(0 0 0 / .18) 2px 3px)}
+.topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
+.skins{display:inline-flex;gap:6px}
+.skins .ghost{padding:6px 10px;font-size:12px}
 /*CURSOR_CSS*/
 *{box-sizing:border-box}
 body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:32px 92px}  /* 아래 여백은 고정된 주소 줄(.urlbar) 자리 */
@@ -245,6 +262,25 @@ pre .c{color:var(--muted)}
 .copy{font:700 14px/1 var(--body);color:#1E1A20;background:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 16px;min-height:40px}
 .section-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin:0 0 14px}
 .section-head h2{margin:0}
+/* 구성표 고르기 머리(제목·모양·찾기)는 목록을 내려도 위에 붙어 있다. 넓은 화면은 왼쪽 통 맨 위, 좁은 화면은 화면 맨 위.
+   붙었을 때만 밑줄(.stuck)을 긋고, 칸으로 옮겨 다닐 때 머리 밑에 숨지 않게 그 높이(--head)만큼 비켜 스크롤한다 */
+.pickhead{position:sticky;top:0;z-index:5;background:var(--ground);padding-top:8px;margin-top:-8px}
+.pickhead.stuck{box-shadow:0 1px 0 var(--line)}
+html,.pane.menu{scroll-padding-top:var(--head,0px)}
+/* 넓은 화면: 붙는 자리가 통의 안쪽 여백 아래라 그 32px 사이로 목록이 비쳤다. 여백만큼 올려 통 맨 위에 붙인다 */
+@media (min-width:1100px){ .pane.menu .pickhead{top:-32px;padding-top:40px;margin-top:-40px} }
+/* 좁은 화면: 다 펼치면 머리가 폰 화면의 반(434px)이라 모양 탭은 한 줄 가로 스크롤, 설명은 한 줄로 줄인다 */
+@media (max-width:1099px){
+  .pickhead .section-head{margin-bottom:8px}
+  .pickhead .global .ghost{padding:6px 10px;font-size:12px}
+  .pickhead .shapebar{flex-wrap:nowrap;flex-direction:column;align-items:stretch;gap:6px;margin-bottom:10px}
+  .pickhead .shapes{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}
+  .pickhead .shape{flex:none}
+  .pickhead #shape-note{flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pickhead .findbar{flex-wrap:nowrap;margin-bottom:10px}
+  .pickhead .findbar input{flex:1 1 0;min-width:0}
+  .pickhead .find-note:empty{display:none}
+}
 .global{display:flex;gap:8px}
 .ghost{font:600 14px/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 14px}
 .ghost:hover{border-color:var(--muted)}
@@ -259,7 +295,13 @@ pre .c{color:var(--muted)}
 <div class="wrap c-arrow" id="app" data-scheme="pink">
  <div class="pane menu">
   <header>
-    <span class="eyebrow">win-cursor · 포인터 구성표 <!--COUNT-->종</span>
+    <div class="topline">
+      <span class="eyebrow">win-cursor · 포인터 구성표 <!--COUNT-->종</span>
+      <div class="skins" role="group" aria-label="페이지 테마">
+        <button type="button" class="ghost c-hand" data-skin="" aria-pressed="true">기본</button>
+        <button type="button" class="ghost c-hand" data-skin="terminal" aria-pressed="false">터미널</button>
+      </div>
+    </div>
     <h1>cursor-playground <em>schemes</em><span class="ver"><!--VERSION--></span></h1>
     <p class="lede">텍스트 픽셀아트로 그린 윈도우 커서 구성표 <!--COUNT-->가지를 <!--GROUPS-->갈래로 묶음. 구성표를 고르면 이 페이지의 커서가 먼저 바뀌고, 마음에 들면 버튼 하나로 윈도우에 바로 적용함. 이것저것 적용해 보다 질리면 원래대로 누르면 페이지를 열기 전 커서로 돌아감. <b>커서 모양</b> 에서 화살표 모양을 바꾸면 같은 구성표가 그 모양으로 다시 그려짐.</p>
   </header>
@@ -287,6 +329,7 @@ pre .c{color:var(--muted)}
   </section>
 
   <section>
+    <div class="pickhead">
     <div class="section-head">
       <h2>구성표 고르기</h2>
       <div class="global">
@@ -305,6 +348,7 @@ pre .c{color:var(--muted)}
       <button type="button" class="ghost c-hand" id="fav-only" aria-pressed="false">즐겨찾기만</button>
       <button type="button" class="ghost c-hand" id="random">랜덤 적용</button>
       <span class="find-note" id="find-note"></span>
+    </div>
     </div>
     <div class="groups" role="group" aria-label="구성표"><!--PICKER--></div>
     <div class="sizebar schedbar">
@@ -1249,6 +1293,44 @@ pre .c{color:var(--muted)}
     window.cpSend('schedule');
   });
   document.getElementById('sched-off').addEventListener('click', function(){ window.cpSend('unschedule'); });
+})();
+
+// 페이지 테마 버튼(기본·터미널). 고른 것은 이 브라우저에 기억한다 (머리의 스크립트가 첫 그림 전에 입힌다)
+(function(){
+  var root = document.documentElement, btns = document.querySelectorAll('[data-skin]:not(html)');
+  function show(){
+    var now = root.getAttribute('data-skin') || '';
+    btns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-skin') === now)); });
+  }
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-skin');
+      if (v) root.setAttribute('data-skin', v); else root.removeAttribute('data-skin');
+      try { if (v) localStorage.setItem('cp-skin', v); else localStorage.removeItem('cp-skin'); } catch (e) {}
+      show();
+    });
+  });
+  show();
+})();
+
+// 구성표 고르기 머리: 붙어 있을 때만 밑줄, 그 높이를 --head 로 알려 칸으로 옮겨 다닐 때 머리 밑에 숨지 않게 한다
+(function(){
+  var head = document.querySelector('.pickhead'), mark = document.createElement('div'), queued = false;
+  head.parentNode.insertBefore(mark, head);
+  // 붙지 않았으면 머리는 표지 바로 밑(음수 여백만큼 위)에 있다. 그보다 내려가 있으면 붙어서 따라온 것.
+  // IntersectionObserver 는 한 번에 멀리 뛰면(End 키) 지나친 줄 몰라서 스크롤마다 잰다
+  function check(){
+    queued = false;
+    var gap = head.getBoundingClientRect().top - mark.getBoundingClientRect().top - parseFloat(getComputedStyle(head).marginTop);
+    head.classList.toggle('stuck', gap > 1);
+  }
+  function later(){ if (!queued) { queued = true; requestAnimationFrame(check); } }
+  document.addEventListener('scroll', later, true);   // 넓은 화면은 왼쪽 통이, 좁은 화면은 페이지가 스크롤한다
+  addEventListener('resize', later);
+  check();
+  function seat(){ document.documentElement.style.setProperty('--head', head.offsetHeight + 'px'); }
+  if (window.ResizeObserver) new ResizeObserver(seat).observe(head); else addEventListener('resize', seat);
+  seat();
 })();
 
 // 지금 설정 주소: 화면 맨 아래 줄에 적용 주소를 띄워 둔다. 복사해서 Win+R 이나 주소창에 붙이면 그대로 적용됨
