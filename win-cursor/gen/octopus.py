@@ -456,7 +456,7 @@ def no() -> list[dict]:
     """빨간 금지 표지(고리 + 사선) 앞에서 문어가 앞 다리 둘을 들어 제 눈을 가린다(🙈) — 사이사이 오른 다리를 내려
     빼꼼 본다. 나머지 다리 셋은 머리 아래로 엇갈리지 않고 늘어져 꼼지락"""
     frames = []
-    hy, r = 12.0, 6.2
+    hy, r = 14.0, 5.8
     R = 13.5
     ring = {p for p in disc(15.5, 15.5, R) if math.hypot(p[0] + 0.5 - 15.5, p[1] + 0.5 - 15.5) > R - 2.4}
     bar = set()
@@ -465,7 +465,6 @@ def no() -> list[dict]:
         bar |= disc(15.5 + d, 15.5 + d, 1.3)
     for k, ph in enumerate(phases()):
         f = {}
-        solid(f, ring | bar, SIGN, SIGN_D)
         peek = k in (5, 6, 7)
         cy = hy + 0.3 * math.sin(ph)
         # ✕ 로 엇갈린 다리는 둥근 머리 밑에서 해골과 뼈다귀(☠)로 읽혔다 — 다리가 머리 아래에서 교차하지 않게,
@@ -488,6 +487,10 @@ def no() -> list[dict]:
                 p = (math.floor(x + dx / d * 0.9), math.floor(y + dy / d * 0.9))
                 if f.get(p) == BODY:
                     f[p] = SUCK
+        # 표지는 문어 위에 덮는다 — 문어 뒤에 깔면 고리 위쪽과 사선이 몸에 묻혀 금지로 안 읽혔다
+        for p in ring | bar:
+            f.pop(p, None)
+        solid(f, ring | bar, SIGN, SIGN_D)
         frames.append(finish(f))
     return frames
 
