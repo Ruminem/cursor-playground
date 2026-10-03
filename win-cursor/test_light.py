@@ -376,11 +376,14 @@ print("rate 칸 OK — 프레임마다 머무는 시간이 파일에 적힌다")
 # 전기 불꽃을 칸마다 따로 뽑아 그렇게 됐다. 절반 넘는 프레임에 나오는 기호 칸의 상자에서 3칸 넘게
 # 떨어진 칸이 있으면 실패한다. 여유를 두는 것은 기호 **스스로** 움직이는 구성표 때문이다 —
 # 불꽃놀이의 모래시계는 터지며 아래로 2~3칸 번지고, 지터의 기호는 옆으로 2칸 떨린다(1칸 여유로
-# 짰다가 이 둘이 걸렸다). 샌 화살표 무늬는 몸 안쪽·왼쪽이라 기호 상자에서 훨씬 멀다
+# 짰다가 이 둘이 걸렸다). 샌 화살표 무늬는 몸 안쪽·왼쪽이라 기호 상자에서 훨씬 멀다.
+# classic_only 구성표는 매끈한 모양으로 안 그려 smooth_parts 를 안 타므로 뺀다 — 그 칸들은
+# 작은 화살표 동물 옆에 장면을 통째로 그려서 기호 상자라는 것이 없다(먼치킨 백그라운드 작업)
 import build  # noqa: E402
 
 leaks = []
-for scheme in build.SCHEMES:
+smooth_schemes = [s for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY]
+for scheme in smooth_schemes:
     sid = scheme["id"]
     arrow = shapelib.read_art(build.art_raw(sid, "arrow"))[0]
     for rid in ("help", "busy", "pin", "person"):
@@ -397,7 +400,7 @@ for scheme in build.SCHEMES:
         out = [p for p in seen if not (x0 - 3 <= p[0] <= x1 + 3 and y0 - 3 <= p[1] <= y1 + 3)]
         if out:
             leaks.append(f"{sid}/{rid} {len(out)}칸")
-print(f"기호 칸 {len(build.SCHEMES) * 4}개 · 화살표 무늬가 샌 칸 {len(leaks)}개")
+print(f"기호 칸 {len(smooth_schemes) * 4}개 · 화살표 무늬가 샌 칸 {len(leaks)}개")
 assert not leaks, "기호에 화살표 무늬가 섞임 — " + " · ".join(leaks)
 print("기호 OK — 도움말·작업·위치·사용자 칸의 화살표 부분이 화살표 그림과 같다")
 
