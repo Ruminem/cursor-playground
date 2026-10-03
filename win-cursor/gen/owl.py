@@ -43,7 +43,7 @@ FACE, FACE_D, HI = hx("f6e8cdff"), hx("d9b98cff"), hx("fffaf0ff")    # 얼굴판
 IRIS, IRIS_R = hx("f8bf1eff"), hx("c46a12ff")                       # 노란 홍채 · 눈 테(검정 테면 안경으로 읽힌다)
 BEAK, BEAK_D, FOOT = hx("f08a24ff"), hx("b85e14ff"), hx("e9a53aff")  # 부리 · 부리 그늘 · 발
 BLUSH = hx("f49a9aff")
-ink(OUT, HI)
+ink(OUT, HI, hx("f6e9d2c7"))                       # 숲속 친구들 공용 크림 테 (다람쥐·토끼·여우와 같게)
 BRANCH, BRANCH_D = hx("7a5230ff"), hx("553820ff")                    # 나뭇가지
 LEAF, LEAF_D, LEAF_L = hx("5aa04aff"), hx("3f7a35ff"), hx("86c46aff")   # 나뭇잎 · 풀
 ACORN, CAP, ACORN_L = hx("a0662eff"), hx("6b4423ff"), hx("c58a4eff")    # 도토리 · 모자 · 반짝

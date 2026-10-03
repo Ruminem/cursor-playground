@@ -39,7 +39,7 @@ OUT, EYE, HI = hx("2a1a10ff"), hx("1a0e08ff"), hx("fffaf0ff")                  #
 SPINE, SPINE_D, SPINE_M, SPINE_L = hx("5c3b22ff"), hx("3e2716ff"), hx("7c5434ff"), hx("dcc08eff")   # 가시 · 끝
 CREAM, CREAM_D, BLUSH = hx("f4e2c4ff"), hx("dcc39aff"), hx("f49a9aff")         # 얼굴 · 배 그늘 · 볼터치
 FEET, EAR = hx("d4927aff"), hx("c98a72ff")                                     # 발 · 귀
-ink(OUT, HI)
+ink(OUT, HI, hx("f6e9d2c7"))                       # 숲속 친구들 공용 크림 테 (다람쥐·토끼·여우와 같게)
 GRASS, GRASS_D, GRASS_L = hx("5aa04aff"), hx("3f7a35ff"), hx("86c46aff")      # 풀 · 나뭇잎
 ACORN, ACORN_L, CAP, CAP_D = hx("a0662eff"), hx("c88a4eff"), hx("6b4423ff"), hx("4a2e16ff")   # 도토리
 APPLE, APPLE_D, APPLE_L = hx("d9443aff"), hx("a52f28ff"), hx("f08a7aff")
