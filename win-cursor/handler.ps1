@@ -5,19 +5,21 @@
 # 받는 주소는 아래 여섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
 #   cursor-playground://apply/<구성표>/<방문>[/<크기>[/<색조>]]  커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
 #                                              <색조> 가 0 이 아니면 색상환을 그만큼 돌린 새 구성표(예: 네온 색조120)로 만든다
-#                                              그 뒤에 /<모양>, 맨 끝에 /dot 을 붙이면 링크(손) 칸의 핫스팟에 파란 점을 찍는다
+#                                              그 뒤에 /<모양>, 맨 끝에 /<점> 을 붙이면 고른 칸의 핫스팟에 파란 점을 찍는다
+#                                              <점> 은 dot(링크 칸만) 이나 dot.<칸>.<칸>… (칸은 아래 $slots 의 파일 이름, 예: dot.arrow.hand)
 #   cursor-playground://size/<크기>/<방문>      포인터 크기만 바꿈. <크기> 는 32, 48, 64, 96, 128 중 하나
 #   cursor-playground://restore/<방문>          그 방문에서 처음 적용하기 직전 상태로 되돌림
 #   cursor-playground://status                  지금 상태를 알림 창으로 보여 줌
 #   cursor-playground://settings                마우스 속성 창을 포인터 탭으로 엶
-#   cursor-playground://schedule/<방문>/<시>-<구성표>-<색조>[-<모양>][-dot]/...  정한 시각마다 그 구성표로 바꾸는 작업을 등록 (최대 6칸)
+#   cursor-playground://schedule/<방문>/<시>-<구성표>-<색조>[-<모양>][-<점>]/...  정한 시각마다 그 구성표로 바꾸는 작업을 등록 (최대 6칸)
 #   cursor-playground://unschedule              등록한 자동 전환 작업을 지움
 #   cursor-playground://unlink                  설치할 때 상태로 되돌린 뒤 주소 연결과 설치 폴더까지 지움
 # <방문> 은 페이지를 열 때마다 새로 만드는 16자리 번호. 같은 방문 안에서 여러 번 적용해도 백업은 처음 한 번만 뜬다.
 #
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
 [CmdletBinding(PositionalBinding = $false)]
-param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue, [string]$Shape, [switch]$Dot)  # -Apply 는 자동 전환 작업이 부른다
+param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue, [string]$Shape, [switch]$Dot, [string]$DotSlots)  # -Apply 는 자동 전환 작업이 부른다
+# -Dot 은 링크 칸만 점(예전에 등록한 작업도 이 꼴), -DotSlots arrow.hand 는 고른 칸마다 점
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # 내려받기 진행 표시가 꽤 느리게 만든다
 
@@ -39,6 +41,25 @@ $slots = [ordered]@{
     NWPen = 'pen'; No = 'no'; SizeNS = 'ns'; SizeWE = 'we'; SizeNWSE = 'nwse'; SizeNESW = 'nesw'; SizeAll = 'move'
     UpArrow = 'up'; Hand = 'hand'; Pin = 'pin'; Person = 'person'
 }
+# 클릭 점 토큰(dot · dot.arrow.hand)을 점 찍을 칸 파일 이름 목록으로. 칸 차례는 위 표 차례로 맞추고
+# 모르는 칸이 하나라도 있으면 $null (주소를 통째로 무시). dot 하나는 예전 주소 그대로 링크 칸만
+function Get-DotFiles([string]$token) {
+    if (-not $token) { return , @() }
+    if ($token -ceq 'dot') { return , @('hand') }
+    $want = @($token -split '\.' | Select-Object -Skip 1)
+    if (-not $want.Count -or ($want | Where-Object { $slots.Values -cnotcontains $_ })) { return $null }
+    , @($slots.Values | Where-Object { $want -ccontains $_ })
+}
+# 점 칸 목록을 다시 토큰으로 (폴더 이름·작업 인자에 쓴다). 링크 칸만이면 예전처럼 dot
+function Get-DotToken($files) {
+    if (-not $files -or -not $files.Count) { '' }
+    elseif ($files.Count -eq 1 -and $files[0] -ceq 'hand') { 'dot' }
+    else { 'dot.' + ($files -join '.') }
+}
+# 받는 주소 두 가지. test_dot.ps1 이 이 둘을 그대로 가져다 검사한다
+$dotPattern = '(dot(?:\.[a-z]{2,6}){0,17})'
+$applyPattern = '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3})(?:/(?!dot(?:[./]|$))([a-z]{1,12}))?(?:/' + $dotPattern + ')?)?)?/?$'
+$schedulePattern = '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:-(?!dot(?:\.|-|/|$))[a-z]{1,12})?(?:-dot(?:\.[a-z]{2,6}){0,17})?){1,6})/?$'
 
 # 구성표 목록은 Pages 의 schemes.json 에서 읽는다. 테마가 늘어도 이 스크립트를 다시 설치할 필요가 없음
 function Get-Scheme($id) {
@@ -62,11 +83,12 @@ function Get-Shape($id) {
 }
 
 # 레지스트리에 들어갈 구성표 이름: 테마 + 모양 + 색조 + 점
-function Get-SchemeName($entry, [int]$hue, $shape, $dot) {
+function Get-SchemeName($entry, [int]$hue, $shape, $dots) {
     $name = $entry.name
     if ($shape) { $name = "$name $($shape.name)" }
     if ($hue) { $name = "$name 색조$hue" }
-    if ($dot) { $name = "$name 점" }
+    # 링크 칸만이면 예전 이름 그대로 '점', 칸을 여럿 고르면 그 수를 붙인다
+    if ($dots -and $dots.Count) { $name = if ((Get-DotToken $dots) -ceq 'dot') { "$name 점" } else { "$name 점$($dots.Count)" } }
     $name
 }
 
@@ -306,12 +328,13 @@ namespace CursorPlayground {
 }
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
-function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dot) {
+function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dots) {
     $key = if ($shape) { "$shape-$id" } else { $id }
     if ($hue) { $key = "$key-h$hue" }
-    if ($dot) { $key = "$key-dot" }
+    $dotToken = Get-DotToken $dots
+    if ($dotToken) { $key = "$key-$dotToken" }
     $dest = Join-Path $root $key
-    if ($hue -or $dot) { Initialize-Recolor }
+    if ($hue -or $dotToken) { Initialize-Recolor }
     New-Item -ItemType Directory -Force $dest | Out-Null
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $paths = foreach ($slot in $slots.Keys) {
@@ -329,8 +352,8 @@ function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dot) {
         if (-not (($ext -eq 'cur' -and $isCur) -or ($ext -eq 'ani' -and $isAni))) {
             Remove-Item $cur; throw "$file.$ext 가 커서 파일이 아님"
         }
-        # 점은 링크 칸에만 찍는다 (시안 페이지의 '링크 클릭 점')
-        $mark = [bool]$dot -and $file -eq 'hand'
+        # 점은 고른 칸에만 찍는다 (시안 페이지의 '클릭 점')
+        $mark = [bool]$dots -and $dots -ccontains $file
         if ($hue -or $mark) {
             $colored = if ($isAni) { [CursorPlayground.Recolor]::Ani($head, $hue, $mark) } else { [CursorPlayground.Recolor]::Cur($head, $hue, $mark) }
             [IO.File]::WriteAllBytes($cur, $colored)
@@ -342,8 +365,8 @@ function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dot) {
     $paths
 }
 
-function Set-Scheme($id, $name, $ext, [int]$hue, $shape, $dot) {
-    $paths = @(Install-Scheme $id $name $ext $hue $shape $dot)
+function Set-Scheme($id, $name, $ext, [int]$hue, $shape, $dots) {
+    $paths = @(Install-Scheme $id $name $ext $hue $shape $dots)
     $i = 0
     foreach ($slot in $slots.Keys) {
         New-ItemProperty -Path $cursorsKey -Name $slot -Value $paths[$i] -PropertyType ExpandString -Force | Out-Null
@@ -429,7 +452,8 @@ function Set-Schedule($slots) {
         $argument = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -Apply $($slot.Id)"
         if ($slot.Hue) { $argument += " -Hue $($slot.Hue)" }
         if ($slot.Shape) { $argument += " -Shape $($slot.Shape)" }
-        if ($slot.Dot) { $argument += ' -Dot' }
+        $dotToken = Get-DotToken $slot.Dots
+        if ($dotToken -ceq 'dot') { $argument += ' -Dot' } elseif ($dotToken) { $argument += " -DotSlots $($dotToken.Substring(4))" }
         $action = New-ScheduledTaskAction -Execute "$PSHOME\powershell.exe" -Argument $argument
         $trigger = New-ScheduledTaskTrigger -Daily -At ([datetime]::Today.AddHours($slot.Hour))
         # 배터리로 돌 때도, 컴퓨터가 꺼져 있어 놓친 시각도 켜지면 한 번 실행
@@ -469,8 +493,10 @@ if ($Apply) {
     # $Shape 는 [string] 파라미터라 같은 이름(대소문자 무시)의 변수에 객체를 넣으면 문자열이 된다
     $shapeEntry = if ($Shape) { Get-Shape $Shape } else { $null }
     if ($Shape -and -not $shapeEntry) { return }
-    $name = Get-SchemeName $entry $Hue $shapeEntry $Dot.IsPresent
-    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue $(if ($shapeEntry) { $shapeEntry.id }) $Dot.IsPresent
+    $dots = if ($DotSlots) { Get-DotFiles "dot.$DotSlots" } elseif ($Dot) { @('hand') } else { @() }
+    if ($null -eq $dots) { return }
+    $name = Get-SchemeName $entry $Hue $shapeEntry $dots
+    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue $(if ($shapeEntry) { $shapeEntry.id }) $dots
     return
 }
 
@@ -480,17 +506,18 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3})(?:/(?!dot/?$)([a-z]{1,12}))?(?:/(dot))?)?)?/?$' -and [int]('0' + $Matches[4]) -lt 360) {
-        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4]); $shapeId = $Matches[5]; $withDot = [bool]$Matches[6]
+    if ($Url -cmatch $applyPattern -and [int]('0' + $Matches[4]) -lt 360) {
+        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4]); $shapeId = $Matches[5]; $dots = Get-DotFiles $Matches[6]
         $entry = Get-Scheme $id
         if (-not $entry) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
         $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
         if ($shapeId -and -not $shapeEntry) { Notify "알 수 없는 모양이라 무시함`n$shapeId" -IsError; return }
-        $name = Get-SchemeName $entry $hue $shapeEntry $withDot
+        if ($null -eq $dots) { Notify "알 수 없는 클릭 점 칸이라 무시함`n$($Matches[6])" -IsError; return }
+        $name = Get-SchemeName $entry $hue $shapeEntry $dots
         $ext = if ($entry.animated -eq $true) { 'ani' } else { 'cur' }
         Save-VisitBackup $visit
         if ($size) { Set-Size $size }
-        Set-Scheme $id $name $ext $hue $(if ($shapeEntry) { $shapeEntry.id }) $withDot
+        Set-Scheme $id $name $ext $hue $(if ($shapeEntry) { $shapeEntry.id }) $dots
         if ($env:CURSOR_PLAYGROUND_NO_POPUP) { "적용함: $prefix$name" }
     }
     elseif ($Url -cmatch '^cursor-playground://size/(32|48|64|96|128)/([a-z0-9]{16})/?$') {
@@ -517,20 +544,21 @@ try {
     elseif ($Url -cmatch '^cursor-playground://status/?$') {
         Notify (Get-StatusText)
     }
-    elseif ($Url -cmatch '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:-[a-z]{1,12})?(?:-dot)?){1,6})/?$') {
-        $slots = @()
+    elseif ($Url -cmatch $schedulePattern) {
+        $plan = @()   # $slots(칸 표)를 덮어쓰면 Get-DotFiles 가 칸 이름을 못 찾는다
         foreach ($part in ($Matches[2] -split '/' | Where-Object { $_ })) {
-            # 맨 끝 -dot 은 링크 클릭 점. 모양이 없으면 넷째 칸이 dot 이라 먼저 떼어 낸다
+            # 맨 끝 -dot… 은 클릭 점. 모양이 없으면 넷째 칸이 점이라 먼저 떼어 낸다
             $bits = @($part -split '-')
-            $withDot = $bits.Count -gt 3 -and $bits[-1] -ceq 'dot'
-            if ($withDot) { $bits = $bits[0..($bits.Count - 2)] }
+            $dotToken = if ($bits.Count -gt 3 -and $bits[-1] -cmatch '^dot(\.|$)') { $bits[-1] } else { '' }
+            if ($dotToken) { $bits = $bits[0..($bits.Count - 2)] }
+            $dots = Get-DotFiles $dotToken
             $hour, $id, $hue, $shapeId = $bits
             $entry = Get-Scheme $id
             $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
-            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359 -or ($shapeId -and -not $shapeEntry)) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
-            $slots += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Dot = $withDot; Name = Get-SchemeName $entry ([int]$hue) $shapeEntry $withDot }
+            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359 -or ($shapeId -and -not $shapeEntry) -or $null -eq $dots) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
+            $plan += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Dots = $dots; Name = Get-SchemeName $entry ([int]$hue) $shapeEntry $dots }
         }
-        Set-Schedule $slots
+        Set-Schedule $plan
         Notify "시간대별 자동 전환을 켬.`n`n$((Get-Schedule | ForEach-Object { $_.TaskName } | Sort-Object) -join "`n")"
     }
     elseif ($Url -cmatch '^cursor-playground://unschedule/?$') {

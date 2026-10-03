@@ -1,5 +1,5 @@
 ﻿# SPDX-License-Identifier: Apache-2.0
-# handler.ps1 의 링크 클릭 점(C# Recolor.Mark)을 dist 의 손 커서에 찍어 보고, 윈도우가 그 파일을 읽는지와
+# handler.ps1 의 클릭 점(C# Recolor.Mark)을 dist 의 커서(손·화살표·모래시계)에 찍어 보고, 윈도우가 그 파일을 읽는지와
 # 이미지마다 핫스팟 픽셀이 파란지 본다. C# 은 윈도우 PowerShell(5.1)에서만 컴파일되고 handler 도 5.1 로 돌아서
 # CI 가 빌드 뒤에 5.1 로 부른다: powershell -NoProfile -ExecutionPolicy Bypass -File test_dot.ps1
 $ErrorActionPreference = 'Stop'
@@ -62,8 +62,46 @@ foreach ($deg in 0, 120) {
     Test-Load $out 'ani' "heartbeat 색조$deg 점"
     Test-Cur (First-Icon $out) "heartbeat 색조$deg 점" $true
 }
+# 손 말고 다른 칸에도 같은 점이 찍힌다. 화살표는 핫스팟이 (0,0) 구석이라 흰 테가 판 밖으로 나가는 자리,
+# 모래시계는 핫스팟이 가운데인 자리
+foreach ($slot in 'arrow', 'wait') {
+    $one = [IO.File]::ReadAllBytes((Join-Path $PSScriptRoot "dist\pink\$slot.cur"))
+    Test-Cur $one "pink $slot 원본" $false
+    $out = [CursorPlayground.Recolor]::Cur($one, 0, $true)
+    Test-Load $out 'cur' "pink $slot 점"
+    Test-Cur $out "pink $slot 점" $true
+}
+
+# 주소 풀이: 시안 페이지가 뱉는 꼴을 handler 가 그대로 읽는지. 점 토큰은 링크 칸만(dot)과 칸 여럿(dot.arrow.hand).
+# 칸 차례는 주소에 적힌 차례가 아니라 칸 표 차례로 맞춘다
+$v = 'a1b2c3d4e5f60789'
+$cases = @(
+    @("cursor-playground://apply/pink/$v/32/0", '', '', ''),
+    @("cursor-playground://apply/pink/$v/32/0/cutout", 'cutout', '', ''),
+    @("cursor-playground://apply/pink/$v/32/0/dot", '', 'dot', 'hand'),
+    @("cursor-playground://apply/pink/$v/48/120/cutout/dot", 'cutout', 'dot', 'hand'),
+    @("cursor-playground://apply/pink/$v/32/0/dot.arrow.wait.hand", '', 'dot.arrow.wait.hand', 'arrow,wait,hand'),
+    @("cursor-playground://apply/pink/$v/32/0/cutout/dot.hand.arrow", 'cutout', 'dot.hand.arrow', 'arrow,hand')
+)
+foreach ($c in $cases) {
+    if ($c[0] -cnotmatch $applyPattern) { "주소를 못 읽음: $($c[0])"; $fail = 1; continue }
+    $shape = "$($Matches[5])"; $token = "$($Matches[6])"; $files = (Get-DotFiles $token) -join ','
+    "$($c[0]) → 모양 '$shape' · 점 '$token' · 칸 '$files'"
+    if ($shape -cne $c[1] -or $token -cne $c[2] -or $files -cne $c[3]) { "  ↑ 기대: 모양 '$($c[1])' · 점 '$($c[2])' · 칸 '$($c[3])'"; $fail = 1 }
+}
+foreach ($bad in "cursor-playground://apply/pink/$v/32/0/dot.", "cursor-playground://apply/pink/$v/32/0/dot/cutout") {
+    if ($bad -cmatch $applyPattern) { "엉뚱한 주소를 읽어 버림: $bad"; $fail = 1 }
+}
+if ($null -ne (Get-DotFiles 'dot.arrow.nope')) { '모르는 칸이 든 점 토큰을 받아 버림'; $fail = 1 }
+foreach ($t in @(@('', @()), @('dot', @('hand')), @('dot.arrow.hand', @('arrow', 'hand')))) {
+    $got = Get-DotToken $t[1]
+    if ($got -cne $t[0]) { "점 토큰을 잘못 만듦: $($t[1] -join ',') → '$got' (기대 '$($t[0])')"; $fail = 1 }
+}
+$sched = "cursor-playground://schedule/$v/7-pink-0-dot.arrow.hand/22-electric-120-cutout-dot/9-ink-0-cutout/23-ink-0"
+if ($sched -cnotmatch $schedulePattern) { "예약 주소를 못 읽음: $sched"; $fail = 1 }
+
 # 점을 끄고 색조만 돌린 길도 그대로 돈다
 Test-Load ([CursorPlayground.Recolor]::Cur($cur, 120, $false)) 'cur' 'pink 색조120'
 Test-Cur ([CursorPlayground.Recolor]::Cur($cur, 120, $false)) 'pink 색조120' $false
-if ($fail) { '링크 클릭 점 검사 실패' } else { '링크 클릭 점 검사 통과' }
+if ($fail) { '클릭 점 검사 실패' } else { '클릭 점 검사 통과' }
 exit $fail

@@ -28,10 +28,13 @@ for url, want in [
     # 링크 클릭 점. 모양 없이 붙으면 dot 을 모양으로 읽지 않아야 한다
     (f"apply/electric/{visit}/48/270/dot", ("electric", "48", "270", None, "dot")),
     (f"apply/electric/{visit}/48/270/cutout/dot", ("electric", "48", "270", "cutout", "dot")),
+    # 칸마다 클릭 점. dot.<칸>.<칸>… 도 모양으로 읽지 않아야 한다
+    (f"apply/electric/{visit}/48/270/dot.arrow.hand", ("electric", "48", "270", None, "dot.arrow.hand")),
+    (f"apply/electric/{visit}/48/270/cutout/dot.arrow.wait", ("electric", "48", "270", "cutout", "dot.arrow.wait")),
 ]:
     m = parse.fullmatch(url)
     assert m and m.groups() == want, f"주소를 못 읽음: {url}"
-for bad in ["cursor-playground://restore/" + visit, "apply/electric", "https://example.com"]:
+for bad in ["cursor-playground://restore/" + visit, "apply/electric", "https://example.com", f"apply/electric/{visit}/48/270/dot."]:
     assert not parse.fullmatch(bad), f"엉뚱한 주소를 읽어 버림: {bad}"
 
 # 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다
