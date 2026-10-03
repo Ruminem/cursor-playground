@@ -1,3 +1,7 @@
+- 여기까지 됨 (2026-10-03 — v1.4.0 릴리스): 태그 v1.4.0(d6ca25c)을 내 PC 에서 밀었고 release.yml 이 1분 11초 만에 릴리스를 냈다. 캐시가 main 키에 정확히 히트해 커서 0개·빌드 14.8초, zip 638MiB, 본문은 CHANGELOG 1.4.0 절. 태그 check 런도 성공
+- 다음 할 것: 약한 칸 다듬기. 꽃게 cross·person·ns·pin / 문어 ns·no·pen / 해달 move·크기 조절 넷 (아래 해양 애니 3종 절 참고)
+- 막힌 것: 없음 (클라우드에서는 여전히 태그를 못 밀어 다음 릴리스도 내 PC 에서 민다)
+
 - 여기까지 됨 (2026-10-03 — v1.4.0 릴리스 준비): CHANGELOG 1.4.0 절을 9월 23일 뒤로 바뀐 것(해양 애니 10종·다시 그린 움직이는 구성표·재질·링크 커서·클릭 점·맥 .cape·시안 페이지)으로 채우고 날짜를 10-03 으로 맞춰 main 에 넣었다(d6ca25c7). 페이지 표시는 `v1.4.0 · d6ca25c`
 - 다음 할 것: v1.4.0 태그 밀기. 내 PC 에서 `git pull && git tag -a v1.4.0 -m v1.4.0 d6ca25c && git push origin v1.4.0` — release.yml 이 빌드·zip·릴리스를 한다. 그 뒤 릴리스 본문·zip 과 로그의 `Cache restored` 를 본다(아직 한 번도 못 봄)
 - 막힌 것: 클라우드에서 태그를 못 민다 — `git push origin v1.4.0` 은 unexpected disconnect, `POST git/refs` 는 프록시 403(9월 22일과 같음)
