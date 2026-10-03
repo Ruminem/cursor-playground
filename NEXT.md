@@ -1,3 +1,7 @@
+- 여기까지 됨 (2026-10-03 — v1.4.0 릴리스 준비): CHANGELOG 1.4.0 절을 9월 23일 뒤로 바뀐 것(해양 애니 10종·다시 그린 움직이는 구성표·재질·링크 커서·클릭 점·맥 .cape·시안 페이지)으로 채우고 날짜를 10-03 으로 맞춰 main 에 넣었다(d6ca25c7). 페이지 표시는 `v1.4.0 · d6ca25c`
+- 다음 할 것: v1.4.0 태그 밀기. 내 PC 에서 `git pull && git tag -a v1.4.0 -m v1.4.0 d6ca25c && git push origin v1.4.0` — release.yml 이 빌드·zip·릴리스를 한다. 그 뒤 릴리스 본문·zip 과 로그의 `Cache restored` 를 본다(아직 한 번도 못 봄)
+- 막힌 것: 클라우드에서 태그를 못 민다 — `git push origin v1.4.0` 은 unexpected disconnect, `POST git/refs` 는 프록시 403(9월 22일과 같음)
+
 - 여기까지 됨 (2026-10-03 — 해양 애니 3종 더함): 해달(otteranim)·꽃게(crabanim)·문어 치비(octopusanim)를 `gen/{otter,crab,octopus}.py` 로 17칸 다 그려 67종이 됐다. 셋 다 classic_only·sway·keep wait. 해달은 등을 대고 떠서 조개를 콩콩, no 는 두 앞발로 얼굴 가리기. 꽃게는 옆걸음·집게 딸깍·거품, 문어는 다리 물결·먹물. 커서 51개 13.4초, 맥 .cape 737벌 실패 0
 - 다음 할 것: 약한 칸 다듬기. 꽃게 cross·person 속 작은 게, ns 집게가 다리에 겹침, pin 이 막대사탕처럼 읽힘 / 문어 ns 가 마법사 모자, no 의 엇갈린 팔이 치마, pen 이 요술봉 / 해달 move·크기 조절 넷의 위에서 본 해달이 콧수염처럼 읽힘
 - 막힌 것: 없음
