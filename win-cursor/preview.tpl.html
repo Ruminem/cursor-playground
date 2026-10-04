@@ -182,6 +182,8 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 /* 한 장의 카드: 크기는 쟁반 위에 고른 칸만 떠 있는 토글, 색조는 색상환을 펼친 띠 — 띠의 무지개는 테마 색이 아니라 고를 색 자체다 */
 .tune{display:grid;gap:22px;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px 24px}
 .tune .sizebar{margin-top:0;padding-top:0;border-top:0}
+.ctl-label{flex:1 1 100%;display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 13px/1.2 var(--body);color:var(--muted)}
+.ctl-label .mono{font:500 13px/1.2 var(--mono);color:var(--ink)}
 .tune .sizes{flex:1 1 100%;gap:2px;padding:4px;border:0;border-radius:999px;background:var(--check-a)}
 .tune .size{flex:1;min-height:40px;padding:0 10px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:500;font-size:13px}
 .tune .size[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 3px var(--shadow),0 0 0 1px var(--line)}
@@ -191,7 +193,6 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .huebar input[type="range"]::-moz-range-thumb{box-sizing:border-box;width:28px;height:28px;border-radius:50%;background:var(--surface);border:2px solid var(--ink);box-shadow:0 1px 4px var(--shadow)}
 .huebar input[type="range"]::-moz-range-track{background:transparent}
 .huebar input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
-.huebar output{font:600 14px/1 var(--mono);min-width:3.5em}
 .schedbar{margin-top:10px;padding-top:0;border-top:0;align-items:flex-start}
 .sched{display:grid;gap:6px}
 .sched-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
@@ -268,14 +269,14 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .card:hover .dotbtn,.dotbtn:focus-visible,.dotbtn[aria-pressed="true"]{opacity:1}
 .dotbtn[aria-pressed="true"]{border-color:rgb(30,110,255)}
 .dotbtn[aria-pressed="true"]::after{background:rgb(30,110,255);border:2px solid #fff;width:6px;height:6px;border-radius:1px}
-.dot-count{font-family:var(--mono);font-size:12px}
-.apply-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.dot-toggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
-/* 클릭 점 전체 선택 · 전체 해제. 이미 그 상태면 흐리게 */
-.dot-bulk{display:inline-flex;gap:4px}
-.dot-bulk button{font:600 12px/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 8px}
-.dot-bulk button:hover:not(:disabled){border-color:var(--muted)}
-.dot-bulk button:disabled{opacity:.4;cursor:default}
+/* 클릭 점 스위치: 고른 구성표 17칸 전부 켜고 끄기. 몇 칸만 켜져 있으면 꺼진 모양이고 누르면 전부 켜짐 */
+.switch{display:inline-flex;align-items:center;gap:12px;min-height:44px;padding:0;border:0;background:none;font:500 14px/1.2 var(--body);color:var(--ink)}
+.switch i{position:relative;flex:none;width:44px;height:26px;border-radius:999px;background:var(--line-2);transition:background .2s}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px var(--shadow);transition:transform .2s}
+.switch[aria-pressed="true"] i{background:var(--accent)}
+.switch[aria-pressed="true"] i::after{transform:translateX(18px)}
+.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:999px}
+@media (prefers-reduced-motion:reduce){ .switch i,.switch i::after{transition:none} }
 .meta{min-width:0}
 .meta h3{margin:0 0 2px;font-size:16px;font-weight:700}
 .meta p{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
@@ -578,23 +579,26 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   <div class="st-body">
   <section class="tune" aria-label="커서 크기와 색조">
     <div class="sizebar">
-      <span class="size-label" id="size-label">커서 크기</span>
+      <div class="ctl-label"><span id="size-label">크기</span><span class="mono" id="size-out">32 px</span></div>
       <div class="sizes" role="group" aria-labelledby="size-label">
-        <button type="button" class="size c-hand" data-size="32" aria-pressed="true">기본</button>
-        <button type="button" class="size c-hand" data-size="48" aria-pressed="false">1.5배</button>
-        <button type="button" class="size c-hand" data-size="64" aria-pressed="false">2배</button>
-        <button type="button" class="size c-hand" data-size="96" aria-pressed="false">3배</button>
-        <button type="button" class="size c-hand" data-size="128" aria-pressed="false">4배</button>
+        <button type="button" class="size c-hand" data-size="32" aria-pressed="true" title="기본">32</button>
+        <button type="button" class="size c-hand" data-size="48" aria-pressed="false" title="1.5배">48</button>
+        <button type="button" class="size c-hand" data-size="64" aria-pressed="false" title="2배">64</button>
+        <button type="button" class="size c-hand" data-size="96" aria-pressed="false" title="3배">96</button>
+        <button type="button" class="size c-hand" data-size="128" aria-pressed="false" title="4배">128</button>
       </div>
       <button type="button" class="ghost c-hand" data-action="size">크기만 적용</button>
       <span class="size-note">고르면 이 페이지 커서가 바로 그 크기가 됨. <b>이 구성표 적용</b> 은 크기까지 같이 적용함.</span>
     </div>
     <div class="sizebar huebar">
-      <label class="size-label" for="hue">색조</label>
+      <div class="ctl-label"><label for="hue">색조</label><output class="mono" id="hue-out" for="hue">원래 색</output></div>
       <input type="range" id="hue" class="c-hand" min="0" max="355" step="5" value="0">
-      <output id="hue-out" for="hue">0°</output>
       <button type="button" class="ghost c-hand" id="hue-reset">원래 색</button>
       <span class="size-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. <b>이 구성표 적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
+    </div>
+    <div class="sizebar">
+      <div class="ctl-label"><span>클릭 점</span><span class="mono" id="dot-out">0 / 17</span></div>
+      <button type="button" class="switch c-hand" id="dot-all" aria-pressed="false" title="고른 구성표 17칸 전부의 클릭 지점에 파란 점을 찍어 적용함. 칸마다 따로는 카드 오른쪽 위 동그라미. 구성표마다 따로 기억"><i></i>핫스팟에 파란 점 찍기</button>
     </div>
   </section>
 
@@ -707,14 +711,17 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     document.querySelectorAll('[data-dotfor="' + sid + '"]').forEach(function(b){
       b.setAttribute('aria-pressed', on.indexOf(b.getAttribute('data-dotslot')) >= 0 ? 'true' : 'false');
     });
-    document.querySelectorAll('[data-dot="' + sid + '"]').forEach(function(b){
-      b.checked = on.length === DOT_SLOTS.length; b.indeterminate = on.length > 0 && on.length < DOT_SLOTS.length;
-      b.parentNode.querySelector('.dot-count').textContent = on.length && on.length < DOT_SLOTS.length ? on.length + '칸' : '';
-    });
-    document.querySelectorAll('[data-dotbulk="' + sid + '"]').forEach(function(b){
-      b.disabled = b.getAttribute('data-all') ? on.length === DOT_SLOTS.length : !on.length;
-    });
+    if (sid !== document.getElementById('app').getAttribute('data-scheme')) return;
+    dotAll.setAttribute('aria-pressed', String(on.length === DOT_SLOTS.length));
+    document.getElementById('dot-out').textContent = on.length + ' / ' + DOT_SLOTS.length;
   }
+  window.cpShowDot = showDot;   // 구성표를 바꾸면 스위치와 칸 수를 그 구성표 것으로
+  // 스튜디오의 스위치는 고른 구성표 17칸 전부 켜고 끄기. 몇 칸만 켜져 있으면 한 번 눌러 전부가 됨
+  var dotAll = document.getElementById('dot-all');
+  dotAll.addEventListener('click', function(){
+    var sid = document.getElementById('app').getAttribute('data-scheme');
+    window.cpSetDots(sid, window.cpDots(sid).length === DOT_SLOTS.length ? [] : DOT_SLOTS);
+  });
   // 카드마다 단추 하나. 칸 이름은 그 카드 제목에서 따 온다
   document.querySelectorAll('.card[class*=" s-"]').forEach(function(c){
     var sid = (/(?:^| )s-([a-z]+)/.exec(c.className) || [])[1], rid = (/(?:^| )c-([a-z]+)/.exec(c.className) || [])[1];
@@ -732,29 +739,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     });
     c.appendChild(b);
   });
-  // 적용 단추 옆 상자는 17칸 전부 켜고 끄기. 몇 칸만 켜져 있으면 반쯤 찬 상자와 칸 수
-  document.querySelectorAll('[data-apply]').forEach(function(b){
-    var sid = b.getAttribute('data-apply'), grp = document.createElement('span'), lab = document.createElement('label');
-    var box = document.createElement('input'), count = document.createElement('span');
-    grp.className = 'apply-group'; lab.className = 'dot-toggle c-hand'; count.className = 'dot-count';
-    lab.title = '커서 클릭 지점에 파란 점을 찍어 적용함. 이 상자는 17칸 전부, 칸마다 따로는 카드 오른쪽 위 동그라미. 구성표마다 따로 기억';
-    box.type = 'checkbox'; box.className = 'c-hand'; box.setAttribute('data-dot', sid);
-    box.addEventListener('change', function(){ window.cpSetDots(sid, box.checked ? DOT_SLOTS : []); });
-    lab.appendChild(box); lab.appendChild(document.createTextNode('클릭 점')); lab.appendChild(count);
-    // 상자는 몇 칸만 켜진 때 한 번 눌러야 전부가 되고 또 눌러야 해제라, 바로 가는 단추 둘을 옆에 둔다
-    var bulk = document.createElement('span');
-    bulk.className = 'dot-bulk';
-    [['전체 선택', DOT_SLOTS], ['전체 해제', []]].forEach(function(d){
-      var k = document.createElement('button');
-      k.type = 'button'; k.className = 'c-hand'; k.textContent = d[0]; k.setAttribute('data-dotbulk', sid);
-      if (d[1].length) k.setAttribute('data-all', '1');
-      k.title = '이 구성표 17칸 클릭 점 ' + (d[1].length ? '전부 켬' : '전부 끔');
-      k.addEventListener('click', function(){ window.cpSetDots(sid, d[1]); });
-      bulk.appendChild(k);
-    });
-    b.parentNode.insertBefore(grp, b); grp.appendChild(lab); grp.appendChild(bulk); grp.appendChild(b);
-    showDot(sid);
-  });
+  document.querySelectorAll('[data-apply]').forEach(function(b){ showDot(b.getAttribute('data-apply')); });
   var SIZES = [32, 48, 64, 96, 128];
   var size = 32, hue = 0, cache = {};
   try {
@@ -1049,12 +1034,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   function chooseSize(px){
     size = px;
     document.querySelectorAll('[data-size]').forEach(function(b){ b.setAttribute('aria-pressed', String(parseInt(b.getAttribute('data-size'), 10) === px)); });
+    document.getElementById('size-out').textContent = px + ' px';
     try { localStorage.setItem('cp-size', String(px)); } catch (e) {}
     tick();
   }
   var hueInput = document.getElementById('hue'), hueOut = document.getElementById('hue-out');
   function chooseHue(deg){
-    hue = deg; hueInput.value = String(deg); hueOut.textContent = deg + '°';
+    hue = deg; hueInput.value = String(deg); hueOut.textContent = deg ? '+' + deg + '°' : '원래 색';
     // 목록 썸네일은 120장이라 CSS 필터로 비슷하게만 보여 줌
     thumbStyle.textContent = deg ? '.thumb{filter:hue-rotate(' + deg + 'deg)}' : '';
     try { localStorage.setItem('cp-hue', String(deg)); } catch (e) {}
@@ -1313,6 +1299,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     picks.forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-pick') === id)); });
     panels.forEach(function(p){ p.hidden = p.getAttribute('data-panel') !== id; });
     try { localStorage.setItem('scheme', id); } catch (e) {}
+    window.cpShowDot(id);
   }
   picks.forEach(function(b){ b.addEventListener('click', function(){ choose(b.getAttribute('data-pick')); }); });
   var saved = null;
