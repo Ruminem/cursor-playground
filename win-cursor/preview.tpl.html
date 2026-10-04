@@ -7,32 +7,34 @@
 if (!/Win/.test(navigator.platform || '') && !/Windows/.test(navigator.userAgent)) document.documentElement.classList.add('not-win');
 // 페이지 테마(기본·터미널)도 첫 그림 전에 입혀야 기본 색으로 한 번 번쩍이지 않는다
 try { if (localStorage.getItem('cp-skin') === 'terminal') document.documentElement.setAttribute('data-skin', 'terminal'); } catch (e) {}
+// 밝기도 같다 — 저장된 것이 'dark' 일 때만 밤, 못 읽으면 밝게
+try { if (localStorage.getItem('cp-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
 :root{
-  --ground:#F6F3F6; --surface:#FFFFFF; --ink:#262028; --muted:#7D7280; --line:#E3DCE4;
-  --accent:#D9579F; --accent-ink:#A8327A; --check-a:#ECE6EC; --check-b:#FFFFFF; --hot:#2A7DE1;
-  --display:"Silkscreen", ui-monospace, monospace;
+  --ground:#FBFBFA; --surface:#FFFFFF; --ink:#111113; --muted:#5C5C66; --line:#E6E6E9; --line-2:#CFCFD4;
+  --accent:#2E44F0; --accent-ink:#2E44F0; --on-accent:#FFFFFF; --check-a:#F1F1EF; --check-b:#FFFFFF; --hot:#E0443A;
+  --nav:rgb(251 251 250 / .86); --shadow:rgb(17 17 19 / .08);
+  --display:"IBM Plex Sans KR", "Malgun Gothic", system-ui, sans-serif;
   --body:"IBM Plex Sans KR", "Malgun Gothic", system-ui, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --ground:#18151A; --surface:#221E24; --ink:#F1ECF2; --muted:#A99DAC; --line:#37303A;
-    --accent:#F27DBE; --accent-ink:#F7A6D3; --check-a:#2A252D; --check-b:#332D36; --hot:#6FB1FF;
-  }
-}
+/* 밤: 시스템 설정은 안 따라가고 머리의 해·달 단추로만 켠다(cp-theme). 처음은 늘 밝게 */
 :root[data-theme="dark"]{
-  --ground:#18151A; --surface:#221E24; --ink:#F1ECF2; --muted:#A99DAC; --line:#37303A;
-  --accent:#F27DBE; --accent-ink:#F7A6D3; --check-a:#2A252D; --check-b:#332D36; --hot:#6FB1FF;
+  --ground:#0C0C0E; --surface:#131316; --ink:#EDEDEF; --muted:#9B9BA5; --line:#26262B; --line-2:#3A3A42;
+  --accent:#5B6CFF; --accent-ink:#9AA6FF; --on-accent:#FFFFFF; --check-a:#18181C; --check-b:#1F1F24; --hot:#FF6B5E;
+  --nav:rgb(12 12 14 / .82); --shadow:rgb(0 0 0 / .4);
+  color-scheme:dark;
 }
 /* 터미널 테마: 검정 바탕에 형광 초록 글자. 밝기 설정과 상관없이 늘 어둡다. 커서 그림은 그대로 두고 페이지 옷만 바꾼다 */
 :root[data-skin="terminal"]{
-  --ground:#030603; --surface:#081008; --ink:#3BFF6E; --muted:#22B04C; --line:#1A5A2A;
-  --accent:#3BFF6E; --accent-ink:#9DFFB5; --check-a:#0A150C; --check-b:#0E1D11; --hot:#F2FF5A;
+  --ground:#030603; --surface:#081008; --ink:#3BFF6E; --muted:#22B04C; --line:#1A5A2A; --line-2:#22B04C;
+  --accent:#3BFF6E; --accent-ink:#9DFFB5; --on-accent:#030603; --check-a:#0A150C; --check-b:#0E1D11; --hot:#F2FF5A;
+  --nav:rgb(3 6 3 / .9); --shadow:transparent;
   --display:"Silkscreen", ui-monospace, monospace;
   --body:"IBM Plex Mono", "D2Coding", Consolas, ui-monospace, monospace;
   color-scheme:dark;
@@ -41,17 +43,38 @@ try { if (localStorage.getItem('cp-skin') === 'terminal') document.documentEleme
 /* 옅은 주사선. 눌리는 것을 막지 않게 pointer-events 를 끈다 */
 :root[data-skin="terminal"] body::after{content:"";position:fixed;inset:0;z-index:50;pointer-events:none;
   background:repeating-linear-gradient(to bottom,transparent 0 2px,rgb(0 0 0 / .18) 2px 3px)}
-.topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
-.skins{display:inline-flex;gap:6px}
-.topbtns{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
-.skins .ghost{padding:6px 10px;font-size:12px}
-#tools-btn{padding:6px 10px;font-size:12px}
+/* 머리 줄: 이름 · 바로 가기 · 버전 도장 · 도구·테마 단추. 넓은 화면은 두 통 위를 가로지르는 붙박이 줄 */
+.nav{order:-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;min-height:64px;margin:-32px -16px 0;padding:8px 16px;
+  padding-top:max(8px,env(safe-area-inset-top));background:var(--nav);border-bottom:1px solid var(--line)}
+.brand{display:inline-flex;align-items:center;gap:10px;min-height:44px;font:700 17px/1 var(--display);letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.brand img{width:24px;height:24px;image-rendering:pixelated}
+.links{display:flex;gap:4px;margin-left:auto}
+.links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:999px;font-size:14px;color:var(--muted);text-decoration:none}
+.links a:focus-visible,.brand:focus-visible,.btn:focus-visible,.theme:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.stamp{font:500 12px/1 var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 12px;white-space:nowrap}
+.skins{display:inline-flex;gap:4px}
+.topbtns{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.skins .ghost,#tools-btn{min-height:44px;padding:0 16px;font-size:13px}
+.theme{width:44px;height:44px;flex:none;display:inline-grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink)}
+.theme svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.theme .sun,:root[data-theme="dark"] .theme .moon{display:none}
+:root[data-theme="dark"] .theme .sun{display:block}
+:root[data-skin="terminal"] .theme{display:none}   /* 터미널은 늘 어두워 밝기 단추가 할 일이 없다 */
+@media (max-width:719px){
+  .nav{gap:8px 12px}
+  .brand{font-size:15px;gap:8px}
+  .links{display:none}
+  .stamp{margin-left:auto}
+  .hero{padding-top:0}
+  .topbtns{width:100%}
+  .theme{margin-left:auto}
+}
 #tools-btn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent-ink)}
 .toolbox{display:grid;grid-template-columns:minmax(0,1fr);gap:36px}
 .toolbox[hidden]{display:none}
 /*CURSOR_CSS*/
 *{box-sizing:border-box}
-body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:32px 92px}  /* 아래 여백은 고정된 주소 줄(.urlbar) 자리 */
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:32px 92px}  /* 아래 여백은 고정된 주소 줄(.urlbar) 자리 */
 .wrap{max-width:980px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:36px}  /* minmax(0,…): 긴 주소 한 줄이 칸을 늘려 폰에서 옆으로 밀리던 것 막기 */
 /* 좁은 화면: 두 통을 풀어 한 줄로 쌓고, 미리보기(.view)를 구성표 고르기 바로 밑에 끼운다 */
 .pane{display:contents}
@@ -63,6 +86,8 @@ body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding
 @media (min-width:1100px){
   body{margin:0;height:100vh;height:100dvh;overflow:hidden;padding:0 0 var(--bar,64px)}
   .wrap{max-width:1560px;height:100%;padding:0 16px;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 32px}
+  .wrap{grid-template-rows:auto minmax(0,1fr)}
+  .nav{grid-column:1/-1;margin:0 -16px;padding-top:8px}
   .pane{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:36px;min-height:0;overflow-y:auto;padding:32px 4px 32px 0}
   .pane.menu{scrollbar-gutter:stable;padding-right:16px}
   .pane.view{overscroll-behavior:contain}
@@ -99,18 +124,25 @@ body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding
   .pane.view .stage{--px:2px}
   .pane.view .legend,.pane.view .play .note,.pane.view .tune .size-note{display:none}
 }
-header{display:grid;gap:10px}
-.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-h1{font:700 clamp(28px,6vw,44px)/1.05 var(--display);margin:0;letter-spacing:.01em;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 10px}
-h1 em{font-style:normal;color:var(--accent)}
-/* 버전은 제목 오른쪽 끝에. 좁은 화면에서는 줄이 넘어가 제목 아래로 내려간다 */
-h1 .ver{margin-left:auto;font:600 12px/1 var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap}
-h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
+/* 첫 화면 */
+.hero{padding:clamp(24px,5vw,64px) 0 clamp(8px,2vw,24px)}
+.eyebrow{margin:0 0 20px;font:600 13px/1 var(--body);letter-spacing:.08em;color:var(--accent-ink)}
+h1{font:700 clamp(40px,6.2vw,80px)/1.04 var(--display);margin:0;letter-spacing:-.035em}
+.lede{margin:24px 0 0;max-width:30em;font-size:clamp(17px,1.6vw,20px);line-height:1.6;color:var(--muted)}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.fine{margin:20px 0 0;font-size:13px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:999px;border:1px solid transparent;
+  font:600 15px/1 var(--body);text-decoration:none;white-space:nowrap}
+.btn-dark{background:var(--ink);color:var(--ground)}
+.btn-line{background:transparent;color:var(--ink);border-color:var(--line-2)}
+:root[data-skin="terminal"] h1{letter-spacing:0}
+h2{font:700 clamp(22px,2.4vw,28px)/1.2 var(--display);letter-spacing:-.02em;margin:0 0 16px;color:var(--ink)}
+:root[data-skin="terminal"] h2{letter-spacing:0}
 
 .findbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 16px}
-.findbar input{flex:1 1 240px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 11px}
+.findbar input{flex:1 1 240px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:999px;padding:9px 16px}
 .findbar input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ghost[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1E1A20}
+.ghost[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
 .find-note{font-size:13px;color:var(--muted)}
 .pick-wrap{position:relative}
 .pick-wrap[hidden],.group[hidden]{display:none}
@@ -121,18 +153,18 @@ h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;mar
 .groups{display:grid;gap:18px}
 .sizebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 .size-label{font:600 13px/1 var(--body);color:var(--muted)}
-.sizes{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.sizes{display:flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden}
 .size{font:600 14px/1 var(--body);color:var(--ink);background:var(--surface);border:0;border-right:1px solid var(--line);padding:9px 12px}
 .size:last-child{border-right:0}
-.size[aria-pressed="true"]{background:var(--accent);color:#1E1A20}
+.size[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
 .size:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .size-note{font-size:13px;color:var(--muted);flex:1 1 260px}
 .shapebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 16px}
 /* 모양이 열한 가지라 한 줄에 다 안 들어간다. 한 줄로 붙이지 않고 낱개 단추로 흘려 놓는다 */
 .shapes{display:flex;flex-wrap:wrap;gap:6px}
 .shape{display:flex;align-items:center;gap:8px;white-space:nowrap;font:600 14px/1 var(--body);color:var(--ink);
-  background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px 12px}
-.shape[aria-selected="true"]{background:var(--accent);color:#1E1A20}
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.shape[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
 .shape:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .shape i{width:22px;height:22px;background:50%/contain no-repeat;image-rendering:pixelated}
 /* 매끈한 모양은 픽셀을 각지게 키우면 오히려 거칠어 보여서 부드럽게 늘린다 */
@@ -157,40 +189,39 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .bakbar{margin-top:10px;padding-top:0;border-top:0}
 .baks{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 320px}
 .baks:empty::before{content:"저장한 것 없음";font-size:13px;color:var(--muted)}
-.bak{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+.bak{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
 .bak:hover{border-color:var(--muted)}
 .bak button{font:600 13px/1 var(--body);color:var(--ink);background:none;border:0;padding:8px 10px}
 .bak .bak-del{color:var(--muted);border-left:1px solid var(--line);padding:8px 9px}
 .bak button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .group-name{margin:0 0 8px;font:600 13px/1 var(--body);color:var(--muted)}
 .picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-.pick{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 8px 10px;display:grid;justify-items:center;gap:8px}
-.pick:hover{border-color:var(--muted)}
-.pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pick{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px 8px 12px;display:grid;justify-items:center;gap:10px;transition:box-shadow .2s,border-color .2s}
+.pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .thumb{width:72px;height:64px;background-color:var(--check-a);background-repeat:no-repeat;
-  background-position:6px calc(4px - 108px * var(--f,0));background-size:96px calc(108px * var(--n,1));image-rendering:pixelated;border-radius:3px}
+  background-position:6px calc(4px - 108px * var(--f,0));background-size:96px calc(108px * var(--n,1));image-rendering:pixelated;border-radius:12px}
 .pick-name{font-weight:700;font-size:14px}
 .pick-name mark{color:inherit;background:color-mix(in srgb, var(--accent) 35%, transparent);border-radius:2px}
 @media (max-width:560px){.picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 .desc-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 14px}
 .desc{margin:0;color:var(--muted)}
-.register{font:700 14px/1 var(--body);color:#1E1A20;background:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:10px 14px}
+.register{font:600 14px/1 var(--body);color:var(--on-accent);background:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:11px 18px}
 .register:hover{filter:brightness(1.06)}
 .register:focus-visible,.dlg button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .reg-status{margin:10px 0 0;font-size:13px;color:var(--muted)}
 .reg-status b{color:var(--ink)}
-.dlg{border:1px solid var(--line);border-radius:8px;padding:22px;max-width:min(420px,calc(100vw - 32px));background:var(--surface);color:var(--ink)}
+.dlg{border:1px solid var(--line);border-radius:24px;padding:22px;max-width:min(420px,calc(100vw - 32px));background:var(--surface);color:var(--ink)}
 .dlg::backdrop{background:rgb(10 8 12 / .55)}
 .dlg h3{margin:0 0 8px;font-size:18px}
 .dlg p{margin:0 0 8px;color:var(--muted);font-size:14px}
 .dlg .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
-.dlg button{font:600 14px/1 var(--body);border-radius:4px;padding:10px 14px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
-.dlg button.ok{background:var(--accent);border-color:var(--accent);color:#1E1A20}
+.dlg button{font:600 14px/1 var(--body);border-radius:999px;padding:10px 14px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.dlg button.ok{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .desc b{color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;gap:16px;align-items:center;outline:none;transition:border-color .15s}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;gap:16px;align-items:center;outline:none;transition:border-color .15s}
 .card:hover,.card:focus-visible{border-color:var(--accent)}
 .card:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
 .stage{--px:4px;position:relative;flex:none;width:calc(32 * var(--px));height:calc(32 * var(--px));
@@ -218,7 +249,7 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .dot-toggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
 /* 클릭 점 전체 선택 · 전체 해제. 이미 그 상태면 흐리게 */
 .dot-bulk{display:inline-flex;gap:4px}
-.dot-bulk button{font:600 12px/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:5px 8px}
+.dot-bulk button{font:600 12px/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 8px}
 .dot-bulk button:hover:not(:disabled){border-color:var(--muted)}
 .dot-bulk button:disabled{opacity:.4;cursor:default}
 .meta{min-width:0}
@@ -226,7 +257,7 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .meta p{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .meta code,.coords{font-family:var(--mono)}
 .coords b{color:var(--hot);font-weight:600}
-.extras{margin-top:12px;border:1px dashed var(--line);border-radius:6px;padding:12px}
+.extras{margin-top:12px;border:1px dashed var(--line-2);border-radius:16px;padding:12px}
 .extras h4{margin:0 0 10px;font:600 13px/1 var(--body);color:var(--muted)}
 .editor{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
 .editor canvas{width:min(384px,100%);height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:6px;background:var(--surface);touch-action:none}
@@ -241,7 +272,7 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .legend{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin:12px 0 0}
 .legend i{flex:none;width:5px;height:5px;outline:2px solid var(--hot);outline-offset:1px;display:inline-block;margin-left:3px}  /* 테(3px)가 왼쪽으로 삐져나와 넓은 화면 오른쪽 통(왼쪽 여백 0, overflow)에서 잘렸다 */
 
-.play{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;display:grid;gap:18px}
+.play{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:24px;display:grid;gap:18px}
 .play .row{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
 .play label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
 .rsz-zone{position:relative;height:150px;border:1px dashed var(--line);border-radius:4px;background:var(--ground)}
@@ -255,9 +286,9 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .play input{font:inherit;color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:9px 11px;width:100%}
 .play input:focus-visible,.play button:focus-visible,.play a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .play a{color:var(--accent-ink);font-weight:700;text-underline-offset:3px}
-.play button{font:600 14px/1 var(--body);border-radius:4px;padding:11px 16px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.play button{font:600 14px/1 var(--body);border-radius:999px;padding:11px 16px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
 .play button:disabled{opacity:.55}
-.play button.busy{background:var(--accent);border-color:var(--accent);color:#1E1A20}
+.play button.busy{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .drag{display:grid;place-items:center;height:96px;border:1.5px dashed var(--accent);border-radius:6px;color:var(--accent-ink);font-weight:500;user-select:none;touch-action:none;overflow:hidden}
 .drag span{padding:6px 12px;background:var(--surface);border:1px solid var(--line);border-radius:4px}
 .note{font-size:13px;color:var(--muted);margin:0}
@@ -267,10 +298,10 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .bat{margin:0}
 .bat a{color:var(--accent-ink);font:600 15px/1.4 var(--mono);text-underline-offset:3px}
 .bat a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-pre{margin:0;overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;font:13px/1.7 var(--mono)}
+pre{margin:0;overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font:13px/1.7 var(--mono)}
 pre .c{color:var(--muted)}
 .steps{margin:0;padding-left:20px;display:grid;gap:4px}
-.setup{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.setup{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:24px 24px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .setup h2{margin:0}
 .not-win-note{display:none}
 .not-win .not-win-note{display:block;color:var(--accent-ink)}
@@ -280,8 +311,8 @@ pre .c{color:var(--muted)}
 .setup ol{margin:0;padding-left:20px;display:grid;gap:4px;max-width:70ch}
 .not-win .urlbar [data-action="restore"]{display:none}   /* 맥은 Mousecape 의 ⌘R 이 원래대로 */
 .cmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
-.cmd code{flex:1 1 320px;min-width:0;overflow-x:auto;white-space:nowrap;font:13px/1.5 var(--mono);background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
-.copy{font:700 14px/1 var(--body);color:#1E1A20;background:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 16px;min-height:40px}
+.cmd code{flex:1 1 320px;min-width:0;overflow-x:auto;white-space:nowrap;font:13px/1.5 var(--mono);background:var(--ground);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.copy{font:600 14px/1 var(--body);color:var(--on-accent);background:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 20px;min-height:44px}
 .section-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin:0 0 14px}
 .section-head h2{margin:0}
 /* 구성표 고르기 머리(제목·모양·찾기)는 목록을 내려도 위에 붙어 있다. 넓은 화면은 왼쪽 통 맨 위, 좁은 화면은 화면 맨 위.
@@ -294,6 +325,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
 /* 좁은 화면: 다 펼치면 머리가 폰 화면의 반(434px)이라 모양 탭은 작게 줄여 여러 줄로 다 보이게 하고(가로 스크롤은 2026-10-04 요청으로 뺐다), 설명은 한 줄로 줄인다 */
 @media (max-width:1099px){
   .pickhead .section-head{margin-bottom:8px}
+  .pickhead h2{font-size:20px}
   .pickhead .global .ghost{padding:6px 10px;font-size:12px}
   .pickhead .shapebar{flex-wrap:nowrap;flex-direction:column;align-items:stretch;gap:6px;margin-bottom:10px}
   .pickhead .shapes{gap:4px}
@@ -305,8 +337,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   .pickhead .find-note:empty{display:none}
 }
 .global{display:flex;gap:8px}
-.ghost{font:600 14px/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 14px}
-.ghost:hover{border-color:var(--muted)}
+.ghost{font:600 14px/1 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:999px;padding:10px 16px}
+@media (hover:hover){
+  .ghost:hover,.theme:hover,.btn-line:hover{border-color:var(--ink)}
+  .links a:hover{color:var(--ink);background:var(--check-a)}
+  .btn-dark:hover{background:var(--muted)}
+  .pick:hover{box-shadow:0 8px 28px var(--shadow)}
+}
 .linkish{font:inherit;color:var(--accent-ink);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px}
 .copy:focus-visible,.ghost:focus-visible,.linkish:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .urlbar{position:fixed;left:0;right:0;bottom:0;z-index:5;align-items:center;gap:8px 10px;padding:10px 16px;background:var(--surface);border-top:1px solid var(--line)}
@@ -334,7 +371,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   .st-grab:hover::before{background:var(--muted)}
   .st-grab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
   .st-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px 10px 16px}
-  .st-top b{font:700 15px/1 var(--display)}
+  .st-top b{font:700 17px/1 var(--display)}
   .st-top .ghost{min-height:44px}
   .st-body{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:28px;flex:1;min-height:0;
     overflow-y:auto;overscroll-behavior:contain;padding:16px}
@@ -352,20 +389,38 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
 </style>
 
 <div class="wrap c-arrow" id="app" data-scheme="rainbowflow">
- <div class="pane menu">
-  <header>
-    <div class="topline">
-      <span class="eyebrow">마우스 커서 테마</span>
-      <div class="topbtns">
-      <button type="button" class="ghost c-hand" id="tools-btn" aria-expanded="false" aria-controls="toolbox">도구</button>
-      <div class="skins" role="group" aria-label="페이지 테마">
-        <button type="button" class="ghost c-hand" data-skin="" aria-pressed="true">기본</button>
-        <button type="button" class="ghost c-hand" data-skin="terminal" aria-pressed="false">터미널</button>
-      </div>
-      </div>
+ <header class="nav">
+  <a class="brand c-hand" href="#app"><img src="<!--FAVICON-->" alt="" width="24" height="24">cursor-playground</a>
+  <nav class="links" aria-label="바로 가기">
+    <a class="c-hand" href="#pick-title">구성표</a>
+    <a class="c-hand" href="#studio">스튜디오</a>
+    <a class="c-hand" href="#setup-title">설치</a>
+  </nav>
+  <span class="stamp ver"><!--VERSION--></span>
+  <div class="topbtns">
+    <button type="button" class="ghost c-hand" id="tools-btn" aria-expanded="false" aria-controls="toolbox">도구</button>
+    <div class="skins" role="group" aria-label="페이지 테마">
+      <button type="button" class="ghost c-hand" data-skin="" aria-pressed="true">기본</button>
+      <button type="button" class="ghost c-hand" data-skin="terminal" aria-pressed="false">터미널</button>
     </div>
-    <h1>cursor-playground <em>schemes</em><span class="ver"><!--VERSION--></span></h1>
-  </header>
+    <button type="button" class="theme c-hand" id="theme-btn" aria-pressed="false" aria-label="밤 화면">
+      <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </div>
+ </header>
+ <div class="pane menu">
+  <section class="hero" aria-labelledby="hero-title">
+    <p class="eyebrow">WINDOWS CURSOR COLLECTION</p>
+    <h1 id="hero-title">움직이는<br>윈도우 커서</h1>
+    <p class="lede">구성표와 모양을 고르고 적용을 누르면 윈도우 커서가 바로 바뀌어요. 원래 커서로 되돌리기도 버튼 하나.</p>
+    <div class="ctas">
+      <a class="btn btn-dark c-hand" href="#pick-title">구성표 둘러보기</a>
+      <a class="btn btn-line c-hand" href="#setup-title">윈도우 처음 설정</a>
+      <a class="btn btn-line c-hand" href="#mac-title">맥에서 쓰기</a>
+    </div>
+    <p class="fine">무료 · 오픈소스(Apache-2.0) · 설치는 PowerShell 한 줄</p>
+  </section>
 
   <div class="toolbox" id="toolbox" hidden>
   <section>
@@ -436,7 +491,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   <section>
     <div class="pickhead">
     <div class="section-head">
-      <h2>구성표 고르기</h2>
+      <h2 id="pick-title">구성표 고르기</h2>
       <div class="global">
         <button type="button" class="ghost c-hand" data-action="settings">포인터 설정 열기</button>
         <button type="button" class="ghost c-hand" data-action="status">현재 상태</button>
@@ -1490,6 +1545,20 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     });
   });
   show();
+  // 밝기(해·달). 처음은 늘 밝게 — 시스템 다크 설정을 따라가지 않는다
+  var tb = document.getElementById('theme-btn');
+  function showTheme(){
+    var dark = root.getAttribute('data-theme') === 'dark';
+    tb.setAttribute('aria-pressed', String(dark));
+    tb.setAttribute('aria-label', dark ? '밝은 화면' : '밤 화면');
+  }
+  tb.addEventListener('click', function(){
+    var dark = root.getAttribute('data-theme') !== 'dark';
+    if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
+    try { if (dark) localStorage.setItem('cp-theme', 'dark'); else localStorage.removeItem('cp-theme'); } catch (e) {}
+    showTheme();
+  });
+  showTheme();
 })();
 
 // 구성표 고르기 머리: 붙어 있을 때만 밑줄, 그 높이를 --head 로 알려 칸으로 옮겨 다닐 때 머리 밑에 숨지 않게 한다
@@ -1599,6 +1668,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   document.getElementById('st-close').addEventListener('click', function(){ close(true); });
   document.getElementById('st-scrim').addEventListener('click', function(){ close(true); });
   grab.addEventListener('click', function(){ full(!root.classList.contains('st-full')); });
+  // 머리의 '스튜디오' 바로 가기: 좁은 화면에서는 닫힌 통이라 건너뛸 자리가 없으니 연다
+  var link = document.querySelector('.links a[href="#studio"]');
+  if (link) link.addEventListener('click', function(e){ if (narrow.matches) { e.preventDefault(); open(); } });
   document.addEventListener('keydown', function(e){
     if (!isOpen() || !narrow.matches) return;
     if (e.key === 'Escape') {
