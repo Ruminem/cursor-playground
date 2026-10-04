@@ -147,7 +147,7 @@ h2{font:700 clamp(22px,2.4vw,28px)/1.2 var(--display);letter-spacing:-.02em;marg
 .find-note{font-size:13px;color:var(--muted)}
 .pick-wrap{position:relative}
 .pick-wrap[hidden],.group[hidden]{display:none}
-.star{position:absolute;top:4px;right:4px;font-size:15px;line-height:1;padding:2px 4px;border:0;border-radius:4px;background:none;color:var(--line)}
+.star{position:absolute;top:8px;right:8px;width:32px;height:32px;display:grid;place-items:center;font-size:16px;line-height:1;padding:0;border:0;border-radius:999px;background:var(--surface);color:var(--line-2)}
 .star[aria-pressed="true"],.star[aria-pressed="true"]:hover{color:#F5B301}
 .star:hover{color:var(--muted)}
 .star:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -195,16 +195,27 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .bak button{font:600 13px/1 var(--body);color:var(--ink);background:none;border:0;padding:8px 10px}
 .bak .bak-del{color:var(--muted);border-left:1px solid var(--line);padding:8px 9px}
 .bak button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.group-name{margin:0 0 8px;font:600 13px/1 var(--body);color:var(--muted)}
-.picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-.pick{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px 8px 12px;display:grid;justify-items:center;gap:10px;transition:box-shadow .2s,border-color .2s}
+.group-name{margin:0 0 12px;font:600 15px/1.2 var(--body);color:var(--ink)}
+/* 목록 카드: 위는 그림 타일, 아래는 이름·한 줄 설명 */
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.pick{width:100%;height:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:0;
+  display:flex;flex-direction:column;align-items:stretch;text-align:left;overflow:hidden;transition:box-shadow .2s,border-color .2s}
 .pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.thumb{width:72px;height:64px;background-color:var(--check-a);background-repeat:no-repeat;
-  background-position:6px calc(4px - 108px * var(--f,0));background-size:96px calc(108px * var(--n,1));image-rendering:pixelated;border-radius:12px}
-.pick-name{font-weight:700;font-size:14px}
+.thumb{display:block;width:100%;height:136px;flex:none;background-color:var(--check-a);background-repeat:no-repeat;
+  background-position:6px calc(4px - 108px * var(--f,0));background-size:96px calc(108px * var(--n,1));image-rendering:pixelated}
+.pick-body{display:grid;gap:4px;padding:14px 16px 16px}
+.pick-name{font-weight:600;font-size:16px;line-height:1.3;letter-spacing:-.01em}
+.pick-desc{font-size:13px;line-height:1.5;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pick-name mark{color:inherit;background:color-mix(in srgb, var(--accent) 35%, transparent);border-radius:2px}
-@media (max-width:560px){.picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){
+  .picker{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .pick{border-radius:18px}
+  .thumb{height:96px}
+  .pick-body{padding:10px 12px 12px}
+  .pick-name{font-size:14px}
+  .pick-desc{display:none}   /* 폰은 스튜디오를 반쯤 연 채로도 카드가 두 줄 보이게 */
+}
 
 .desc-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 14px}
 .desc{margin:0;color:var(--muted)}
@@ -966,7 +977,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   // 목록 썸네일: 움직이는 구성표는 고르지 않아도 계속 움직인다. 색조는 .thumb 의 CSS 필터가 따로 입힌다.
   // 그림은 그대로 두고 --f 만 바꾸니 그림을 기다릴 것이 없다.
   // 썸네일은 지금 고른 모양보다 늦게 바뀔 수 있어서(화살표 그림을 나중에 받는다) 깔린 모양의 데이터를 따로 든다
-  var thumbData = DATA;
+  var thumbData = DATA, thumbShape = SHAPES[0].id;    // 목록 썸네일이 지금 그린 모양 — 고른 모양(shape)은 화살표를 받기 전에 먼저 바뀐다
   var MOVING = Object.keys(DATA).filter(function(sid){ return DATA[sid].arrow[7] > 1; });
   var thumbs = new Map();
   // 화면에 보이는 썸네일만 움직인다. 목록 전체를 프레임마다 바꾸던 것이 끊김의 큰 몫이었다
@@ -1045,29 +1056,35 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   // 판 크기는 8의 배수로 맞춘다 — 한 칸(판의 1.125배)이 정수 px 여야 프레임마다 흐림이 달라지지 않는다
   var thumbFit = document.createElement('style');
   document.head.insertBefore(thumbFit, shapeThumbs);
-  var fitRules = {};                                    // 모양 → 규칙. 모양 묶음은 한 번 받으면 안 바뀐다
+  var fitRules = {};                                    // 모양·틀 높이 → 규칙. 모양 묶음은 한 번 받으면 안 바뀐다
   function fitThumbs(mine, pack){
     var el = document.querySelector('.thumb');
     if (!el) return;
-    if (!fitRules[mine]) {
+    var key = mine + ':' + Math.round(parseFloat(getComputedStyle(el).height));
+    if (!fitRules[key]) {
       // 여백은 두지 않는다 — 2px 만 둬도 21칸 화살표(스티커·폭죽 등)가 3배(63px)에서 2배로, 31칸 용암이 1배로 떨어진다
       // 반올림한다 — 브라우저 확대·윈도우 배율에서는 64px 이 63.98px 로 재여, 판 높이를 꽉 채운 그림(토끼·너구리)이
       // 64/32 가 아니라 1.99 로 내림돼 1배가 되고 틀에 이웃 프레임이 같이 보였다(2026-10-04)
-      var cs = getComputedStyle(el), W = Math.round(parseFloat(cs.width)), H = Math.round(parseFloat(cs.height));
-      fitRules[mine] = Object.keys(pack).map(function(sid){
+      // 가로는 틀 폭이 창을 따라 바뀌어(목록 카드 칸) 재지 않고 가운데 기준 calc 로 둔다. 틀은 그림 판(96px)보다 늘 넓다
+      var cs = getComputedStyle(el), W = Infinity, H = Math.round(parseFloat(cs.height));
+      fitRules[key] = Object.keys(pack).map(function(sid){
         var pixel = mine === SHAPES[0].id || CLASSIC_ONLY[sid];
         var b = pack[sid].arrow[8], n = b[4], bw = b[2] - b[0] + 1, bh = b[3] - b[1] + 1;
         var s = Math.min(96 / n, W / bw, H / bh);   // 원래 배율은 판을 96px 로
         if (pixel && s >= 1) s = Math.floor(s);
         var A = n * s;
         if (A % 8) { A = Math.max(8, Math.floor(A / 8) * 8); s = A / n; }
-        var x = Math.round((W - bw * s) / 2 - b[0] * s), y = Math.round((H - bh * s) / 2 - b[1] * s);
+        // 50% 는 판 가운데를 틀 가운데에 맞춘다 — 거기서 그림 상자 가운데까지만 더 민다
+        var x = Math.round(A / 2 - bw * s / 2 - b[0] * s), y = Math.round((H - bh * s) / 2 - b[1] * s);
         return '[data-scheme-item="' + sid + '"] .thumb{background-size:' + A + 'px calc(' + (A * K) + 'px * var(--n,1));'
-          + 'background-position:' + x + 'px calc(' + y + 'px - ' + (A * K) + 'px * var(--f,0))}';
+          + 'background-position:calc(50% + ' + x + 'px) calc(' + y + 'px - ' + (A * K) + 'px * var(--f,0))}';
       }).join(' ');
     }
-    thumbFit.textContent = fitRules[mine];
+    thumbFit.textContent = fitRules[key];
   }
+  // 폰 폭을 넘나들면 틀 높이(96·136px)가 바뀌어 배율·세로 자리를 다시 잰다
+  var fitMq = window.matchMedia && matchMedia('(max-width:560px)');
+  if (fitMq && fitMq.addEventListener) fitMq.addEventListener('change', function(){ fitThumbs(thumbShape, thumbData); });
   // 카드 밑의 파일 이름·크기·핫스팟은 페이지를 만들 때 박은 값이라, 모양을 바꾸면 같이 고친다
   function relabel(){
     var plain = shape === SHAPES[0].id;
@@ -1095,7 +1112,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   }
   // 목록 썸네일을 이 모양으로 바꾼다. 그 모양의 화살표 그림이 다 있을 때만 부른다
   function showThumbs(id, pack){
-    thumbData = pack.data;
+    thumbData = pack.data; thumbShape = id;
     MOVING = Object.keys(thumbData).filter(function(sid){ return thumbData[sid].arrow[7] > 1; });
     restore(thumbs); paintThumbs(id, thumbData); fitThumbs(id, thumbData);
   }

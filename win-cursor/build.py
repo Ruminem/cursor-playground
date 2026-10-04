@@ -385,7 +385,7 @@ def build() -> str:
       <div class="pick-wrap" data-scheme-item="{sid}" data-search="{search}">
         <button type="button" class="pick c-hand" data-pick="{sid}" aria-pressed="false">
           <span class="thumb"></span>
-          <span class="pick-name">{sname}</span>
+          <span class="pick-body"><span class="pick-name">{sname}</span><span class="pick-desc" aria-hidden="true">{sdesc}</span></span>
         </button>
         <button type="button" class="star c-hand" data-star="{sid}" aria-pressed="false" title="즐겨찾기" aria-label="{sname} 즐겨찾기">★</button>
       </div>""")
