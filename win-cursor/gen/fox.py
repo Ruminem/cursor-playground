@@ -373,9 +373,9 @@ def front(rig: Rig, ph: float = 0.0, mood: str = "smile", paws=((-1.6, 12.4), (1
     legs, raised, pads, rpads = [], [], [], []
     for i, (sg, (pa, pb)) in enumerate(zip((-1, 1), paws)):
         sh = (sg * 1.9, 6.6)
-        if elbows[i]:   # 든 다리는 주황 털에 발만 까맣게 — 통째로 까마면 막대기로 읽힌다
-            raised += [bar(sh, elbows[i], 1.4, 1.3), bar(elbows[i], (pa, pb), 1.3, 1.2)]
-            rpads.append(ell(pa, pb, 1.4, 1.3))
+        if elbows[i]:   # 든 다리는 주황 털에 발만 까맣게, 짧고 굵게 — 길고 가늘면 막대기로 읽힌다
+            raised += [bar(sh, elbows[i], 2.1, 2.0), bar(elbows[i], (pa, pb), 2.0, 1.9)]
+            rpads.append(ell(pa, pb, 2.3, 2.1))
         else:
             legs.append(bar(sh, (pa, pb), 1.25, 1.05))
             pads.append(ell(pa, pb, 1.2, 1.0))
@@ -508,23 +508,41 @@ def wait() -> list[dict]:
     return frames
 
 
+HAND_RIG, HAND_PAW = Rig(17.0, 15.6, 0.0, 0.9), (-10.6, -3.6)
+
+
 def hand() -> list[dict]:
-    """앞발 하나를 머리 위로 높이 들어 콕 — 꼬리를 세워 살랑, 콕 할 때 발끝에 반짝. 든 앞발 끝이 핫스팟"""
+    """앞발 하나를 뺨 옆으로 번쩍 들어 발바닥을 보인다 — 짧고 굵은 팔에 까만 발, 분홍 젤리 넷. 꼬리를 세워 살랑,
+    콕 할 때 팔꿈치를 밀어 올리고 젤리가 밝아지며 발끝에 반짝. 든 앞발 꼭대기가 핫스팟(hand_top).
+    머리 위로 높이 들던 판은 어깨에서 발끝까지 길어 막대기 팔로 읽혔다"""
     frames = []
-    rig = Rig(16.0, 15.0, 0.0, 0.9)
+    rig = HAND_RIG
+    pa, pb = HAND_PAW
     for k, ph in enumerate(phases()):
         f = {}
-        poke = k in (0, 1, 6, 7)    # 발끝은 그대로 두고(핫스팟) 팔꿈치만 밀어 올려 콕
-        o, _ = front(rig, ph, "blink" if k == 9 else "smile", paws=((-7.6, -13.6), (1.6, 12.4)),
-                     elbows=((-6.4 if poke else -7.2, -3.0 if poke else -1.6), None), tail=TAIL_UP, tail_r=TAIL_UPR,
-                     tail_amp=0.14, tilt=(10.0 if k % 6 < 3 else 0.0, 0.0))
+        poke = k in (0, 1, 6, 7)    # 발은 그대로 두고(핫스팟) 팔꿈치만 밀어 올려 콕
+        o, _ = front(rig, ph, "blink" if k == 9 else "smile", paws=((pa, pb), (1.6, 12.4)),
+                     elbows=((-7.0 if poke else -7.8, 3.6 if poke else 4.6), None), tail=TAIL_UP, tail_r=TAIL_UPR,
+                     tail_amp=0.14, tilt=(0.0, 6.0 if k % 6 < 3 else 0.0))
         f.update(o)
+        bean = HI if poke else BLUSH
+        cx, cy = rig.cell(pa, pb + 0.6)
+        for q in ((cx, cy), (cx - 1, cy), (cx - 1, cy - 2), (cx + 1, cy - 2)):   # 큰 젤리 둘 · 발가락 젤리 둘
+            if f.get(q) == SOCK:
+                f[q] = bean
         if poke:
-            x, y = rig.cell(-7.6, -13.6)
-            for q in ((x - 3, y + 2), (x + 3, y + 2), (x - 2, y), (x + 2, y)):   # 발끝보다 위로는 안 찍는다
+            x, y = rig.cell(pa, pb - 2.1)
+            for q in ((x - 3, y + 1), (x + 3, y + 1), (x - 3, y + 3), (x + 3, y + 3)):   # 발끝보다 위로는 안 찍는다
                 f.setdefault(q, HI if k % 2 == 0 else LEAF_L)
         frames.append(finish({p: c for p, c in f.items() if 1 <= p[0] <= 30 and 1 <= p[1] <= 30}))
     return frames
+
+
+def hand_top(fr):
+    """든 앞발 꼭대기 — 귀가 더 높아서 맨 위 칸(top_cell)을 쓰면 귀 끝이 잡힌다. 발 둘레 안에서 맨 위 칸"""
+    x0 = HAND_RIG.cell(HAND_PAW[0] + 2.6, 0)[0]
+    common = set.intersection(*({p for p, c in f.items() if c[3] == 255 and p[0] <= x0} for f in fr))
+    return min(common, key=lambda p: (p[1], p[0]))
 
 
 def cross() -> list[dict]:
@@ -857,7 +875,7 @@ def steady(fr):
 HOT = {"arrow": (1, 1), "busy": (1, 1), "help": (1, 1), "person": (1, 1), "pin": (1, 1),
        "wait": steady, "we": (15, 15), "ns": (15, 15), "nwse": (15, 15), "nesw": (15, 15),
        "no": (15, 15), "cross": (15, 15), "move": (15, 15), "ibeam": (15, 15),
-       "pen": (math.floor(TIP_[0]), math.floor(TIP_[1])), "hand": top_cell, "up": top_cell}
+       "pen": (math.floor(TIP_[0]), math.floor(TIP_[1])), "hand": hand_top, "up": top_cell}
 
 
 def check(rid: str, frames: list[dict], hot: tuple) -> None:
