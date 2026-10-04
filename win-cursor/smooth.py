@@ -63,6 +63,7 @@ EDGE_LAMB = 0.35  # 빛을 등진 쪽 외곽선을 얼마나 누를지. 검은 �
 LIFT = 0.42     # 밝은 쪽에서 몸 색을 몇 배까지 올릴지 (1.42배)
 SINK = 0.42     # 어두운 쪽에서 몸 색을 얼마나 내릴지 (0.58배)
 QUANT = 8       # 명암·광택 계조를 몇 단계로 묶을지. 잘게 쪼갤수록 색과 파일이 는다
+BAND_WHITE = 0.7  # 스티커 띠를 테마의 가장 밝은 색에서 흰색 쪽으로 얼마나 밀지
 SHADOW = (0.6, 0.9)  # 접지 그림자를 오른쪽 아래로 밀어 놓는 양 (설계 격자)
 SHADOW_A = 0.40  # 닿는 자리의 그림자 진하기. 멀어지면 아래 폭만큼 걸쳐 0 으로 사라진다
 SHADOW_B = 2.2   # 그림자가 번지는 폭 (밀어 놓은 양의 배수). 크면 흐리고 멀리 퍼진다
@@ -152,30 +153,33 @@ SLOTS = {
                   radii=[0.7] * 24, steps=3)],
 }
 
-# ── 모양 열 가지. 윤곽이 다른 것 여섯, 칠하는 방식이 다른 것 넷 ───────────────
-# dome·shade·spec·shadow 를 안 적으면 위 기본값을 쓴다. 속이 비거나(hollow) 바깥으로
-# 번지는(glow) 모양만 돔을 줄이고 그림자를 뺀다 — 얇은 테를 돔으로 깎으면 색이 남지 않고,
-# 번짐 아래에 그림자를 깔면 둘이 섞여 탁해진다
+# ── 모양 여덟 가지 (2026-10-04 개편). 윤곽보다 **칠하는 방식**이 서로 달라야 32px 에서 갈린다 ──
+# 예전 열 가지 중 여섯이 같은 화살표에 윤곽만 조금씩 달라 실제 크기에서 구분이 안 됐다
+# (둥근 삼각·긴 꼬리·바늘·물방울·입체를 지움). dome·shade·spec·shadow 를 안 적으면 위 기본값을 쓴다.
+# 속이 비거나(hollow) 바깥으로 번지는(glow) 모양만 돔을 줄이고 그림자를 뺀다 — 얇은 테를 돔으로 깎으면
+# 색이 남지 않고, 번짐 아래에 그림자를 깔면 둘이 섞여 탁해진다
 SHAPES = {
     "round": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid"),
-    "hollow": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="hollow", thick=3.4, dome=1.5, spec=0.6),
-    "cutout": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="sticker", band=1.8, shadow=(1.4, 2.0)),
-    "blob": dict(pts=[(1.2, 0.3), (19.4, 15.8), (1.8, 25.0)], radii=[1.4, 3.0, 3.4], rscale=1.0, style="solid"),
-    "comet": dict(pts=[(1.2, 0.4), (17.8, 14.2), (12.0, 16.2), (19.4, 27.4), (7.6, 18.2), (0.2, 21.6)],
-                  radii=[2.6, 2.0, 0.6, 1.2, 0.6, 2.0], rscale=1.2, style="solid"),
-    "needle": dict(pts=[(0.8, 0.3), (13.2, 15.0), (9.2, 16.4), (12.6, 26.0), (8.6, 26.6), (5.6, 18.0), (0.6, 22.4)],
-                   radii=[1.7, 1.1, 0.3, 0.9, 0.9, 0.3, 1.1], rscale=1.3, style="solid"),
-    "dart": dict(pts=[(0.8, 0.5), (19.9, 19.5), (10.2, 16.7), (7.7, 26.5)],
-                 radii=[1.6, 1.6, 1.4, 1.6], rscale=1.15, style="solid"),
-    "drop": dict(pts=[(1.2, 0.6), (17.0, 9.0), (19.0, 19.0), (11.0, 25.5), (2.0, 17.0)],
-                 radii=[1.2, 6.0, 6.0, 6.0, 6.0], rscale=1.0, style="solid"),
     "glow": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid", glow=3.2, shadow=(0, 0), spec=0.6),
-    # 돔을 좁게 잡으면 완만한 언덕이 아니라 면취처럼 꺾여 보인다 — 이 모양은 그 꺾임이 요점이다
-    "bevel": dict(pts=ARROW, radii=ARROW_R, rscale=1.0, style="solid", dome=2.6, shade=1.0, spec=1.0, ew=0.7),
+    "cutout": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="sticker", band=2.6, shadow=(0.9, 1.3), dome=4.5),
+    # 테두리는 테가 형태를 다 떠맡는다. 검은 외곽선이면 어두운 바탕에서 사라져 밝은 테(lit_edge)를 두른다
+    "hollow": dict(pts=ARROW, radii=ARROW_R, rscale=1.5, style="hollow", thick=4.6, dome=1.6, spec=0.6, ew=0.7,
+                   shadow=(0, 0), lit_edge=True),
+    # 돔이 0 이면 법선이 다 위를 봐 음영·광택이 안 생긴다 — 단색 벡터
+    "flat": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid", dome=0, spec=0, shadow=(0, 0), ew=0.9),
+    # 속이 비치는 유리. 몸은 반만 덮고(body_a) 테를 밝게 둘러 형태를 잡는다
+    "glass": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid", dome=9, spec=1.8, shade=0.6, shadow=(0, 0),
+                  body_a=0.6, lit_edge=True),
+    # 화살촉(내비 화살표). 꼬리 없이 네 점, 뒷면을 오목하게 판다. 윤곽이 확실히 다른 단 하나
+    "dart": dict(pts=[(1.0, 0.6), (21.0, 14.0), (11.4, 14.6), (6.4, 26.0)], radii=[1.2, 1.6, 0.8, 1.6],
+                 rscale=1.3, style="solid", dome=4.0, spec=1.0),
+    # 굵은. 몸과 꼬리를 넓혀 큰 화면에서 잘 보이게
+    "chunky": dict(pts=[(1.0, 0.4), (21.4, 15.0), (15.0, 17.2), (19.0, 24.8), (11.4, 27.6), (8.0, 20.6), (0.4, 25.4)],
+                   radii=[2.6, 2.4, 0.8, 2.4, 2.4, 0.8, 2.4], rscale=1.3, style="solid"),
 }
 ROLES = ("arrow",) + tuple(SLOTS)   # 모양이 직접 그리는 칸
 # 층을 아래에서 위로 겹치는 순서. 한 칸 안에서 여러 층이 조금씩 겹칠 수 있다
-ORDER = ("shadow", "halo0", "halo1", "halo2", "glow", "band", "body", "vol", "edge")
+ORDER = ("shadow", "halo0", "halo1", "halo2", "glow", "band", "body", "vol", "edge", "lit")
 N4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
 N8 = N4 + ((1, 1), (-1, -1), (1, -1), (-1, 1))
 # 테두리를 돌 때 쓰는 여덟 이웃. N8 과 달리 **도는 차례**라야 한 바퀴를 놓치지 않는다
@@ -346,6 +350,12 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
     dome = spec.get("dome", DOME) * k
     shade = spec.get("shade", 1.0)
     gloss_k = spec.get("spec", 1.0)
+    # 몸(외곽선 안쪽)을 이만큼만 덮는다. 유리는 속이 비쳐 밑의 글자가 보여야 해서 1 보다 작게 둔다 —
+    # 외곽선은 그대로 불투명이라 형태는 안 흐려진다
+    body_a = spec.get("body_a", 1.0)
+    # 외곽선을 테마의 검은 테 대신 가장 밝은 색으로 (lit 층). 속이 비치거나 빈 모양은 테가 형태를
+    # 다 떠맡는데, 검은 테면 어두운 바탕에서 형태가 통째로 사라진다
+    edge_kind = "lit" if spec.get("lit_edge") else "edge"
     band = spec.get("band", 0) * k
     glow = spec.get("glow", 0) * k
     halo = HALO * cells / LIMIT                      # 테마 번짐 층도 크기에 맞춰 두꺼워진다
@@ -419,7 +429,7 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
                     h = RELIEF * dome * math.sin(q * math.pi / 2)
                     if h > hgt[idx]:                              # 부품이 겹치면 높은 쪽이 이긴다
                         hgt[idx] = h
-                    faces.append((idx, cell, w, t, False))
+                    faces.append((idx, cell, w * body_a, t, False))
 
     # ── 두 번째 바퀴: 높이장 → 법선 → 빛 ────────────────────────────────────
     # 높이장을 한 번 뭉개고 중앙차분으로 기울기를 잡는다. 예전에는 '가장 가까운 윤곽선 점을 향한
@@ -449,7 +459,7 @@ def _draw(sid: str, rid: str, size: float, cells: int) -> tuple[tuple[dict, list
             # 테두리 빛은 면이 눈에서 돌아선 만큼. 빛을 등진 쪽을 더 세게 해야 테를 돌려 준다
             rm = (1.0 - nz) ** 3 * (0.35 + 0.65 * max(0.0, -dl)) * gloss_k
             if is_edge:
-                add(cell, "edge", w, 0.0, (dl + 1) / 2)
+                add(cell, edge_kind, w, 0.0, (dl + 1) / 2)
             elif abs(dl) < 0.03 and hi < 0.02 and rm < 0.02:
                 add(cell, "body", w, t)                   # 가운데 평평한 곳은 한 가지로 묶는다
             else:
@@ -1075,7 +1085,7 @@ def _needs(layers: tuple) -> tuple[bool, tuple, bool]:
             edge = True
         elif kind[0] == "h":
             halos.add(int(kind[4]))
-        elif kind not in ("shadow", "glow", "band"):
+        elif kind not in ("shadow", "glow", "band", "lit"):
             body = True
     return body, tuple(sorted(halos)), edge
 
@@ -1100,8 +1110,15 @@ def _color(layers: tuple, c_body: tuple | None, c_halo: dict, c_edge: tuple | No
             if not c:
                 continue                           # 번짐이 없는 테마·자리면 그 층은 비워 둔다
             rgba = c[:3] + (round(a * c[3]),)
-        elif kind in ("glow", "band"):
+        elif kind == "glow":
             rgba = gloss[:3] + (round(a * 255),)
+        elif kind == "band":
+            # 스티커 띠는 흰 종이 쪽으로 민다. 테마의 밝은 색 그대로면 시안·분홍 테마에서 띠가
+            # 몸 색과 붙어 오려 낸 스티커가 아니라 굵은 외곽선으로 읽혔다
+            rgba = mix(gloss[:3], (255, 255, 255), BAND_WHITE) + (round(a * 255),)
+        elif kind == "lit":
+            # 빛을 보는 쪽은 흰색 쪽으로 더 민다. 한 색으로 두르면 오려 붙인 선이 된다
+            rgba = mix(gloss[:3], (255, 255, 255), 0.15 + 0.45 * max(0.0, k2 * 2 - 1)) + (round(a * 255),)
         elif kind == "edge":
             c = c_edge
             # 외곽선도 벽이라 빛을 받는다. 평평한 검은 테를 한 가지 색으로 두르면 스티커가 된다 —

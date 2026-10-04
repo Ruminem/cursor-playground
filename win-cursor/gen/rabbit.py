@@ -317,7 +317,7 @@ def side(rig: Rig, hop: float = 0.0, ear_up: float = 1.0, nose: int = 0, shut: b
 
 
 SLOPE = 42.0                           # 언덕 비탈(땅 좌표 a 축)이 화면에서 기운 각
-ARROW = Rig(1.4, 1.3, SLOPE, 0.95)     # 화살표 토끼의 땅 좌표: 코끝이 (1, 1)
+ARROW = Rig(1.4, 1.3, SLOPE, 1.3)     # 화살표 토끼의 땅 좌표: 코끝이 (1, 1)
 ARROW_S = Rig(1.4, 1.3, SLOPE, 0.62)   # 작은 화살표 토끼 (busy · help · person · pin)
 G0 = 8.0                               # 땅에 디딘 발 가운데의 b (땅 좌표). 땅 줄은 발 반지름만큼 더 아래
 

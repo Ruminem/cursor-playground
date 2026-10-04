@@ -29,7 +29,7 @@ def arrow(sid: str) -> str:
 
 
 def render(shape: str, sid: str, flat: bool) -> dict:
-    # 전역 상수만 0 으로 해서는 안 꺼진다 — bevel 처럼 제 값을 적어 둔 모양은 그것을 쓴다
+    # 전역 상수만 0 으로 해서는 안 꺼진다 — glass 처럼 제 값을 적어 둔 모양은 그것을 쓴다
     keep, spec = {k: getattr(sm, k) for k in FLAT}, sm.SHAPES[shape]
     own = {k.lower(): spec[k.lower()] for k in FLAT if k.lower() in spec}
     if flat:
@@ -56,7 +56,7 @@ def mean(px: dict, cells: set) -> float:
 
 fails = []
 for sid in ("pink", "neonpulse", "electric", "jitter", "flicker"):   # 2색 둘·5색·4색·18색
-    for shape in ("round", "bevel", "drop"):
+    for shape in ("round", "chunky", "dart"):
         lit, flat = render(shape, sid, False), render(shape, sid, True)
         # 자리는 **그린 그림에서** 잡는다. stencil 의 body 는 원점이 draw() 와 달라 어긋난다
         body = {p for p, c in flat.items() if c[3] > 200}
@@ -96,7 +96,7 @@ def colors(sid: str, pat: float) -> set:
     sm._cache.clear()
     try:
         frames = shapelib.read_art(arrow(sid))[0]
-        px = sm.draw("drop", "arrow", sm.samplers_of(frames), CELLS)[0][0]
+        px = sm.draw("chunky", "arrow", sm.samplers_of(frames), CELLS)[0][0]
         return {c for c in px.values() if c[3] > 240}
     finally:
         sm.PATTERN = keep
@@ -153,7 +153,7 @@ def crease(shape: str, sid: str) -> tuple[float, float]:
 
 # 뭉개기를 끈 것과 **쌍으로** 잰다. 한쪽만 재면 이 값이 큰 건지 작은 건지 알 수 없다
 worst = 0.0
-for shape in ("round", "dart", "needle", "drop"):
+for shape in ("round", "dart", "chunky"):
     keep = sm.BLUR
     sm.BLUR = 0.0
     try:

@@ -468,7 +468,7 @@ def side(rig: Rig, ph: float = 0.0, mood: str = "smile", tail=None, tail_r=None,
 SIDE_HEAD = (5.6, -1.0)    # 옆 몸 좌표에서 앞모습 머리 가운데
 
 
-ARROW = Rig(1.5, 3.0, 45.0, 0.8)    # 화살표 너구리: 왼쪽 귀 끝이 (1, 1) 언저리 — 핫스팟은 `corner`
+ARROW = Rig(1.5, 3.0, 45.0, 1.2)    # 화살표 너구리: 왼쪽 귀 끝이 (1, 1) 언저리 — 핫스팟은 `corner`
 ARROW_S = Rig(2.1, 3.2, 45.0, 0.5)   # 작은 화살표 너구리 (busy · help · person · pin)
 
 

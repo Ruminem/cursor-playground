@@ -492,7 +492,6 @@ if ($Apply) {
     if (-not $entry) { return }
     # $Shape 는 [string] 파라미터라 같은 이름(대소문자 무시)의 변수에 객체를 넣으면 문자열이 된다
     $shapeEntry = if ($Shape) { Get-Shape $Shape } else { $null }
-    if ($Shape -and -not $shapeEntry) { return }
     $dots = if ($DotSlots) { Get-DotFiles "dot.$DotSlots" } elseif ($Dot) { @('hand') } else { @() }
     if ($null -eq $dots) { return }
     $name = Get-SchemeName $entry $Hue $shapeEntry $dots
@@ -511,7 +510,7 @@ try {
         $entry = Get-Scheme $id
         if (-not $entry) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
         $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
-        if ($shapeId -and -not $shapeEntry) { Notify "알 수 없는 모양이라 무시함`n$shapeId" -IsError; return }
+        # 모르는 모양은 기본 모양으로 적용한다. 2026-10-04 모양 다섯을 지웠는데, 그 이름이 박힌 예약·주소가 PC 에 남아 있다
         if ($null -eq $dots) { Notify "알 수 없는 클릭 점 칸이라 무시함`n$($Matches[6])" -IsError; return }
         $name = Get-SchemeName $entry $hue $shapeEntry $dots
         $ext = if ($entry.animated -eq $true) { 'ani' } else { 'cur' }
@@ -555,7 +554,7 @@ try {
             $hour, $id, $hue, $shapeId = $bits
             $entry = Get-Scheme $id
             $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
-            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359 -or ($shapeId -and -not $shapeEntry) -or $null -eq $dots) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
+            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359 -or $null -eq $dots) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
             $plan += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Dots = $dots; Name = Get-SchemeName $entry ([int]$hue) $shapeEntry $dots }
         }
         Set-Schedule $plan
