@@ -615,7 +615,8 @@ def ibeam() -> list[dict]:
         for i, sg in enumerate((-1, 1)):   # 튀는 방울
             t = ((k + 3 * i) % 6) / 6
             f[round(14.5 + sg * (2.5 + 3 * t)), round(26 - 5 * t * (1 - t) * 4)] = MILK
-        lap = k % 6 in (1, 2, 3)
+        ext = (0.0, 0.5, 1.0, 1.0, 0.5, 0.0)[k % 6]   # 혀가 나온 정도 — 쭉 뻗었다 도로 감는다
+        lap = ext > 0
         rig = Rig(23.4, 19.4, 0.0, 0.62)
         hc = (0.0, -7.6)
         sw = math.sin(ph)
@@ -626,11 +627,15 @@ def ibeam() -> list[dict]:
         o, _, _ = draw(rig, parts)
         f.update(o)
         face(f, rig, hc, 6.6, "blink" if lap else "open", turn=-1.2)
-        if lap:      # 혀가 줄기까지 날름
+        if lap:      # 혀가 줄기까지 날름 — 끝이 아래로 말린 국자꼴, 밑줄은 짙은 분홍이라 두께가 보인다
             mx, my = rig.cell(-1.2, hc[1] + 6.6 * 0.16)
-            for x in range(17, mx):
+            tip = mx - max(2, round((mx - 17) * ext))
+            for x in range(tip, mx):
                 f[x, my + 2] = PINK
-                f[x, my + 3] = PINK if x < mx - 1 else f.get((x, my + 3), PINK)
+                f[x, my + 3] = NOSE if x > tip else PINK
+            f[tip, my + 4] = PINK     # 아래로 말린 끝
+            if k % 6 == 4:            # 감아 들일 때 말린 끝 안쪽에 우유 한 모금
+                f[tip + 1, my + 4] = MILK_D
         frames.append(finish(clip(f)))
     return frames
 
