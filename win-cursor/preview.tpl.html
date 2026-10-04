@@ -558,7 +558,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   <section class="install later">
     <h2>그 밖에</h2>
     <ul class="steps">
-      <li><b>원래대로</b> 는 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감. 페이지를 닫았다 다시 열면 그때부터 새로 셈 (같은 탭 새로고침은 이어짐).</li>
+      <li><b>원래대로</b> 는 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아가고, 페이지에서 고른 구성표·모양·크기·색조도 처음 상태로 돌림. 페이지를 닫았다 다시 열면 그때부터 새로 셈 (같은 탭 새로고침은 이어짐).</li>
       <li>맨 아래 <b>지금 설정</b> 줄은 고쳐 쓸 수 있음. 어디서 받은 주소를 붙여넣고 <b>적용</b>(또는 Enter)을 누르면 그 구성표·모양·색조·크기로 바뀜. 주소 안의 방문 번호는 그 PC 의 것이라 버리고 씀.</li>
       <li><b>포인터 설정 열기</b> 는 윈도우 마우스 속성 창을 포인터 탭으로 엶. 칸 하나만 바꾸거나 구성표를 직접 고를 때.</li>
       <li>버튼을 눌렀는데 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 위의 한 줄부터.</li>
@@ -1229,7 +1229,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     try { sessionStorage.setItem('cp-visit', visit); } catch (e) {}
   }
   var ASK = {
-    restore: { title: '원래대로 되돌릴까요?', body: '이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아가고, 지금 안 쓰는 구성표 파일은 지움.', ok: '되돌리기' },
+    restore: { title: '원래대로 되돌릴까요?', body: '이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아가고, 지금 안 쓰는 구성표 파일은 지움. 페이지에서 고른 구성표·모양·크기·색조도 처음 상태로 돌아감.', ok: '되돌리기' },
     unlink: { title: '완전 제거할까요?', body: '한 줄 설치할 때의 커서로 되돌린 뒤, 이 페이지 버튼 연결과 설치 폴더까지 지움. 다시 쓰려면 한 줄 설치부터 다시 해야 함.', ok: '완전 제거' }
   };
   function shapeTail(id){
@@ -1287,7 +1287,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     b.disabled = true; b.title = '윈도우에서만 적용됨';
   });
   document.getElementById('act-cancel').addEventListener('click', function(){ dlg.close(); });
-  document.getElementById('act-ok').addEventListener('click', function(){ dlg.close(); send(pending); });
+  document.getElementById('act-ok').addEventListener('click', function(){
+    dlg.close(); send(pending);
+    if (pending === 'restore') window.cpReset();
+  });
 
   // 복사 버튼: 클립보드가 막힌 곳에서는 글자를 잡아 줘 Ctrl+C 로 하게 한다
   window.cpCopy = function(btn, node){
@@ -1315,6 +1318,12 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   var saved = null;
   try { saved = localStorage.getItem('scheme'); } catch (e) {}
   choose(document.querySelector('[data-pick="' + saved + '"]') ? saved : /*START*/);
+  // 원래대로: 윈도우 커서만이 아니라 이 페이지에서 고른 것도 처음 연 상태(처음 구성표·기본 모양·기본 크기·원래 색)로 돌린다.
+  // 즐겨찾기와 클릭 점은 고른 것이 아니라 설정이라 그대로 둔다
+  window.cpReset = function(){
+    choose(/*START*/);
+    window.cpSetShape(window.cpShapes()[0].id); window.cpSetSize(32); window.cpSetHue(0);
+  };
 
   var zone = document.getElementById('drag-zone'), chip = document.getElementById('drag-chip');
   var start = null, pos = {x:0, y:0};
