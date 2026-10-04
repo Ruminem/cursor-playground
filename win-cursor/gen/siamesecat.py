@@ -9,8 +9,8 @@
 작은 화살표 동반 꼴은 치즈냥 · 삼색냥을 따른다. 수다쟁이라 소품의 주인공은 말풍선과 음표(♪)이고, 신호색(화살촉 ·
 음표 · 말풍선 점)은 눈 색인 파랑이다. 꼬리는 끝을 갈고리로 만 물음표 꼴로 자주 세운다.
 
-  arrow   앉은 샴냥이 짙은 앞발 하나를 왼쪽 위로 쭉 뻗어 가리키며 조잘댄다(입이 열렸다 닫혔다) — 그 발끝이 핫스팟.
-          물음표 꼬리가 살랑
+  arrow   큰 흰 화살표 뒤에 숨은 샴냥이 빗변 위로 빼꼼하며 조잘댄다(입이 열렸다 닫혔다) — 짙은 발끝 둘이 빗변을 잡고
+          장 2–5 에 쏙 더 올라온다. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 샴냥 + 오른쪽 아래 말풍선 속 '…' 세 점이 차례로 통통 튄다(입력 중)
   cross   가는 조준선 가운데 앉은 파란 나비(몸통이 핫스팟)를 아래에서 고개를 내민 샴냥이 사시 눈으로 노려본다.
           나비가 날갯짓
@@ -38,7 +38,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write  # noqa: F401
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write  # noqa: F401
 
 SID = "siamesecatanim"
 
@@ -425,7 +425,16 @@ def arrow_frames(small=False) -> list[dict]:
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    return [finish(f) for f in arrow_frames()]
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        g, _, _ = draw(rig, sit_parts(None))           # 꼬리는 화살표 뒤라 안 보인다
+        face(g, rig, mood="blink" if k == 7 else "talk" if k % 4 in (1, 2) else "open")
+        whiskers(g, rig, n=2, skip=(-1,))
+        return g
+    return [finish(peek(k, head, OUT, PT)) for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 샴냥 배율
 
 
 def companion(scene) -> list[dict]:

@@ -9,9 +9,8 @@
 몸 · 꼬리에 굵은 가로 줄(32칸에서 잘면 회색 덩어리라 2–3개로 굵게) · 흰 주둥이와 가슴은 조금 · 초록 눈 · 회색 발.
 화살촉 같은 신호색은 눈 색(초록)이다.
 
-  arrow   하이파이브 고등어냥 — 앞을 보고 앉아 왼 앞발을 머리 옆으로 번쩍 든다. 든 발은 분홍 젤리가 보이는 큰
-          손바닥이고 그 왼쪽 위 모서리가 핫스팟. 장 4–6 에 발끝으로 몸을 쭉 펴며 ^^ 눈 · 벌린 입으로 "냥!",
-          10 에 깜빡, 짧고 통통한 꼬리가 살랑. 예전의 비스듬히 덮치는 자세는 "어정쩡하다"고 해서 바꿨다
+  arrow   큰 흰 화살표 뒤에 숨은 고등어냥이 빗변 위로 빼꼼 — 회색 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더
+          올라온다 · 10 에 깜빡. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 고등어냥 + 오른쪽 아래 물그릇 둘레를 도는 젖은 발자국 여덟 개(물그릇에 발을 담갔다)
   cross   앞모습 얼굴 — 사냥 눈(동공이 커졌다 줄었다). 긴 수염이 가로 조준선, 귀 사이 · 턱 밑 초록 눈금이 세로선.
           코가 핫스팟
@@ -35,7 +34,7 @@
 import math
 import sys
 
-from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write
+from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write
 
 SID = "mackerelcatanim"
 
@@ -432,7 +431,19 @@ def arrow_frames(small=False, tail=True):
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    return [finish(f) for f in arrow_frames()[0]]
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        g, _, _ = draw(rig, head_parts() + [            # 꼬리는 화살표 뒤라 안 그린다
+            ("feet", any_of(ell(-3.8, 9.0, 2.2, 1.5), ell(4.0, 9.0, 2.2, 1.5)), FUR_L, True),
+            ("haunch", any_of(ell(-4.0, 6.6, 2.5, 2.5), ell(4.2, 6.6, 2.5, 2.5)), FUR, True),
+            body_part((0.2, 3.6), 5.0, 5.2)])
+        face(g, rig, mood="blink" if k == 10 else "open", look=(-1, -1))
+        whiskers(g, rig, n=2, skip=(-1,))
+        return g
+    return [finish(peek(k, head, OUT, FUR)) for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 고등어냥 배율
 
 
 def companion(scene, tail=True) -> list[dict]:

@@ -8,8 +8,8 @@
 몸은 짙은 회흑(순검정이면 어두운 바탕에서 테만 남는다)에 왼쪽 위 털 결만 살짝 밝다. 분홍 코 · 귀 속 · 발바닥 젤리,
 소품의 주인공은 분홍 털실 공이다. 눈이 커서 부엉이로 읽히지 않게 세모 귀 · 수염 · 고양이 꼬리를 늘 살린다.
 
-  arrow   오른쪽 아래 앉은 까망이가 발치 털실 공에서 뽑은 실을 한 앞발로 쥐어 왼쪽 위로 당긴다 — 실 끝이 핫스팟.
-          당길 때마다 실이 출렁, 꼬리가 살랑
+  arrow   큰 흰 화살표 뒤에 숨은 까망이 빗변 위로 빼꼼 — 까만 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더
+          올라온다. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 까망이 + 오른쪽 아래 털실 공 둘레를 차례로 도는 발자국(젤리) 여덟
   cross   앞모습 얼굴 — 양 볼 수염이 가로 조준선, 위에서 늘어진 털실과 턱 밑 털실이 세로선. 사냥 눈(동공이 커졌다
           작아졌다). 분홍 코가 핫스팟
@@ -39,7 +39,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, solid, write
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, solid, write
 
 SID = "blackcatanim"
 
@@ -440,8 +440,12 @@ def arrow_cat(ph: float, k: int, small: bool = False) -> dict:
 
 
 def arrow() -> list[dict]:
-    """털실 끝 화살표 — 실 끝이 핫스팟, 앞발이 실을 당겼다 놓고 실이 출렁, 꼬리가 살랑"""
-    return [finish(f) for f in arrow_frames()[0]]
+    def head(x, y, k):
+        return kit(Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K), blink(k, 7), look=-1)   # 꼬리 없이
+    return [finish(peek(k, head, OUT, FUR)) for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 까망이 배율
 
 
 def wait() -> list[dict]:

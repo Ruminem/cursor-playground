@@ -9,10 +9,9 @@
 털은 연크림 바탕에 옅은 주황 줄(치즈냥보다 연하고 밝다) · 흰 배와 주둥이 · 분홍 코. 소품의 주인공은 금빛 방울이고,
 화살촉 같은 신호색도 방울의 금색이다. 다리가 짧아 몸통 밑으로 발만 빼꼼 보이게 그린다 — 다리를 길게 그리면 치즈냥이 된다.
 
-  arrow   미어캣처럼 뒷발로 선 먼치킨이 짧은 앞발 하나를 귀 옆으로 번쩍 들어 금빛 화살촉 막대를 왼쪽 위로 쳐든다 —
-          화살촉 끝이 핫스팟(귀 끝을 찍던 때는 찍는 점이 안 보였다). 다른 앞발은 가슴에 방울을 안고 딸랑, 눈 깜빡,
-          바닥에 깐 꼬리 끝이 까딱. 곁들이 칸(busy · help · person · pin)의 작은 냥은 볼 옆에 든 발과 손으로 찍은
-          화살촉, 앉은 빵 몸 — 판을 덜 써서 옆 장면에 안 닿게
+  arrow   큰 흰 화살표 뒤에 숨어 뒷발로 선 먼치킨이 빗변 위로 빼꼼 — 크림빛 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더
+          올라온다. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
+          곁들이 칸(busy · help · person · pin)의 작은 냥은 볼 옆에 든 발과 손으로 찍은 화살촉, 앉은 빵 몸 그대로
   busy    작은 화살표 먼치킨 + 오른쪽 아래 동그라미를 따라 데굴데굴 구르는 금빛 방울(지나간 자리에 반짝이가 남는다)
   cross   가는 조준선 가운데 리본에 매달린 방울(핫스팟) — 아래에서 먼치킨이 짧은 앞발 둘을 뻗어 허우적대지만 안 닿는다
   hand    까치발로 서서 짧은 앞발 하나를 왼쪽 위로 쭉 내밀어 톡톡 — 젤리가 보이는 발끝이 핫스팟, 짧은 뒷발이 바들바들
@@ -37,7 +36,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write  # noqa: F401
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write  # noqa: F401
 
 SID = "munchkincatanim"
 
@@ -547,8 +546,13 @@ def arrow_frames(small=False) -> tuple[list[dict], tuple]:
 
 
 def arrow():
-    frames, hot = arrow_frames()
-    return [finish(f) for f in frames], hot
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        return stand(rig, "blink" if k == 7 else "open", tail_pts=[(0.0, 3.0), (0.1, 3.0)])   # 꼬리는 화살표 뒤
+    return [finish(peek(k, head, OUT, FUR)) for k in range(N)], (1, 1)
+
+
+PEEK_K = 0.74     # 빼꼼 먼치킨 배율
 
 
 def companion(scene):

@@ -11,8 +11,8 @@
 바탕에 털 가장자리는 밝은 갈색, 눈은 초록 섞인 금색, 화살촉 같은 신호색은 금색이다.
 소품은 숲의 것 — 자작나무 기둥(갈색 털과 갈리게 흰 껍질에 검은 무늬) · 솔방울 · 나뭇잎 · 눈송이.
 
-  arrow   왼쪽 위로 뻗은 나뭇가지를 끌어안고 타고 오르는 노르웨이숲 — 가지 끝이 핫스팟. 앞발이 번갈아 가지를 고쳐 쥐고
-          깃털 꼬리가 아래로 늘어져 살랑인다
+  arrow   큰 흰 화살표 뒤에 숨은 노르웨이숲이 빗변 위로 빼꼼 — 갈색 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더
+          올라온다. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 노르웨이숲 + 오른쪽 아래 솔방울 둘레를 맴도는 나뭇잎 여덟 장(앞장은 초록, 뒤로 갈수록 흐려진다)
   cross   자작나무 기둥을 끌어안고 그 앞에서 내다보는 앞모습 — 긴 수염이 가로 조준선, 귀 사이 · 턱 밑 기둥이 세로선.
           사냥 눈(동공이 커졌다 줄었다), 코가 핫스팟
@@ -40,7 +40,7 @@
 import math
 import sys
 
-from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write
+from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write
 
 SID = "norwegiancatanim"
 
@@ -493,7 +493,16 @@ def arrow_frames(small=False, tail=True):
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    return [{p: c for p, c in finish(f).items() if p[1] <= 31} for f in arrow_frames()[0]]
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        g, _, _ = draw(rig, sitting())                 # 꼬리는 화살표 뒤라 안 그린다
+        face(g, rig, mood="blink" if k == 7 else "open", look=(-1, -1))
+        whiskers(g, rig, n=2, skip=(-1,))
+        return g
+    return [{p: c for p, c in finish(peek(k, head, OUT, FUR)).items() if p[1] <= 31} for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 노르웨이숲 배율
 
 
 def companion(scene, tail=True) -> list[dict]:

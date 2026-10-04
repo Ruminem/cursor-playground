@@ -9,8 +9,8 @@
 더러워 보여서 큰 덩어리만 둔다(`patches`). 머리 · 귀 · 눈 비율과 작은 화살표 동반 꼴 · 분홍 발자국 고리는 치즈냥을 따른다.
 소품의 주인공은 골판지 상자와 꾹꾹이 담요다.
 
-  arrow   똑바로 앉아 왼 앞발(주황 얼룩)을 머리 뒤로 해서 왼쪽 위로 쭉 뻗는다 — 그 발끝이 핫스팟.
-          오른 앞발은 배 앞에서 꾹꾹, 까만 꼬리가 살랑
+  arrow   큰 흰 화살표 뒤에 숨은 삼색냥이 빗변 위로 빼꼼 — 주황 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더 올라온다.
+          화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 삼색냥 + 오른쪽 아래 작은 골판지 상자 둘레를 도는 분홍 발자국 여덟
   cross   앞모습 얼굴 — 양 볼 수염이 가로 조준선, 머리 위로 늘어진 낚싯대 장난감 줄과 턱 밑 줄이 세로선. 코가 핫스팟
   hand    배를 깔고 엎드린 식빵 삼색냥이 앞발 하나를 위로 쭉 내밀어 톡톡 — 누를 때 젤리가 벌어진다. 발끝이 핫스팟
@@ -33,7 +33,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write  # noqa: F401
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write  # noqa: F401
 
 SID = "calicocatanim"
 
@@ -392,7 +392,19 @@ def arrow_frames(small=False) -> list[dict]:
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    return [finish(f) for f in arrow_frames()]
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        g, _, _ = draw(rig, head_parts() + [   # 꼬리 · 앞발은 화살표 뒤라 안 그린다
+            ("feet", any_of(ell(-5.0, 8.9, 2.2, 1.4), ell(5.0, 8.9, 2.2, 1.4)), WHITE, True),
+            ("haunch", any_of(ell(-5.0, 6.2, 2.9, 2.8), ell(5.0, 6.2, 2.9, 2.8)), lambda a, b: BLK if a > 0 else WHITE, True),
+            body_part()])
+        face(g, rig, mood="blink" if k == 7 else "open")
+        whiskers(g, rig, n=2, skip=(-1,))
+        return g
+    return [finish(peek(k, head, OUT, ORNG)) for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 삼색냥 배율
 
 
 def companion(scene) -> list[dict]:

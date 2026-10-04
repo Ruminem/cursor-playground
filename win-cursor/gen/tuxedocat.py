@@ -9,8 +9,8 @@
 흰 주둥이와 콧등 줄 · 흰 양말 네 발 · 초록 눈 · 빨간 나비넥타이(실루엣의 표식) · 길고 곧게 선 꼬리.
 새침한 성격이라 코를 치켜들고 눈을 내리깐다. 소품도 신사의 것(회중시계 · 깃펜 · 지팡이 · 찻잔)이다.
 
-  arrow   흰 화살표 커서 오른쪽에 앉아 두 앞발로 화살표 기둥을 껴안고 볼을 기댄다 — 화살표 끝이 핫스팟.
-          고개를 갸웃, 눈을 지그시 감았다 깜빡, 꼬리를 살랑 (긴 꼬리 끝을 핫스팟으로 들던 판은 꼬리가 별로라 바꿨다)
+  arrow   큰 흰 화살표 뒤에 숨은 턱시도냥이 빗변 위로 빼꼼 — 흰 양말 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더
+          올라온다. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 턱시도냥 + 오른쪽 아래 찻잔(김이 오른다) 둘레를 도는 분홍 젤리 발자국 여덟
   cross   가는 조준선 가운데 빨간 레이저 점(핫스팟) — 오른쪽 아래에서 동공이 커진 턱시도냥이 엉덩이를 씰룩이며 노린다
   hand    옆으로 앉아 흰 양말 앞발 하나를 왼쪽 위로 쭉 들어 콕 누른다 — 분홍 젤리가 보이는 발끝이 핫스팟
@@ -39,7 +39,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write
 
 SID = "tuxedocatanim"
 
@@ -491,8 +491,12 @@ def diag_chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col=BOW) -> None:
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    """오른쪽을 보고 앉아 코를 치켜든다 — 고개를 흥 하고 들었다 내리고, 한 번 눈을 깜빡"""
-    return [finish(arrow_cat(k)) for k in range(N)]
+    def head(x, y, k):
+        return front(Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K), mood="blink" if k == 7 else "open")[0]
+    return [finish(peek(k, head, OUT, WHITE)) for k in range(N)]
+
+
+PEEK_K = 0.86     # 빼꼼 턱시도냥 배율 — 머리 반지름이 6 이라 다른 냥이(7 × 0.74)와 머리 크기를 맞춘다
 
 
 def watch(f: dict, cx: float, cy: float, r: float, k: int) -> None:

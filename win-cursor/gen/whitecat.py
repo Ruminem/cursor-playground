@@ -10,8 +10,8 @@
 분홍 귀 속 · 코 · 젤리. 소품의 주인공은 파란 우유 접시 · 우유 · 햇살(노란 반짝이)이다.
 머리 · 귀 · 몸 비율과 작은 화살표 동반 꼴 · 분홍 발자국 고리는 삼색냥을 따른다.
 
-  arrow   클래식 흰 화살표(짙은 테) 옆에 붙어 앉아 두 앞발을 빗변에 걸치고 기댄다 — 화살표 끝이 핫스팟.
-          꼬리가 살랑, 고개가 화살표 쪽으로 갸웃, 가끔 금눈만 찡긋
+  arrow   큰 흰 화살표 뒤에 숨은 흰냥이 빗변 위로 빼꼼 — 흰 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더 올라오며 가끔 금눈만
+          찡긋. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 흰냥 + 오른쪽 아래 우유 접시(물결이 돈다) 둘레를 도는 분홍 발자국 여덟
   cross   앞모습 얼굴(짝짝이 눈) — 양 볼 수염이 가로 조준선, 위 줄과 턱 밑 줄이 세로선. 턱 밑 줄을 따라 우유 방울이
           또르르 떨어진다. 분홍 코가 핫스팟
@@ -38,7 +38,7 @@
 import math
 import sys
 
-from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write  # noqa: F401
+from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write  # noqa: F401
 
 SID = "whitecatanim"
 
@@ -383,7 +383,18 @@ def arrow_frames(small=False) -> list[dict]:
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    return [finish(f) for f in arrow_frames()]
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        g, _, _ = draw(rig, head_parts() + [           # 꼬리는 화살표 뒤라 안 그린다
+            ("feet", any_of(ell(-4.4, 8.9, 2.2, 1.4), ell(4.4, 8.9, 2.2, 1.4)), WHITE, True),
+            ("haunch", ell(4.8, 6.2, 2.9, 2.8), SHADE, True), body_part()])
+        face(g, rig, mood="wink" if k in (7, 8) else "open")
+        whiskers(g, rig, skip=(-1,))
+        return g
+    return [finish(peek(k, head, OUT, WHITE)) for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 흰냥 배율
 
 
 def companion(scene) -> list[dict]:

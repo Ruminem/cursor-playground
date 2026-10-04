@@ -10,8 +10,8 @@
 입꼬리가 올라간 ω 입(러시안블루 미소). 성격이 새침해서 대개 얌전히 앉아 있고, 소품의 주인공은 분홍 깃털 낚싯대다
 (깃털 · 막대 · 줄). 화살촉 같은 신호색은 눈 색(에메랄드)이다.
 
-  arrow   새침하게 앉아 낚아챈 분홍 깃털을 한 앞발로 왼쪽 위로 치켜든다 — 깃털 끝이 핫스팟.
-          깃털 깃이 살랑이고, 입꼬리가 웃고, 긴 꼬리가 살랑
+  arrow   큰 흰 화살표 뒤에 숨은 러시안블루가 빗변 위로 새침하게 빼꼼 — 은회색 발끝 둘이 빗변을 잡고 장 2–5 에 쏙
+          더 올라온다. 화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀)
   busy    작은 화살표 러시안블루 + 오른쪽 아래 낚싯대 끝에서 줄에 매달린 깃털이 빙글빙글 돈다(지나간 자리에 잔상)
   cross   가는 조준선 가운데 늘어진 깃털(깃대 가운데가 핫스팟) — 양옆에서 회색 앞발 둘이 젤리를 보이며 다가와 짝! 덮친다
   hand    앉은 러시안블루가 깃털 낚싯대를 쥐고 왼쪽 위로 내민다 — 막대 끝이 핫스팟, 끝에 매달린 깃털이 대롱대롱
@@ -34,7 +34,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, raster, solid, write
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write
 
 SID = "russianbluecatanim"
 
@@ -368,7 +368,16 @@ def arrow_frames(small=False):
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    return [finish(f) for f in arrow_frames()[0]]
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        g, _, _ = draw(rig, seat()[:-1])               # 꼬리는 화살표 뒤라 안 그린다
+        face(g, rig, mood="blink" if k == 7 else "open")
+        whiskers(g, rig, n=2, skip=(-1,))
+        return g
+    return [finish(peek(k, head, OUT, FUR)) for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 러시안블루 배율
 
 
 def companion(scene) -> list[dict]:
