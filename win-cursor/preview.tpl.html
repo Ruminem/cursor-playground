@@ -105,7 +105,6 @@ h1{font:700 clamp(28px,6vw,44px)/1.05 var(--display);margin:0;letter-spacing:.01
 h1 em{font-style:normal;color:var(--accent)}
 /* 버전은 제목 오른쪽 끝에. 좁은 화면에서는 줄이 넘어가 제목 아래로 내려간다 */
 h1 .ver{margin-left:auto;font:600 12px/1 var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap}
-.lede{margin:0;max-width:62ch;color:var(--muted)}
 h2{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}
 
 .findbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 16px}
@@ -319,7 +318,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
  <div class="pane menu">
   <header>
     <div class="topline">
-      <span class="eyebrow">움직이는 커서 <!--COUNT-->종 · 윈도우 · 맥</span>
+      <span class="eyebrow">마우스 커서 테마</span>
       <div class="topbtns">
       <button type="button" class="ghost c-hand" id="tools-btn" aria-expanded="false" aria-controls="toolbox">도구</button>
       <div class="skins" role="group" aria-label="페이지 테마">
@@ -329,7 +328,6 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       </div>
     </div>
     <h1>cursor-playground <em>schemes</em><span class="ver"><!--VERSION--></span></h1>
-    <p class="lede">윈도우 커서 17칸이 전부 움직이는 구성표 모음. 빛·물결이 흐르는 커서 <!--FLOWS-->종과 칸마다 동물이 제 할 일을 하는 커서 <!--PETS-->종. 골라서 마우스를 올려 써 보고, 마음에 들면 버튼 하나로 적용함(맥은 .cape).</p>
   </header>
 
   <div class="toolbox" id="toolbox" hidden>
