@@ -401,6 +401,8 @@ def build() -> str:
         .replace("/*CURSOR_DATA*/", json.dumps(data, separators=(",", ":")))
         .replace("<!--FAVICON-->", favicon())
         .replace("<!--COUNT-->", str(len(SCHEMES)))
+        .replace("<!--PETS-->", str(len(CLASSIC_ONLY)))
+        .replace("<!--FLOWS-->", str(len(SCHEMES) - len(CLASSIC_ONLY)))
         .replace("<!--VERSION-->", version())
         .replace("<!--PICKER-->", "".join(
             f'<div class="group"><h3 class="group-name">{cat}</h3><div class="picker">{"".join(items)}</div></div>'
