@@ -8,8 +8,8 @@
 색은 같은 저장소 `cat-follower/art/*.txt` 의 치즈 고양이(주황 e89a4a · 짙은 주황 c26f34 · 흰 fff6e8 · 분홍 f4a0b0)를 따른다.
 해양 애니의 물낯 자리는 집 소품(방석 · 털실 공 · 생선 · 발바닥 젤리)이 대신한다.
 
-  arrow   통통하게 앉은 치즈냥이 몸을 왼쪽 위로 기울여 앞발 하나를 머리 위로 쭉 뻗는다 — 그 발끝이 핫스팟.
-          꼬리가 살랑이고 아래 앞발이 꾹꾹이를 한다
+  arrow   큰 흰 화살표 뒤에 숨은 치즈냥이 빗변 위로 빼꼼 — 동그란 발끝 둘이 빗변을 잡고 장 2–5 에 쏙 더 올라온다.
+          화살표 끝이 핫스팟(`sea.peek`, 냥이 10종 공용 틀). 작은 칸(busy · help · person · pin)은 옛 기지개 치즈냥을 그대로 쓴다
   busy    작은 화살표 치즈냥 + 오른쪽 아래 생선 둘레를 도는 분홍 젤리 발자국 여덟 개
   cross   앞모습 얼굴. 긴 수염 한 가닥씩이 가로 조준선, 머리 위로 늘어진 장난감 줄과 턱 밑 줄이 세로선. 코가 핫스팟
   hand    분홍 젤리 발바닥을 보이며 앞발로 꾹 누른다 — 누를 때 눈을 질끈(><) 감는다. 발바닥 꼭대기가 핫스팟
@@ -32,7 +32,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, phases, solid, write
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, solid, write
 
 SID = "cheesecatanim"
 
@@ -353,7 +353,16 @@ def arrow_frames(small=False) -> list[dict]:
 
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
-    return [finish(f) for f in arrow_frames()]
+    def head(x, y, k):
+        rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
+        g, _, _ = draw(rig, sit_parts([(0.0, 0.0), (0.1, 0.0)]))   # 꼬리는 화살표 뒤라 안 보인다
+        face(g, rig, mood="blink" if k == 7 else "open")
+        whiskers(g, rig, n=2, skip=(-1,))
+        return g
+    return [finish(peek(k, head, OUT, FUR)) for k in range(N)]
+
+
+PEEK_K = 0.74     # 빼꼼 치즈냥 배율
 
 
 def companion(scene) -> list[dict]:

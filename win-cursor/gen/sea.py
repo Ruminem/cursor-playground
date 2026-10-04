@@ -332,6 +332,32 @@ def hand_at(f: dict, x0: int, y0: int, skin: tuple) -> None:
                 f[x0 + i, y0 + j] = INK["out"] if ch == "#" else skin
 
 
+PEEK_CUR = [(0, 0), (0, 15.4), (4.0, 11.8), (6.6, 17.6), (9.2, 16.6), (6.8, 11.0), (11.6, 11.0)]   # 윈도우 화살표
+PEEK_S, PEEK_T, PEEK_WHITE = 1.6, 0.72, hx("fff6e8ff")   # 화살표 배율 · 머리가 솟는 빗변 자리(0 끝–1 날개) · 화살표 색
+
+
+def peek(k: int, head: Callable, out: tuple, fur: tuple) -> dict:
+    """냥이 10종 일반 선택의 공용 틀 — 1.6배 흰 화살표가 앞, 냥이는 그 뒤에 숨어 빗변 위로 귀와 눈이 빼꼼,
+    날개 끝 너머로 몸이 살짝, 털빛 동그란 발끝 둘이 빗변을 잡는다. 장 2–5 에 쏙 더 올라온다. 핫스팟은 화살표 끝 (1, 1).
+    head(x, y, k) 는 머리 가운데를 화면 (x, y) 에 둔 앉은 냥이 한 장을 돌려준다 — 틀만 같이 쓰고 냥이는 제 것이다
+    (시안 다섯 벌 중 사용자가 고른 것, 2026-10-04)"""
+    lx, ly = 11.6 * PEEK_S, 11.0 * PEEK_S              # 빗변: (1,1) → (1+lx, 1+ly)
+    ln = math.hypot(lx, ly)
+    nx, ny = ly / ln, -lx / ln                         # 빗변 바깥(오른쪽 위) 법선
+    lift = 3.2 + (1.6 if k in (2, 3, 4, 5) else 0.0)
+    ex, ey = 1 + lx * PEEK_T, 1 + ly * PEEK_T
+    f = {p: c for p, c in head(ex + nx * lift, ey + ny * lift, k).items() if p[0] >= 1 and p[1] >= 1}
+    solid(f, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), PEEK_WHITE, out)   # 화살표가 냥이를 덮는다
+    f[1, 1] = out
+    for dt in (-0.12, 0.12):                           # 빗변을 잡은 발끝 둘(팔 없이 동그란 발만)
+        paw = disc(1 + lx * (PEEK_T + dt) + nx * 0.2, 1 + ly * (PEEK_T + dt) + ny * 0.2, 1.3)
+        for p in {(a + da, b + db) for a, b in paw for da in (-1, 0, 1) for db in (-1, 0, 1)} - paw:
+            f[p] = out
+        for p in paw:
+            f[p] = fur
+    return f
+
+
 def write(sid: str, table: dict, roles=None) -> None:
     """table: 역할 → () → (프레임들, 핫스팟). roles 를 안 주면 table 전부"""
     roles = roles or list(table)
