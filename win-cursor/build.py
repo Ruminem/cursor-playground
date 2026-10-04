@@ -402,7 +402,6 @@ def build() -> str:
         .replace("<!--FAVICON-->", favicon())
         .replace("<!--COUNT-->", str(len(SCHEMES)))
         .replace("<!--VERSION-->", version())
-        .replace("<!--GROUPS-->", str(len(groups)))
         .replace("<!--PICKER-->", "".join(
             f'<div class="group"><h3 class="group-name">{cat}</h3><div class="picker">{"".join(items)}</div></div>'
             for cat, items in groups.items()))
