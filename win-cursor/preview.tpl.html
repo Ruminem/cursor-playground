@@ -321,7 +321,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   .st-open{display:inline-block}
   .st-open[aria-expanded="true"]{border-color:var(--accent);color:var(--accent-ink)}
   /* 주소 줄에 붙여 그 줄이 위로 부푼 것처럼 보이게 한다 — 띄우면 그 틈으로 뒤 목록이 비친다 */
-  .pane.view{display:none;position:fixed;z-index:7;left:0;right:0;bottom:var(--bar,64px);height:62vh;height:62dvh;
+  /* 반쯤 연 높이(--st-h)는 주소 줄 위 공간의 반 — 62% 로 열었더니 722×1265 창에서 목록이 147px, 아이폰은 0 이었다 */
+  :root{--st-h:45vh;--st-h:calc((100dvh - var(--bar,64px)) * .5)}
+  .pane.view{display:none;position:fixed;z-index:7;left:0;right:0;bottom:var(--bar,64px);height:var(--st-h);
     flex-direction:column;background:var(--ground);border:1px solid var(--line);border-bottom:0;border-radius:12px 12px 0 0;overflow:hidden;
     box-shadow:0 -12px 40px rgb(0 0 0 / .22)}
   html.st-on .pane.view{display:flex;animation:st-grow .2s ease-out}
@@ -336,10 +338,14 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   .st-top .ghost{min-height:44px}
   .st-body{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:28px;flex:1;min-height:0;
     overflow-y:auto;overscroll-behavior:contain;padding:16px}
-  html.st-on body{padding-bottom:calc(62vh + var(--bar,64px) + 16px);padding-bottom:calc(62dvh + var(--bar,64px) + 16px)}
+  html.st-on body{padding-bottom:calc(var(--st-h) + var(--bar,64px) + 16px)}
+  /* 열면 17칸 그림을 맨 위로 — 반쯤 연 통에 크기·색조 막대만 보이면 고른 구성표가 안 보인다 */
+  .st-body>.cells{order:-1}
   html.st-full{overflow:hidden}
   html.st-full .st-scrim{display:block;position:fixed;inset:0;z-index:6;padding:0;border:0;background:rgb(10 8 12 / .45)}
 }
+/* 낮은 화면(폰)은 붙는 고르기 머리(255px)와 주소 줄만으로 반이 넘는다. 스튜디오를 연 동안은 머리를 목록과 같이 흘려보낸다 */
+@media (max-width:1099px) and (max-height:900px){ html.st-on .pickhead{position:static} }
 @keyframes st-grow{from{clip-path:inset(100% 0 0 0 round 12px)}to{clip-path:inset(0 0 0 0 round 12px)}}
 .install ul.steps{list-style:disc}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}html.st-on .pane.view{animation:none}}
@@ -493,7 +499,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     </div>
   </section>
 
-  <section>
+  <section class="cells">
     <h2>17칸</h2>
     <!--PANELS-->
     <p class="reg-status" id="reg-status" role="status"></p>
