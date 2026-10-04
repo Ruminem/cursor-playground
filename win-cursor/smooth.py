@@ -165,6 +165,9 @@ SHAPES = {
     # 테두리는 테가 형태를 다 떠맡는다. 검은 외곽선이면 어두운 바탕에서 사라져 밝은 테(lit_edge)를 두른다
     "hollow": dict(pts=ARROW, radii=ARROW_R, rscale=1.5, style="hollow", thick=4.6, dome=1.6, spec=0.6, ew=0.7,
                    shadow=(0, 0), lit_edge=True),
+    # 네온 튜브. 테두리보다 가는 테에 바깥 번짐을 둘러 속이 빈 간판 글자처럼 뜬다 (2026-10-04 시안에서 고름)
+    "tube": dict(pts=ARROW, radii=ARROW_R, rscale=1.4, style="hollow", thick=2.8, glow=3.0, dome=1.2, spec=0.4, ew=0.6,
+                 shadow=(0, 0), lit_edge=True),
     # 돔이 0 이면 법선이 다 위를 봐 음영·광택이 안 생긴다 — 단색 벡터
     "flat": dict(pts=ARROW, radii=ARROW_R, rscale=1.35, style="solid", dome=0, spec=0, shadow=(0, 0), ew=0.9),
     # 속이 비치는 유리. 몸은 반만 덮고(body_a) 테를 밝게 둘러 형태를 잡는다

@@ -4,6 +4,7 @@
   {"id": "glow", "name": "네온", "desc": "몸 바깥으로 테마의 밝은 색이 번짐. 어두운 배경에서 특히 뜸.", "name_en": "Neon", "desc_en": "The theme's brightest colour bleeds out around the body; it glows on dark backgrounds."},
   {"id": "cutout", "name": "스티커", "desc": "몸 바깥에 흰 띠를 굵게 두르고 옅은 그림자를 깖. 오려 낸 스티커처럼 어떤 배경에서도 뜸.", "name_en": "Sticker", "desc_en": "A thick white band around the body and a soft shadow, like a die-cut sticker; reads on any background."},
   {"id": "hollow", "name": "테두리", "desc": "속을 비우고 두꺼운 테만 남김. 테 둘레를 밝게 둘러 어두운 바탕에서도 보이고, 밑의 글자가 보임.", "name_en": "Outline", "desc_en": "Hollowed out to a thick ring with a bright rim, so it shows on dark backgrounds and keeps what is underneath readable."},
+  {"id": "tube", "name": "네온 튜브", "desc": "가는 테만 남기고 바깥으로 빛을 번지게 함. 속이 빈 네온 간판 글자처럼 어두운 바탕에서 뜸.", "name_en": "Neon tube", "desc_en": "A thin hollow ring with light bleeding outward, like a neon sign letter; it glows on dark backgrounds."},
   {"id": "flat", "name": "플랫", "desc": "음영·광택·그림자 없이 테마 색 그대로 칠한 단색 벡터. 요즘 OS 기본 커서 같은 깔끔함.", "name_en": "Flat", "desc_en": "A single-colour vector with no shading, gloss or shadow — clean like a modern OS default."},
   {"id": "glass", "name": "유리", "desc": "몸은 반쯤 비치고 테만 밝게 빛남. 밑에 있는 글자가 비쳐 보임.", "name_en": "Glass", "desc_en": "A see-through body with a bright rim, so whatever is underneath shows through."},
   {"id": "dart", "name": "화살촉", "desc": "꼬리 없이 네 점, 뒷면을 오목하게 판 내비 화살표. 윤곽부터 다른 단 하나.", "name_en": "Arrowhead", "desc_en": "A tail-less navigation arrow with a concave back — the one with a truly different outline."},
