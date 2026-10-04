@@ -17,11 +17,11 @@ Standard library only (Python 3.10+).
    links the `cursor-playground://` address to it, and **backs up your current pointer settings** (where Remove everything goes back to)
 2. Pick a scheme on the page, press **이 구성표 적용** (apply this scheme), confirm, then allow the browser to open the app
 3. Tired of trying things? Press **원래대로** (undo) to go back to the cursor you had right before the first apply since opening the page
-   - Example: apply Neon → close the page → reopen and apply Pink → undo → Neon
+   - Example: apply Neon pulse → close the page → reopen and apply Rainbow flow → undo → Neon pulse
    - Closing and reopening the tab starts a new count; reloading the same tab keeps it
 4. **포인터 설정 열기** (open pointer settings) opens the Windows Mouse Properties dialog on the Pointers tab
 5. **커서 크기** (cursor size: 1×, 1.5×, 2×, 3×, 4×) resizes the page's cursors right away, and the apply button applies the size too. To change only the size, press **크기만 적용** (apply size only)
-   - **색조** (hue) turns the colour wheel from 0° to 355°. Black, white and grey stay as they are. The page's cursors and cards change right away, and applying makes a new scheme in that colour, such as `cursor-playground 네온 색조120` (Neon, hue 120)
+   - **색조** (hue) turns the colour wheel from 0° to 355°. Black, white and grey stay as they are. The page's cursors and cards change right away, and applying makes a new scheme in that colour, such as `cursor-playground 네온 맥박 색조120` (Neon pulse, hue 120)
 6. **시간대별 자동 전환** (daily schedule): set a scheme per time of day and press **켜기** (on). The handler registers one daily task per row in the Windows Task Scheduler — no admin rights — and **끄기** (off) removes them
 7. Find a scheme by name with the search box, star the ones you like and tick **즐겨찾기만** (favourites only), or press **랜덤 적용** (apply a random one) to get a random scheme with a random hue
 8. **내 커서 그리기** (draw your own) at the bottom of the page: paint on a 32x32 grid, set the click point, see it as the page's cursor and download it as a .cur with all five sizes. The drawing stays in the browser
@@ -45,44 +45,6 @@ The list lives in one place, [schemes.json](schemes.json). The build, the local 
 Schemes with `"animated": true` are built as animated cursors (.ani). The tables below are filled in by `python build.py`.
 
 <!-- schemes:en -->
-**Pixel classics**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/pink` | Pink | Pink fill inside a black outline. Crisp pixels at the default size. |
-| `art/onebit` | 1-bit | Two colours only, with dithered shading, a hard drop shadow and a pointing-hand link. |
-| `art/ink` | Ink | A black body with a white outline — the usual white arrow turned inside out. |
-| `art/sticker` | Sticker | A mint body cut out with a thick white border and a faint shadow. |
-| `art/gameboy` | Game Boy | Light and shade drawn with just four greens, like an old handheld screen. |
-| `art/commodore` | Commodore | The blue-on-lavender palette of an 8-bit home computer. |
-| `art/terminal` | Amber terminal | Scanlined amber phosphor glowing off an old terminal screen. |
-| `art/dos` | DOS | Four hard steps of EGA blue from top to bottom, inside a thin white rim. |
-| `art/arcade` | Arcade | Cabinet-sign colours from yellow to purple inside a double black line. |
-
-**Materials**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/chrome` | Chrome | Four shades of silver, lit from the top left. |
-| `art/gold` | Gold | Gold bevel with two sparkles. The link is a gold star. |
-| `art/glass` | Glass | See-through body with a highlight along the edge. |
-| `art/ice` | Ice | Sky blue getting colder towards the bottom, with diagonal frost lines. |
-| `art/wood` | Wood | Dark rim with wood grain running across. |
-| `art/marble` | Marble | White stone with grey veins winding through. |
-| `art/stone` | Stone | Grey pebble with light and dark specks. |
-| `art/copper` | Copper | Copper bevel with patches of green patina. |
-| `art/leather` | Leather | Dark brown leather with a line of stitches just inside the edge. |
-| `art/denim` | Denim | Twill denim weave with orange stitching. |
-| `art/paper` | Paper | Cream paper with one half shaded as if folded. |
-| `art/rust` | Rust | Iron gone red with rust, bare metal showing through. |
-| `art/velvet` | Velvet | Crimson pile that deepens towards the edges. |
-| `art/brick` | Brick | Red bricks in a running bond with pale mortar. |
-| `art/jade` | Jade | Clear green stone with a white sheen running through it. |
-| `art/amber` | Amber | Tiny bubbles trapped in hardened golden resin. |
-| `art/steel` | Brushed steel | Matte metal with a horizontal hairline grain. |
-| `art/wrap` | Bubble wrap | Rows of puffed-up air pockets in clear plastic. |
-| `art/rubber` | Rubber | Matte black rubber with a fine pebbled grain. |
-
 **Animated**
 
 | Folder | Name | Style |
@@ -107,25 +69,6 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/chameleon` | Chameleon | The whole body cycling slowly through the colour wheel. |
 | `art/ripple` | Ripple | Rings spreading out from the centre like water. |
 | `art/marquee` | Marquee | Border bulbs lighting one after another around the edge. |
-
-**Game items**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/fantasy` | Fantasy | A silver sword, wooden hourglass, shield, compass and magic wand. |
-
-**Food and drink**
-
-| Folder | Name | Style |
-|---|---|---|
-| `art/chocolate` | Chocolate | A bar of chocolate divided by moulded grooves. |
-| `art/strawberry` | Strawberry | Red flesh speckled with yellow seeds. |
-| `art/mintchoco` | Mint choc chip | Mint ice cream studded with chocolate chips. |
-| `art/coffee` | Coffee | Crema swirling on the surface of a cup. |
-| `art/soda` | Soda | Bubbles rising through pale blue fizz. |
-| `art/honey` | Honey | Golden honey filling a hexagonal comb. |
-| `art/matcha` | Matcha | Deep green matcha under a fine layer of foam. |
-| `art/cookie` | Cookie | Baked dough studded with chocolate chips. |
 
 **Sea life · Animated**
 
@@ -253,7 +196,7 @@ Menu item 6 switches the shape; everything after it registers, removes and repor
 
 ```bat
 cursors.bat -Install                    :: register all
-cursors.bat -Install -Scheme neon,pink  :: register some (comma-separated)
+cursors.bat -Install -Scheme neonpulse,rainbowflow  :: register some (comma-separated)
 cursors.bat -Install -Shape round       :: register all in the round shape
 cursors.bat -Uninstall                  :: remove all
 cursors.bat -Uninstall -Scheme neon     :: remove some
@@ -303,7 +246,7 @@ hotspot 5,4
 Converting a single file:
 
 ```sh
-python make_cur.py art/pink/hand.txt out/hand.cur          # hotspot read from the txt
+python make_cur.py art/neonpulse/hand.txt out/hand.cur     # hotspot read from the txt
 python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent background, up to 256x256)
 ```
 
@@ -333,11 +276,11 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
    `cursor-playground://` 주소를 거기에 연결하고, **지금 포인터 설정을 백업** 함 (완전 제거 때 돌아갈 곳)
 2. 페이지에서 구성표를 고르고 **이 구성표 적용** → 확인 → 브라우저의 "앱 열기" 에서 열기
 3. 이것저것 적용해 보다 질리면 **원래대로** — 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감
-   - 예: 네온 적용 → 페이지 닫음 → 다시 열어 분홍 적용 → 원래대로 → 네온
+   - 예: 네온 맥박 적용 → 페이지 닫음 → 다시 열어 무지개 흐름 적용 → 원래대로 → 네온 맥박
    - 탭을 닫았다 열면 새로 셈. 같은 탭 새로고침은 이어짐
 4. **포인터 설정 열기** — 윈도우 마우스 속성 창을 포인터 탭으로 엶
 5. **커서 크기** (기본·1.5배·2배·3배·4배) — 고르면 페이지 커서가 바로 그 크기가 되고, 적용 버튼은 크기까지 같이 적용. 구성표는 두고 크기만 바꾸려면 **크기만 적용**
-   - **색조** — 색상환을 0°~355° 돌림. 검정·흰색·회색은 그대로. 페이지 커서와 카드가 바로 바뀌고, 적용하면 `cursor-playground 네온 색조120` 같은 그 색의 새 구성표를 만듦
+   - **색조** — 색상환을 0°~355° 돌림. 검정·흰색·회색은 그대로. 페이지 커서와 카드가 바로 바뀌고, 적용하면 `cursor-playground 네온 맥박 색조120` 같은 그 색의 새 구성표를 만듦
 6. **시간대별 자동 전환** — 시각마다 구성표를 정하고 **켜기**. 처리 스크립트가 줄마다 하루 한 번짜리 작업을 윈도우 작업 스케줄러에 등록함(관리자 권한 필요 없음). **끄기** 로 지움
 7. 검색칸에 이름을 넣어 찾고, 마음에 드는 구성표에 별표를 눌러 **즐겨찾기만** 으로 거름. **랜덤 적용** 은 무작위 구성표에 무작위 색조를 입혀 적용함
 8. 페이지 아래 **내 커서 그리기** — 32x32 격자에 찍어 그리고 클릭 지점을 정하면 페이지 커서로 바로 보이고, 다섯 가지 크기가 든 .cur 로 내려받음. 그림은 브라우저에 남음
@@ -361,44 +304,6 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 `"animated": true` 인 구성표는 움직이는 커서(.ani)로 만들어짐. 아래 표는 `python build.py` 가 채움.
 
 <!-- schemes:ko -->
-**픽셀 클래식**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/pink` | 분홍 | 검은 외곽선에 분홍 채우기. 기본 크기의 또렷한 픽셀. |
-| `art/onebit` | 1비트 | 흑백 두 색에 디더링 음영과 딱딱한 그림자, 손가락 링크. |
-| `art/ink` | 잉크 | 검은 몸체에 흰 외곽선. 흔한 흰 화살표를 뒤집은 모양. |
-| `art/sticker` | 스티커 | 민트색 몸체를 두꺼운 흰 테두리와 옅은 그림자로 오려 붙인 느낌. |
-| `art/gameboy` | 게임보이 | 초록 네 가지 색만으로 빛과 그늘을 넣은 휴대용 게임기 화면풍. |
-| `art/commodore` | 코모도어 | 파랑과 연보라 두 색만 쓰던 8비트 가정용 컴퓨터 화면. |
-| `art/terminal` | 터미널 | 검은 판에 주사선이 지나고 둘레로 주황 인광이 번지는 옛 단말기 글자. |
-| `art/dos` | 도스 | 위에서 아래로 네 단계로 끊기는 EGA 파랑에 흰 테 한 겹. |
-| `art/arcade` | 아케이드 | 노랑에서 보라로 떨어지는 오락실 간판 색에 두 겹 검정 선. |
-
-**재질**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/chrome` | 크롬 | 왼쪽 위에서 빛을 받는 네 단계 은빛 금속 입체. |
-| `art/gold` | 골드 | 금빛 입체에 반짝이 두 개. 링크는 금별. |
-| `art/glass` | 유리 | 뒤가 비치는 반투명 몸체에 가장자리 하이라이트. |
-| `art/ice` | 얼음 | 위에서 아래로 차가워지는 하늘색에 비스듬한 서리 결. |
-| `art/wood` | 나무 | 짙은 테두리에 가로로 흐르는 나뭇결. |
-| `art/marble` | 대리석 | 흰 돌에 회색 결이 물결치듯 지나감. |
-| `art/stone` | 돌 | 회색 바탕에 밝고 어두운 얼룩이 박힌 돌멩이. |
-| `art/copper` | 구리 | 구릿빛 금속 입체에 청록 녹이 군데군데 슨 모습. |
-| `art/leather` | 가죽 | 짙은 갈색 가죽 안쪽을 따라 한 땀씩 박음질. |
-| `art/denim` | 데님 | 청바지 능직 결에 주황 스티치. |
-| `art/paper` | 종이 | 크림색 종이를 반으로 접은 듯 한쪽에 그늘. |
-| `art/rust` | 녹 | 붉은 녹이 슬고 군데군데 쇳빛이 벗겨진 철판. |
-| `art/velvet` | 벨벳 | 가장자리로 갈수록 어두워지는 자주색 융단 결. |
-| `art/brick` | 벽돌 | 엇갈려 쌓은 붉은 벽돌과 밝은 줄눈. |
-| `art/jade` | 옥 | 맑은 초록 돌에 흰 광택과 결이 비침. |
-| `art/amber` | 호박 | 굳은 황금빛 수지 속에 작은 기포가 갇힘. |
-| `art/steel` | 강철 | 가로로 긁힌 헤어라인이 지나가는 무광 금속. |
-| `art/wrap` | 에어캡 | 볼록한 공기 방울이 줄지어 박힌 투명 포장 비닐. |
-| `art/rubber` | 고무 | 빛을 먹는 검은 무광 고무에 오돌토돌한 돌기. |
-
 **움직이는**
 
 | 폴더 | 이름 | 스타일 |
@@ -423,25 +328,6 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/chameleon` | 카멜레온 | 몸 전체 색이 색상환을 따라 천천히 바뀜. |
 | `art/ripple` | 파문 | 물결 고리가 가운데에서 바깥으로 퍼짐. |
 | `art/marquee` | 전구 간판 | 테두리 전구가 한 칸씩 차례로 켜지며 흘러감. |
-
-**게임 아이템**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/fantasy` | 판타지 | 은빛 칼, 나무 모래시계, 방패, 나침반, 마법 지팡이. |
-
-**음식**
-
-| 폴더 | 이름 | 스타일 |
-|---|---|---|
-| `art/chocolate` | 초콜릿 | 홈으로 나뉜 판 초콜릿 조각. |
-| `art/strawberry` | 딸기 | 빨간 과육에 노란 씨가 박힌 딸기. |
-| `art/mintchoco` | 민트초코 | 민트색 아이스크림에 초코 조각이 섞임. |
-| `art/coffee` | 커피 | 잔 위에서 크레마가 소용돌이치는 커피. |
-| `art/soda` | 소다 | 하늘색 탄산 속에서 기포가 올라오는 음료. |
-| `art/honey` | 꿀 | 금빛 꿀이 들어찬 육각 벌집. |
-| `art/matcha` | 말차 | 진한 초록 말차에 거품이 곱게 올라옴. |
-| `art/cookie` | 쿠키 | 구운 반죽에 초코칩이 박힌 쿠키. |
 
 **해양 생물 · 애니**
 
@@ -569,7 +455,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 ```bat
 cursors.bat -Install                    :: 전체 등록
-cursors.bat -Install -Scheme neon,pink  :: 개별 등록 (쉼표로 여러 개)
+cursors.bat -Install -Scheme neonpulse,rainbowflow  :: 개별 등록 (쉼표로 여러 개)
 cursors.bat -Install -Shape round       :: 전체를 둥근 모양으로 등록
 cursors.bat -Uninstall                  :: 전체 제거
 cursors.bat -Uninstall -Scheme neon     :: 개별 제거
@@ -619,7 +505,7 @@ hotspot 5,4
 파일 하나만 변환:
 
 ```sh
-python make_cur.py art/pink/hand.txt out/hand.cur          # 핫스팟은 txt 에서 읽음
+python make_cur.py art/neonpulse/hand.txt out/hand.cur     # 핫스팟은 txt 에서 읽음
 python make_cur.py 내그림.png out/mine.cur --hotspot 0,0    # PNG (투명 배경, 256x256 이하)
 ```
 

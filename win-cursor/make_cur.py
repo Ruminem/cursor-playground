@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """그림(.txt 픽셀아트 또는 .png)을 윈도우 커서 파일(.cur)로 만든다.
 
-사용법: python make_cur.py art/pink/hand.txt out/hand.cur [--hotspot 5,4]
+사용법: python make_cur.py art/neonpulse/hand.txt out/hand.cur [--hotspot 5,4]
 
 txt 첫 줄에 `hotspot x,y` 를 적어 두면 핫스팟으로 쓴다. --hotspot 을 주면 그쪽이 우선.
 
