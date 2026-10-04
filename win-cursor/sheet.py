@@ -45,6 +45,8 @@ def frames_of(shape: str, sid: str, role: str, size: int, cache: dict, mat: str 
     if build.shape_of(shape) is None or role in build.KEEPS[sid]:   # 테마 그림 그대로 쓰는 자리
         raw = build.art_raw(sid, role)
         return sm.tween([sm.scale_up(f, size / canvas_size(raw)) for f in shapelib.read_art(raw)[0]], [1] * k)
+    if sid in build.PEEK and role == "arrow":                       # 냥이 빼꼼 화살표 — 빌드와 같은 drawer
+        return sm.tween(build.peek_drawer(sid, shape)(sm.cells_for(size))[0], [1] * k)
     frames, _, glyphs = build.smooth_parts(sid, role, shape, cache)
     return sm.tween(sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid), sid in build.SWAYS),
                             sm.cells_for(size), glyphs)[0], [1] * k)
@@ -121,7 +123,7 @@ def main(argv: list[str] | None = None) -> Path:
             rows = [r[int(lo or 0):int(hi or len(r))] for r in rows]
         cols = f"{shapes[0]} 의 프레임 (많은 쪽 {max(len(r) for r in rows)}장)"
     elif a.roles:
-        roles = pick(a.roles, sorted(p.stem for p in (build.HERE / "art" / schemes[0]).glob("*.txt")), "칸")
+        roles = pick(a.roles, sorted(p.stem for p in (build.HERE / "art" / schemes[0]).glob("*.txt") if not p.stem.startswith("_")), "칸")
         rows = [[frames_of(shapes[0], sid, r, a.size, cache, a.mat)[0] for r in roles] for sid in schemes]
         cols = f"{shapes[0]} 의 칸: {' · '.join(roles)}"
     else:

@@ -334,6 +334,13 @@ def hand_at(f: dict, x0: int, y0: int, skin: tuple) -> None:
 
 PEEK_CUR = [(0, 0), (0, 15.4), (4.0, 11.8), (6.6, 17.6), (9.2, 16.6), (6.8, 11.0), (11.6, 11.0)]   # 윈도우 화살표
 PEEK_S, PEEK_T, PEEK_WHITE = 1.6, 0.72, hx("fff6e8ff")   # 화살표 배율 · 머리가 솟는 빗변 자리(0 끝–1 날개) · 화살표 색
+PEEK_PAW = (0.12, 0.2, 1.3)   # 발끝 둘의 빗변 자리(PEEK_T ±) · 빗변에서 뜬 거리 · 반지름
+# peek() 가 그린 냥이 층(화살표·발 빼고 테 두른 것) — write() 가 매끈한 모양용 재료로 따로 남긴다 (write_peek)
+PEEKS: list = []
+
+
+def peek_lift(k: int) -> float:
+    return 3.2 + (1.6 if k in (2, 3, 4, 5) else 0.0)
 
 
 def peek(k: int, head: Callable, out: tuple, fur: tuple) -> dict:
@@ -344,13 +351,15 @@ def peek(k: int, head: Callable, out: tuple, fur: tuple) -> dict:
     lx, ly = 11.6 * PEEK_S, 11.0 * PEEK_S              # 빗변: (1,1) → (1+lx, 1+ly)
     ln = math.hypot(lx, ly)
     nx, ny = ly / ln, -lx / ln                         # 빗변 바깥(오른쪽 위) 법선
-    lift = 3.2 + (1.6 if k in (2, 3, 4, 5) else 0.0)
+    lift = peek_lift(k)
     ex, ey = 1 + lx * PEEK_T, 1 + ly * PEEK_T
     f = {p: c for p, c in head(ex + nx * lift, ey + ny * lift, k).items() if p[0] >= 1 and p[1] >= 1}
+    PEEKS.append((k, rim(f, {p for p, c in f.items() if c[3] == 255}), out, fur))
     solid(f, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), PEEK_WHITE, out)   # 화살표가 냥이를 덮는다
     f[1, 1] = out
-    for dt in (-0.12, 0.12):                           # 빗변을 잡은 발끝 둘(팔 없이 동그란 발만)
-        paw = disc(1 + lx * (PEEK_T + dt) + nx * 0.2, 1 + ly * (PEEK_T + dt) + ny * 0.2, 1.3)
+    dt, up, r = PEEK_PAW
+    for dt in (-dt, dt):                               # 빗변을 잡은 발끝 둘(팔 없이 동그란 발만)
+        paw = disc(1 + lx * (PEEK_T + dt) + nx * up, 1 + ly * (PEEK_T + dt) + ny * up, r)
         for p in {(a + da, b + db) for a, b in paw for da in (-1, 0, 1) for db in (-1, 0, 1)} - paw:
             f[p] = out
         for p in paw:
@@ -372,7 +381,28 @@ def write(sid: str, table: dict, roles=None) -> None:
     roles = roles or list(table)
     d = WIN / "art" / sid
     d.mkdir(parents=True, exist_ok=True)
+    PEEKS.clear()
     for rid in roles:
         frames, hot = table[rid]()
         (d / f"{rid}.txt").write_text(S.to_text(frames, hot, RATE), encoding="utf-8")
         print(f"{rid}: {len(frames)}장")
+    if "arrow" in roles and PEEKS:
+        write_peek(d)
+
+
+def write_peek(d: Path) -> None:
+    """빼꼼 화살표를 매끈한 모양으로 다시 그릴 재료 셋 (smooth.peek_drawer) — 이름이 _ 로 시작해 칸이 아니다.
+    _peek.txt 냥이 층(장마다) · _arrow.txt 흰 화살표(색을 뜰 테마 그림) · _peek.json 빗변·발·장마다 솟는 높이.
+    좌표는 전부 화살표 끝(핫스팟 (1, 1))에서 잰다 — txt 는 그림 상자 왼쪽 위로 옮겨 적히므로 핫스팟으로 되찾는다"""
+    import json
+    layers = [f for _, f, _, _ in sorted(PEEKS, key=lambda e: e[0])]
+    out, fur = PEEKS[0][2], PEEKS[0][3]
+    (d / "_peek.txt").write_text(S.to_text(layers, (1, 1), RATE), encoding="utf-8")
+    a: dict = {}
+    solid(a, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), PEEK_WHITE, out)
+    (d / "_arrow.txt").write_text(S.to_text([a], (1, 1), RATE), encoding="utf-8")
+    lx, ly = 11.6 * PEEK_S, 11.0 * PEEK_S
+    meta = dict(t=PEEK_T, paw=list(PEEK_PAW), height=max(y for _, y in PEEK_CUR) * PEEK_S,
+                edge=[lx * PEEK_T, ly * PEEK_T], normal=[ly / math.hypot(lx, ly), -lx / math.hypot(lx, ly)],
+                lift=[peek_lift(k) for k in range(len(layers))], out=bytes(out).hex(), fur=bytes(fur).hex())
+    (d / "_peek.json").write_text(json.dumps(meta, ensure_ascii=False) + "\n", encoding="utf-8")

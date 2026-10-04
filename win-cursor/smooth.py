@@ -1555,12 +1555,104 @@ def drawer(sid: str, rid: str, frames: list[dict], glyphs: list | None = None, m
     return at
 
 
+def _disc(cx: float, cy: float, r: float) -> set:
+    """gen/sea.disc 와 같은 꼴 — 칸 가운데가 원 안인 칸들"""
+    return {(x, y) for y in range(math.floor(cy - r) - 1, math.ceil(cy + r) + 1)
+            for x in range(math.floor(cx - r) - 1, math.ceil(cx + r) + 1) if math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r}
+
+
+def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
+    """냥이 빼꼼 화살표(gen/sea.peek)를 이 모양으로 그리는 drawer. 화살표만 매끈하게 그리고, 냥이 머리는 그 뒤에
+    앉히고 발끝 둘은 위에 얹는다. 머리·발 자리는 새 몸의 실제 테두리에서 다시 잰다 — 모양마다 빗변이 둥글거나
+    굵어서, 기본 그림 자리 그대로 두면 발이 몸 한가운데 뜨거나 떨어져 보였다 (시안, 2026-10-04).
+    theme 은 색을 뜰 흰 화살표, layers 는 장마다 테 두른 냥이 층, meta 는 gen 이 적은 빗변·발·솟는 높이(_peek.json).
+    좌표는 전부 기본 그림의 화살표 끝 (1, 1) 에서 잰 32칸 단위다. 냥이는 32칸 픽셀 그림을 키워 쓴다"""
+    samplers = samplers_of([theme])
+    out_c, fur = tuple(bytes.fromhex(meta["out"])), tuple(bytes.fromhex(meta["fur"]))
+    t, (dt, up, r) = meta["t"], meta["paw"]
+    cnx, cny = meta["normal"]
+    cex, cey = 1 + meta["edge"][0], 1 + meta["edge"][1]
+    pts = SHAPES[sid]["pts"]
+    px0, px1 = min(p[0] for p in pts), max(p[0] for p in pts)
+    py0, py1 = min(p[1] for p in pts), max(p[1] for p in pts)
+    done: dict[int, tuple] = {}
+
+    def at(cells: int) -> tuple[list[dict], tuple[int, int]]:
+        if cells in done:
+            return done[cells]
+        g = cells / LIMIT
+        board = round(MIN_SIZE * g)
+        size = round(meta["height"] * g)                 # 빼꼼 화살표는 보통 화살표보다 크다 (PEEK_S 배)
+        drawn, hot = draw(sid, "arrow", samplers, size)
+        arrow = drawn[0]
+        _, shot, _, body = stencil(sid, "arrow", size)
+        body = {(x + hot[0] - shot[0], y + hot[1] - shot[1]) for x, y in body}
+        bx0, bx1 = min(x for x, _ in body), max(x for x, _ in body)
+        by0, by1 = min(y for _, y in body), max(y for _, y in body)
+        m = lambda p: ((bx0 + (p[0] - px0) / (px1 - px0) * (bx1 - bx0)) / g,
+                       (by0 + (p[1] - py0) / (py1 - py0) * (by1 - by0)) / g)
+        tip, wing = m(pts[0]), m(pts[1])                 # 빗변 어림: 끝 → 날개
+        lx, ly = wing[0] - tip[0], wing[1] - tip[1]
+        ln = math.hypot(lx, ly)
+        nx, ny = ly / ln, -lx / ln
+
+        # 꼭짓점을 둥글린 만큼 실제 테두리는 어림한 선에서 들어가 있다 — 바깥쪽으로 걸어 나가 몸(스텐실) 끝을 잰다.
+        # 불투명 칸으로 재면 스티커는 흰 띠 바깥에서 뜨고, 반쯤 비치는 유리는 몸 속에 박혔다
+        def edge(s: float) -> tuple[float, float]:
+            x, y = (tip[0] + lx * s) * g, (tip[1] + ly * s) * g
+            for _ in range(200):
+                if (int(x + nx * 0.25), int(y + ny * 0.25)) not in body and (int(x), int(y)) not in body:
+                    break
+                x, y = x + nx * 0.25, y + ny * 0.25
+            return x / g, y / g
+
+        # 속이 빈 모양은 구멍으로 냥이가 비친다 — 바깥에서 못 닿는 칸과 비치는 몸을 화살표 안쪽으로 보고 냥이를 뺀다
+        solid = {p for p, c in arrow.items() if c[3] >= 160}
+        seen = set()
+        todo = [(x, y) for x in range(board) for y in (0, board - 1)] + [(x, y) for y in range(board) for x in (0, board - 1)]
+        while todo:
+            q = todo.pop()
+            if q in seen or q in solid or not (0 <= q[0] < board and 0 <= q[1] < board):
+                continue
+            seen.add(q)
+            todo += [(q[0] + 1, q[1]), (q[0] - 1, q[1]), (q[0], q[1] + 1), (q[0], q[1] - 1)]
+        inner = ({(x, y) for x in range(board) for y in range(board)} - seen) | body
+
+        paws: dict = {}
+        for s in (t - dt, t + dt):                      # 빗변을 잡은 발끝 둘 — 테 색 고리 + 털 색 속
+            ex, ey = edge(s)
+            paw = _disc(ex + nx * up, ey + ny * up, r)
+            for p in {(a + da, b + db) for a, b in paw for da in (-1, 0, 1) for db in (-1, 0, 1)} - paw:
+                paws[p] = out_c
+            for p in paw:
+                paws[p] = fur
+        paws = scale_up(paws, g)
+        ex, ey = edge(t)
+        frames = []
+        for layer, lift in zip(layers, meta["lift"]):
+            # 기본 그림에서 머리가 솟던 자리 → 새 테두리에서 같은 높이로 솟는 자리만큼 옮긴다
+            sx = round((ex + nx * lift - cex - cnx * lift) * g)
+            sy = round((ey + ny * lift - cey - cny * lift) * g)
+            f = {(x + sx, y + sy): c for (x, y), c in scale_up(layer, g).items()}
+            f = {p: c for p, c in f.items() if p[0] >= 0 and p[1] >= 0 and p not in inner}   # 냥이는 화살표 뒤에
+            for p, c in arrow.items():
+                f[p] = over(f.get(p), c)
+            for p, c in paws.items():
+                f[p] = over(f.get(p), c)
+            frames.append(f)
+        done[cells] = frames, hot
+        return done[cells]
+    return at
+
+
 def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None,
-           mat: str | None = None, at=None) -> tuple[bytes, str]:
-    """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다). at 은 drawer() 가 만든 것 (나눠 쓸 때)"""
+           mat: str | None = None, at=None, fps: int | None = None) -> tuple[bytes, str]:
+    """커서 파일 하나. 크기마다 새로 그려 담는다 (늘리면 뭉개진다). at 은 drawer() 가 만든 것 (나눠 쓸 때).
+    fps 를 주면 FPS 대신 쓴다 — 0 이면 안 섞는다 (픽셀 그림을 키워 얹은 냥이 빼꼼은 섞으면 머리가 뿌옇다)"""
     at = at or drawer(sid, rid, frames, glyphs, mat)
+    fps = FPS if fps is None else fps
     # FPS 가 켜져 있으면 다 그린 뒤에 사이를 섞는다 — 그리는 값은 그대로 두고 프레임만 는다
-    parts = steps(rate, FPS) if FPS and len(frames) > 1 else [rate]
+    parts = steps(rate, fps) if fps and len(frames) > 1 else [rate]
     per_size = []
     for size in CUR_SIZES:
         pxs, hot = at(cells_for(size))

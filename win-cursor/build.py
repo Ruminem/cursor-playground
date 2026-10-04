@@ -181,7 +181,11 @@ KEEP = {"ns", "we", "nwse", "nesw", "up", "cross", "pen", "hand"}
 # 구성표가 schemes.json 의 keep 으로 더 붙드는 칸 — 해양 생물의 "사용 중"은 모래시계가 아니라 생물 그림이다.
 # 모양 폴더에 파일이 없으면 받는 쪽이 기본 모양으로 넘어가는 약속은 KEEP 만의 것이라, 여기 칸은
 # 모양 폴더에도 기본 모양과 같은 바이트로 쓴다 (build_one)
-KEEPS = {s["id"]: KEEP | set(s.get("keep", ())) for s in SCHEMES}
+# 냥이 빼꼼(peek) 구성표는 화살표만 매끈한 모양으로 다시 그리고 나머지 칸은 기본 그림 그대로다 — 냥이가 하는 짓을
+# 그린 칸이라 몸을 매끈하게 다시 그릴 데가 없다. 화살표는 gen 이 남긴 재료(_peek.*)로 smooth.peek_drawer 가 그린다
+PEEK = {s["id"] for s in SCHEMES if s.get("peek")}
+KEEPS = {s["id"]: KEEP | set(s.get("keep", ())) | ({r for r, _, _ in ROLES + EXTRA} - {"arrow"} if s["id"] in PEEK else set())
+         for s in SCHEMES}
 # 몸이 장마다 흔들리는 그림(헤엄) — 매끈한 모양의 번짐 테를 그 장 몸 밖에서만 뜬다 (smooth.samplers_of).
 # 비율만으로 켜면 반짝이·폭죽 move 처럼 몸에서 튀는 것도 걸려서 표식을 단 구성표만
 SWAYS = {s["id"] for s in SCHEMES if s.get("sway")}
@@ -226,11 +230,29 @@ def smooth_parts(sid: str, rid: str, shape: str, cache: dict) -> tuple[list[dict
 def _drawer(ats: dict | None, sid: str, rid: str, shape: str, frames: list[dict], glyphs: list | None):
     """이 칸의 drawer. ats 를 받았으면 거기서 꺼내거나 만들어 둔다 — 커서와 시안 데이터가 같은 그림을 나눠 쓰게.
     안 받았어도 여기서 만든다 — smooth 쪽이 대신 만들면 구성표를 몰라 sway 표식이 빠진다"""
+    if sid in PEEK and rid == "arrow":
+        if ats is None or rid not in ats:
+            at = peek_drawer(sid, shape)
+            if ats is None:
+                return at
+            ats[rid] = at
+        return ats[rid]
     if ats is None:
         return smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid), sid in SWAYS)
     if rid not in ats:
         ats[rid] = smoothlib.drawer(shape, rid, frames, glyphs, MAT.get(sid), sid in SWAYS)
     return ats[rid]
+
+
+def peek_drawer(sid: str, shape: str):
+    """냥이 빼꼼 화살표의 drawer. gen/sea.write_peek 가 남긴 재료 셋을 읽는다 — txt 는 그림 상자 왼쪽 위로 옮겨
+    적혀 있어 핫스팟으로 화살표 끝 (1, 1) 기준 좌표를 되찾는다"""
+    d = HERE / "art" / sid
+    layers, hot, _ = shapelib.read_art((d / "_peek.txt").read_text(encoding="utf-8"))
+    layers = [{(x - hot[0] + 1, y - hot[1] + 1): c for (x, y), c in f.items()} for f in layers]
+    theme = shapelib.read_art((d / "_arrow.txt").read_text(encoding="utf-8"))[0][0]
+    meta = json.loads((d / "_peek.json").read_text(encoding="utf-8"))
+    return smoothlib.peek_drawer(shape, theme, layers, meta)
 
 
 def page_bits(sid: str, rid: str, shape: str | None, cache: dict,
@@ -311,7 +333,7 @@ def cursor_bytes(sid: str, rid: str, shape: str | None, cache: dict, ats: dict |
         return (txt_to_ani(raw, hot), "ani") if is_animated(raw) else (txt_to_cur(raw, hot), "cur")
     frames, rate, glyphs = smooth_parts(sid, rid, shape, cache)
     at = _drawer(ats, sid, rid, shape, frames, glyphs)
-    return smoothlib.cursor(shape, rid, frames, rate, glyphs, MAT.get(sid), at)
+    return smoothlib.cursor(shape, rid, frames, rate, glyphs, MAT.get(sid), at, 0 if sid in PEEK else None)
 
 
 def favicon() -> str:

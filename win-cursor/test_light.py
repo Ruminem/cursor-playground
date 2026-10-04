@@ -384,12 +384,12 @@ print("rate 칸 OK — 프레임마다 머무는 시간이 파일에 적힌다")
 # 떨어진 칸이 있으면 실패한다. 여유를 두는 것은 기호 **스스로** 움직이는 구성표 때문이다 —
 # 불꽃놀이의 모래시계는 터지며 아래로 2~3칸 번지고, 지터의 기호는 옆으로 2칸 떨린다(1칸 여유로
 # 짰다가 이 둘이 걸렸다). 샌 화살표 무늬는 몸 안쪽·왼쪽이라 기호 상자에서 훨씬 멀다.
-# classic_only 구성표는 매끈한 모양으로 안 그려 smooth_parts 를 안 타므로 뺀다 — 그 칸들은
+# classic_only 구성표와 냥이 빼꼼(peek, 화살표만 다시 그림)은 이 칸들이 smooth_parts 를 안 타므로 뺀다 — 그 칸들은
 # 작은 화살표 동물 옆에 장면을 통째로 그려서 기호 상자라는 것이 없다(먼치킨 백그라운드 작업)
 import build  # noqa: E402
 
 leaks = []
-smooth_schemes = [s for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY]
+smooth_schemes = [s for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY | build.PEEK]
 for scheme in smooth_schemes:
     sid = scheme["id"]
     arrow = shapelib.read_art(build.art_raw(sid, "arrow"))[0]
