@@ -334,8 +334,6 @@ pre .c{color:var(--muted)}
 .setup p{margin:0;max-width:70ch}
 .setup a,.install a{color:var(--accent-ink);text-underline-offset:3px}
 .setup ol{margin:0;padding-left:20px;display:grid;gap:4px;max-width:70ch}
-.setup .setup-dl{justify-self:start;color:var(--ground);text-decoration:none;margin:4px 0}
-.not-win .setup-dl,.not-win .setup-dl+ol{display:none}   /* .bat 은 윈도우에서만 돈다 */
 .not-win .urlbar [data-action="restore"]{display:none}   /* 맥은 Mousecape 의 ⌘R 이 원래대로 */
 .cmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
 .cmd code{flex:1 1 320px;min-width:0;overflow-x:auto;white-space:nowrap;font:13px/1.5 var(--mono);background:var(--ground);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
@@ -462,10 +460,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     <p class="lede">구성표와 모양을 고르고 적용을 누르면 윈도우 커서가 바로 바뀌어요. 원래 커서로 되돌리기도 버튼 하나.</p>
     <div class="ctas">
       <a class="btn btn-dark c-hand" href="#pick-title">구성표 둘러보기</a>
-      <a class="btn btn-line c-hand" id="setup-hero" href="setup.bat" download="cursor-playground-setup.bat">윈도우 처음 설정</a>
+      <a class="btn btn-line c-hand" href="#setup-title">윈도우 처음 설정</a>
       <a class="btn btn-line c-hand" href="#mac-title">맥에서 쓰기</a>
     </div>
-    <p class="fine">무료 · 오픈소스(Apache-2.0) · 설치는 파일 하나 두 번 누르기</p>
+    <p class="fine">무료 · 오픈소스(Apache-2.0) · 설치는 PowerShell 한 줄</p>
   </section>
 
   <div class="toolbox" id="toolbox" hidden>
@@ -515,19 +513,12 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   <section class="setup" aria-labelledby="setup-title">
     <h2 id="setup-title">처음 한 번</h2>
     <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠. 맥이면 오른쪽 아래 적용 자리가 <b>맥용 .cape 받기</b> 로 바뀜 — 바로 아래 <b>맥에서 쓰기</b>.</p>
-    <p>설정 파일을 받아 두 번 누르면 끝. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음.</p>
-    <a class="btn btn-dark c-hand setup-dl" id="setup-dl" href="setup.bat" download="cursor-playground-setup.bat">설정 파일 받기</a>
-    <ol class="note">
-      <li>받은 <b>cursor-playground-setup.bat</b> 을 두 번 누름 — 브라우저의 다운로드 목록이나 다운로드 폴더에 있음. 브라우저가 흔하지 않은 파일이라고 막으면 <b>유지</b>·<b>계속</b>.</li>
-      <li>파란 <b>Windows의 PC 보호</b> 창이 뜨면 <b>추가 정보</b> → <b>실행</b>. 서명 없는 파일이라 처음 한 번 뜰 수 있음.</li>
-      <li>검은 창에 <b>준비 끝</b>이 나오면 아무 키나 눌러 닫고, 이 페이지에서 적용을 누름.</li>
-    </ol>
-    <p>PowerShell 이 익숙하면 파일 없이 아래 한 줄을 붙여넣어도 같음.</p>
+    <p>윈도우 PowerShell 을 열고 아래 한 줄을 붙여넣음. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음.</p>
     <div class="cmd">
       <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
       <button type="button" class="copy c-hand" id="copy-btn">복사</button>
     </div>
-    <p class="note">둘 다 인터넷의 스크립트를 받아 바로 실행하는 길이라, 실행하기 전에 <a href="setup.bat">setup.bat</a> · <a href="setup.ps1">setup.ps1</a> · <a href="handler.ps1">handler.ps1</a> 내용을 확인할 수 있음.</p>
+    <p class="note">인터넷의 스크립트를 받아 바로 실행하는 명령이라, 붙여넣기 전에 <a href="setup.ps1">setup.ps1</a> 과 <a href="handler.ps1">handler.ps1</a> 내용을 확인할 수 있음.</p>
   </section>
 
   <section class="setup" aria-labelledby="mac-title">
@@ -1301,10 +1292,6 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     });
   };
   window.cpCopy(document.getElementById('copy-btn'), document.getElementById('setup-cmd'));
-  // 머리의 처음 설정: 윈도우면 .bat 을 받으면서 다음에 할 일(두 번 누르기·경고 창)이 적힌 자리로 내려가고, 아니면 그 자리로만 간다
-  var hero = document.getElementById('setup-hero'), title = document.getElementById('setup-title');
-  if (document.documentElement.classList.contains('not-win')) { hero.removeAttribute('download'); hero.href = '#setup-title'; }
-  else hero.addEventListener('click', function(){ title.scrollIntoView({ behavior: 'smooth' }); });
 })();
 
 (function(){
