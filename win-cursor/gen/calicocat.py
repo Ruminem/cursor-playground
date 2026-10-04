@@ -613,10 +613,17 @@ def ibeam() -> list[dict]:
         sc = math.sin(2 * ph)
         rig = Rig(21.0, 17.0, 0.0, 0.62)
         hc = (1.0, -10.0)
-        paws = []
-        for i, (sg, dy) in enumerate(((-1, 2.4 * sc), (1, -2.4 * sc))):
-            y0 = -4.0 + i * 5.0 + dy
-            paws += arm_part([(-2.0, -1.0 + i * 3.0), (-9.2, y0)], r=1.8, pr=2.0, name=f"a{i}")
+        # 턱시도냥과 같은 박자 — 한 앞발이 기둥 높이 박혀 아래로 죽 긁어내리는 동안 다른 앞발은 떼어 위로 올린다.
+        # 두 발이 사인으로 마주 오가면 펌프질로 읽힌다
+        paws, marks = [], []
+        for i in range(2):
+            t = (k / 6 + i / 2) % 1
+            if t < 0.66:
+                tip = (-9.2, -8.0 + 11.0 * t / 0.66)
+                marks.append(tip)
+            else:
+                tip = (-7.6, 3.0 - 11.0 * (t - 0.66) / 0.34)
+            paws += arm_part([(-2.0, -1.0 + i * 3.0), tip], r=1.8, pr=2.0, name=f"a{i}")
         parts = paws + head_parts(hc, 6.6, turn=-0.8) + \
             [("body", ell(1.0, 4.0, 5.6, 8.0),
               patches(WHITE, (ell(-2.0, 0.6, 3.6, 3.4), ORNG), (ell(3.6, 8.6, 3.4, 3.8), BLK)), False),
@@ -625,11 +632,12 @@ def ibeam() -> list[dict]:
         o, _, _ = draw(rig, parts)
         f.update(o)
         face(f, rig, hc, 6.6, "happy" if k % 6 < 3 else "open", turn=-0.8)
-        for i, dy in enumerate((2.4 * sc, -2.4 * sc)):   # 긁힘 줄
-            _, py = rig.cell(-9.2, -4.0 + i * 5.0 + dy)
-            for j in (-2, 0, 2):
-                if f.get((14, py + j)) not in (None, OUT) and (14, py + j) not in o:
-                    f[14, py + j] = SISAL_D
+        for a, b in marks:   # 긁는 발이 지나온 자리에 삼줄이 일어난 흰 자국
+            _, y0 = rig.cell(a, -8.0)
+            _, y1 = rig.cell(a, b)
+            for y in range(y0, y1):
+                if f.get((14, y)) not in (None, OUT) and (14, y) not in o:
+                    f[14, y] = hx("fff4dcff")
         frames.append(finish(f))
     return frames
 

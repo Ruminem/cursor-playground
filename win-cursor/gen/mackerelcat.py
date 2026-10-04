@@ -680,18 +680,34 @@ def ibeam() -> list[dict]:
         solid(f, base, lambda p: PLATE_D if p[1] == 28 else PLATE)
         rig = Rig(24.4, 18.6, 0.0, 0.6)
         s = math.sin(ph)
-        pa, pb = (-12.6, -6.0 + 3.0 * s), (-12.6, -0.5 - 3.0 * s)
-        arms = leg_part([(-2.6, -0.6), (-7.0, -3.0), pa], name="a1", pr=2.0, r=1.7) + \
-            leg_part([(-2.6, 1.6), (-7.0, 0.6), pb], name="a2", pr=2.0, r=1.7)
+        # 턱시도냥과 같은 박자 — 한 앞발이 기둥 높이 박혀 아래로 죽 긁어내리는 동안 다른 앞발은 떼어 위로 올린다.
+        # 두 발이 사인으로 마주 오가면 펌프질로 읽힌다
+        arms, marks = [], []
+        for i, sh in enumerate(((-2.6, -0.6), (-2.6, 1.6))):
+            t = (k / 6 + i / 2) % 1
+            if t < 0.66:
+                tip = (-12.6, -12.0 + 12.0 * t / 0.66)
+                marks.append(tip)
+            else:
+                tip = (-10.6, 0.0 - 12.0 * (t - 0.66) / 0.34)
+            arms += leg_part([sh, (-7.0, (sh[1] + tip[1]) / 2 - 1.0), tip], name=f"a{i + 1}", pr=2.0, r=1.7)
         body = body_part((0.6, 4.0), 4.8, 7.0, rot=0.0)
         hind = ("hind", any_of(ell(-1.6, 11.6, 2.4, 1.4), ell(3.0, 11.6, 2.4, 1.4)), FUR_L, True)
         tail = tail_part([(4.0, 9.0), (8.0, 8.0 + s), (9.0, 3.0 + s)], 1.6, 1.3)
         cat, _, _ = draw(rig, arms + head_parts(turn=-1.0) + [hind, body, tail])
         face(cat, rig, mood="open", turn=-1.0, look=(-1, 0))
+        # 긁는 발이 지나온 자리에 노끈이 일어난 흰 자국 두 줄, 발끝 왼쪽으로 보풀이 튄다
+        for a, b in marks:
+            _, y0 = rig.cell(a, -12.0)
+            _, y1 = rig.cell(a, b)
+            for y in range(y0, y1):
+                for x in (15, 17):
+                    if (x, y) in post:
+                        f[x, y] = hx("fff4dcff")
+            if k % 2:
+                for p in ((12, y1 - 1), (11, y1 + 1)):
+                    f.setdefault(p, SISAL_D)
         f.update({p: c for p, c in cat.items() if p[0] <= 30})
-        if k % 3 == 1:   # 보풀
-            for p in ((12, 9 + (k % 6)), (11, 13 + (k % 6)), (12, 17 + (k % 4))):
-                f.setdefault(p, SISAL_D)
         frames.append(finish(f))
     return frames
 
