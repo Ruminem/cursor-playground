@@ -334,6 +334,23 @@ pre .c{color:var(--muted)}
 .setup p{margin:0;max-width:70ch}
 .setup a,.install a{color:var(--accent-ink);text-underline-offset:3px}
 .setup ol{margin:0;padding-left:20px;display:grid;gap:4px;max-width:70ch}
+/* 처음 설정 그림 단계. 그림은 실제 화면을 흉내 낸 작은 상자라 테마 토큰으로만 칠한다 */
+.setup ol.guide{list-style:none;padding:0;gap:14px;max-width:none;grid-template-columns:minmax(0,1fr)}  /* 안 주면 긴 명령 한 줄이 칸 폭이 돼 폰에서 페이지째 밀림 */
+.guide li{display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;align-items:start}
+.g-n{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--on-accent);font:700 15px/1 var(--body)}
+.g-b{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;min-width:0;padding-top:5px}
+kbd{font:600 12px/1 var(--mono);border:1px solid var(--line-2);border-bottom-width:2px;border-radius:6px;padding:2px 6px;background:var(--ground)}
+.g-pic{border:1px solid var(--line);border-radius:12px;background:var(--ground);font-size:13px;max-width:420px}
+.g-menu{position:relative;display:grid;width:200px;padding:6px 6px 40px}
+.g-menu span{padding:4px 10px;border-radius:6px;color:var(--muted)}
+.g-menu span.on{background:var(--accent);color:var(--on-accent);font-weight:700}
+.g-menu span.on::after{content:" ← 여기"}
+.g-start{position:absolute;left:10px;bottom:8px;width:22px;height:22px;border-radius:5px;outline:2px dashed var(--accent);outline-offset:2px;
+  background:linear-gradient(var(--accent),var(--accent)) 0 0/10px 10px no-repeat,linear-gradient(var(--accent),var(--accent)) 12px 0/10px 10px no-repeat,
+  linear-gradient(var(--accent),var(--accent)) 0 12px/10px 10px no-repeat,linear-gradient(var(--accent),var(--accent)) 12px 12px/10px 10px no-repeat}
+.g-term{padding:12px 14px;font:12px/1.6 var(--mono);color:var(--ink);overflow-wrap:anywhere}
+.g-term .dim{color:var(--muted)}
+.g-term .ok{color:var(--accent-ink);font-weight:700}
 .not-win .urlbar [data-action="restore"]{display:none}   /* 맥은 Mousecape 의 ⌘R 이 원래대로 */
 .cmd{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
 .cmd code{flex:1 1 320px;min-width:0;overflow-x:auto;white-space:nowrap;font:13px/1.5 var(--mono);background:var(--ground);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
@@ -513,11 +530,34 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   <section class="setup" aria-labelledby="setup-title">
     <h2 id="setup-title">처음 한 번</h2>
     <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠. 맥이면 오른쪽 아래 적용 자리가 <b>맥용 .cape 받기</b> 로 바뀜 — 바로 아래 <b>맥에서 쓰기</b>.</p>
-    <p>윈도우 PowerShell 을 열고 아래 한 줄을 붙여넣음. 버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음.</p>
-    <div class="cmd">
-      <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
-      <button type="button" class="copy c-hand" id="copy-btn">복사</button>
-    </div>
+    <p>버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음. 한 번이면 끝.</p>
+    <ol class="guide">
+      <li><span class="g-n" aria-hidden="true">1</span><div class="g-b">
+        <p>아래 <b>복사</b>를 누름.</p>
+        <div class="cmd">
+          <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
+          <button type="button" class="copy c-hand" id="copy-btn">복사</button>
+        </div>
+      </div></li>
+      <li><span class="g-n" aria-hidden="true">2</span><div class="g-b">
+        <p>작업 표시줄의 <b>시작 단추를 오른쪽 클릭</b>(또는 <kbd>Win</kbd> + <kbd>X</kbd>) → <b>터미널</b>. <b>(관리자)</b> 붙은 것 말고 그냥 터미널. 윈도우 10 이면 <b>Windows PowerShell</b>.</p>
+        <div class="g-pic g-menu" aria-hidden="true">
+          <span>장치 관리자</span><span>컴퓨터 관리</span><span class="on">터미널</span><span>터미널(관리자)</span><span>작업 관리자</span><span>설정</span>
+          <i class="g-start"></i>
+        </div>
+      </div></li>
+      <li><span class="g-n" aria-hidden="true">3</span><div class="g-b">
+        <p>열린 창에 <kbd>Ctrl</kbd> + <kbd>V</kbd> 로 붙여넣고 <kbd>Enter</kbd>. <b>cursor-playground 준비 끝</b> 이 뜨면 창을 닫아도 됨.</p>
+        <div class="g-pic g-term" aria-hidden="true">
+          <span class="dim">PS C:\Users\나&gt;</span> irm https://ruminem.github.io/…/setup.ps1 | iex<br><br>
+          <span class="ok">  cursor-playground 준비 끝</span><br>
+          <span class="dim">  이제 시안 페이지에서 구성표의 [이 구성표 적용] 을 누르면 됨</span>
+        </div>
+      </div></li>
+      <li><span class="g-n" aria-hidden="true">4</span><div class="g-b">
+        <p>이 페이지로 돌아와 <b>적용</b>. 처음 한 번은 브라우저가 <b>cursor-playground 를 열지</b> 물음 — <b>열기</b>. 항상 허용에 체크해 두면 다음부터 안 물음.</p>
+      </div></li>
+    </ol>
     <p class="note">인터넷의 스크립트를 받아 바로 실행하는 명령이라, 붙여넣기 전에 <a href="setup.ps1">setup.ps1</a> 과 <a href="handler.ps1">handler.ps1</a> 내용을 확인할 수 있음.</p>
   </section>
 
