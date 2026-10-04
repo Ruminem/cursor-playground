@@ -160,15 +160,13 @@ The **Cursor shape** tabs at the top of the preview page change the silhouette w
 |---|---|---|
 | `art/` | Classic | The theme's own pixel art: an angular arrow with a crisp notch and tail. |
 | `round` | Round | A chubby arrow with every corner rounded off; the tip has the largest radius. |
-| `hollow` | Outline | Hollowed out to a thick outline, so whatever is underneath stays readable. |
-| `cutout` | Sticker | A bright band around the body and a shadow below right, so the shape reads on any background. |
-| `blob` | Wedge | Three points, no tail or notch: a sharp tip with the other two corners rounded wide. |
-| `comet` | Comet | The tail stretches down and right into a single point, so the direction is unmistakable. |
-| `needle` | Needle | Narrow body, long tail — the option that covers the least of the screen. |
-| `dart` | Paper plane | Four points with a concave back edge, like two wings swept backwards. |
-| `drop` | Droplet | A pointed tip on an almost circular body, like a single drop of ink. |
 | `glow` | Neon | The theme's brightest colour bleeds out around the body; it glows on dark backgrounds. |
-| `bevel` | Beveled | Where the others round off gently, this one breaks like a chamfered edge. |
+| `cutout` | Sticker | A thick white band around the body and a soft shadow, like a die-cut sticker; reads on any background. |
+| `hollow` | Outline | Hollowed out to a thick ring with a bright rim, so it shows on dark backgrounds and keeps what is underneath readable. |
+| `flat` | Flat | A single-colour vector with no shading, gloss or shadow — clean like a modern OS default. |
+| `glass` | Glass | A see-through body with a bright rim, so whatever is underneath shows through. |
+| `dart` | Arrowhead | A tail-less navigation arrow with a concave back — the one with a truly different outline. |
+| `chunky` | Chunky | A wider body and tail, easy to spot on big or high-resolution screens. |
 
 <!-- /shapes:en -->
 
@@ -419,15 +417,13 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 |---|---|---|
 | `art/` | 기본 | 테마가 그린 픽셀 그림 그대로. 각진 화살표에 또렷한 홈과 꼬리. |
 | `round` | 둥근 | 모든 모서리를 큼직하게 둥글린 통통한 화살표. 끝 반지름이 가장 큼. |
-| `hollow` | 테두리 | 속을 비우고 두꺼운 테두리만 남김. 밑에 있는 글자가 보임. |
-| `cutout` | 스티커 | 몸 바깥에 밝은 테두리를 두르고 오른쪽 아래로 그림자를 깖. 어떤 배경에서도 형태가 뜸. |
-| `blob` | 둥근 삼각 | 꼬리와 홈 없이 세 점만. 끝은 살리고 나머지 두 모서리만 크게 둥글림. |
-| `comet` | 긴 꼬리 | 꼬리가 오른쪽 아래로 길게 빠지며 한 점으로 모임. 방향이 확실히 읽힘. |
-| `needle` | 바늘 | 폭을 좁히고 꼬리를 길게 뺐음. 화면을 가장 덜 가림. |
-| `dart` | 종이비행기 | 네 점만 쓰고 뒷면을 오목하게 팠음. 날개 두 장이 뒤로 젖혀진 형태. |
-| `drop` | 물방울 | 끝만 뾰족하고 몸통은 거의 원. 잉크 한 방울 같은 형태. |
 | `glow` | 네온 | 몸 바깥으로 테마의 밝은 색이 번짐. 어두운 배경에서 특히 뜸. |
-| `bevel` | 입체 | 다른 모양이 완만한 언덕이라면 이건 모서리를 깎아낸 것처럼 꺾임. |
+| `cutout` | 스티커 | 몸 바깥에 흰 띠를 굵게 두르고 옅은 그림자를 깖. 오려 낸 스티커처럼 어떤 배경에서도 뜸. |
+| `hollow` | 테두리 | 속을 비우고 두꺼운 테만 남김. 테 둘레를 밝게 둘러 어두운 바탕에서도 보이고, 밑의 글자가 보임. |
+| `flat` | 플랫 | 음영·광택·그림자 없이 테마 색 그대로 칠한 단색 벡터. 요즘 OS 기본 커서 같은 깔끔함. |
+| `glass` | 유리 | 몸은 반쯤 비치고 테만 밝게 빛남. 밑에 있는 글자가 비쳐 보임. |
+| `dart` | 화살촉 | 꼬리 없이 네 점, 뒷면을 오목하게 판 내비 화살표. 윤곽부터 다른 단 하나. |
+| `chunky` | 굵은 | 몸과 꼬리를 넓힌 화살표. 큰 화면이나 높은 해상도에서도 한눈에 찾음. |
 
 <!-- /shapes:ko -->
 
