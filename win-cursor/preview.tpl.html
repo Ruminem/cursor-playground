@@ -43,7 +43,12 @@ try { if (localStorage.getItem('cp-skin') === 'terminal') document.documentEleme
   background:repeating-linear-gradient(to bottom,transparent 0 2px,rgb(0 0 0 / .18) 2px 3px)}
 .topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
 .skins{display:inline-flex;gap:6px}
+.topbtns{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 .skins .ghost{padding:6px 10px;font-size:12px}
+#tools-btn{padding:6px 10px;font-size:12px}
+#tools-btn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent-ink)}
+.toolbox{display:grid;grid-template-columns:minmax(0,1fr);gap:36px}
+.toolbox[hidden]{display:none}
 /*CURSOR_CSS*/
 *{box-sizing:border-box}
 body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:32px 92px}  /* 아래 여백은 고정된 주소 줄(.urlbar) 자리 */
@@ -304,14 +309,61 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   <header>
     <div class="topline">
       <span class="eyebrow">win-cursor · 포인터 구성표 <!--COUNT-->종</span>
+      <div class="topbtns">
+      <button type="button" class="ghost c-hand" id="tools-btn" aria-expanded="false" aria-controls="toolbox">도구</button>
       <div class="skins" role="group" aria-label="페이지 테마">
         <button type="button" class="ghost c-hand" data-skin="" aria-pressed="true">기본</button>
         <button type="button" class="ghost c-hand" data-skin="terminal" aria-pressed="false">터미널</button>
+      </div>
       </div>
     </div>
     <h1>cursor-playground <em>schemes</em><span class="ver"><!--VERSION--></span></h1>
     <p class="lede">윈도우 커서 구성표 <!--COUNT-->종. 빛·불꽃·물결이 흐르는 <b>움직이는 커서</b>와, 해양 생물·숲속 친구들·냥이가 칸마다 제 할 일을 하는 <b>동물 커서</b>가 있음 — 17칸이 전부 움직임. 고르면 이 페이지 커서가 먼저 바뀌고, 마음에 들면 버튼 하나로 윈도우에 적용함. 질리면 <b>원래대로</b>. 움직이는 커서는 <b>커서 모양</b>에서 화살표를 매끈한 모양으로 바꿔 그릴 수 있음.</p>
   </header>
+
+  <div class="toolbox" id="toolbox" hidden>
+  <section>
+    <h2>도구</h2>
+    <div class="sizebar schedbar">
+      <span class="size-label">시간대별 자동 전환</span>
+      <div class="sched" id="sched"></div>
+      <button type="button" class="ghost c-hand" id="sched-on">켜기</button>
+      <button type="button" class="ghost c-hand" id="sched-off">끄기</button>
+      <span class="size-note">정한 시각마다 그 구성표로 저절로 바뀜. 지금 고른 색조도 같이 적용됨. 윈도우 작업 스케줄러에 등록되고 <b>끄기</b> 로 지움.</span>
+    </div>
+    <div class="sizebar bakbar">
+      <span class="size-label" id="bak-label">내 백업</span>
+      <div class="baks" id="baks" role="group" aria-labelledby="bak-label"></div>
+      <button type="button" class="ghost c-hand" id="bak-save">지금 설정 저장</button>
+      <button type="button" class="ghost c-hand" id="bak-export">내보내기</button>
+      <button type="button" class="ghost c-hand" id="bak-import">가져오기</button>
+      <input type="file" id="bak-file" accept="application/json,.json" hidden>
+      <span class="size-note" id="bak-note">지금 고른 구성표·모양·색조·크기를 묶어 둠(최대 20개). 누르면 그 조합으로 다시 적용함. <b>이 브라우저에만</b> 저장되므로 다른 PC 로 옮기려면 <b>내보내기</b>.</span>
+    </div>
+  </section>
+  <section>
+    <h2>내 커서 그리기</h2>
+    <div class="editor">
+      <canvas id="draw" class="try-cursor" aria-label="커서를 그리는 32x32 격자"></canvas>
+      <div class="tools">
+        <div class="swatches"><button type="button" class="swatch c-hand" data-swatch="#000000" aria-label="#000000"></button><button type="button" class="swatch c-hand" data-swatch="#ffffff" aria-label="#ffffff"></button><button type="button" class="swatch c-hand" data-swatch="#7d7280" aria-label="#7d7280"></button><button type="button" class="swatch c-hand" data-swatch="#e84545" aria-label="#e84545"></button><button type="button" class="swatch c-hand" data-swatch="#f5902a" aria-label="#f5902a"></button><button type="button" class="swatch c-hand" data-swatch="#f5d22e" aria-label="#f5d22e"></button><button type="button" class="swatch c-hand" data-swatch="#4cb85a" aria-label="#4cb85a"></button><button type="button" class="swatch c-hand" data-swatch="#2a7de1" aria-label="#2a7de1"></button><button type="button" class="swatch c-hand" data-swatch="#8a4cd2" aria-label="#8a4cd2"></button><button type="button" class="swatch c-hand" data-swatch="#f078be" aria-label="#f078be"></button><button type="button" class="swatch c-hand" data-swatch="#8c5a2a" aria-label="#8c5a2a"></button><button type="button" class="swatch c-hand" data-swatch="#28e5ff" aria-label="#28e5ff"></button></div>
+        <label class="pick-color">색 직접 고르기 <input type="color" id="draw-color" class="c-hand" value="#f078be"></label>
+        <div class="sizes modes">
+          <button type="button" class="size c-hand" data-mode="pen" aria-pressed="true">그리기</button>
+          <button type="button" class="size c-hand" data-mode="erase" aria-pressed="false">지우개</button>
+          <button type="button" class="size c-hand" data-mode="hot" aria-pressed="false">클릭 지점</button>
+        </div>
+        <div class="tool-row">
+          <button type="button" class="ghost c-hand" id="draw-undo">되돌리기</button>
+          <button type="button" class="ghost c-hand" id="draw-clear">전부 지우기</button>
+          <button type="button" class="register c-hand" id="draw-save">.cur 내려받기</button>
+        </div>
+        <p class="note try-cursor">이 글 위에 마우스를 올리면 그린 커서가 나옴. 파란 칸이 클릭 지점.
+        내려받은 .cur 는 포인터 설정의 <b>찾아보기</b> 로 칸 하나에 지정하면 됨. 그림은 이 브라우저에 저장돼 다음에도 남음.</p>
+      </div>
+    </div>
+  </section>
+  </div>
 
   <section class="setup" aria-labelledby="setup-title">
     <h2 id="setup-title">처음 한 번</h2>
@@ -358,44 +410,6 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     </div>
     </div>
     <div class="groups" role="group" aria-label="구성표"><!--PICKER--></div>
-    <div class="sizebar schedbar">
-      <span class="size-label">시간대별 자동 전환</span>
-      <div class="sched" id="sched"></div>
-      <button type="button" class="ghost c-hand" id="sched-on">켜기</button>
-      <button type="button" class="ghost c-hand" id="sched-off">끄기</button>
-      <span class="size-note">정한 시각마다 그 구성표로 저절로 바뀜. 지금 고른 색조도 같이 적용됨. 윈도우 작업 스케줄러에 등록되고 <b>끄기</b> 로 지움.</span>
-    </div>
-    <div class="sizebar bakbar">
-      <span class="size-label" id="bak-label">내 백업</span>
-      <div class="baks" id="baks" role="group" aria-labelledby="bak-label"></div>
-      <button type="button" class="ghost c-hand" id="bak-save">지금 설정 저장</button>
-      <button type="button" class="ghost c-hand" id="bak-export">내보내기</button>
-      <button type="button" class="ghost c-hand" id="bak-import">가져오기</button>
-      <input type="file" id="bak-file" accept="application/json,.json" hidden>
-      <span class="size-note" id="bak-note">지금 고른 구성표·모양·색조·크기를 묶어 둠(최대 20개). 누르면 그 조합으로 다시 적용함. <b>이 브라우저에만</b> 저장되므로 다른 PC 로 옮기려면 <b>내보내기</b>.</span>
-    </div>
-  </section>
-  <section class="later">
-    <h2>내 커서 그리기</h2>
-    <div class="editor">
-      <canvas id="draw" class="try-cursor" aria-label="커서를 그리는 32x32 격자"></canvas>
-      <div class="tools">
-        <div class="swatches"><button type="button" class="swatch c-hand" data-swatch="#000000" aria-label="#000000"></button><button type="button" class="swatch c-hand" data-swatch="#ffffff" aria-label="#ffffff"></button><button type="button" class="swatch c-hand" data-swatch="#7d7280" aria-label="#7d7280"></button><button type="button" class="swatch c-hand" data-swatch="#e84545" aria-label="#e84545"></button><button type="button" class="swatch c-hand" data-swatch="#f5902a" aria-label="#f5902a"></button><button type="button" class="swatch c-hand" data-swatch="#f5d22e" aria-label="#f5d22e"></button><button type="button" class="swatch c-hand" data-swatch="#4cb85a" aria-label="#4cb85a"></button><button type="button" class="swatch c-hand" data-swatch="#2a7de1" aria-label="#2a7de1"></button><button type="button" class="swatch c-hand" data-swatch="#8a4cd2" aria-label="#8a4cd2"></button><button type="button" class="swatch c-hand" data-swatch="#f078be" aria-label="#f078be"></button><button type="button" class="swatch c-hand" data-swatch="#8c5a2a" aria-label="#8c5a2a"></button><button type="button" class="swatch c-hand" data-swatch="#28e5ff" aria-label="#28e5ff"></button></div>
-        <label class="pick-color">색 직접 고르기 <input type="color" id="draw-color" class="c-hand" value="#f078be"></label>
-        <div class="sizes modes">
-          <button type="button" class="size c-hand" data-mode="pen" aria-pressed="true">그리기</button>
-          <button type="button" class="size c-hand" data-mode="erase" aria-pressed="false">지우개</button>
-          <button type="button" class="size c-hand" data-mode="hot" aria-pressed="false">클릭 지점</button>
-        </div>
-        <div class="tool-row">
-          <button type="button" class="ghost c-hand" id="draw-undo">되돌리기</button>
-          <button type="button" class="ghost c-hand" id="draw-clear">전부 지우기</button>
-          <button type="button" class="register c-hand" id="draw-save">.cur 내려받기</button>
-        </div>
-        <p class="note try-cursor">이 글 위에 마우스를 올리면 그린 커서가 나옴. 파란 칸이 클릭 지점.
-        내려받은 .cur 는 포인터 설정의 <b>찾아보기</b> 로 칸 하나에 지정하면 됨. 그림은 이 브라우저에 저장돼 다음에도 남음.</p>
-      </div>
-    </div>
   </section>
   <section class="install later">
     <h2>그 밖에</h2>
@@ -434,7 +448,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   </section>
 
   <section>
-    <h2>여섯 칸</h2>
+    <h2>17칸</h2>
     <!--PANELS-->
     <p class="reg-status" id="reg-status" role="status"></p>
     <p class="legend"><i></i> 파란 네모는 클릭이 실제로 일어나는 점(핫스팟). 화살표는 뾰족한 끝, 모래시계는 가운데처럼 커서마다 다름. 카드 위에 마우스를 올리면 그 커서로 바뀜.</p>
@@ -1141,6 +1155,23 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     chip.style.transform = 'translate(' + pos.x + 'px,' + pos.y + 'px)';
   });
   zone.addEventListener('pointerup', function(){ start = null; });
+})();
+</script>
+
+<script>
+// 도구: 자동 전환·백업·그리기는 늘 쓰는 게 아니라 기본으로 접어 두고 머리의 [도구] 로 폄. 편 상태는 이 브라우저에 기억
+(function(){
+  var btn = document.getElementById('tools-btn'), box = document.getElementById('toolbox');
+  function set(open, scroll){
+    box.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    try { localStorage.setItem('cp-tools', open ? '1' : ''); } catch (e) {}
+    if (open && scroll) box.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+  var open = false;
+  try { open = localStorage.getItem('cp-tools') === '1'; } catch (e) {}
+  set(open, false);
+  btn.addEventListener('click', function(){ set(box.hidden, true); });
 })();
 </script>
 
