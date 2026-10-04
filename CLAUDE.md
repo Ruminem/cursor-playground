@@ -26,7 +26,7 @@
 | `gen/cape.py` | 구성표 하나를 `.cape` 로 뽑는 손 도구(기본 모양만). 버튼의 기준 답 — 기본 모양이면 둘이 같은 그림·핫스팟·장 수가 나와야 한다 |
 | `preview.tpl.html` | 시안 페이지 틀. `build.py` 가 여기에 데이터를 끼워 `preview.html` 을 뱉는다 |
 | `handler.ps1` | `cursor-playground://` 주소를 받아 실제로 커서를 적용/되돌림. 받는 주소 목록은 파일 머리에. 주소 끝 `/dot.<칸>.<칸>…`(예약은 `-dot.…`)은 **클릭 점** — 고른 칸 커서의 핫스팟에 파란 칸 + 흰 테를 C#(`Recolor.Mark`)으로 찍는다. 그냥 `/dot` 은 예전 주소 그대로 링크(손) 칸만. 시안 페이지가 구성표마다 칸마다 켜고 끄며(`cp-dots` 에 칸 이름 배열, 옛 `true` 는 손 칸만, 기본 끔) dist 를 두 벌로 만들지 않으려고 빌드가 아니라 적용할 때 찍는다. C# 은 로컬 리눅스에서 못 돌려 `test_dot.ps1` 을 CI 가 윈도우 PowerShell 5.1 로 돌린다 |
-| `install.ps1` / `setup.ps1` | 주소 연결 등록과 설치 |
+| `install.ps1` / `setup.ps1` / `setup.bat` | 주소 연결 등록과 설치. `setup.bat` 은 시안 페이지의 처음 설정 단추가 내려 주는 두 번 누르기용 파일로, `setup.ps1` 한 줄을 PowerShell 로 돌릴 뿐이다 |
 
 ### cat-follower
 `cat.py` (tkinter, `Cat` 클래스가 전부) + `art/*.txt` 그림. 본체와 아무 관계 없다.
