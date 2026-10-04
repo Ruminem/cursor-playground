@@ -164,6 +164,7 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .thumb{width:72px;height:64px;background-color:var(--check-a);background-repeat:no-repeat;
   background-position:6px calc(4px - 108px * var(--f,0));background-size:96px calc(108px * var(--n,1));image-rendering:pixelated;border-radius:3px}
 .pick-name{font-weight:700;font-size:14px}
+.pick-name mark{color:inherit;background:color-mix(in srgb, var(--accent) 35%, transparent);border-radius:2px}
 @media (max-width:560px){.picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 .desc-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 14px}
@@ -1158,6 +1159,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       var hit = (!q || item.getAttribute('data-search').indexOf(q) >= 0) && (!onlyFav || favs[id]);
       item.hidden = !hit;
       if (hit) shown++;
+      // 이름에 든 검색어를 칠함. 영어 이름·갈래로만 걸린 것은 칠할 자리가 없어 그대로
+      var nm = item.querySelector('.pick-name'), text = nm.textContent, at = q ? text.toLowerCase().indexOf(q) : -1;
+      nm.textContent = '';
+      if (at < 0) { nm.textContent = text; return; }
+      var m = document.createElement('mark');
+      m.textContent = text.slice(at, at + q.length);
+      nm.append(text.slice(0, at), m, text.slice(at + q.length));
     });
     // 남은 것이 없는 갈래는 제목까지 숨김
     document.querySelectorAll('.group').forEach(function(g){
