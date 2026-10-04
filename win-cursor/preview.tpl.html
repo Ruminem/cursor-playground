@@ -950,7 +950,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     if (!el) return;
     if (!fitRules[mine]) {
       // 여백은 두지 않는다 — 2px 만 둬도 21칸 화살표(스티커·폭죽 등)가 3배(63px)에서 2배로, 31칸 용암이 1배로 떨어진다
-      var cs = getComputedStyle(el), W = parseFloat(cs.width), H = parseFloat(cs.height);
+      // 반올림한다 — 브라우저 확대·윈도우 배율에서는 64px 이 63.98px 로 재여, 판 높이를 꽉 채운 그림(토끼·너구리)이
+      // 64/32 가 아니라 1.99 로 내림돼 1배가 되고 틀에 이웃 프레임이 같이 보였다(2026-10-04)
+      var cs = getComputedStyle(el), W = Math.round(parseFloat(cs.width)), H = Math.round(parseFloat(cs.height));
       fitRules[mine] = Object.keys(pack).map(function(sid){
         var pixel = mine === SHAPES[0].id || CLASSIC_ONLY[sid];
         var b = pack[sid].arrow[8], n = b[4], bw = b[2] - b[0] + 1, bh = b[3] - b[1] + 1;
