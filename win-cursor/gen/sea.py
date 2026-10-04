@@ -358,6 +358,15 @@ def peek(k: int, head: Callable, out: tuple, fur: tuple) -> dict:
     return f
 
 
+def peek_tail(k: int, root=(5.6, 8.2), s: float = 1.0) -> list:
+    """빼꼼 냥이의 긴 꼬리 마디(냥이 제 좌표) — 엉덩이에서 바닥을 따라 오른쪽으로 나가 물음표처럼 솟고,
+    끝이 장마다 살랑인다. 화살표 뒤로 숨기던 꼬리가 몽땅 잘려 보여서 날개 반대쪽(오른쪽)으로 길게 뺐다"""
+    sw = math.sin(2 * math.pi * k / N)
+    x, y = root
+    return [(x, y), (x + 4.4 * s, y + 0.9 * s), (x + 8.2 * s, y - 0.8 * s), (x + 9.6 * s, y - 5.0 * s),
+            (x + 9.0 * s + 0.5 * sw, y - 8.4 * s), (x + 9.6 * s + 0.8 * sw, y - 10.0 * s + 0.3 * sw)]
+
+
 def write(sid: str, table: dict, roles=None) -> None:
     """table: 역할 → () → (프레임들, 핫스팟). roles 를 안 주면 table 전부"""
     roles = roles or list(table)

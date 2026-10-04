@@ -38,7 +38,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write  # noqa: F401
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write  # noqa: F401
 
 SID = "siamesecatanim"
 
@@ -427,7 +427,7 @@ def arrow_frames(small=False) -> list[dict]:
 def arrow() -> list[dict]:
     def head(x, y, k):
         rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
-        g, _, _ = draw(rig, sit_parts(None))           # 꼬리는 화살표 뒤라 안 보인다
+        g, _, _ = draw(rig, sit_parts(tail_part(peek_tail(k))))   # 꼬리는 오른쪽으로 길게 U 자
         face(g, rig, mood="blink" if k == 7 else "talk" if k % 4 in (1, 2) else "open")
         whiskers(g, rig, n=2, skip=(-1,))
         return g

@@ -39,7 +39,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write
 
 SID = "tuxedocatanim"
 
@@ -492,7 +492,8 @@ def diag_chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col=BOW) -> None:
 # ── 장면 ─────────────────────────────────────────────────────────────────────
 def arrow() -> list[dict]:
     def head(x, y, k):
-        return front(Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K), mood="blink" if k == 7 else "open")[0]
+        return front(Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K), mood="blink" if k == 7 else "open",
+                     tail_pts=peek_tail(k, (3.6, 7.6), 0.86))[0]   # 꼬리는 오른쪽으로 길게 U 자
     return [finish(peek(k, head, OUT, WHITE)) for k in range(N)]
 
 

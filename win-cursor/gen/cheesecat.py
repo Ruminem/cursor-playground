@@ -32,7 +32,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, solid, write
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, solid, write
 
 SID = "cheesecatanim"
 
@@ -355,7 +355,7 @@ def arrow_frames(small=False) -> list[dict]:
 def arrow() -> list[dict]:
     def head(x, y, k):
         rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
-        g, _, _ = draw(rig, sit_parts([(0.0, 0.0), (0.1, 0.0)]))   # 꼬리는 화살표 뒤라 안 보인다
+        g, _, _ = draw(rig, sit_parts(peek_tail(k)))   # 꼬리는 오른쪽으로 길게 — 물음표로 솟는다
         face(g, rig, mood="blink" if k == 7 else "open")
         whiskers(g, rig, n=2, skip=(-1,))
         return g

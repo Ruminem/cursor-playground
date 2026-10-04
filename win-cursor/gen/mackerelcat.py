@@ -34,7 +34,7 @@
 import math
 import sys
 
-from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write
+from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write
 
 SID = "mackerelcatanim"
 
@@ -433,10 +433,10 @@ def arrow_frames(small=False, tail=True):
 def arrow() -> list[dict]:
     def head(x, y, k):
         rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
-        g, _, _ = draw(rig, head_parts() + [            # 꼬리는 화살표 뒤라 안 그린다
+        g, _, _ = draw(rig, head_parts() + [            # 꼬리는 오른쪽으로 길게 U 자
             ("feet", any_of(ell(-3.8, 9.0, 2.2, 1.5), ell(4.0, 9.0, 2.2, 1.5)), FUR_L, True),
             ("haunch", any_of(ell(-4.0, 6.6, 2.5, 2.5), ell(4.2, 6.6, 2.5, 2.5)), FUR, True),
-            body_part((0.2, 3.6), 5.0, 5.2)])
+            body_part((0.2, 3.6), 5.0, 5.2), tail_part(peek_tail(k))])
         face(g, rig, mood="blink" if k == 10 else "open", look=(-1, -1))
         whiskers(g, rig, n=2, skip=(-1,))
         return g

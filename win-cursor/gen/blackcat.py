@@ -39,7 +39,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, solid, write
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, solid, write
 
 SID = "blackcatanim"
 
@@ -441,7 +441,8 @@ def arrow_cat(ph: float, k: int, small: bool = False) -> dict:
 
 def arrow() -> list[dict]:
     def head(x, y, k):
-        return kit(Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K), blink(k, 7), look=-1)   # 꼬리 없이
+        return kit(Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K), blink(k, 7), look=-1,
+                   tail=peek_tail(k, (3.8, 6.4), 0.85))   # 꼬리는 오른쪽으로 길게 U 자
     return [finish(peek(k, head, OUT, FUR)) for k in range(N)]
 
 

@@ -36,7 +36,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, phases, raster, solid, write  # noqa: F401
+from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write  # noqa: F401
 
 SID = "munchkincatanim"
 
@@ -548,7 +548,7 @@ def arrow_frames(small=False) -> tuple[list[dict], tuple]:
 def arrow():
     def head(x, y, k):
         rig = Rig(x - HC[0] * PEEK_K, y - HC[1] * PEEK_K, 0.0, PEEK_K)
-        return stand(rig, "blink" if k == 7 else "open", tail_pts=[(0.0, 3.0), (0.1, 3.0)])   # 꼬리는 화살표 뒤
+        return stand(rig, "blink" if k == 7 else "open", tail_pts=peek_tail(k, (3.2, 8.1)))   # 꼬리는 오른쪽으로 길게 U 자
     return [finish(peek(k, head, OUT, FUR)) for k in range(N)], (1, 1)
 
 
