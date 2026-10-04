@@ -1094,8 +1094,12 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
         if (A % 8) { A = Math.max(8, Math.floor(A / 8) * 8); s = A / n; }
         // 50% 는 판 가운데를 틀 가운데에 맞춘다 — 거기서 그림 상자 가운데까지만 더 민다
         var x = Math.round(A / 2 - bw * s / 2 - b[0] * s), y = Math.round((H - bh * s) / 2 - b[1] * s);
+        // 띠는 장 사이가 A/8 뿐이라 틀이 한 장(A)보다 높으면 위아래 이웃 장이 삐져 보인다(카드 틀 136px 에 96px 장).
+        // 이 장의 판 [y, y+A] 밖을 틀 바탕색 안쪽 그림자로 덮는다 — 그림자는 배경 그림 위에 그려진다
+        var top = Math.max(0, y), bot = Math.max(0, H - y - A);
         return '[data-scheme-item="' + sid + '"] .thumb{background-size:' + A + 'px calc(' + (A * K) + 'px * var(--n,1));'
-          + 'background-position:calc(50% + ' + x + 'px) calc(' + y + 'px - ' + (A * K) + 'px * var(--f,0))}';
+          + 'background-position:calc(50% + ' + x + 'px) calc(' + y + 'px - ' + (A * K) + 'px * var(--f,0));'
+          + 'box-shadow:inset 0 ' + top + 'px var(--check-a),inset 0 -' + bot + 'px var(--check-a)}';
       }).join(' ');
     }
     thumbFit.textContent = fitRules[key];
