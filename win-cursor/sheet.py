@@ -10,12 +10,14 @@
   python sheet.py glow electric --frames           열을 모양 대신 프레임으로 (움직임을 볼 때, 모양은 하나만)
   python sheet.py classic neonpulse,wave --roles all 열을 칸 17개로 (구성표 한 벌을 통째로 볼 때)
   --role hand · --size 128 · -o 경로               칸 · 판 크기 · 나갈 자리 (기본은 임시 폴더)
+  python sheet.py round,jelly neonpulse --try 후보.json   shapes.json 에 없는 후보 모양을 같이 그린다
 
 매끈한 모양을 고치다 "그려서 보는" 임시 스크립트를 새로 짜고 싶어지면 이 파일에 옵션을 더한다.
 2026-09-19 에 세어 보니 그런 스크립트를 세션마다 39번 다시 짜고 있었다.
 """
 import argparse
 import ast
+import json
 import tempfile
 import time
 from pathlib import Path
@@ -81,6 +83,8 @@ def main(argv: list[str] | None = None) -> Path:
     ap.add_argument("--range", metavar="처음:끝", help="프레임을 이 구간만 (60fps 판은 한 줄이 너무 길다)")
     ap.add_argument("--set", action="append", default=[], metavar="이름=값",
                     help="smooth.py 상수를 이 판에서만 바꾼다 (예: --set PATTERN=0 --set KEEP=40)")
+    ap.add_argument("--try", dest="trial", type=Path, metavar="JSON",
+                    help="후보 모양을 이 판에서만 더한다 — {id: SHAPES 와 같은 꼴}. pts·radii 에 \"ARROW\" 를 쓰면 기본 화살표")
     ap.add_argument("-o", "--out", type=Path, default=Path(tempfile.gettempdir()) / "cursor-sheet.png")
     a = ap.parse_args(argv)
 
@@ -92,8 +96,20 @@ def main(argv: list[str] | None = None) -> Path:
     sm._cache.clear()                                # 스텐실 캐시가 옛 값으로 그린 것을 들고 있다
     sm._BLENDS.clear(); sm._SAME.clear()             # 색 캐시도 마찬가지
 
+    known = [s["id"] for s in build.SHAPES]
+    if a.trial:                                      # 모양을 갈아엎기 전에 후보를 shapes.json 안 건드리고 본다
+        for sid, spec in json.loads(a.trial.read_text(encoding="utf-8")).items():
+            spec.setdefault("rscale", 1.0)
+            spec.setdefault("style", "solid")
+            spec["pts"] = sm.ARROW if spec.get("pts", "ARROW") == "ARROW" else [tuple(p) for p in spec["pts"]]
+            spec["radii"] = sm.ARROW_R if spec.get("radii", "ARROW") == "ARROW" else spec["radii"]
+            if "shadow" in spec:
+                spec["shadow"] = tuple(spec["shadow"])
+            sm.SHAPES[sid] = spec
+            known.append(sid)
+
     t0 = time.time()
-    shapes = pick(a.shapes, [s["id"] for s in build.SHAPES], "모양")
+    shapes = pick(a.shapes, known, "모양")
     schemes = pick(a.schemes, [s["id"] for s in build.SCHEMES], "구성표")
     if not (build.HERE / "art" / schemes[0] / f"{a.role}.txt").exists():
         raise SystemExit(f"모르는 칸: {a.role}")
