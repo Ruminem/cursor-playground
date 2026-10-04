@@ -85,7 +85,10 @@ body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--body);padding
   .pane.view .reg-status{margin-top:6px}
   .pane.view .legend{margin-top:4px;font-size:12px}
   .pane.view .play{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 14px;padding:12px 14px;align-items:end}
-  .pane.view .play .row,.pane.view .play .note{grid-column:1/-1}
+  .pane.view .play .row,.pane.view .play .note,.pane.view .rsz-zone{grid-column:1/-1}
+  .pane.view .rsz-zone{height:120px}
+  .pane.view .rsz{top:22px;height:76px}
+  .pane.view .chip{padding:6px 10px;font-size:12px}
   .pane.view .play button{padding:9px 14px}
   .pane.view .drag{height:44px}
   .pane.view .play .note{font-size:12px}
@@ -242,6 +245,14 @@ body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-u
 .play{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;display:grid;gap:18px}
 .play .row{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
 .play label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.rsz-zone{position:relative;height:150px;border:1px dashed var(--line);border-radius:4px;background:var(--ground)}
+.rsz{position:absolute;box-sizing:border-box;left:25%;top:30px;width:50%;height:90px;display:grid;place-items:center;text-align:center;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--accent);border-radius:4px;touch-action:none;user-select:none}
+.rsz .h{position:absolute;box-sizing:border-box;width:14px;height:14px;background:var(--surface);border:2px solid var(--accent);border-radius:3px}
+.rsz .n,.rsz .s{left:calc(50% - 7px)}.rsz .w,.rsz .e{top:calc(50% - 7px)}
+.rsz .n,.rsz .nw,.rsz .ne{top:-8px}.rsz .s,.rsz .sw,.rsz .se{bottom:-8px}
+.rsz .w,.rsz .nw,.rsz .sw{left:-8px}.rsz .e,.rsz .ne,.rsz .se{right:-8px}
+.chips{gap:8px}
+.chip{padding:8px 12px;border:1px dashed var(--line);border-radius:4px;font-size:13px;color:var(--muted);background:var(--ground)}
 .play input{font:inherit;color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:9px 11px;width:100%}
 .play input:focus-visible,.play button:focus-visible,.play a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .play a{color:var(--accent-ink);font-weight:700;text-underline-offset:3px}
@@ -466,6 +477,16 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
         <input id="try-text" class="c-ibeam" type="text" value="여기는 텍스트 선택 커서">
       </label>
       <div class="drag c-move" id="drag-zone"><span id="drag-chip">끌어서 옮기는 영역</span></div>
+      <div class="rsz-zone" id="rsz-zone">
+        <div class="rsz" id="rsz"><span>모서리·변을 끌어<br>크기 조정</span>
+          <i class="h n c-ns" data-h="n"></i><i class="h s c-ns" data-h="s"></i><i class="h w c-we" data-h="w"></i><i class="h e c-we" data-h="e"></i>
+          <i class="h nw c-nwse" data-h="nw"></i><i class="h se c-nwse" data-h="se"></i><i class="h ne c-nesw" data-h="ne"></i><i class="h sw c-nesw" data-h="sw"></i>
+        </div>
+      </div>
+      <div class="row chips">
+        <span class="chip c-help">도움말 선택</span><span class="chip c-busy">백그라운드 작업</span><span class="chip c-cross">정밀 선택</span><span class="chip c-pen">필기</span>
+        <span class="chip c-up">대체 선택</span><span class="chip c-pin">위치 선택</span><span class="chip c-person">사용자 선택</span>
+      </div>
       <p class="note">페이지 기본 커서도 고른 구성표의 일반 선택. 브라우저가 커서 이미지를 막는 환경에서는 기본 커서로 대신 보임.</p>
     </div>
   </section>
@@ -1172,6 +1193,32 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   try { open = localStorage.getItem('cp-tools') === '1'; } catch (e) {}
   set(open, false);
   btn.addEventListener('click', function(){ set(box.hidden, true); });
+})();
+</script>
+
+<script>
+// 만져 보기 크기 조정 상자: 모서리·변 손잡이를 끌면 그쪽으로 늘고 줄어듦. 크기 조정 4칸 커서를 실제로 써 보려고
+(function(){
+  var zone = document.getElementById('rsz-zone'), box = document.getElementById('rsz'), drag = null, MW = 80, MH = 44;
+  box.addEventListener('pointerdown', function(e){
+    var h = e.target.getAttribute('data-h');
+    if (!h) return;
+    e.preventDefault(); e.target.setPointerCapture(e.pointerId);
+    drag = { h: h, x: e.clientX, y: e.clientY, l: box.offsetLeft, t: box.offsetTop, w: box.offsetWidth, ht: box.offsetHeight };
+  });
+  box.addEventListener('pointermove', function(e){
+    if (!drag) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y, W = zone.clientWidth, H = zone.clientHeight;
+    var l = drag.l, t = drag.t, r = l + drag.w, b = t + drag.ht;
+    if (/w/.test(drag.h)) l = Math.max(0, Math.min(r - MW, l + dx));
+    if (/e/.test(drag.h)) r = Math.min(W, Math.max(l + MW, r + dx));
+    if (/n/.test(drag.h)) t = Math.max(0, Math.min(b - MH, t + dy));
+    if (/s/.test(drag.h)) b = Math.min(H, Math.max(t + MH, b + dy));
+    box.style.left = l + 'px'; box.style.top = t + 'px'; box.style.width = (r - l) + 'px'; box.style.height = (b - t) + 'px';
+  });
+  function end(){ drag = null; }
+  box.addEventListener('pointerup', end);
+  box.addEventListener('pointercancel', end);
 })();
 </script>
 
