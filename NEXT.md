@@ -1,3 +1,7 @@
+- 여기까지 됨 (2026-10-05 낮 3): 적용 속도. handler.ps1 이 칸 17개를 HttpClient 로 한꺼번에 받고(schemes.json·shapes.json 도 같이), C#(SPI 알림·색칠)을 소스 해시 이름의 dll(`%LOCALAPPDATA%\cursor-playground\csharp-<해시>.dll`)로 한 번만 구워 `Add-Type -Path` 로 다시 쓰고, 색조·클릭 점 칠하기를 칸마다 병렬(`Recolor.Many`)로 돌림. 완전 제거(unlink)는 dll 을 쥐면 폴더를 못 지워 메모리 컴파일로 감. 윈도우 러너 옛/새 번갈아 3번 중앙값(ms): 그냥 988→847 · 모양 1,183→1,002 · 폭죽 1,369→1,222 · 색조 2,661→1,424 · 모양+색조+점 2,751→1,443, 결과 파일 바이트 같음. 첫 적용만 dll 굽느라 3.4초. 러너는 받기가 원래 0.1초라 동시 받기 몫은 여기 안 보임 — 집 PC 에서 더 클 것으로 추정(안 잼). 임시 벤치(bench_apply.ps1·bench.yml)는 지움.
+- 다음 할 것: 윈도우 PC 에서 설치 줄 다시 돌리고 적용 체감 보기. 이미 깔린 handler.ps1 은 아는 주소면 스스로 안 바뀜 — `irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex` 한 번. 다시 깔면 첫 적용은 dll 굽느라 한 번 느림.
+- 막힌 것: 없음
+
 - 여기까지 됨 (2026-10-05 낮 2): 폰 붙는 머리 줄이기 시안 네 벌을 아티팩트(https://claude.ai/artifact/RHjUgMNyczZuM4bJ1Zbahw)로 보여 줌 — 아이폰 13 에서 붙은 머리·카드 지금 280px·4장, 글씨만 숨김 202px·4장, 한 줄로 접힘 60px·6장, 찾기 줄만 붙음 44px·6장. 사용자가 **폰은 지금대로 두기로 정함** — 다시 꺼내지 않음.
 - 다음 할 것: 새 작업 고르기. UI 다듬기(A+B·⑩·⑪)는 사용자가 c9244a1 Pages 도장과 아이폰 사파리(띠·★·칸 정보)까지 확인해 끝남.
 - 막힌 것: 없음
