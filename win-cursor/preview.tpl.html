@@ -5,8 +5,8 @@
 // 적용은 윈도우에서만 된다 (cursor-playground:// 를 받는 것이 handler.ps1). 다른 OS 는 미리보기만 두고 적용 버튼을 끈다.
 // 첫 그림 전에 표시를 달아야 버튼이 켜졌다 꺼지며 깜빡이지 않는다
 if (!/Win/.test(navigator.platform || '') && !/Windows/.test(navigator.userAgent)) document.documentElement.classList.add('not-win');
-// 페이지 테마(기본·터미널)도 첫 그림 전에 입혀야 기본 색으로 한 번 번쩍이지 않는다
-try { if (localStorage.getItem('cp-skin') === 'terminal') document.documentElement.setAttribute('data-skin', 'terminal'); } catch (e) {}
+// 페이지 테마(기본·터미널·유리)도 첫 그림 전에 입혀야 기본 색으로 한 번 번쩍이지 않는다
+try { var sk = localStorage.getItem('cp-skin'); if (sk === 'terminal' || sk === 'glass') document.documentElement.setAttribute('data-skin', sk); } catch (e) {}
 // 밝기도 같다 — 저장된 것이 'dark' 일 때만 밤, 못 읽으면 밝게
 try { if (localStorage.getItem('cp-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
 </script>
@@ -43,6 +43,26 @@ try { if (localStorage.getItem('cp-theme') === 'dark') document.documentElement.
 /* 옅은 주사선. 눌리는 것을 막지 않게 pointer-events 를 끈다 */
 :root[data-skin="terminal"] body::after{content:"";position:fixed;inset:0;z-index:50;pointer-events:none;
   background:repeating-linear-gradient(to bottom,transparent 0 2px,rgb(0 0 0 / .18) 2px 3px)}
+/* 유리 테마: 흐릿한 색 덩어리(--g1~3, 고른 구성표 색으로 물든다) 바탕 위에 반투명 판. 밝기 단추는 그대로 산다.
+   커서 무대·썸네일 바탕(--check-a/b)은 불투명 그대로 — 시안이 윈도우에서 보일 모습과 달라지면 안 된다.
+   흐림(backdrop-filter)을 거는 자리는 맨 아래 유리 절에 */
+@property --g1{syntax:"<color>";inherits:true;initial-value:#8EA2FF}
+@property --g2{syntax:"<color>";inherits:true;initial-value:#FF9CCF}
+@property --g3{syntax:"<color>";inherits:true;initial-value:#7FE3C4}
+:root[data-skin="glass"]{
+  --ground:#EEF0F6; --surface:rgb(255 255 255 / .58); --ink:#111118; --muted:#4A4A57; --line:rgb(20 20 50 / .10); --line-2:rgb(20 20 50 / .22);
+  --check-a:#F1F1EF; --check-b:#FFFFFF; --nav:rgb(255 255 255 / .72); --shadow:rgb(40 40 90 / .12); --hi:rgb(255 255 255 / .8); --blob:60%;
+  transition:--g1 .6s,--g2 .6s,--g3 .6s;
+}
+/* 밤과 겹치면: 위 밝은 판이 밤 토큰을 덮으므로 위에서 정한 칸은 여기서 다 다시 정한다 */
+:root[data-skin="glass"][data-theme="dark"]{
+  --ground:#0A0A12; --surface:rgb(255 255 255 / .06); --ink:#EDEDF2; --muted:#A8A8B8; --line:rgb(255 255 255 / .10); --line-2:rgb(255 255 255 / .22);
+  --check-a:#18181C; --check-b:#1F1F24; --nav:rgb(16 16 26 / .72); --shadow:rgb(0 0 0 / .45); --hi:rgb(255 255 255 / .10); --blob:40%;
+}
+:root[data-skin="glass"] body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(42% 52% at 12% 18%,color-mix(in oklab,var(--g1) var(--blob),transparent),transparent),
+    radial-gradient(46% 56% at 88% 26%,color-mix(in oklab,var(--g2) var(--blob),transparent),transparent),
+    radial-gradient(56% 50% at 46% 96%,color-mix(in oklab,var(--g3) var(--blob),transparent),transparent)}
 /* 머리 줄: 이름 · 바로 가기 · 버전 도장 · 도구·테마 단추. 넓은 화면은 두 통 위를 가로지르는 붙박이 줄 */
 .nav{order:-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;min-height:64px;margin:-32px -16px 0;padding:8px 16px;
   padding-top:max(8px,env(safe-area-inset-top));background:var(--nav);border-bottom:1px solid var(--line)}
@@ -492,6 +512,23 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
 .setup-box[open] .sum-hint{display:none}
 .setup-in{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:10px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}html.st-on .pane.view{animation:none}}
+/* 유리 절. 흐림은 목록이 밑으로 지나가는 것(붙는 머리·주소 줄·폰 서랍·대화창)에만 건다 — 카드 뒤는 매끈한 그라디언트라
+   흐려도 눈에 같고, 움직이는 썸네일 50개 위에서 GPU 만 먹는다. 카드는 반투명 판에 밝은 테만.
+   :where 로 앞머리 무게를 빼 카드의 고름·hover 테(.pick[aria-pressed] 등)가 이기게 한다 */
+:where(:root[data-skin="glass"]) :is(.pick,.card,.tune){border-color:var(--hi)}
+/* 붙는 머리는 흐림을 양옆 여백까지 넓힌 판(::before)에 건다 — 흐림은 판 안쪽만 읽어서, 판 끝이 카드 끝과 겹치면
+   가장자리의 카드 글자가 덜 흐려진 채 비쳤다 */
+:root[data-skin="glass"] .pickhead{background:transparent}
+:root[data-skin="glass"] .pickhead::before{content:"";position:absolute;z-index:-1;inset:0 -16px;background:var(--nav);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+:root[data-skin="glass"] :is(.urlbar,.dlg){background:var(--nav);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+@media (min-width:721px){
+  :root[data-skin="glass"] .pane.view>.st-head{background:var(--nav);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+}
+@media (max-width:720px){
+  :root[data-skin="glass"] .pane.view{background:var(--nav);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6)}
+  :root[data-skin="glass"] .st-head{background:transparent}
+}
 </style>
 
 <div class="wrap c-arrow" id="app" data-scheme="rainbowflow">
@@ -510,6 +547,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       <div class="skins" role="group" aria-labelledby="look-lbl">
         <button type="button" class="c-hand" data-skin="" aria-pressed="true">기본</button>
         <button type="button" class="c-hand" data-skin="terminal" aria-pressed="false">터미널</button>
+        <button type="button" class="c-hand" data-skin="glass" aria-pressed="false">유리</button>
       </div>
       <button type="button" class="theme c-hand" id="theme-btn" aria-pressed="false" aria-label="밤 화면">
         <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
@@ -1409,6 +1447,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     panels.forEach(function(p){ p.hidden = p.getAttribute('data-panel') !== id; });
     try { localStorage.setItem('scheme', id); } catch (e) {}
     window.cpShowDot(id);
+    if (window.cpTint) window.cpTint();
   }
   picks.forEach(function(b){ b.addEventListener('click', function(){ choose(b.getAttribute('data-pick')); }); });
   var saved = null;
@@ -1723,9 +1762,48 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       if (v) root.setAttribute('data-skin', v); else root.removeAttribute('data-skin');
       try { if (v) localStorage.setItem('cp-skin', v); else localStorage.removeItem('cp-skin'); } catch (e) {}
       show();
+      tint();
     });
   });
   show();
+  // 유리 바탕 물들이기: 고른 구성표의 목록 썸네일 그림에서 채도 높은 색을 셋까지 떠 바탕 덩어리(--g1~3)에 입힌다.
+  // 색조를 열두 통으로 나눠 채도·밝기로 무게를 단 큰 통부터 고른다. 무채색 구성표는 색이 안 떠져 기본 색(@property 초깃값)으로 돌아간다
+  var app = document.getElementById('app'), tints = {};
+  function colorsOf(img){
+    var w = 32, h = Math.max(1, Math.round(img.naturalHeight * w / img.naturalWidth));
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    var g = c.getContext('2d'); g.drawImage(img, 0, 0, w, h);
+    var px; try { px = g.getImageData(0, 0, w, h).data; } catch (e) { return null; }
+    var bins = [], total = 0;
+    for (var i = 0; i < px.length; i += 4) {
+      if (px[i + 3] < 128) continue;
+      var r = px[i], gr = px[i + 1], b = px[i + 2], mx = Math.max(r, gr, b), mn = Math.min(r, gr, b);
+      if (mx < 64 || mx - mn < 0.3 * mx) continue;
+      var d = mx - mn, hue = mx === r ? (gr - b) / d : mx === gr ? 2 + (b - r) / d : 4 + (r - gr) / d;
+      var k = Math.floor(((hue + 6) % 6) * 2), wt = (d / mx) * (mx / 255);
+      var o = bins[k] || (bins[k] = { w: 0, r: 0, g: 0, b: 0 });
+      o.w += wt; o.r += r * wt; o.g += gr * wt; o.b += b * wt; total += wt;
+    }
+    var top = bins.filter(function(o){ return o && o.w > total * 0.04; }).sort(function(a, b){ return b.w - a.w; }).slice(0, 3)
+      .map(function(o){ return 'rgb(' + Math.round(o.r / o.w) + ' ' + Math.round(o.g / o.w) + ' ' + Math.round(o.b / o.w) + ')'; });
+    return top.length ? [top[0], top[1] || top[0], top[2] || top[1] || top[0]] : null;
+  }
+  function put(cols){
+    ['--g1', '--g2', '--g3'].forEach(function(n, i){ if (cols) root.style.setProperty(n, cols[i]); else root.style.removeProperty(n); });
+  }
+  function tint(){
+    if (root.getAttribute('data-skin') !== 'glass') return;
+    var sid = app.getAttribute('data-scheme'), el = document.querySelector('[data-scheme-item="' + sid + '"] .thumb');
+    var m = el && /url\(["']?(.*?)["']?\)$/.exec(getComputedStyle(el).backgroundImage);
+    if (!m) return put(null);
+    var src = m[1];
+    if (src in tints) return put(tints[src]);
+    var img = new Image();
+    img.onload = function(){ tints[src] = colorsOf(img); if (app.getAttribute('data-scheme') === sid) put(tints[src]); };
+    img.src = src;
+  }
+  window.cpTint = tint;
+  tint();
   // 밝기(해·달). 처음은 늘 밝게 — 시스템 다크 설정을 따라가지 않는다
   var tb = document.getElementById('theme-btn');
   function showTheme(){
