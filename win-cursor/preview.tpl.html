@@ -522,8 +522,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
 :root[data-skin="glass"] .pickhead::before{content:"";position:absolute;z-index:-1;inset:0 -16px;background:var(--nav);
   -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
 :root[data-skin="glass"] :is(.urlbar,.dlg){background:var(--nav);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+/* 넓은 화면 스튜디오 머리: 네모 판·밑줄이면 붙여 넣은 띠로 보여서, 흐림 판을 통 양옆까지 넓히고 아래 30px 를 가면(mask)으로
+   녹인다. 가면이 글자까지 지우지 않게 판은 ::before 에 둔다 */
 @media (min-width:721px){
-  :root[data-skin="glass"] .pane.view>.st-head{background:var(--nav);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+  :root[data-skin="glass"] .pane.view>.st-head{background:transparent;border-bottom:0}
+  :root[data-skin="glass"] .pane.view>.st-head::before{content:"";position:absolute;z-index:-1;inset:0 -8px -18px -24px;
+    background:color-mix(in oklab,var(--ground) 60%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+    -webkit-mask-image:linear-gradient(#000 calc(100% - 30px),transparent);mask-image:linear-gradient(#000 calc(100% - 30px),transparent)}
 }
 @media (max-width:720px){
   :root[data-skin="glass"] .pane.view{background:var(--nav);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6)}
