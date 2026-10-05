@@ -60,7 +60,7 @@ try { if (localStorage.getItem('cp-theme') === 'dark') document.documentElement.
 .theme .sun,:root[data-theme="dark"] .theme .moon{display:none}
 :root[data-theme="dark"] .theme .sun{display:block}
 :root[data-skin="terminal"] .theme{display:none}   /* 터미널은 늘 어두워 밝기 단추가 할 일이 없다 */
-@media (max-width:719px){
+@media (max-width:720px){   /* 스튜디오가 통으로 바뀌는 경계(720)와 같게 — 719 였을 때 딱 720px 에서 둘이 따로 놀았다 */
   .nav{gap:8px 12px}
   .brand{font-size:15px;gap:8px}
   .links{display:none}
@@ -361,7 +361,7 @@ kbd{font:600 12px/1 var(--mono);border:1px solid var(--line-2);border-bottom-wid
    붙었을 때만 밑줄(.stuck)을 긋고, 칸으로 옮겨 다닐 때 머리 밑에 숨지 않게 그 높이(--head)만큼 비켜 스크롤한다 */
 .pickhead{position:sticky;top:0;z-index:5;background:var(--ground);padding-top:8px;margin-top:-8px}
 .pickhead.stuck{box-shadow:0 1px 0 var(--line)}
-html,.pane.menu{scroll-padding-top:var(--head,0px)}
+html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(var(--bar,64px) + 16px)}   /* 아래는 떠 있는 띠만큼 — 카드로 옮겨 갈 때 띠 밑에 안 깔리게 */
 /* 넓은 화면: 붙는 자리가 통의 안쪽 여백 아래라 그 32px 사이로 목록이 비쳤다. 여백만큼 올려 통 맨 위에 붙인다 */
 @media (min-width:721px){ .pane.menu .pickhead{top:-32px;padding-top:40px;margin-top:-40px} }
 /* 좁은 화면: 다 펼치면 머리가 폰 화면의 반(434px)이라 모양 탭은 작게 줄여 여러 줄로 다 보이게 하고(가로 스크롤은 2026-10-04 요청으로 뺐다), 설명은 한 줄로 줄인다 */
@@ -417,9 +417,15 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
 .st-x:hover{border-color:var(--line-2)}
 .st-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:720px){
-  .urlbar{z-index:8}
-  .ub-txt{display:contents}
-  .ub-txt b{display:none}
+  /* 좁은 화면 띠는 이름 + 단추만. 날 주소(cursor-playground://…)는 화면 20% 를 먹던 개발자용 글자라 숨긴다 —
+     [복사] 는 그대로 주소를 복사하고, 주소를 붙여넣어 적용하는 것은 넓은 화면에서 */
+  /* 이름은 위 한 줄, 단추는 아래 한 줄(적용이 남는 폭을 다 씀) — 한 줄에 몰면 폰에서 이름이 손톱만 해지거나 단추가 세 줄로 접혔다 */
+  .urlbar{z-index:8;row-gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}
+  .urlbar>span{display:none}
+  .ub-txt{display:grid;flex:1 1 100%;min-width:0}
+  .ub-txt b{font:600 14px/1.3 var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #urlbar-apply{flex:1 1 auto}
+  .ub-txt code{display:none}
   /* 주소 줄에 붙여 그 줄이 위로 부푼 것처럼 보이게 한다 — 띄우면 그 틈으로 뒤 목록이 비친다 */
   /* 반쯤 연 높이(--st-h)는 주소 줄 위 공간의 반 — 62% 로 열었더니 722×1265 창에서 목록이 147px, 아이폰은 0 이었다 */
   :root{--st-h:45vh;--st-h:calc((100dvh - var(--bar,64px)) * .5)}
@@ -446,6 +452,36 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
 @media (max-width:720px) and (max-height:900px){ html.st-on .pickhead{position:static} }
 @keyframes st-grow{from{clip-path:inset(100% 0 0 0 round 20px)}to{clip-path:inset(0 0 0 0 round 20px)}}
 .install ul.steps{list-style:disc}
+/* 손가락으로 누르는 기기: 폭이 아니라 포인터로 가른다(마우스로 쓰는 좁은 창은 그대로). 누를 것은 44px 이상.
+   ★·칸 점 단추는 그림은 그대로 두고 누르는 자리만 ::before 로 넓힌다 — 키우면 작은 카드 그림을 가린다 */
+@media (pointer:coarse){
+  button:not(.star):not(.dotbtn):not(.linkish):not(.st-scrim),select,
+  input:not([type="range"]):not([type="color"]):not([type="file"]){min-height:44px}
+  .pick-color input{width:56px;height:44px}
+  .dotbtn::before{content:"";position:absolute;inset:-13px}
+  /* 색조 띠는 굵기 12px 그대로, 누르는 상자만 44px — 띠는 안쪽 상자(content-box)에만 칠한다 */
+  .huebar input[type="range"]{height:44px;margin:0;padding:16px 0;background-clip:content-box}
+}
+.star::before{content:"";position:absolute;inset:-6px;border-radius:50%}   /* 그림 32px, 누르는 자리 44px */
+/* 윈도우가 아니면 포인터 설정·현재 상태·원래대로·랜덤 적용은 꺼진 단추라 아예 안 보인다 — 폰에서 머리 한 줄을 먹고 눌러도 아무 일이 없었다 */
+.not-win .pickhead .global,.not-win #random{display:none}
+/* 적용은 아래 띠 하나로. 패널의 적용 단추는 띠·랜덤이 확인 창을 지나가려고 누르는 입구라 DOM 에는 남긴다 */
+.desc-row .register{display:none}
+/* 칸 카드의 크기·핫스팟 좌표·그림 파일은 그림을 고칠 사람 몫이라 [칸 정보] 를 켰을 때만 */
+.cells-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px}
+.cells-head h2{margin:0}
+.cells-head .ghost{padding:8px 14px;font-size:13px}
+.cells-head .ghost[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
+.cells:not(.info) .meta p{display:none}
+/* 처음 한 번: 설치 명령을 복사해 간 뒤로는 접어 둔다(머리 한 줄만). 펴고 접은 것은 이 브라우저에 기억 */
+.setup-box>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;min-height:44px;list-style:none;cursor:pointer}
+.setup-box>summary::-webkit-details-marker{display:none}
+.setup-box>summary::after{content:"";grid-column:2;grid-row:1/3;width:10px;height:10px;margin-right:6px;border:solid var(--muted);border-width:0 2px 2px 0;transform:translateY(-3px) rotate(45deg);transition:transform .2s}
+.setup-box[open]>summary::after{transform:translateY(3px) rotate(-135deg)}
+.setup-box>summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:8px}
+.sum-hint{font-size:13px;color:var(--muted)}
+.setup-box[open] .sum-hint{display:none}
+.setup-in{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:10px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}html.st-on .pane.view{animation:none}}
 </style>
 
@@ -528,7 +564,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   </div>
 
   <section class="setup" aria-labelledby="setup-title">
-    <h2 id="setup-title">처음 한 번</h2>
+   <details class="setup-box" id="setup-box" open>
+    <summary class="c-hand"><h2 id="setup-title">처음 한 번</h2><span class="sum-hint">윈도우에서 적용 단추가 먹게 하는 한 줄 설치 — 눌러서 펴기</span></summary>
+    <div class="setup-in">
     <p class="not-win-note"><b>이 PC 는 윈도우가 아니라 미리보기만 됨.</b> 구성표·모양·크기·색조를 골라 이 페이지 커서로 볼 수는 있고, 적용 버튼은 꺼 둠. 맥이면 오른쪽 아래 적용 자리가 <b>맥용 .cape 받기</b> 로 바뀜 — 바로 아래 <b>맥에서 쓰기</b>.</p>
     <p>버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음. 한 번이면 끝.</p>
     <ol class="guide">
@@ -551,7 +589,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
         <div class="g-pic g-term" aria-hidden="true">
           <span class="dim">PS C:\Users\나&gt;</span> irm https://ruminem.github.io/…/setup.ps1 | iex<br><br>
           <span class="ok">  cursor-playground 준비 끝</span><br>
-          <span class="dim">  이제 시안 페이지에서 구성표의 [이 구성표 적용] 을 누르면 됨</span>
+          <span class="dim">  이제 시안 페이지에서 구성표를 고르고 [적용] 을 누르면 됨</span>
         </div>
       </div></li>
       <li><span class="g-n" aria-hidden="true">4</span><div class="g-b">
@@ -559,6 +597,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
       </div></li>
     </ol>
     <p class="note">인터넷의 스크립트를 받아 바로 실행하는 명령이라, 붙여넣기 전에 <a href="setup.ps1">setup.ps1</a> 과 <a href="handler.ps1">handler.ps1</a> 내용을 확인할 수 있음.</p>
+    </div>
+   </details>
   </section>
 
   <section class="setup" aria-labelledby="mac-title">
@@ -600,7 +640,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     <h2>그 밖에</h2>
     <ul class="steps">
       <li><b>원래대로</b> 는 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아가고, 페이지에서 고른 구성표·모양·크기·색조도 처음 상태로 돌림. 페이지를 닫았다 다시 열면 그때부터 새로 셈 (같은 탭 새로고침은 이어짐).</li>
-      <li>맨 아래 <b>지금 설정</b> 줄은 고쳐 쓸 수 있음. 어디서 받은 주소를 붙여넣고 <b>적용</b>(또는 Enter)을 누르면 그 구성표·모양·색조·크기로 바뀜. 주소 안의 방문 번호는 그 PC 의 것이라 버리고 씀.</li>
+      <li>넓은 화면 맨 아래 <b>지금 설정</b> 줄의 주소는 고쳐 쓸 수 있음(좁은 화면은 주소를 숨기고 <b>복사</b> 만 둠). 어디서 받은 주소를 붙여넣고 <b>적용</b>(또는 Enter)을 누르면 그 구성표·모양·색조·크기로 바뀜. 주소 안의 방문 번호는 그 PC 의 것이라 버리고 씀.</li>
       <li><b>포인터 설정 열기</b> 는 윈도우 마우스 속성 창을 포인터 탭으로 엶. 칸 하나만 바꾸거나 구성표를 직접 고를 때.</li>
       <li>버튼을 눌렀는데 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 위의 한 줄부터.</li>
       <li>그림을 직접 고치려면 <a href="https://github.com/Ruminem/cursor-playground">저장소</a>를 받아 <code>art/</code> 를 고치고 <code>python build.py</code>. 로컬 메뉴는 <code>win-cursor/cursors.bat</code>.</li>
@@ -628,13 +668,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
         <button type="button" class="size c-hand" data-size="128" aria-pressed="false" title="4배">128</button>
       </div>
       <button type="button" class="ghost c-hand" data-action="size">크기만 적용</button>
-      <span class="size-note">고르면 이 페이지 커서가 바로 그 크기가 됨. <b>이 구성표 적용</b> 은 크기까지 같이 적용함.</span>
+      <span class="size-note">고르면 이 페이지 커서가 바로 그 크기가 됨. 아래 띠의 <b>적용</b> 은 크기까지 같이 적용함.</span>
     </div>
     <div class="sizebar huebar">
       <div class="ctl-label"><label for="hue">색조</label><output class="mono" id="hue-out" for="hue">원래 색</output></div>
       <input type="range" id="hue" class="c-hand" min="0" max="355" step="5" value="0">
       <button type="button" class="ghost c-hand" id="hue-reset">원래 색</button>
-      <span class="size-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. <b>이 구성표 적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
+      <span class="size-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. 아래 띠의 <b>적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
     </div>
     <div class="sizebar">
       <div class="ctl-label"><span>클릭 점</span><span class="mono" id="dot-out">0 / 17</span></div>
@@ -643,10 +683,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   </section>
 
   <section class="cells">
-    <h2>17칸</h2>
+    <div class="cells-head"><h2>17칸</h2><button type="button" class="ghost c-hand" id="cell-info" aria-pressed="false">칸 정보</button></div>
     <!--PANELS-->
     <p class="reg-status" id="reg-status" role="status"></p>
-    <p class="legend"><i></i> 파란 네모는 클릭이 실제로 일어나는 점(핫스팟). 화살표는 뾰족한 끝, 모래시계는 가운데처럼 커서마다 다름. 카드 위에 마우스를 올리면 그 커서로 바뀜.</p>
+    <p class="legend"><i></i> 빨간 테는 클릭이 실제로 일어나는 점(핫스팟). 화살표는 뾰족한 끝, 모래시계는 가운데처럼 커서마다 다름. 카드 위에 마우스를 올리면 그 커서로 바뀜.</p>
   </section>
 
   <section>
@@ -1385,6 +1425,32 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   set(open, false);
   btn.addEventListener('click', function(){ set(box.hidden, true); });
 })();
+
+// 처음 한 번: 설치 명령을 복사해 간 브라우저는 다음부터 접어 연다(cp-setup = 'shut'). 머리를 눌러 펴고 접은 것도 같은 칸에 기억.
+// 머리의 [설치]·첫 화면의 [윈도우 처음 설정] 처럼 이 절로 오는 링크는 펴고 온다
+(function(){
+  var box = document.getElementById('setup-box'), KEY = 'cp-setup', v = '';
+  function put(x){ try { localStorage.setItem(KEY, x); } catch (e) {} }
+  try { v = localStorage.getItem(KEY) || ''; } catch (e) {}
+  if (v === 'shut') box.open = false;
+  document.getElementById('copy-btn').addEventListener('click', function(){ if (!v) put(v = 'shut'); });
+  // 눌러서 바뀐 뒤의 상태를 적는다 — click 때는 아직 안 바뀌었다
+  box.querySelector('summary').addEventListener('click', function(){ setTimeout(function(){ put(v = box.open ? 'open' : 'shut'); }, 0); });
+  document.querySelectorAll('a[href="#setup-title"]').forEach(function(a){ a.addEventListener('click', function(){ box.open = true; }); });
+  if (location.hash === '#setup-title') box.open = true;
+})();
+
+// 칸 정보: 칸 카드의 크기·핫스팟 좌표·그림 파일 줄은 기본으로 숨기고 [칸 정보] 로 켠다. 켠 것은 이 브라우저에 기억
+(function(){
+  var btn = document.getElementById('cell-info'), box = btn.closest('.cells'), on = false;
+  function set(x){
+    on = x; box.classList.toggle('info', on); btn.setAttribute('aria-pressed', String(on));
+    try { localStorage.setItem('cp-cellinfo', on ? '1' : ''); } catch (e) {}
+  }
+  try { on = localStorage.getItem('cp-cellinfo') === '1'; } catch (e) {}
+  set(on);
+  btn.addEventListener('click', function(){ set(!on); });
+})();
 </script>
 
 <script>
@@ -1766,7 +1832,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
   var link = document.querySelector('.links a[href="#studio"]');
   if (link) link.addEventListener('click', function(e){ e.preventDefault(); open(e.detail > 0 ? 'mouse' : ''); });
   document.querySelectorAll('[data-pick]').forEach(function(b){
-    b.addEventListener('click', function(){ if (!narrow.matches && !isOpen()) open('card'); });
+    // 패널이 끼면 목록 칸 수가 줄어 누른 카드가 밀려난다(4열 → 3열). 연 뒤 그 카드를 다시 보이는 자리로
+    b.addEventListener('click', function(){ if (!narrow.matches && !isOpen()) { open('card'); b.scrollIntoView({ block: 'nearest' }); } });
   });
   document.addEventListener('keydown', function(e){
     if (!isOpen()) return;

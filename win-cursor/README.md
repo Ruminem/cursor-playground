@@ -15,7 +15,7 @@ Standard library only (Python 3.10+).
    ```
    [setup.ps1](setup.ps1) downloads [handler.ps1](handler.ps1) to `%LOCALAPPDATA%\cursor-playground`,
    links the `cursor-playground://` address to it, and **backs up your current pointer settings** (where Remove everything goes back to)
-2. Pick a scheme on the page, press **이 구성표 적용** (apply this scheme), confirm, then allow the browser to open the app
+2. Pick a scheme on the page, press **적용** (apply) on the bar at the bottom, confirm, then allow the browser to open the app
 3. Tired of trying things? Press **원래대로** (undo) to go back to the cursor you had right before the first apply since opening the page
    - Example: apply Neon pulse → close the page → reopen and apply Rainbow flow → undo → Neon pulse
    - Closing and reopening the tab starts a new count; reloading the same tab keeps it
@@ -273,7 +273,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
    ```
    [setup.ps1](setup.ps1) 이 [handler.ps1](handler.ps1) 을 `%LOCALAPPDATA%\cursor-playground` 에 받고,
    `cursor-playground://` 주소를 거기에 연결하고, **지금 포인터 설정을 백업** 함 (완전 제거 때 돌아갈 곳)
-2. 페이지에서 구성표를 고르고 **이 구성표 적용** → 확인 → 브라우저의 "앱 열기" 에서 열기
+2. 페이지에서 구성표를 고르고 아래 띠의 **적용** → 확인 → 브라우저의 "앱 열기" 에서 열기
 3. 이것저것 적용해 보다 질리면 **원래대로** — 이 페이지를 연 뒤 처음 적용하기 직전 커서로 돌아감
    - 예: 네온 맥박 적용 → 페이지 닫음 → 다시 열어 무지개 흐름 적용 → 원래대로 → 네온 맥박
    - 탭을 닫았다 열면 새로 셈. 같은 탭 새로고침은 이어짐
