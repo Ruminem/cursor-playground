@@ -529,12 +529,20 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   -webkit-mask-image:linear-gradient(#000 calc(100% - 30px),transparent);mask-image:linear-gradient(#000 calc(100% - 30px),transparent);
   opacity:0;transition:opacity .2s}
 :root[data-skin="glass"] .pickhead.stuck::before{opacity:1}
-/* 넓은 화면에서 붙으면 머리 줄도 같은 판을 깔아 둘을 한 장으로 잇는다 — 투명한 머리 줄 밑에서 판만 뚝 시작하면 떠 있는 네모로
-   읽혔다. 판이 스크롤바 앞에서 끊기지 않게 스튜디오를 닫았을 때는 왼쪽 통을 창 오른쪽 끝까지 민다(스크롤바가 창 끝에 붙는다) */
+/* 넓은 화면에서 붙으면 판 한 장을 머리 줄째 깐다 — 고르기 머리 판(::before)은 왼쪽 통이 잘라서, 머리 줄과 두 장이면 이음매에
+   가로 줄이 생기고 창 왼쪽 16px(통 밖 여백)이 비었다. 그래서 판은 통 밖의 머리 줄(::after)이 들고, 머리 줄 높이 + 고르기 머리(--head)
+   + 18px 를 덮는다. 머리 줄 아래로는 왼쪽 통의 스크롤바 앞(--slab-w, JS)까지만 — 스크롤바를 덮지 않고 스튜디오 통도 안 가린다.
+   머리 줄은 z-index 4 로 카드 위·고르기 머리(5) 밑에 둔다. 스튜디오를 닫았을 때는 왼쪽 통을 창 끝까지 밀어 스크롤바를 창 끝에 붙인다 */
 @media (min-width:721px){
-  :root[data-skin="glass"] .nav{transition:background-color .2s}
-  :root[data-skin="glass"].head-stuck .nav{background:color-mix(in oklab,var(--ground) 75%,transparent);
-    -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+  :root[data-skin="glass"] .nav{position:relative;z-index:4}
+  :root[data-skin="glass"] .nav::after{content:"";position:absolute;z-index:-1;left:0;top:0;width:100%;height:calc(100% + var(--head,0px) + 18px);
+    pointer-events:none;background:color-mix(in oklab,var(--ground) 75%,transparent);
+    -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+    -webkit-mask-image:linear-gradient(#000 calc(100% - 30px),transparent);mask-image:linear-gradient(#000 calc(100% - 30px),transparent);
+    clip-path:polygon(0 0,100% 0,100% calc(100% - var(--head,0px) - 18px),var(--slab-w,100%) calc(100% - var(--head,0px) - 18px),var(--slab-w,100%) 100%,0 100%);
+    opacity:0;transition:opacity .2s}
+  :root[data-skin="glass"].head-stuck .nav::after{opacity:1}
+  :root[data-skin="glass"] .pickhead::before{display:none}
   :root[data-skin="glass"]:not(.st-on) .pane.menu{margin-right:-16px}
 }
 :root[data-skin="glass"] :is(.urlbar,.dlg){background:var(--nav);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
@@ -1851,7 +1859,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     queued = false;
     var gap = head.getBoundingClientRect().top - mark.getBoundingClientRect().top - parseFloat(getComputedStyle(head).marginTop);
     head.classList.toggle('stuck', gap > 1);
-    document.documentElement.classList.toggle('head-stuck', gap > 1);   // 유리 테마 넓은 화면은 머리 줄이 판을 이어 받는다
+    var root = document.documentElement, menu = head.closest('.pane'), nav = document.querySelector('.nav');
+    root.classList.toggle('head-stuck', gap > 1);   // 유리 테마 넓은 화면은 머리 줄이 판을 깐다
+    // 판이 덮을 너비: 머리 줄 왼쪽 끝부터 왼쪽 통의 스크롤바 앞까지
+    if (menu && nav) root.style.setProperty('--slab-w', Math.round(menu.getBoundingClientRect().left + menu.clientLeft + menu.clientWidth - nav.getBoundingClientRect().left) + 'px');
   }
   function later(){ if (!queued) { queued = true; requestAnimationFrame(check); } }
   document.addEventListener('scroll', later, true);   // 넓은 화면은 왼쪽 통이, 좁은 화면은 페이지가 스크롤한다
@@ -1859,6 +1870,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   check();
   function seat(){ document.documentElement.style.setProperty('--head', head.offsetHeight + 'px'); }
   if (window.ResizeObserver) new ResizeObserver(seat).observe(head); else addEventListener('resize', seat);
+  if (window.ResizeObserver && head.closest('.pane')) new ResizeObserver(later).observe(head.closest('.pane'));   // 스튜디오를 열고 닫으면 통 너비가 바뀐다
   seat();
 })();
 
