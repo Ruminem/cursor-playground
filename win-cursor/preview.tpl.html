@@ -516,11 +516,19 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
    흐려도 눈에 같고, 움직이는 썸네일 50개 위에서 GPU 만 먹는다. 카드는 반투명 판에 밝은 테만.
    :where 로 앞머리 무게를 빼 카드의 고름·hover 테(.pick[aria-pressed] 등)가 이기게 한다 */
 :where(:root[data-skin="glass"]) :is(.pick,.card,.tune){border-color:var(--hi)}
+/* 머리 줄은 밑으로 아무것도 안 지나가서(넓은 화면은 통이 따로 스크롤, 폰은 안 붙는다) 판·밑줄 없이 배경에 그대로 둔다 —
+   흰 반투명 띠면 네모 상자로 읽혔다 */
+:root[data-skin="glass"] .nav{background:transparent;border-bottom-color:transparent}
 /* 붙는 머리는 흐림을 양옆 여백까지 넓힌 판(::before)에 건다 — 흐림은 판 안쪽만 읽어서, 판 끝이 카드 끝과 겹치면
-   가장자리의 카드 글자가 덜 흐려진 채 비쳤다 */
+   가장자리의 카드 글자가 덜 흐려진 채 비쳤다. 판은 붙었을 때만 켜고(안 붙었으면 밑에 지나가는 게 없어 네모만 남는다)
+   아래 30px 를 가면으로 녹인다 — 스튜디오 머리와 같은 수 */
 :root[data-skin="glass"] .pickhead{background:transparent}
-:root[data-skin="glass"] .pickhead::before{content:"";position:absolute;z-index:-1;inset:0 -16px;background:var(--nav);
-  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+:root[data-skin="glass"] .pickhead.stuck{box-shadow:none}
+:root[data-skin="glass"] .pickhead::before{content:"";position:absolute;z-index:-1;inset:0 -16px -18px;
+  background:color-mix(in oklab,var(--ground) 60%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+  -webkit-mask-image:linear-gradient(#000 calc(100% - 30px),transparent);mask-image:linear-gradient(#000 calc(100% - 30px),transparent);
+  opacity:0;transition:opacity .2s}
+:root[data-skin="glass"] .pickhead.stuck::before{opacity:1}
 :root[data-skin="glass"] :is(.urlbar,.dlg){background:var(--nav);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
 /* 넓은 화면 스튜디오 머리: 네모 판·밑줄이면 붙여 넣은 띠로 보여서, 흐림 판을 통 양옆까지 넓히고 아래 30px 를 가면(mask)으로
    녹인다. 가면이 글자까지 지우지 않게 판은 ::before 에 둔다 */
