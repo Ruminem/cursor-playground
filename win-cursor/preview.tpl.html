@@ -583,10 +583,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     <p>버튼을 받아 줄 작은 스크립트를 설치하고, <b>지금 마우스 포인터 설정을 백업</b>해 둠(완전 제거 때 여기로 돌아감). 관리자 권한 필요 없음. 한 번이면 끝.</p>
     <ol class="guide">
       <li><span class="g-n" aria-hidden="true">1</span><div class="g-b">
-        <p>아래 <b>복사</b>를 누름.</p>
+        <p>아래 명령을 눌러(또는 <b>전체 선택</b>) 통째로 잡고 <kbd>Ctrl</kbd> + <kbd>C</kbd>.</p>
         <div class="cmd">
-          <code id="setup-cmd">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
-          <button type="button" class="copy c-hand" id="copy-btn">복사</button>
+          <code id="setup-cmd" tabindex="0">irm https://ruminem.github.io/cursor-playground/win-cursor/setup.ps1 | iex</code>
+          <button type="button" class="copy c-hand" id="copy-btn">전체 선택</button>
         </div>
       </div></li>
       <li><span class="g-n" aria-hidden="true">2</span><div class="g-b">
@@ -608,7 +608,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
         <p>이 페이지로 돌아와 <b>적용</b>. 처음 한 번은 브라우저가 <b>cursor-playground 를 열지</b> 물음 — <b>열기</b>. 항상 허용에 체크해 두면 다음부터 안 물음.</p>
       </div></li>
     </ol>
-    <p class="note">인터넷의 스크립트를 받아 바로 실행하는 명령이라, 붙여넣기 전에 <a href="setup.ps1">setup.ps1</a> 과 <a href="handler.ps1">handler.ps1</a> 내용을 확인할 수 있음.</p>
+    <p class="note">인터넷의 스크립트를 받아 바로 실행하는 명령이라, 붙여넣기 전에 <a href="setup.ps1">setup.ps1</a> 과 <a href="handler.ps1">handler.ps1</a> 내용을 확인할 수 있음. 같은 이유로 이 페이지는 명령을 클립보드에 직접 넣지 않음 — 페이지가 넣어 준 명령을 붙여 넣게 하는 사기(ClickFix)와 모양이 같아서, 복사는 직접 함.</p>
     </div>
    </details>
   </section>
@@ -1383,7 +1383,20 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       else select();
     });
   };
-  window.cpCopy(document.getElementById('copy-btn'), document.getElementById('setup-cmd'));
+  // 설치 명령은 클립보드에 넣지 않고 글자를 잡아 주기만 한다. 페이지가 PowerShell 명령을 클립보드에 넣고 Win+X 로
+  // 붙이라는 꼴이 ClickFix 사기와 같아서, uBlock Origin 이 "ClickFix 공격 차단" 경고를 띄웠다(2026-10-05)
+  (function(){
+    var btn = document.getElementById('copy-btn'), node = document.getElementById('setup-cmd');
+    function grab(){ var r = document.createRange(); r.selectNodeContents(node); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Ctrl+C'; }
+    btn.addEventListener('click', grab);
+    node.addEventListener('click', grab);
+    node.addEventListener('focus', grab);
+    // 사람이 복사한 순간(Ctrl+C·오른쪽 클릭 복사)만 알아챈다. 클립보드 내용은 건드리지 않는다
+    node.addEventListener('copy', function(){
+      btn.textContent = '복사함'; setTimeout(function(){ btn.textContent = '전체 선택'; }, 1600);
+      node.dispatchEvent(new CustomEvent('cp-copied', { bubbles: true }));
+    });
+  })();
 })();
 
 (function(){
@@ -1445,7 +1458,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   function put(x){ try { localStorage.setItem(KEY, x); } catch (e) {} }
   try { v = localStorage.getItem(KEY) || ''; } catch (e) {}
   if (v === 'shut') box.open = false;
-  document.getElementById('copy-btn').addEventListener('click', function(){ if (!v) put(v = 'shut'); });
+  document.getElementById('setup-cmd').addEventListener('cp-copied', function(){ if (!v) put(v = 'shut'); });
   // 눌러서 바뀐 뒤의 상태를 적는다 — click 때는 아직 안 바뀌었다
   box.querySelector('summary').addEventListener('click', function(){ setTimeout(function(){ put(v = box.open ? 'open' : 'shut'); }, 0); });
   document.querySelectorAll('a[href="#setup-title"]').forEach(function(a){ a.addEventListener('click', function(){ box.open = true; }); });
