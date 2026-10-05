@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Temporary: measure handler.ps1 apply steps on a Windows runner. Removed after measuring.
+name: bench
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['win-cursor/bench_apply.ps1', '.github/workflows/bench.yml']
+jobs:
+  bench:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bench
+        shell: pwsh
+        run: |
+          foreach ($r in 1..2) { "--- round $r"; powershell -NoProfile -ExecutionPolicy Bypass -File win-cursor/bench_apply.ps1 }
