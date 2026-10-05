@@ -521,14 +521,22 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
 :root[data-skin="glass"] .nav{background:transparent;border-bottom-color:transparent}
 /* 붙는 머리는 흐림을 양옆 여백까지 넓힌 판(::before)에 건다 — 흐림은 판 안쪽만 읽어서, 판 끝이 카드 끝과 겹치면
    가장자리의 카드 글자가 덜 흐려진 채 비쳤다. 판은 붙었을 때만 켜고(안 붙었으면 밑에 지나가는 게 없어 네모만 남는다)
-   아래 30px 를 가면으로 녹인다 — 스튜디오 머리와 같은 수 */
+   아래 30px 를 가면으로 녹인다 — 스튜디오 머리와 같은 수. 다만 판이 넓고 높아 60% 면 흐린 카드 얼룩이 짙게 비쳐 75% */
 :root[data-skin="glass"] .pickhead{background:transparent}
 :root[data-skin="glass"] .pickhead.stuck{box-shadow:none}
 :root[data-skin="glass"] .pickhead::before{content:"";position:absolute;z-index:-1;inset:0 -16px -18px;
-  background:color-mix(in oklab,var(--ground) 60%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+  background:color-mix(in oklab,var(--ground) 75%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
   -webkit-mask-image:linear-gradient(#000 calc(100% - 30px),transparent);mask-image:linear-gradient(#000 calc(100% - 30px),transparent);
   opacity:0;transition:opacity .2s}
 :root[data-skin="glass"] .pickhead.stuck::before{opacity:1}
+/* 넓은 화면에서 붙으면 머리 줄도 같은 판을 깔아 둘을 한 장으로 잇는다 — 투명한 머리 줄 밑에서 판만 뚝 시작하면 떠 있는 네모로
+   읽혔다. 판이 스크롤바 앞에서 끊기지 않게 스튜디오를 닫았을 때는 왼쪽 통을 창 오른쪽 끝까지 민다(스크롤바가 창 끝에 붙는다) */
+@media (min-width:721px){
+  :root[data-skin="glass"] .nav{transition:background-color .2s}
+  :root[data-skin="glass"].head-stuck .nav{background:color-mix(in oklab,var(--ground) 75%,transparent);
+    -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+  :root[data-skin="glass"]:not(.st-on) .pane.menu{margin-right:-16px}
+}
 :root[data-skin="glass"] :is(.urlbar,.dlg){background:var(--nav);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
 /* 넓은 화면 스튜디오 머리: 네모 판·밑줄이면 붙여 넣은 띠로 보여서, 흐림 판을 통 양옆까지 넓히고 아래 30px 를 가면(mask)으로
    녹인다. 가면이 글자까지 지우지 않게 판은 ::before 에 둔다 */
@@ -1843,6 +1851,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     queued = false;
     var gap = head.getBoundingClientRect().top - mark.getBoundingClientRect().top - parseFloat(getComputedStyle(head).marginTop);
     head.classList.toggle('stuck', gap > 1);
+    document.documentElement.classList.toggle('head-stuck', gap > 1);   // 유리 테마 넓은 화면은 머리 줄이 판을 이어 받는다
   }
   function later(){ if (!queued) { queued = true; requestAnimationFrame(check); } }
   document.addEventListener('scroll', later, true);   // 넓은 화면은 왼쪽 통이, 좁은 화면은 페이지가 스크롤한다
