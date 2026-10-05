@@ -1,51 +1,44 @@
 # SPDX-License-Identifier: Apache-2.0
-# Temporary: time each step of handler.ps1 apply on a Windows runner (PowerShell 5.1). ASCII only.
+# Temporary: compare old vs new handler.ps1 end to end on a Windows runner (PowerShell 5.1). ASCII only.
+# handler.old.ps1 is written by the workflow from the commit before the speedup.
 $ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
 $env:CURSOR_PLAYGROUND_NO_POPUP = '1'
-$h = Join-Path $PSScriptRoot 'handler.ps1'
-function T($label, [scriptblock]$b) { $ms = (Measure-Command $b).TotalMilliseconds; '{0,-44} {1,8:N0} ms' -f $label, $ms }
-
-foreach ($i in 1..3) { T "ps startup (powershell -NoProfile exit) #$i" { & "$PSHOME\powershell.exe" -NoProfile -Command exit } }
-
-. $h | Out-Null
-T 'Get-Scheme rainbowflow (cold IWR)' { $script:e = Get-Scheme rainbowflow }
-T 'Get-Scheme rainbowflow (warm)' { $null = Get-Scheme rainbowflow }
-T 'Get-Shape chunky' { $script:s = Get-Shape chunky }
-T 'IWR one small file (warm)' { $null = Invoke-WebRequest -UseBasicParsing -Uri "$base/shapes.json" }
-T 'Add-Type Native (compile, SPI)' { Update-Cursors }
-T 'Update-Cursors again (no compile)' { Update-Cursors }
-T 'Initialize-Recolor (compile)' { Initialize-Recolor }
-T 'Install-Scheme rainbowflow plain (17 seq)' { $null = Install-Scheme rainbowflow 'b1' ani 0 $null @() }
-T 'Install-Scheme rainbowflow chunky (fallback)' { $null = Install-Scheme rainbowflow 'b2' ani 0 chunky @() }
-T 'Install-Scheme firework plain (17 seq)' { $null = Install-Scheme firework 'b3' ani 0 $null @() }
-T 'Install-Scheme rainbowflow hue120 (recolor)' { $null = Install-Scheme rainbowflow 'b4' ani 120 $null @() }
-
-# parallel download of the same 17 files
-Add-Type -AssemblyName System.Net.Http
-[Net.ServicePointManager]::DefaultConnectionLimit = 32
-$hc = [System.Net.Http.HttpClient]::new()
-foreach ($id in 'rainbowflow', 'firework') {
-    T "HttpClient parallel 17 $id" {
-        $tasks = foreach ($f in $slots.Values) { $hc.GetByteArrayAsync("$base/dist/$id/$f.ani") }
-        [Threading.Tasks.Task]::WaitAll([Threading.Tasks.Task[]]@($tasks))
+$new = Join-Path $PSScriptRoot 'handler.ps1'
+$old = Join-Path $PSScriptRoot 'handler.old.ps1'
+$root = Join-Path $env:LOCALAPPDATA 'cursor-playground'
+$v = 'aaaaaaaaaaaaaaaa'
+$cases = [ordered]@{
+    'plain'            = @("rainbowflow/$v", 'rainbowflow')
+    'chunky'           = @("rainbowflow/$v/32/0/chunky", 'chunky-rainbowflow')
+    'firework'         = @("firework/$v", 'firework')
+    'hue120'           = @("rainbowflow/$v/32/120", 'rainbowflow-h120')
+    'chunky+hue+dots'  = @("rainbowflow/$v/32/200/chunky/dot.arrow.hand", 'chunky-rainbowflow-h200-dot.arrow.hand')
+}
+function Run($h, $u) {
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    $out = & "$PSHOME\powershell.exe" -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File $h -Url "cursor-playground://apply/$u" | Out-String
+    $sw.Stop()
+    if ($out -notmatch 'cursor-playground ') { throw "FAILED $h $u :: $out" }
+    $sw.Elapsed.TotalMilliseconds
+}
+function FolderHash($dir) {
+    -join (Get-ChildItem (Join-Path $root $dir) -File | Sort-Object Name | ForEach-Object { (Get-FileHash $_.FullName -Algorithm SHA256).Hash.Substring(0, 8) })
+}
+Get-ChildItem $root -Filter 'csharp-*.dll' -ErrorAction SilentlyContinue | Remove-Item -Force
+'new, first run (compiles dll): {0:N0} ms' -f (Run $new $cases['plain'][0])
+'dll cached: ' + ((Get-ChildItem $root -Filter 'csharp-*.dll' | ForEach-Object Name) -join ', ')
+$t = @{}
+foreach ($r in 1..3) {
+    foreach ($k in $cases.Keys) {
+        $u, $dir = $cases[$k]
+        $a = Run $old $u; $ha = FolderHash $dir
+        $b = Run $new $u; $hb = FolderHash $dir
+        if ($ha -ne $hb) { throw "BYTES DIFFER $k" }
+        $t["$k old"] += @($a); $t["$k new"] += @($b)
     }
 }
-T 'HttpClient parallel 17 rainbowflow (again)' {
-    $tasks = foreach ($f in $slots.Values) { $hc.GetByteArrayAsync("$base/dist/rainbowflow/$f.ani") }
-    [Threading.Tasks.Task]::WaitAll([Threading.Tasks.Task[]]@($tasks))
-}
-
-# compile vs load cached dll in a fresh process
-$dll = Join-Path $env:TEMP 'cpbench.dll'
-$src = '[DllImport("user32.dll")] public static extern bool SystemParametersInfo(uint action, uint param, System.IntPtr vparam, uint winini);'
-Add-Type -Namespace CPB -Name N -MemberDefinition $src -OutputAssembly $dll
-foreach ($i in 1..2) {
-    T "fresh ps + Add-Type compile #$i" { & "$PSHOME\powershell.exe" -NoProfile -Command "Add-Type -Namespace X -Name N -MemberDefinition '$src'" }
-    T "fresh ps + Add-Type -Path dll #$i" { & "$PSHOME\powershell.exe" -NoProfile -Command "Add-Type -Path '$dll'" }
-}
-
-# end to end, as the browser link does it
-foreach ($u in 'rainbowflow/aaaaaaaaaaaaaaaa', 'rainbowflow/aaaaaaaaaaaaaaaa/32/0/chunky', 'firework/aaaaaaaaaaaaaaaa', 'rainbowflow/aaaaaaaaaaaaaaaa/32/120') {
-    T "e2e apply $u" { & "$PSHOME\powershell.exe" -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File $h -Url "cursor-playground://apply/$u" | Out-Null }
+'{0,-18} {1,8} {2,8}   (median of 3, ms; files byte-identical)' -f 'case', 'old', 'new'
+foreach ($k in $cases.Keys) {
+    $m = foreach ($w in 'old', 'new') { ($t["$k $w"] | Sort-Object)[1] }
+    '{0,-18} {1,8:N0} {2,8:N0}' -f $k, $m[0], $m[1]
 }

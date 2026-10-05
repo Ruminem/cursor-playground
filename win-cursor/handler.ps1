@@ -61,25 +61,60 @@ $dotPattern = '(dot(?:\.[a-z]{2,6}){0,17})'
 $applyPattern = '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3})(?:/(?!dot(?:[./]|$))([a-z]{1,12}))?(?:/' + $dotPattern + ')?)?)?/?$'
 $schedulePattern = '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:-(?!dot(?:\.|-|/|$))[a-z]{1,12})?(?:-dot(?:\.[a-z]{2,6}){0,17})?){1,6})/?$'
 
+# ── 내려받기 ────────────────────────────────────────────────────────────
+# 칸 17개를 Invoke-WebRequest 로 하나씩 받으면 왕복이 17번 줄을 선다. HttpClient 로 한꺼번에 걸어 두고 모아 받는다
+# (2026-10-05 윈도우 러너 첫 판 1.7초 → 0.7초). .NET Framework 는 호스트당 연결이 기본 2개라 올려 둔다
+function Get-Http {
+    if (-not $script:http) {
+        Add-Type -AssemblyName System.Net.Http
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        [Net.ServicePointManager]::DefaultConnectionLimit = 32
+        $script:http = New-Object Net.Http.HttpClient
+    }
+    $script:http
+}
+
+# 받기를 걸기만 하고 기다리지 않는다. 결과는 Receive-Bytes 로 꺼낸다
+function Start-Get($uri) { (Get-Http).GetAsync($uri) }
+
+# 끝날 때까지 기다려 바이트를 돌려준다. 404 면 $null(모양 쪽에 없는 칸), 그 밖의 실패는 던진다
+function Receive-Bytes($task, $uri) {
+    try { $response = $task.GetAwaiter().GetResult() }
+    catch { throw "받기 실패 $uri`n$($_.Exception.GetBaseException().Message)" }
+    if ([int]$response.StatusCode -eq 404) { return $null }
+    if (-not $response.IsSuccessStatusCode) { throw "받기 실패 $uri (HTTP $([int]$response.StatusCode))" }
+    , $response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()   # 쉼표가 없으면 바이트가 하나씩 풀려 나간다
+}
+
+# Pages 의 목록(schemes.json·shapes.json)은 한 번만 받는다. 주소를 풀자마자 Request-List 로 둘 다 걸어 두면 같이 받는다
+function Request-List($file) {
+    if (-not $script:lists) { $script:lists = @{} }
+    if (-not $script:lists.ContainsKey($file)) { $script:lists[$file] = Start-Get "$base/$file" }
+}
+function Get-List($file) {
+    Request-List $file
+    if ($script:lists[$file] -is [Threading.Tasks.Task]) {
+        $bytes = Receive-Bytes $script:lists[$file] "$base/$file"
+        if ($null -eq $bytes) { throw "받기 실패 $base/$file (HTTP 404)" }
+        # PowerShell 5.1 의 ConvertFrom-Json 은 배열을 한 덩어리로 넘기므로 ForEach-Object 로 푼다
+        $script:lists[$file] = @([Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json | ForEach-Object { $_ })
+    }
+    $script:lists[$file]
+}
+
 # 구성표 목록은 Pages 의 schemes.json 에서 읽는다. 테마가 늘어도 이 스크립트를 다시 설치할 필요가 없음
 function Get-Scheme($id) {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $bytes = (Invoke-WebRequest -UseBasicParsing -Uri "$base/schemes.json").RawContentStream.ToArray()
-    $entry = [Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json | ForEach-Object { $_ } | Where-Object { $_.id -ceq $id } | Select-Object -First 1
+    $entry = Get-List 'schemes.json' | Where-Object { $_.id -ceq $id } | Select-Object -First 1
     # 레지스트리 이름에 들어가므로 글자·숫자·공백만 허용
     if ($entry -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
 }
 
 # 커서 모양 목록도 Pages 에서 읽는다. 첫 번째가 기본 모양이고, 그때는 dist/<구성표>/ 를 그대로 쓴다
 function Get-Shape($id) {
-    if (-not $script:shapes) {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $bytes = (Invoke-WebRequest -UseBasicParsing -Uri "$base/shapes.json").RawContentStream.ToArray()
-        $script:shapes = @([Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json | ForEach-Object { $_ })
-    }
-    $entry = $script:shapes | Where-Object { $_.id -ceq $id } | Select-Object -First 1
+    $shapes = @(Get-List 'shapes.json')
+    $entry = $shapes | Where-Object { $_.id -ceq $id } | Select-Object -First 1
     # 기본 모양은 따로 받을 것이 없어 아무것도 돌려주지 않는다. 이름은 레지스트리에 들어가므로 글자·숫자·공백만
-    if ($entry -and $entry.id -cne $script:shapes[0].id -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
+    if ($entry -and $entry.id -cne $shapes[0].id -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
 }
 
 # 레지스트리에 들어갈 구성표 이름: 테마 + 모양 + 색조 + 점
@@ -124,9 +159,7 @@ function Notify($text, [switch]$IsError) {
 
 # 레지스트리를 바꾼 뒤 윈도우에 커서를 다시 읽으라고 알린다
 function Update-Cursors {
-    if (-not ('CursorPlayground.Native' -as [type])) {
-        Add-Type -Namespace CursorPlayground -Name Native -MemberDefinition '[DllImport("user32.dll")] public static extern bool SystemParametersInfo(uint action, uint param, System.IntPtr vparam, uint winini);'
-    }
+    Initialize-CSharp
     # SPI_SETCURSORS, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE
     [void][CursorPlayground.Native]::SystemParametersInfo(0x57, 0, [IntPtr]::Zero, 0x03)
 }
@@ -179,11 +212,42 @@ function Restore-State($state) {
     Update-Cursors
 }
 
-# ── 색조 ────────────────────────────────────────────────────────────────
-# 커서 파일 안 PNG 를 픽셀마다 다시 칠한다. PowerShell 반복문으로는 너무 느려서 윈도우에 들어 있는 C# 컴파일(Add-Type)을 씀
-function Initialize-Recolor {
+# ── C# ──────────────────────────────────────────────────────────────────
+# 커서를 다시 읽으라는 알림(Native)과 색조·클릭 점(Recolor). 윈도우에 들어 있는 C# 컴파일러로 굽는다.
+# 부를 때마다 컴파일하면 csc.exe 를 띄우느라 느려서(러너 첫 판 0.7초, PC 는 Defender 가 컴파일러를 검사해 더 걸릴 수 있음)
+# 소스 해시를 이름에 넣은 dll 로 한 번만 굽고 다음부터는 불러오기만 한다. 이 파일을 고치면 해시가 바뀌어 저절로 다시 굽는다
+function Initialize-CSharp {
     if ('CursorPlayground.Recolor' -as [type]) { return }
-    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+    $refs = @('System.dll', 'System.Drawing.dll')
+    if (-not $script:inMemory) {
+        try {
+            $sha = [Security.Cryptography.SHA256]::Create()
+            $hash = -join ($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($csharp))[0..7] | ForEach-Object { $_.ToString('x2') })
+            $dll = Join-Path $root "csharp-$hash.dll"
+            if (-not (Test-Path $dll)) {
+                # 따로 구운 뒤 옮긴다. 두 창이 같이 구우면 먼저 옮긴 쪽 것을 쓴다
+                $work = Join-Path $root "csharp-$PID"
+                New-Item -ItemType Directory -Force $work | Out-Null
+                $options = New-Object CodeDom.Compiler.CompilerParameters
+                $options.OutputAssembly = Join-Path $work "csharp-$hash.dll"
+                $options.ReferencedAssemblies.AddRange($refs)
+                $result = (New-Object Microsoft.CSharp.CSharpCodeProvider).CompileAssemblyFromSource($options, $csharp)
+                if ($result.Errors.HasErrors) { throw ($result.Errors | Out-String) }
+                try { Move-Item $options.OutputAssembly $dll -ErrorAction Stop } catch { if (-not (Test-Path $dll)) { throw } }
+                Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
+                # 옛 판 dll. 다른 창이 쥐고 있으면 못 지우고 다음 번에 지운다
+                Get-ChildItem $root -Filter 'csharp-*.dll' | Where-Object { $_.FullName -ne $dll } | Remove-Item -Force -ErrorAction SilentlyContinue
+            }
+            Add-Type -Path $dll
+            return
+        } catch { }   # 굽기나 불러오기가 막히면(폴더 권한·정책) 아래에서 예전처럼 메모리에 컴파일한다
+        if ('CursorPlayground.Recolor' -as [type]) { return }
+    }
+    Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition $csharp
+}
+
+# 커서 파일 안 PNG 를 픽셀마다 다시 칠한다. PowerShell 반복문으로는 너무 느려서 C# 으로 짰다
+$csharp = @'
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -193,6 +257,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CursorPlayground {
+    public static class Native {
+        [DllImport("user32.dll")] public static extern bool SystemParametersInfo(uint action, uint param, IntPtr vparam, uint winini);
+    }
+
     // 커서 파일 안 PNG 의 픽셀마다 색상환 각도만 돌린다. 식은 preview.tpl.html 의 rotate() 와 같다.
     public static class Recolor {
         static double Hue2(double p, double q, double t) {
@@ -278,6 +346,16 @@ namespace CursorPlayground {
                 return o.ToArray();
             }
         }
+        // 칸마다 따로 칠하므로 코어 수만큼 나눠 돌린다. 정적 상태가 없어 스레드끼리 안 부딪힌다
+        public static byte[][] Many(byte[][] files, int deg, bool[] dots) {
+            var o = new byte[files.Length][];
+            System.Threading.Tasks.Parallel.For(0, files.Length, i => {
+                var f = files[i];
+                bool ani = f.Length >= 4 && f[0] == 'R' && f[1] == 'I' && f[2] == 'F' && f[3] == 'F';
+                o[i] = ani ? Ani(f, deg, dots[i]) : Cur(f, deg, dots[i]);
+            });
+            return o;
+        }
         static void Chunk(Stream s, string id, byte[] data) {
             s.Write(Encoding.ASCII.GetBytes(id), 0, 4);
             s.Write(BitConverter.GetBytes(data.Length), 0, 4);
@@ -325,7 +403,6 @@ namespace CursorPlayground {
     }
 }
 '@
-}
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
 function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dots) {
@@ -334,30 +411,38 @@ function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dots) {
     $dotToken = Get-DotToken $dots
     if ($dotToken) { $key = "$key-$dotToken" }
     $dest = Join-Path $root $key
-    if ($hue -or $dotToken) { Initialize-Recolor }
     New-Item -ItemType Directory -Force $dest | Out-Null
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $paths = foreach ($slot in $slots.Keys) {
-        $file = $slots[$slot]
-        if (-not $file) { ''; continue }
-        $cur = Join-Path $dest "$file.$ext"
-        $plainFrom = "$base/dist/$id/$file.$ext"
-        $from = if ($shape) { "$base/dist/$shape/$id/$file.$ext" } else { $plainFrom }
-        # 모양이 안 바꾸는 칸(크기 조정·링크 등)은 모양 쪽에 파일을 두지 않았다. 없으면 기본 것을 받는다
-        try { Invoke-WebRequest -UseBasicParsing -Uri $from -OutFile $cur }
-        catch { if ($from -eq $plainFrom) { throw }; Invoke-WebRequest -UseBasicParsing -Uri $plainFrom -OutFile $cur }
-        $head = [IO.File]::ReadAllBytes($cur)
+    $files = @($slots.Values)
+    $n = $files.Count
+    $data = New-Object 'object[]' $n
+    $from = @(foreach ($file in $files) { if ($shape) { "$base/dist/$shape/$id/$file.$ext" } else { "$base/dist/$id/$file.$ext" } })
+    $tasks = @(foreach ($uri in $from) { Start-Get $uri })
+    for ($i = 0; $i -lt $n; $i++) { $data[$i] = Receive-Bytes $tasks[$i] $from[$i] }
+    # 모양이 안 바꾸는 칸(크기 조정·링크 등)은 모양 쪽에 파일을 두지 않았다. 없는 칸만 기본 것을 다시 한꺼번에 받는다
+    $miss = @(for ($i = 0; $i -lt $n; $i++) { if ($shape -and $null -eq $data[$i]) { $i } })
+    foreach ($i in $miss) { $from[$i] = "$base/dist/$id/$($files[$i]).$ext"; $tasks[$i] = Start-Get $from[$i] }
+    foreach ($i in $miss) { $data[$i] = Receive-Bytes $tasks[$i] $from[$i] }
+    $paint = @()
+    for ($i = 0; $i -lt $n; $i++) {
+        $head = $data[$i]
+        if ($null -eq $head) { throw "받기 실패 $($from[$i]) (HTTP 404)" }
         $isCur = $head.Length -ge 22 -and $head[0] -eq 0 -and $head[1] -eq 0 -and $head[2] -eq 2 -and $head[3] -eq 0
         $isAni = $head.Length -ge 12 -and [Text.Encoding]::ASCII.GetString($head, 0, 4) -eq 'RIFF' -and [Text.Encoding]::ASCII.GetString($head, 8, 4) -eq 'ACON'
-        if (-not (($ext -eq 'cur' -and $isCur) -or ($ext -eq 'ani' -and $isAni))) {
-            Remove-Item $cur; throw "$file.$ext 가 커서 파일이 아님"
-        }
+        if (-not (($ext -eq 'cur' -and $isCur) -or ($ext -eq 'ani' -and $isAni))) { throw "$($files[$i]).$ext 가 커서 파일이 아님" }
         # 점은 고른 칸에만 찍는다 (시안 페이지의 '클릭 점')
-        $mark = [bool]$dots -and $dots -ccontains $file
-        if ($hue -or $mark) {
-            $colored = if ($isAni) { [CursorPlayground.Recolor]::Ani($head, $hue, $mark) } else { [CursorPlayground.Recolor]::Cur($head, $hue, $mark) }
-            [IO.File]::WriteAllBytes($cur, $colored)
-        }
+        if ($hue -or ($dots -and $dots -ccontains $files[$i])) { $paint += $i }
+    }
+    if ($paint.Count) {
+        Initialize-CSharp
+        $src = New-Object 'byte[][]' $paint.Count
+        $marks = New-Object 'bool[]' $paint.Count
+        for ($k = 0; $k -lt $paint.Count; $k++) { $src[$k] = $data[$paint[$k]]; $marks[$k] = $dots -and $dots -ccontains $files[$paint[$k]] }
+        $colored = [CursorPlayground.Recolor]::Many($src, $hue, $marks)
+        for ($k = 0; $k -lt $paint.Count; $k++) { $data[$paint[$k]] = $colored[$k] }
+    }
+    $paths = for ($i = 0; $i -lt $n; $i++) {
+        $cur = Join-Path $dest "$($files[$i]).$ext"
+        [IO.File]::WriteAllBytes($cur, $data[$i])
         $cur
     }
     if (-not (Test-Path $schemesKey)) { New-Item $schemesKey | Out-Null }
@@ -507,6 +592,8 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 try {
     if ($Url -cmatch $applyPattern -and [int]('0' + $Matches[4]) -lt 360) {
         $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4]); $shapeId = $Matches[5]; $dots = Get-DotFiles $Matches[6]
+        Request-List 'schemes.json'
+        if ($shapeId) { Request-List 'shapes.json' }   # 두 목록을 같이 받는다
         $entry = Get-Scheme $id
         if (-not $entry) { Notify "알 수 없는 구성표라 무시함`n$id" -IsError; return }
         $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
@@ -569,6 +656,7 @@ try {
         Start-Process -FilePath "$env:SystemRoot\System32\control.exe" -ArgumentList 'main.cpl,,1'
     }
     elseif ($Url -cmatch '^cursor-playground://unlink/?$') {
+        $script:inMemory = $true   # 구운 dll 을 불러오면 이 창이 쥐고 있어 설치 폴더를 못 지운다
         $initial = Read-State $initialFile
         if ($initial) { Restore-State $initial }
         elseif ((Get-ItemProperty $cursorsKey).'(default)' -like 'cursor-playground *') { Reset-ToDefault }

@@ -5,7 +5,7 @@
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 . (Join-Path $PSScriptRoot 'handler.ps1')   # 주소 없이 부르면 안내 한 줄만 찍고 돌아온다. 함수는 남는다
-Initialize-Recolor
+Initialize-CSharp
 Add-Type -AssemblyName System.Drawing
 Add-Type @'
 using System; using System.Runtime.InteropServices;
