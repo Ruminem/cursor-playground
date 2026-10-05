@@ -1736,7 +1736,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
 
 // 스튜디오: 넓은 화면은 오른쪽 패널(뒤를 안 막음, 카드를 누르면 열림), 좁은 화면은 주소 줄 위로 띄우는 미리보기 통.
 // 좁은 통은 반쯤 열면 뒤 목록을 계속 만질 수 있고(막 없음), 손잡이로 꽉 채우면 막을 깔고 Tab 을 통과 주소 줄 안에 가둔다.
-// Esc·닫기·막 누르기로 닫고, 폭이 넓은 쪽·좁은 쪽을 넘나들면 열린 상태를 걷는다
+// Esc·닫기·막 누르기로 닫는다. 폭이 넓은 쪽·좁은 쪽을 넘나들어도 열린 채로 패널 ↔ 통만 바뀐다(창 크기를 끌다 꺼지던 것) —
+// 꽉 채우기(막·Tab 가두기)는 좁은 통에만 있는 것이라 넘을 때 반으로 내린다
 (function(){
   var root = document.documentElement, box = document.getElementById('studio');
   var openBtn = document.getElementById('st-open'), grab = document.getElementById('st-grab');
@@ -1783,7 +1784,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px)}
     if (e.shiftKey && (at <= 0)) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && (at < 0 || at === all.length - 1)) { e.preventDefault(); first.focus(); }
   });
-  function flip(){ close(false); }
+  function flip(){ full(false); }
   if (narrow.addEventListener) narrow.addEventListener('change', flip); else if (narrow.addListener) narrow.addListener(flip);
 })();
 
