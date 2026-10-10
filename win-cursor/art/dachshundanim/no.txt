@@ -4,10 +4,10 @@ color 0 1e1418ff
 color 1 2a1c22ff
 color 2 3a2a30ff
 color 3 7c3e1aff
-color 4 9e2b28ff
+color 4 9e2b29ff
 color 5 b0602eff
 color 6 b8b0b8ff
-color 7 d64540ff
+color 7 d64541ff
 color 8 d99a62ff
 color 9 f6e9d2c7
 frame

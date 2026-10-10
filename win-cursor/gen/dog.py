@@ -193,6 +193,11 @@ def draw(rig: Rig, parts: list) -> dict:
     return out
 
 
+def cur(f: dict) -> dict:
+    """그린 칸 전부를 커서 색으로 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 동물과 가른다(테두리 OUT 까지)"""
+    return {p: sea.Cur(c) for p, c in f.items()}
+
+
 def dot(f: dict, x: int, y: int, c: tuple) -> None:
     f[x, y] = c
 
@@ -545,7 +550,7 @@ def sign(f: dict, R: float = 13.5) -> None:
     for t in range(-90, 91):
         x, y = 15.5 + t / 100 * (R - 1.5) * 0.7071, 15.5 + t / 100 * (R - 1.5) * 0.7071
         slash |= disc(x, y, 1.3)
-    solid(f, ring | slash, SIGN, SIGN_D)
+    solid(f, ring | slash, sea.Cur(SIGN), sea.Cur(SIGN_D))   # 금지 표지는 커서
 
 
 def in_sign(o: dict) -> dict:
@@ -1144,7 +1149,7 @@ def busy() -> list[dict]:
             a = 2 * math.pi * i / 8 - math.pi / 2
             x, y = round(cx + R * math.cos(a) - 0.5), round(cy + R * math.sin(a) - 0.5)
             lag = (head - i) % 8
-            paw_print(f, x, y + 1, GLOW[0] if lag < 1.5 else GLOW[1] if lag < 3 else GLOW[2])
+            paw_print(f, x, y + 1, sea.Cur(GLOW[0] if lag < 1.5 else GLOW[1] if lag < 3 else GLOW[2]))   # 도는 고리는 커서
         f.update(draw(Rig(cx, cy + 0.5, -28.0 + 16.0 * math.sin(2 * ph), 1.0), bone_parts(2.8, 0.9, 1.25)))
         return f
     return companion(scene)
@@ -1160,7 +1165,7 @@ def help_() -> list[dict]:
         f.update(draw(Rig(0, 0, 0, 1.0), [("clip", ell(17.8, 7.6 + sw, 1.4, 1.4), CLIP, True),
                                            ("leash", chain(pts, 1.2), LEASH, False)]))
         tennis(f, 21.5, 25.4, 2.6, k)
-        return f
+        return cur(f)   # 리드줄 물음표와 점 자리 공은 한 기호 — 커서
     return companion(scene)
 
 
@@ -1191,7 +1196,7 @@ def person() -> list[dict]:
             out[ex, ey] = EYE
             out[ex, ey + 1] = EYE
             out[rig.cell(sg * 3.0, -4.8)] = CHEEK
-        f.update(out)
+        f.update(cur(out))   # 사람은 커서 — 리드줄은 개 소품이라 동물
         return f
     return companion(scene)
 
@@ -1208,7 +1213,7 @@ def pin() -> list[dict]:
         # 머리 꼭대기 줄보다 위 핀은 비운다 — 귀 사이로 빨간 띠가 지나가 모자로 읽혔다
         pinm = {p for p in disc(cx, cy, 7.2) | raster([(cx - 5.0, cy + 4.2), (cx + 5.0, cy + 4.2), (cx, cy + 13.4)])
                 if p[1] >= y0 + 2}
-        solid(f, pinm, SIGN, SIGN_D)
+        solid(f, pinm, sea.Cur(SIGN), sea.Cur(SIGN_D))   # 핀 몸통은 커서, 속 얼굴 · 땅 줄은 동물
         f.update(mini_dog(x0, y0, k, mood="happy" if dy == 0 else "open", body=False))
         return f
     return companion(scene)
@@ -1301,8 +1306,9 @@ def cross() -> list[dict]:
     try:
         sn = D.get("snout", 1.0)
         rig = Rig(16.0, 15.5 - (HC[1] + r * 0.36 * sn), 0.0, 1.0)   # 코 아랫줄이 y=15, 두 칸이 x=15·16
-        lines = {(x, 15): OUT for x in list(range(1, 6)) + list(range(26, 31))}
-        lines.update({(15, y): LEASH_D for y in list(range(1, 6)) + list(range(26, 31))})
+        # 십자선 넷은 얼굴에서 떨어진 기호라 커서
+        lines = {(x, 15): sea.Cur(OUT) for x in list(range(1, 6)) + list(range(26, 31))}
+        lines.update({(15, y): sea.Cur(LEASH_D) for y in list(range(1, 6)) + list(range(26, 31))})
         for k, ph in enumerate(phases()):
             if long_:   # 밝은 주둥이를 턱 밑으로 내민다(안쪽 테를 그으면 입 둘레가 바둑판이 됐다)
                 fl = CR_LONG["ears"]
@@ -1463,10 +1469,10 @@ def pen() -> list[dict]:
         rig = Rig(TIP[0] + ox * math.cos(d) - oy * math.sin(d), TIP[1] + ox * math.sin(d) + oy * math.cos(d),
                   math.degrees(d), base.k)
         f = sit(rig, k, face=False, wag=0.8)
-        f.update(draw(rig, [pencil]))
+        f.update(cur(draw(rig, [pencil])))   # 연필은 커서
         eyes(f, rig, mood="blink" if k == 4 else "open")
         mouth(f, rig, kind="none")
-        f[math.floor(TIP[0]), math.floor(TIP[1])] = LEAD
+        f[math.floor(TIP[0]), math.floor(TIP[1])] = sea.Cur(LEAD)
         frames.append(finish(f))
     return frames
 
@@ -1512,7 +1518,7 @@ def head_top(fr):
 
 
 def ib_bone(x: float, top: float, bot: float) -> dict:
-    return draw(Rig(x, (top + bot) / 2, 90.0, 1.0), bone_parts((bot - top) / 2, 1.1, 1.6))
+    return cur(draw(Rig(x, (top + bot) / 2, 90.0, 1.0), bone_parts((bot - top) / 2, 1.1, 1.6)))   # I 는 커서
 
 
 def ib_snug(f: dict, bone: dict, rows: range, gap: int = 1) -> int:
