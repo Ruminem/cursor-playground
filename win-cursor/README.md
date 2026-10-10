@@ -135,6 +135,36 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/munchkincatanim` | Munchkin | A short-legged cream tabby munchkin — it scurries on stubby legs and stands up like a meerkat to look around. |
 | `art/norwegiancatanim` | Norwegian Forest cat | A long-haired Norwegian Forest cat with a lush ruff and plume tail — it wraps its tail around itself and climbs trees. |
 
+**Dogs · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/shibaanim` | Shiba Inu | A Shiba Inu with white cheeks and eyebrow dots — it fetches the arrow and wags its curly tail, and plants all four feet when the answer is no. |
+| `art/corgianim` | Welsh Corgi | A Welsh Corgi with big perky ears — it wiggles its loaf-shaped bottom while you wait, and turns its back with a huff when the answer is no. |
+| `art/pomeraniananim` | Pomeranian | A fluff-ball Pomeranian — it spins and bounces on the spot while you wait, and puffs up and yaps when the answer is no. |
+| `art/bichonanim` | Bichon Frise | A Bichon Frise with a cotton-candy head — it bounces its fluffy head while you wait, and shakes it when the answer is no. |
+| `art/retrieveranim` | Golden Retriever | A Golden Retriever with a feathery tail — it pants with its tongue out while you wait, and lies down with a teary sigh when the answer is no. |
+| `art/dachshundanim` | Dachshund | A long-snouted Dachshund with floppy ears — it lies down and yawns while you wait, and sticks its nose in the air when the answer is no. |
+| `art/huskyanim` | Husky | A Husky with a grey mask and blue eyes — it howls at the sky while you wait, and flops on its back in protest when the answer is no. |
+| `art/poodleanim` | Poodle | A Poodle with curly ears and a pom-pom tail — it tilts its head this way and that while you wait, and flicks its nose up when the answer is no. |
+| `art/malteseanim` | Maltese | A Maltese with a pink bow — it nods off while you wait, and covers its eyes with its paws when the answer is no. |
+| `art/jindoanim` | Jindo | A Jindo with pointed ears and a curled tail — it sits up on alert while you wait, and pins its ears back and growls when the answer is no. |
+
+**Little birds · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/javasparrowanim` | Java sparrow | A Java sparrow with a chunky pink beak — it hops along with the arrow on its head, and dozes on its eggs while you wait. |
+| `art/budgieanim` | Budgie | A chatty budgie — it bobs and chatters at its mirror while you wait, and crosses its wings in an X when the answer is no. |
+| `art/cockatielanim` | Cockatiel | A cockatiel with a jaunty crest — it slowly raises and lowers its crest while you wait, and hisses with its wings spread when the answer is no. |
+| `art/sparrowanim` | Sparrow | A plump sparrow — it pecks up grains one by one while you wait, and turns its head away with a huff when the answer is no. |
+| `art/crowtitanim` | Parrotbill | A rosy-cheeked parrotbill — it sways on the tip of a twig while you wait, and squeezes its eyes shut and shakes its head when the answer is no. |
+| `art/shimaenagaanim` | Shimaenaga | A rice-cake-round Shimaenaga (long-tailed tit) — it fluffs up into a ball in the falling snow, and puffs up even more when cross. |
+| `art/chickanim` | Chick | A chick in eggshell pants — it waddles along with the arrow on its head, and jumps with a cheep while you wait. |
+| `art/ducklinganim` | Duckling | A flat-billed duckling — it bobs on the water while you wait, and opens wide for a big quack when the answer is no. |
+| `art/canaryanim` | Canary | A yellow canary — it sways and sings while you wait, with little notes floating up. |
+| `art/penguinanim` | Baby penguin | A grey baby penguin — it waddles across the ice, lifting one flipper and then the other. |
+
 <!-- /schemes:en -->
 
 Every scheme fills all 17 slots. Six are drawn per theme; the other 11 are made from that theme's arrow, hourglass and colours.
@@ -392,6 +422,36 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/whitecatanim` | 오드아이 흰냥 | 파랑·노랑 짝짝이 눈의 새하얀 고양이. 우유를 할짝이고 햇살 아래 몸을 굴리는 커서. |
 | `art/munchkincatanim` | 먼치킨 | 다리가 짧은 크림 줄무늬 먼치킨. 짧은 다리로 종종 뛰고 뒷발로 서서 미어캣처럼 두리번대는 커서. |
 | `art/norwegiancatanim` | 노르웨이숲 | 갈기와 꼬리가 풍성한 장모 노르웨이숲 고양이. 복슬한 꼬리를 휘감고 나무를 타는 커서. |
+
+**댕댕이 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/shibaanim` | 시바 | 흰 볼에 눈썹 점이 있는 시바견. 화살표를 물고 와 말린 꼬리를 붕붕, 안 된다고 하면 네 발로 버티는 커서. |
+| `art/corgianim` | 웰시코기 | 큰 귀를 쫑긋 세운 웰시코기. 기다릴 때는 뒤돌아 식빵 엉덩이를 씰룩, 안 될 때는 등 돌리고 흥 하는 커서. |
+| `art/pomeraniananim` | 포메 | 솜털이 동그란 포메라니안. 기다릴 때는 제자리에서 빙글빙글 통통, 안 될 때는 털을 부풀리고 왈왈 짖는 커서. |
+| `art/bichonanim` | 비숑 | 솜사탕 머리의 비숑. 기다릴 때는 솜머리를 통통 튀기고, 안 될 때는 도리도리하는 커서. |
+| `art/retrieveranim` | 골든리트리버 | 깃털 꼬리의 골든리트리버. 기다릴 때는 혀 내밀고 헥헥, 안 될 때는 엎드려 촉촉한 눈으로 한숨 쉬는 커서. |
+| `art/dachshundanim` | 닥스훈트 | 귀가 늘어진 긴 주둥이 닥스훈트. 기다릴 때는 엎드려 하품, 안 될 때는 코를 쳐들고 외면하는 커서. |
+| `art/huskyanim` | 허스키 | 회색 가면에 파란 눈의 허스키. 기다릴 때는 고개 쳐들고 아우우, 안 될 때는 발라당 누워 허우적 항의하는 커서. |
+| `art/poodleanim` | 푸들 | 곱슬 귀에 방울 꼬리의 푸들. 기다릴 때는 고개를 갸웃갸웃, 안 될 때는 콧대 높게 고개를 홱 돌리는 커서. |
+| `art/malteseanim` | 말티즈 | 분홍 리본을 단 말티즈. 기다릴 때는 리본을 흔들며 꾸벅꾸벅 졸고, 안 될 때는 앞발로 눈을 가리는 커서. |
+| `art/jindoanim` | 진돗개 | 뾰족 귀에 말린 꼬리의 진돗개. 기다릴 때는 똑바로 앉아 귀를 쫑긋 세우고, 안 될 때는 귀를 젖히고 으르렁하는 커서. |
+
+**짹짹이 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/javasparrowanim` | 문조 | 굵은 분홍 부리의 문조. 화살표를 머리에 이고 통통, 기다릴 때는 둥지에서 알을 품고 꾸벅꾸벅 조는 커서. |
+| `art/budgieanim` | 사랑앵무 | 수다쟁이 사랑앵무. 기다릴 때는 거울을 보며 고개 까딱 수다, 안 될 때는 날개를 X 로 엇거는 커서. |
+| `art/cockatielanim` | 왕관앵무 | 볏이 멋진 왕관앵무. 기다릴 때는 볏을 천천히 올렸다 내리고, 안 될 때는 볏을 세우고 날개를 쫙 펴 쉭쉭 하는 커서. |
+| `art/sparrowanim` | 참새 | 통통한 참새. 기다릴 때는 땅의 모이를 하나씩 콕콕 쪼아 먹고, 안 될 때는 고개를 홱 돌리는 커서. |
+| `art/crowtitanim` | 뱁새 | 볼이 발그레한 뱁새. 기다릴 때는 가지 끝에 앉아 가지째 살랑살랑, 안 될 때는 눈을 질끈 감고 도리도리하는 커서. |
+| `art/shimaenagaanim` | 시마에나가 | 찹쌀떡 같은 시마에나가(흰머리오목눈이). 눈 오는 날 솜털을 부풀려 동그래지고, 화나면 더 빵빵해지는 커서. |
+| `art/chickanim` | 병아리 | 알껍데기 바지를 입은 병아리. 화살표를 이고 뒤뚱뒤뚱, 기다릴 때는 삐약 점프하는 커서. |
+| `art/ducklinganim` | 아기오리 | 넓적 부리 아기오리. 기다릴 때는 물에 둥둥 떠 있고, 안 될 때는 부리를 크게 벌려 꽥 하는 커서. |
+| `art/canaryanim` | 카나리아 | 노란 카나리아. 기다릴 때는 고개를 흔들며 노래하고 음표가 솟는 커서. |
+| `art/penguinanim` | 아기펭귄 | 회색 아기펭귄. 얼음판에서 지느러미를 번갈아 들며 뒤뚱뒤뚱 걷는 커서. |
 
 <!-- /schemes:ko -->
 
