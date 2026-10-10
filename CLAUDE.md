@@ -119,3 +119,12 @@
 - `handler.ps1` 은 한글 때문에 **UTF-8 BOM** 으로 저장해야 한다 (PowerShell 5.1 이 BOM 없으면 ANSI 로 읽음)
 - 워크플로에서 한글을 찍는 스텝은 `shell: pwsh`, 파이썬은 `PYTHONUTF8: '1'`
 - 세션을 마치면 `NEXT.md` 세 줄(여기까지 됨 / 다음 할 것 / 막힌 것)을 고친다
+
+## 측정 (클라우드 세션만)
+이 저장소를 연 클라우드 세션은 규칙이 안 실린 대조군이라 `ruminem/rules` 의 측정 로그에 행을 남긴다.
+작업 브랜치에 푸시할 때마다 그 뒤에 한 번 한다.
+1. `add_repo`(`ruminem` / `rules`, access `push`) 를 부르고, 알려 주는 명령으로 `/tmp/rules` 에 클론한다
+2. `python3 /tmp/rules/session-breakdown.py --push`
+- `register_repo_root` 는 부르지 않는다. 부르면 rules 의 CLAUDE.md 가 실려 대조군이 깨진다
+- 실패하면 이유를 한 줄 알리고 넘어간다. 이것 때문에 하던 일을 멈추지 않는다
+- 개인 PC 에서 열었으면 할 일 없다 — 자정 작업이 PC 기록을 훑는다
