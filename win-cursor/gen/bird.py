@@ -7,7 +7,9 @@
 양옆 날개 · 뒤로 뻗은 꼬리 · 볏은 따로 놓는다. 눈 · 부리 · 발은 칸 단위로 찍는다(줄여도 점이 안 되게).
 
   arrow   1배 흰 윈도우 화살표를 정수리에 이고 그 밑에 앞모습 새가 선다(carry). 쪼그렸다 통통 뛰면 화살표가
-          머리에서 한 줄 떴다 다시 얹힌다. 날지 않는 새(병아리 · 아기오리 · 펭귄)는 뒤뚱. 화살표 끝 (1, 1) 이 핫스팟
+          머리에서 한 줄 떴다 다시 얹힌다. 날지 않는 새(병아리 · 아기오리 · 펭귄)는 뒤뚱. 화살표 끝 (1, 1) 이 핫스팟.
+          매끈한 모양용 재료(_peek.txt 새 층 · _arrow.txt · _peek.json 꼬리 밑점)도 같이 쓴다(write_carry) —
+          smooth.peek_drawer 가 새 화살표 꼬리 밑에 새를 옮겨 단다. 매끈한 쪽 화살표는 기울지 않는다
   wait    마리마다 제 버릇(알 품기 · 거울 수다 · 볏 까딱 · 모이 콕콕 · 가지 그네 · 솜털 빵빵 · 삐약 점프 ·
           둥둥 · 노래 · 뒤뚱)
   no      빨간 금지 표지 안에서 마리마다 제 식으로 싫다고 한다
@@ -638,6 +640,7 @@ def mark(f, x, y):
 # 움직일 수 없으니 새가 그 밑에서 뛴다 — 화살표를 따라가는 눈으로 보면 화살표가 머리에서 떴다 다시 얹힌다.
 # 뛰는 장(틈 > 0)이 아니면 화살표 밑동이 늘 정수리에 닿는다(carry 안에서 재서 맞춘다)
 CARRY_S, CARRY_TOP = 1.0, 16.0    # 화살표 배율 · 쉴 때 머리 꼭대기 줄(꼬리 아랫단 16–17줄이 정수리 뒤로 한 칸 숨는다)
+CARRY: list = []                  # arrow() 가 장마다 남기는 새 층(화살표 빼고 테 두른 것) — write_carry 가 쓴다
 RING_SOFT = hx("f4a6b4ff")        # 문조 눈테 — 진한 빨강 막대는 1배에서 화난 눈썹 · 빨간 덩어리로 읽혀 연분홍 한 칸으로
 DUST = hx("c8ccd4ff")
 # 뛰는 새: 장마다 (틈 · 쪼그림 sq · 날개 위로 t · 화살표 기울기(도, 음수만 — 양수면 x=0 으로 나간다) · 눈 · 부리 · 먼지)
@@ -737,6 +740,7 @@ def arrow(B) -> list[dict]:
     ox = 9.5 + max(0, 1 - lo)
     top = max(q[0] for q in seq)
     frames = []
+    CARRY.clear()
     for gap, P, rot, dust in seq:
         P = dict(P)
         ang = P.pop("ang", 0.0)
@@ -770,11 +774,14 @@ def arrow(B) -> list[dict]:
         f = {}
         solid(f, am, PEEK_WHITE, OUT)       # 화살표 먼저 — 꼬리 아랫단이 정수리 뒤로 숨는다
         f.update(g)
+        layer = dict(g)
         if dust:   # 박찰 때 · 내려앉을 때 발밑 먼지
             yb = max(y for _, y in mask) + 2
             xs = sorted(x for x, _ in g)
             for x, dy in ((xs[0] - 1, 1), (xs[0], 0), (xs[-1], 0), (xs[-1] + 1, 1)):
                 f.setdefault((x, yb - dy), DUST)
+                layer.setdefault((x, yb - dy), DUST)
+        CARRY.append(finish({p: c for p, c in layer.items() if 1 <= p[0] <= 31 and 1 <= p[1] <= 31}))
         f[1, 1] = OUT
         frames.append(finish({p: c for p, c in f.items() if 1 <= p[0] <= 31 and 1 <= p[1] <= 31}))
     return frames
@@ -1673,6 +1680,21 @@ def check(rid, frames, hot):
     return bad
 
 
+def write_carry(d) -> None:
+    """머리에 이기 화살표를 매끈한 모양으로 다시 그릴 재료 셋 (smooth.peek_drawer 의 anchor "base") — 냥이 빼꼼의
+    sea.write_peek 와 같은 이름을 쓴다. base 는 꼬리 밑변 가운데 세로줄에서 화살표 맨 아래 칸 바로 밑(32칸 판 좌표)"""
+    import json
+    a: dict = {}
+    am = arrow_mask(0)
+    solid(a, am, PEEK_WHITE, OUT)
+    (d / "_arrow.txt").write_text(shape.to_text([a], (1, 1), sea.RATE), encoding="utf-8")
+    (d / "_peek.txt").write_text(shape.to_text(CARRY, (1, 1), sea.RATE), encoding="utf-8")
+    cx = 1 + (PEEK_CUR[3][0] + PEEK_CUR[4][0]) / 2 * CARRY_S
+    by = max(y for x, y in am if abs(x + 0.5 - cx) <= 1) + 1
+    meta = dict(anchor="base", base=[cx, by], height=max(y for _, y in PEEK_CUR) * CARRY_S)
+    (d / "_peek.json").write_text(json.dumps(meta, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
 def main() -> None:
     args = sys.argv[1:]
     only = None
@@ -1703,6 +1725,8 @@ def main() -> None:
             hot = hot_of(frames)
             bad += check(f"{sid}/{cell}", frames, hot)
             (d / f"{cell}.txt").write_text(shape.to_text(frames, hot, sea.RATE), encoding="utf-8")
+            if cell == "arrow":
+                write_carry(d)
         print(f"{sid}: 끝")
     print(f"경고 {bad}개")
 

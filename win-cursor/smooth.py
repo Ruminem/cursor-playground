@@ -1568,10 +1568,13 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
     theme 은 색을 뜰 흰 화살표, layers 는 장마다 테 두른 냥이 층, meta 는 gen 이 적은 빗변·발·솟는 높이(_peek.json).
     좌표는 전부 기본 그림의 화살표 끝 (1, 1) 에서 잰 32칸 단위다. 냥이는 32칸 픽셀 그림을 키워 쓴다"""
     samplers = samplers_of([theme])
-    out_c, fur = tuple(bytes.fromhex(meta["out"])), tuple(bytes.fromhex(meta["fur"]))
-    t, (dt, up, r) = meta["t"], meta["paw"]
-    cnx, cny = meta["normal"]
-    cex, cey = 1 + meta["edge"][0], 1 + meta["edge"][1]
+    # anchor "base"(짹짹이)는 새가 꼬리 밑동 아래에서 화살표를 인다 — 빗변·발 대신 meta["base"] 하나를 옮긴다
+    base = meta.get("anchor") == "base"
+    if not base:
+        out_c, fur = tuple(bytes.fromhex(meta["out"])), tuple(bytes.fromhex(meta["fur"]))
+        t, (dt, up, r) = meta["t"], meta["paw"]
+        cnx, cny = meta["normal"]
+        cex, cey = 1 + meta["edge"][0], 1 + meta["edge"][1]
     pts = SHAPES[sid]["pts"]
     px0, px1 = min(p[0] for p in pts), max(p[0] for p in pts)
     py0, py1 = min(p[1] for p in pts), max(p[1] for p in pts)
@@ -1619,20 +1622,29 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
         inner = ({(x, y) for x in range(board) for y in range(board)} - seen) | body
 
         paws: dict = {}
-        for s in (t - dt, t + dt):                      # 빗변을 잡은 발끝 둘 — 테 색 고리 + 털 색 속
-            ex, ey = edge(s)
-            paw = _disc(ex + nx * up, ey + ny * up, r)
-            for p in {(a + da, b + db) for a, b in paw for da in (-1, 0, 1) for db in (-1, 0, 1)} - paw:
-                paws[p] = out_c
-            for p in paw:
-                paws[p] = fur
-        paws = scale_up(paws, g)
-        ex, ey = edge(t)
-        frames = []
-        for layer, lift in zip(layers, meta["lift"]):
+        if base:
+            # 꼬리 밑변 가운데 세로줄에서 몸(스텐실) 맨 아래 칸 바로 밑 → 기본 그림의 같은 자리만큼 새를 통째로 옮긴다.
+            # 화살표는 기울지 않는다 — 뛰는 장의 틈은 층에 이미 들어 있다. 꼬리 없는 dart 는 밑 꼭짓점 하나다
+            tail = [m(p) for p in pts[3:5]]
+            cx = sum(p[0] for p in tail) / len(tail)
+            col = [y for x, y in body if abs(x + 0.5 - cx * g) <= 1]
+            sx, sy = round((cx - meta["base"][0]) * g), max(col) + 1 - round(meta["base"][1] * g)
+            shifts = [(sx, sy)] * len(layers)
+        else:
+            for s in (t - dt, t + dt):                  # 빗변을 잡은 발끝 둘 — 테 색 고리 + 털 색 속
+                ex, ey = edge(s)
+                paw = _disc(ex + nx * up, ey + ny * up, r)
+                for p in {(a + da, b + db) for a, b in paw for da in (-1, 0, 1) for db in (-1, 0, 1)} - paw:
+                    paws[p] = out_c
+                for p in paw:
+                    paws[p] = fur
+            paws = scale_up(paws, g)
+            ex, ey = edge(t)
             # 기본 그림에서 머리가 솟던 자리 → 새 테두리에서 같은 높이로 솟는 자리만큼 옮긴다
-            sx = round((ex + nx * lift - cex - cnx * lift) * g)
-            sy = round((ey + ny * lift - cey - cny * lift) * g)
+            shifts = [(round((ex + nx * lift - cex - cnx * lift) * g), round((ey + ny * lift - cey - cny * lift) * g))
+                      for lift in meta["lift"]]
+        frames = []
+        for layer, (sx, sy) in zip(layers, shifts):
             f = {(x + sx, y + sy): c for (x, y), c in scale_up(layer, g).items()}
             f = {p: c for p, c in f.items() if p[0] >= 0 and p[1] >= 0 and p not in inner}   # 냥이는 화살표 뒤에
             for p, c in arrow.items():
