@@ -1,0 +1,259 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- HD 시안 페이지 틀. gen/hd_preview.py 가 /*DATA*/ 자리에 그림을 끼운다  · 올린 곳 https://claude.ai/artifact/WToSbg2DiN2QL76z6SQ2or -->
+<title>HD 커서 시안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* 레이아웃: 머리 → 조작 띠 → 17칸 견본판 → 세 결 견줌 · 시험장 */
+:root{
+  --bg:#f3f5f8; --panel:#ffffff; --ink:#151a24; --muted:#5b6474; --line:#d9dee7;
+  --accent:#3b62d9; --accent-ink:#ffffff; --hot:#e0218a;
+  --body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+  --tile-white:#ffffff; --tile-dark:#202124;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151b; --panel:#1a1e26; --ink:#e7ebf2; --muted:#9aa3b2; --line:#2c3340;
+  --accent:#7d9bff; --accent-ink:#0d1220; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151b; --panel:#1a1e26; --ink:#e7ebf2; --muted:#9aa3b2; --line:#2c3340;
+  --accent:#7d9bff; --accent-ink:#0d1220; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;padding:24px 16px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:22px}
+header{display:grid;gap:6px}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 small{font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:400;margin-left:8px;letter-spacing:0}
+.lede{color:var(--muted);margin:0;max-width:68ch}
+h2{font-size:17px;margin:0 0 10px}
+.bar{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.group>span{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{font:inherit;font-size:14px;border:0;background:transparent;color:var(--ink);padding:7px 12px;min-height:36px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible,.tile:focus-visible,.chk input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:pointer;min-height:36px}
+.about{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.about p{margin:0;font-size:14px;color:var(--muted)}
+.about b{color:var(--ink);display:block;font-size:15px}
+.about div{padding:10px 12px;border-radius:10px;border:1px solid transparent}
+.about div.on{border-color:var(--accent);background:var(--panel)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--cell)),1fr));gap:10px}
+.tile{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);display:grid;grid-template-rows:auto auto;cursor:default;padding:0;font:inherit;color:inherit;text-align:left}
+.tile.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.stage{height:calc(var(--px)*1px + 36px);display:grid;place-items:center;position:relative}
+.stage .cv{position:relative;width:calc(var(--px)*1px);height:calc(var(--px)*1px)}
+.stage img{width:100%;height:100%;display:block}
+.dot{position:absolute;width:5px;height:5px;margin:-2px 0 0 -2px;background:var(--hot);border-radius:50%;box-shadow:0 0 0 1px #fff}
+.nodots .dot{display:none}
+.cap{padding:7px 10px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:baseline;min-width:0}
+.cap b{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap code{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.bg-white{background:var(--tile-white)}
+.bg-dark{background:var(--tile-dark)}
+.bg-photo{background:radial-gradient(120% 90% at 20% 10%,#ffd6a3 0,#f08a5d 32%,transparent 60%),radial-gradient(90% 80% at 85% 90%,#2f6b5a 0,#1d3f52 55%,#0f1d33 100%),#3b4c6b}
+.bg-check{background:repeating-conic-gradient(#cfd5de 0 25%,#ffffff 0 50%) 0 0/16px 16px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.trio figure{margin:0;display:grid;gap:4px;text-align:center}
+.trio .duo{display:grid;grid-template-rows:1fr 1fr;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.trio .duo div{display:grid;place-items:center;padding:8px 0}
+.trio img{width:min(100%,96px);height:auto;aspect-ratio:1}
+.trio figcaption{font-size:13px;color:var(--muted)}
+.play{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-radius:10px;overflow:hidden;border:1px solid var(--line);height:260px}
+.play>div{display:grid;place-items:end start;padding:8px;font-size:12px}
+.play .bg-white{color:#4a5262}.play .bg-dark{color:#aab2c0}.play .bg-photo{color:#fff}.play .bg-check{color:#4a5262}
+.play .txt{place-items:start;padding:12px;font-size:13px;line-height:1.6;background:var(--tile-white);color:#222}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+@media (max-width:640px){.play{grid-template-columns:repeat(2,minmax(0,1fr));height:320px}}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>HD 커서 시안 <small>시제품 · 256px 에서 내려 깎음</small></h1>
+    <p class="lede">픽셀 도트 대신 거리함수로 그린 고화질 구성표 세 벌이에요. 칸을 누르면 고른 칸이 되고, 칸이나 아래 시험장 위에 마우스를 올리면 그 그림이 진짜 커서로 바뀌어요.</p>
+  </header>
+
+  <div class="bar" role="toolbar" aria-label="보기 설정">
+    <div class="group"><span>결</span><div class="seg" id="style"></div></div>
+    <div class="group"><span>바탕</span><div class="seg" id="bg"></div></div>
+    <div class="group"><span>크기</span><div class="seg" id="size"></div></div>
+    <label class="chk"><input type="checkbox" id="anim" checked> 움직임</label>
+    <label class="chk"><input type="checkbox" id="dots"> 핫스팟</label>
+    <div class="group"><span>화면</span><div class="seg" id="theme"></div></div>
+  </div>
+
+  <section class="about" id="about"></section>
+
+  <section>
+    <h2 id="gridTitle">17칸</h2>
+    <div class="grid nodots" id="grid"></div>
+  </section>
+
+  <section class="cols">
+    <div class="card">
+      <h2 id="trioTitle">세 결 견줌</h2>
+      <div class="trio" id="trio"></div>
+    </div>
+    <div class="card">
+      <h2>시험장</h2>
+      <div class="play" id="play">
+        <div class="bg-white">흰 바탕</div>
+        <div class="bg-dark">어두운 바탕</div>
+        <div class="bg-photo">사진</div>
+        <div class="txt">커서는 바탕을 고를 수 없어서 어디서든 보여야 해요. 이 글 위에서 텍스트 커서가 잘 보이는지, 링크 손이 글자를 가리지 않는지 봐 주세요.</div>
+      </div>
+      <p class="note" id="playNote"></p>
+    </div>
+  </section>
+</div>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const NAMES = {arrow:'기본 화살표',help:'도움말',busy:'백그라운드 작업',wait:'기다림',cross:'정밀 선택',ibeam:'텍스트',pen:'손글씨',no:'사용 불가',ns:'세로 크기',we:'가로 크기',nwse:'대각선 크기 ↘',nesw:'대각선 크기 ↙',move:'이동',up:'대체 선택',hand:'링크',pin:'위치 선택',person:'사용자 선택'};
+const STYLES = {
+  glass:{ko:'글래스',about:'반투명한 하늘빛 유리. 왼쪽 위 빛에 테두리가 하얗게 서고 비스듬한 반사가 지나가요.'},
+  aurora:{ko:'오로라 네온',about:'남보라 몸에 오로라 빛 테가 번져요. 색이 천천히 흘러요. 사용 불가 칸만 불씨 색.'},
+  chrome:{ko:'크롬 메탈',about:'띠 진 강철에 빛줄기가 쓸고 지나가요. 어느 바탕에서나 제일 또렷해요.'}
+};
+const BGS = [['white','흰'],['dark','어둠'],['photo','사진'],['check','투명']];
+const SIZES = [32,48,64,128];
+const st = {style:'glass', bg:'white', size:64, cell:'arrow', anim:true, dots:false, frame:0};
+try { Object.assign(st, JSON.parse(localStorage.getItem('hdcur')||'{}')); } catch(e) {}
+st.frame = 0;
+const save = () => { try { localStorage.setItem('hdcur', JSON.stringify({style:st.style,bg:st.bg,size:st.size,cell:st.cell,anim:st.anim,dots:st.dots})); } catch(e) {} };
+
+// 128px 원본 → 작은 크기. 반으로 접기는 정확히 2×2 평균이라 64·32 는 빌드와 같은 꼴
+const imgs = {}, cache = {};
+function src(s, c, k) {
+  const key = s+c+k;
+  if (!imgs[key]) { const im = new Image(); im.src = 'data:image/png;base64,' + D.styles[s][c].frames[k]; imgs[key] = im; }
+  return imgs[key];
+}
+function frameOf(s, c) { const n = D.styles[s][c].frames.length; return st.anim ? st.frame % n : 0; }
+function scaled(s, c, k, size) {
+  const key = [s,c,k,size].join('|');
+  if (cache[key]) return cache[key];
+  const im = src(s, c, k);
+  if (!im.complete) return null;
+  let cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  cv.getContext('2d').drawImage(im, 0, 0);
+  let cur = 128;
+  const target = size;
+  const step = (n) => { const o = document.createElement('canvas'); o.width = o.height = n; const g = o.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(cv, 0, 0, n, n); cv = o; cur = n; };
+  if (target === 48) step(96);
+  while (cur / 2 >= target) step(cur / 2);
+  if (cur !== target) step(target);
+  return cache[key] = cv.toDataURL();
+}
+function hot(s, c, size) { const h = D.styles[s][c].hot; return [Math.floor(h[0]*size/128), Math.floor(h[1]*size/128)]; }
+function cursorCss(s, c, size) {
+  const u = scaled(s, c, frameOf(s, c), size); if (!u) return 'auto';
+  const [x, y] = hot(s, c, size);
+  return `url(${u}) ${x} ${y}, auto`;
+}
+
+function seg(id, items, key, fmt) {
+  const box = document.getElementById(id); box.innerHTML = '';
+  for (const [v, label] of items) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+    b.setAttribute('aria-pressed', String(st[key] === v));
+    b.onclick = () => { st[key] = v; save(); renderAll(); };
+    box.appendChild(b);
+  }
+}
+function themeSeg() {
+  const box = document.getElementById('theme'); box.innerHTML = '';
+  const cur = document.documentElement.getAttribute('data-theme') || 'light';
+  for (const [v, l] of [['light','밝게'],['dark','어둡게']]) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = l;
+    b.setAttribute('aria-pressed', String(cur === v));
+    b.onclick = () => { document.documentElement.setAttribute('data-theme', v); try { localStorage.setItem('hdtheme', v); } catch(e) {} themeSeg(); };
+    box.appendChild(b);
+  }
+}
+try { document.documentElement.setAttribute('data-theme', localStorage.getItem('hdtheme') || 'light'); } catch(e) { document.documentElement.setAttribute('data-theme', 'light'); }
+
+const grid = document.getElementById('grid');
+const tiles = {};
+function buildGrid() {
+  for (const c of D.cells) {
+    const t = document.createElement('button'); t.type = 'button'; t.className = 'tile';
+    t.innerHTML = `<div class="stage"><div class="cv"><img alt=""><span class="dot"></span></div></div><div class="cap"><b>${NAMES[c]}</b><code>${c}</code></div>`;
+    t.onclick = () => { st.cell = c; save(); renderAll(); };
+    grid.appendChild(t); tiles[c] = t;
+  }
+}
+function paintTiles() {
+  const s = st.style, size = st.size;
+  for (const c of D.cells) {
+    const t = tiles[c];
+    const u = scaled(s, c, frameOf(s, c), size);
+    const img = t.querySelector('img');
+    if (u && img.getAttribute('src') !== u) img.src = u;
+    const [x, y] = hot(s, c, size);
+    const dot = t.querySelector('.dot'); dot.style.left = (x + .5) + 'px'; dot.style.top = (y + .5) + 'px';
+    t.style.cursor = cursorCss(s, c, Math.min(size, 128));
+  }
+}
+function renderAll() {
+  seg('style', Object.entries(STYLES).map(([k, v]) => [k, v.ko]), 'style');
+  seg('bg', BGS, 'bg');
+  seg('size', SIZES.map(n => [n, n + 'px']), 'size');
+  themeSeg();
+  document.getElementById('anim').checked = st.anim;
+  document.getElementById('dots').checked = st.dots;
+  grid.classList.toggle('nodots', !st.dots);
+  grid.style.setProperty('--px', st.size);
+  grid.style.setProperty('--cell', Math.max(st.size + 40, 140) + 'px');
+  document.getElementById('gridTitle').textContent = `${STYLES[st.style].ko} · 17칸 · ${st.size}px`;
+  const about = document.getElementById('about'); about.innerHTML = '';
+  for (const [k, v] of Object.entries(STYLES)) {
+    const d = document.createElement('div'); if (k === st.style) d.className = 'on';
+    d.innerHTML = `<p><b>${v.ko}</b>${v.about}</p>`; about.appendChild(d);
+  }
+  for (const c of D.cells) {
+    tiles[c].classList.toggle('sel', c === st.cell);
+    tiles[c].querySelector('.stage').className = 'stage bg-' + st.bg;
+    tiles[c].setAttribute('aria-label', `${NAMES[st.cell === c ? c : c]} 고르기`);
+  }
+  document.getElementById('trioTitle').textContent = `세 결 견줌 · ${NAMES[st.cell]}`;
+  document.getElementById('playNote').textContent = `지금 커서: ${STYLES[st.style].ko} · ${NAMES[st.cell]} · ${Math.min(st.size, 128)}px. 웹 브라우저는 커서 그림이 128px 를 넘으면 안 받아요.`;
+  paint();
+}
+const trio = document.getElementById('trio');
+function paintTrio() {
+  if (!trio.children.length) {
+    for (const s of Object.keys(STYLES)) {
+      const f = document.createElement('figure');
+      f.innerHTML = `<div class="duo"><div class="bg-white"><img alt=""></div><div class="bg-dark"><img alt=""></div></div><figcaption>${STYLES[s].ko}</figcaption>`;
+      trio.appendChild(f);
+    }
+  }
+  Object.keys(STYLES).forEach((s, i) => {
+    const u = scaled(s, st.cell, frameOf(s, st.cell), 128);
+    for (const im of trio.children[i].querySelectorAll('img')) { if (u && im.getAttribute('src') !== u) { im.src = u; im.alt = `${STYLES[s].ko} ${NAMES[st.cell]}`; } }
+  });
+}
+function paint() {
+  paintTiles(); paintTrio();
+  document.getElementById('play').style.cursor = cursorCss(st.style, st.cell, Math.min(st.size, 128));
+}
+document.getElementById('anim').onchange = e => { st.anim = e.target.checked; save(); paint(); };
+document.getElementById('dots').onchange = e => { st.dots = e.target.checked; save(); renderAll(); };
+
+// 모든 원본을 먼저 풀어 둔 뒤 그린다 — 안 풀린 그림을 그리면 빈 장이 끼어 깜빡인다
+const all = [];
+for (const s in D.styles) for (const c in D.styles[s]) D.styles[s][c].frames.forEach((_, k) => { const im = src(s, c, k); all.push(im.decode ? im.decode().catch(() => {}) : Promise.resolve()); });
+buildGrid();
+Promise.all(all).then(() => {
+  renderAll();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) setInterval(() => { if (!st.anim) return; st.frame = (st.frame + 1) % 12; paint(); }, 110);
+});
+</script>

@@ -11,6 +11,8 @@
     python gen/hd.py <출력 폴더> [재질…]        # 256 PNG 와 견줘 볼 시트
 
 지금은 시안 단계라 art/ 에 쓰지 않는다. 고른 뒤 빌드 길과 같이 넣는다.
+2026-10-10 보류 — 매끈한 모양 대응(classic_only 로 빌릴지, 모양마다 다시 그릴지)을 정하기 전. NEXT.md 참고.
+시안 페이지: https://claude.ai/artifact/WToSbg2DiN2QL76z6SQ2or (gen/hd_preview.py 로 다시 뽑음)
 """
 import math
 import os
