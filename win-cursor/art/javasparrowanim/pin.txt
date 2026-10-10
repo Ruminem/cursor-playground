@@ -7,9 +7,9 @@ color 3 2f2a32ff
 color 4 3a2a30ff
 color 5 3a2a31ff
 color 6 8f9aaaff
-color 7 9e2b28ff
+color 7 9e2b29ff
 color 8 c84a64ff
-color 9 d64540ff
+color 9 d64541ff
 color A d9dde3c7
 color B e8485aff
 color C ecd9d2ff

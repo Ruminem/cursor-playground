@@ -4,11 +4,11 @@ color 0 2a1c22ff
 color 1 3a2a30ff
 color 2 3a2a31ff
 color 3 3a3236ff
-color 4 7e5230ff
-color 5 b08a48ff
+color 4 7e5231ff
+color 5 b08a49ff
 color 6 d9dde3c7
 color 7 e8c27a68
-color 8 e8c27aff
+color 8 e8c27bff
 color 9 f4ede2ff
 color A fff6e9ff
 color B fffaf2ff

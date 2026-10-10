@@ -113,8 +113,10 @@ def any_of(*hs):
 
 
 def draw(rig: Rig, parts: list) -> tuple[dict, set, dict]:
-    """parts: [(이름, 맞음(a, b), 색(a, b) 또는 색, 테두리)] — 앞의 것이 위에 그려진다 (cheesecat.draw 와 같음)"""
+    """parts: [(이름, 맞음(a, b), 색(a, b) 또는 색, 테두리[, 테두리색])] — 앞의 것이 위에 그려진다 (cheesecat.draw 와 같음).
+    테두리색은 기본 OUT — 커서 소품(깃펜)은 sea.Cur(OUT) 을 줘 테까지 커서로 친다"""
     order = {p[0]: i for i, p in enumerate(parts)}
+    hits_of = [(p[0], p[1]) for p in parts]
     region, mask = {}, set()
     for y in range(-3, 35):
         for x in range(-3, 35):
@@ -122,7 +124,7 @@ def draw(rig: Rig, parts: list) -> tuple[dict, set, dict]:
             for j in range(4):
                 for i in range(4):
                     a, b = rig.local(x + (i + 0.5) / 4, y + (j + 0.5) / 4)
-                    for name, hit, _, _ in parts:
+                    for name, hit in hits_of:
                         if hit(a, b):
                             hits[name] = hits.get(name, 0) + 1
                             break
@@ -131,6 +133,7 @@ def draw(rig: Rig, parts: list) -> tuple[dict, set, dict]:
                 region[x, y] = max(hits, key=lambda n: (hits[n], -order[n]))
     col = {p[0]: p[2] for p in parts}
     lined = {p[0] for p in parts if p[3]}
+    line = {p[0]: p[4] if len(p) > 4 else OUT for p in parts}
     out = {}
     for p in mask:
         c = col[region[p]]
@@ -138,20 +141,20 @@ def draw(rig: Rig, parts: list) -> tuple[dict, set, dict]:
         x, y = p
         nb = ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))
         if any(q not in mask for q in nb):
-            out[p] = OUT
+            out[p] = line[region[p]]
         elif region[p] in lined and any(order[region[q]] > order[region[p]] for q in nb):
-            out[p] = OUT
+            out[p] = line[region[p]]
     return out, mask, region
 
 
 def sign(f: dict, R: float = 13.5) -> None:
-    """빨간 금지 표지(고리 + 왼쪽 위 → 오른쪽 아래 빗금) — cheesecat.sign 과 같음"""
+    """빨간 금지 표지(고리 + 왼쪽 위 → 오른쪽 아래 빗금) — cheesecat.sign 과 같음. 표지는 커서"""
     ring = {p for p in disc(15.5, 15.5, R) if math.hypot(p[0] + 0.5 - 15.5, p[1] + 0.5 - 15.5) > R - 2.4}
     slash = set()
     for t in range(-90, 91):
         x, y = 15.5 + t / 100 * (R - 1.5) * 0.7071, 15.5 + t / 100 * (R - 1.5) * 0.7071
         slash |= disc(x, y, 1.3)
-    solid(f, ring | slash, SIGN, SIGN_D)
+    solid(f, ring | slash, sea.Cur(SIGN), sea.Cur(SIGN_D))
 
 
 # ── 마리마다 무늬 ─────────────────────────────────────────────────────────────
@@ -1294,6 +1297,7 @@ def busy(B):
             x, y = math.floor(cx + R * math.cos(a)), math.floor(cy + R * math.sin(a))
             lag = (head - i) % 8
             col = SEEDS[0] if lag < 1 else SEEDS[1] if lag < 2 else SEEDS[2] if lag < 3.5 else SEEDS[3]
+            col = sea.Cur(col)   # 로딩 원은 커서
             for p in ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)):
                 f[p] = col
         return f
@@ -1341,9 +1345,9 @@ def help_(B):
                 return WORM_B
             return WORM_D if s % 2.2 < 0.55 and s > 1.0 else WORM
         o, _, _ = draw(Rig(0, 0, 0, 1.0), [("worm", chain(pts, 1.6, 1.3), col, False)])
-        f.update(o)
-        solid(f, disc(19.4, 26.6, 1.9), SOIL, SOIL_D)
-        f[19, 26] = hx("b88a58ff")
+        f.update({p: sea.Cur(c) for p, c in o.items()})   # 물음표(지렁이)와 점(흙)은 커서
+        solid(f, disc(19.4, 26.6, 1.9), sea.Cur(SOIL), sea.Cur(SOIL_D))
+        f[19, 26] = sea.Cur(hx("b88a58ff"))
         return f
     return companion(B, scene), (1, 1)
 
@@ -1364,7 +1368,7 @@ def person(B):
             out[ex, ey] = EYE
             out[ex, ey + 1] = EYE
             out[rig.cell(sg * 3.0, -5.4)] = BLUSH
-        f.update({p: c for p, c in out.items() if p[1] <= 30})
+        f.update({p: sea.Cur(c) for p, c in out.items() if p[1] <= 30})   # 사람은 커서, 머리 위 새는 동물
         top = min(y for x, y in mask if x == 22)
         kb = 0.44
         up = abs(math.sin(ph)) > 0.5
@@ -1391,7 +1395,7 @@ def pin(B):
         for x in range(19, 27):
             f.setdefault((x, 30), hx("2a1c2260") if dy else hx("2a1c22a0"))
         pinm = disc(cx, cy, 6.2) | raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
+        solid(f, pinm, sea.Cur(SIGN), sea.Cur(SIGN_D))   # 핀 몸통은 커서, 속 새 얼굴은 동물
         kk = 4.3 / B.hr
         P = dict(body=False, tailon=False, wl=None, wr=None, feet=False, tuft=not B.crest, crest=1.0,
                  mood="happy" if dy == 0 else "open")
@@ -1454,16 +1458,16 @@ def cross(B):
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        for i in list(range(1, 6)) + list(range(26, 31)):
-            f[i, 15] = OUT
-            f[15, i] = OUT
+        for i in list(range(1, 6)) + list(range(26, 31)):   # 조준선은 커서
+            f[i, 15] = sea.Cur(OUT)
+            f[15, i] = sea.Cur(OUT)
         hd, mask, _ = bird(rig, B, {**P0, "mood": "blink" if k == 8 else "open", "crest": 0.6 + 0.3 * math.sin(ph)})
         top = min(y for x, y in mask if x == 15)
         bot = max(y for x, y in mask if x == 15)
         for y in range(6, top):       # 머리 위 깃 한 가닥 — 맨 위 선에 이어진다
-            f[15, y] = OUT
+            f[15, y] = sea.Cur(OUT)
         for y in range(bot + 1, 26):  # 턱 밑 줄
-            f[15, y] = OUT
+            f[15, y] = sea.Cur(OUT)
         f.update(hd)
         frames.append(finish(f))
     return frames, (15, 15)
@@ -1474,13 +1478,14 @@ TILT = [0, 0, 7, 9, 9, 7, 0, 0, -7, -9, -9, -7]
 
 
 def branch_i(f):
-    """I 꼴 나뭇가지: 세로 줄기 + 위아래 끝의 짧은 가로 갈래, 위 오른끝 · 아래 왼끝에 잎 하나씩"""
+    """I 꼴 나뭇가지: 세로 줄기 + 위아래 끝의 짧은 가로 갈래, 위 오른끝 · 아래 왼끝에 잎 하나씩.
+    가지는 잎까지 커서(I빔) — 동물 색조로 돌면 안 된다"""
     m = {(x, y) for y in range(2, 30) for x in (14, 15, 16)}
     m |= {(x, y) for y in (2, 3, 4, 27, 28, 29) for x in range(11, 21)}
-    solid(f, disc(21.6, 2.2, 1.7), LEAF, LEAF_D)
-    solid(f, disc(9.4, 29.0, 1.7), LEAF, LEAF_D)
-    solid(f, m, WOOD, WOOD_D)
-    f[15, 9] = f[15, 20] = WOOD_D     # 옹이
+    solid(f, disc(21.6, 2.2, 1.7), sea.Cur(LEAF), sea.Cur(LEAF_D))
+    solid(f, disc(9.4, 29.0, 1.7), sea.Cur(LEAF), sea.Cur(LEAF_D))
+    solid(f, m, sea.Cur(WOOD), sea.Cur(WOOD_D))
+    f[15, 9] = f[15, 20] = sea.Cur(WOOD_D)     # 옹이
 
 
 def ibeam(B):
@@ -1603,7 +1608,7 @@ def pen(B):
             return WHITE
         return QUILL_D if (tt + abs(sd) * 1.2) % 2.6 < 0.8 else QUILL
     quill = ("quill", any_of(bar(lt, lb, 0.5 / base.k), ell(vc[0], vc[1], L * 0.3 / base.k, 2.3 / base.k, rot)),
-             qcol, True)
+             lambda a, b: sea.Cur(qcol(a, b)), True, sea.Cur(OUT))   # 깃펜은 테까지 커서
     frames = []
     for k, ph in enumerate(phases()):
         d = math.radians(3.0 * math.sin(2 * ph))
@@ -1616,7 +1621,7 @@ def pen(B):
         reach = math.hypot(grip[0] - rx, grip[1] - ry)
         P["wl"] = ("aim", math.atan2(grip[1] - ry, grip[0] - rx), reach / 1.75 / B.wl, 0.95, True)
         f, _, _ = bird(rig, B, P)
-        f[math.floor(TIP[0]), math.floor(TIP[1])] = NIB
+        f[math.floor(TIP[0]), math.floor(TIP[1])] = sea.Cur(NIB)
         frames.append(finish(f))
     return frames, (math.floor(TIP[0]), math.floor(TIP[1]))
 

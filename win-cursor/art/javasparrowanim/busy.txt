@@ -4,13 +4,13 @@ color 0 2a1c22ff
 color 1 2f2a32ff
 color 2 3a2a30ff
 color 3 3a2a31ff
-color 4 7e5230ff
+color 4 7e5231ff
 color 5 8f9aaaff
-color 6 b08a48ff
+color 6 b08a49ff
 color 7 c84a64ff
 color 8 d9dde3c7
 color 9 e8c27a68
-color A e8c27aff
+color A e8c27bff
 color B ecd9d2ff
 color C f0a0a8ff
 color D f2768cff

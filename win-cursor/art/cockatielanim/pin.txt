@@ -6,12 +6,12 @@ color 2 2a1c22ff
 color 3 3a2a30ff
 color 4 3a2a31ff
 color 5 7a7f88ff
-color 6 9e2b28ff
+color 6 9e2b29ff
 color 7 9ea3aaff
 color 8 b8aca8ff
 color 9 c2c6ccff
 color A c8a0a0ff
-color B d64540ff
+color B d64541ff
 color C f2863aff
 color D f6e9d2c7
 color E ffe26eff

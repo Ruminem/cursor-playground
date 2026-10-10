@@ -6,14 +6,14 @@ color 2 3a2a30ff
 color 3 3a2a31ff
 color 4 5a4a40ff
 color 5 6e4a30ff
-color 6 7e5230ff
+color 6 7e5231ff
 color 7 9a5632ff
 color 8 b07c4cff
-color 9 b08a48ff
+color 9 b08a49ff
 color A d0a088ff
 color B e6dfd2ff
 color C e8c27a68
-color D e8c27aff
+color D e8c27bff
 color E f6e9d2c7
 color F fbf6ecff
 color G fff6e9ff

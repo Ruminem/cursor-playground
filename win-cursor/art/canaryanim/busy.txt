@@ -3,12 +3,12 @@ rate 5
 color 0 2a1c22ff
 color 1 3a2a30ff
 color 2 3a2a31ff
-color 3 7e5230ff
-color 4 b08a48ff
+color 3 7e5231ff
+color 4 b08a49ff
 color 5 c8a020ff
 color 6 e8b0a0ff
 color 7 e8c27a68
-color 8 e8c27aff
+color 8 e8c27bff
 color 9 f2a21aff
 color A f6c0a8ff
 color B f6e9d2c7
