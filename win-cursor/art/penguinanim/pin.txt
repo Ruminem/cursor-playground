@@ -12,7 +12,7 @@ color 8 80868eff
 color 9 9e2b29ff
 color A a9aeb6ff
 color B d64541ff
-color C d9dde3c7
+color C d9dde3c6
 color D dadde2ff
 color E fff6e9ff
 color F fffaf2ff

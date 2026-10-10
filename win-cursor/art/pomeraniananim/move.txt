@@ -7,7 +7,7 @@ color 3 f27a8aff
 color 4 f27a8bff
 color 5 f4a0b0ff
 color 6 f4b462ff
-color 7 f6e9d2c7
+color 7 f6e9d2c6
 color 8 fff0d6ff
 frame
 ..............777

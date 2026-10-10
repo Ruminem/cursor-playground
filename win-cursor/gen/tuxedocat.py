@@ -562,9 +562,9 @@ def busy() -> list[dict]:
             if lag < 1:
                 paw_print(f, x, y, Cur(BEAN), Cur(BEAN_D))   # 도는 발자국 고리는 커서(스피너)
             elif lag < 3:
-                paw_print(f, x, y, hx("f6a8b8d0"), hx("d9758ed0"))
+                paw_print(f, x, y, Cur(hx("f6a8b8d0")), Cur(hx("d9758ed0")))   # 옅어지는 꼬리도 고리의 일부
             else:
-                paw_print(f, x, y, hx("f6a8b888"), hx("d9758e88"))
+                paw_print(f, x, y, Cur(hx("f6a8b888")), Cur(hx("d9758e88")))
         teacup(f, 21, 22, k)
         f.update(arrow_cat(k, small=True))
         frames.append(finish(f))

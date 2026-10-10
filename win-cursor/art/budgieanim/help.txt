@@ -15,7 +15,7 @@ color B e6ec7aff
 color C e88aa1ff
 color D f0d8a0ff
 color E f6a8b5ff
-color F f6e9d2c7
+color F f6e9d2c6
 color G ffe25aff
 color H fff6e9ff
 frame

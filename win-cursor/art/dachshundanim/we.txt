@@ -10,7 +10,7 @@ color 6 d99a62ff
 color 7 f27a8bff
 color 8 f4a0b0ff
 color 9 f4a0b1ff
-color A f6e9d2c7
+color A f6e9d2c6
 color B fffffeff
 frame
 ..........AAAA

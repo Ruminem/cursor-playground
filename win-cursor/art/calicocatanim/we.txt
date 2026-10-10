@@ -5,10 +5,10 @@ color 1 3a2a30ff
 color 2 4d424aff
 color 3 e27d90ff
 color 4 ec8f3cff
-color 5 f4a0b0b0
+color 5 f4a0b0b1
 color 6 f4a0b0ff
 color 7 f4a0b1ff
-color 8 fbecdcc7
+color 8 fbecdcc6
 color 9 fff6e8ff
 frame
 ......8888...8888

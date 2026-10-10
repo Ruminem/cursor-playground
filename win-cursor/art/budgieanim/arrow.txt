@@ -14,7 +14,7 @@ color A c89aa0ff
 color B c8a870ff
 color C e6ec7aff
 color D f0d8a0ff
-color E f6e9d2c7
+color E f6e9d2c6
 color F ffe25aff
 color G fff6e9ff
 color H fffffeff

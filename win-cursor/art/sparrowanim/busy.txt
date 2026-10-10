@@ -12,9 +12,9 @@ color 8 b07c4cff
 color 9 b08a49ff
 color A d0a088ff
 color B e6dfd2ff
-color C e8c27a68
+color C e8c27a69
 color D e8c27bff
-color E f6e9d2c7
+color E f6e9d2c6
 color F fbf6ecff
 color G fff6e9ff
 frame

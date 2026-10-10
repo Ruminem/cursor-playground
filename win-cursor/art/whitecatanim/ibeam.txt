@@ -13,7 +13,7 @@ color 9 dbe8f4ff
 color A dbe8f5ff
 color B dde3eeff
 color C e27d90ff
-color D e6e8f0c7
+color D e6e8f0c6
 color E f0bb2aff
 color F f4a0b0ff
 color G fcfdfeff

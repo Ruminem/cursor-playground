@@ -11,7 +11,7 @@ color 7 9a9ca4ff
 color 8 b8925bff
 color 9 e0c08dff
 color A e27d90ff
-color B e8eaf0c7
+color B e8eaf0c6
 color C f4a0b0ff
 color D f4f3eeff
 color E fff4ddff

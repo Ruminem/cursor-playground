@@ -9,7 +9,7 @@ color 5 f27a8bff
 color 6 f4a0b0ff
 color 7 f4a0b1ff
 color 8 f4b462ff
-color 9 f6e9d2c7
+color 9 f6e9d2c6
 color A fff0d6ff
 color B fffffeff
 frame

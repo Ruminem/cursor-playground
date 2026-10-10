@@ -8,7 +8,7 @@ color 4 6a6a76ff
 color 5 80868eff
 color 6 a8d4e8ff
 color 7 a9aeb6ff
-color 8 d9dde3c7
+color 8 d9dde3c6
 color 9 dadde2ff
 color A e6f4faff
 color B fffaf2ff

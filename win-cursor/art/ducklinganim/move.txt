@@ -4,9 +4,9 @@ color 0 2a1c22ff
 color 1 3a2a30ff
 color 2 8a2a3aff
 color 3 f58a2aff
-color 4 f59a5aa0
+color 4 f59a5aa1
 color 5 f59a5bff
-color 6 f6e9d2c7
+color 6 f6e9d2c6
 color 7 ffd23cff
 color 8 ffe88cff
 frame

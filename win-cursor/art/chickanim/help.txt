@@ -11,7 +11,7 @@ color 7 e88aa1ff
 color 8 f59a2aff
 color 9 f6a8b4ff
 color A f6a8b5ff
-color B f6e9d2c7
+color B f6e9d2c6
 color C ffe476ff
 color D fff2b4ff
 color E fff6e9ff

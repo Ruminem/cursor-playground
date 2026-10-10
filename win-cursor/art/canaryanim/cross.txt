@@ -5,7 +5,7 @@ color 1 3a2a30ff
 color 2 3a2a31ff
 color 3 d89a84ff
 color 4 f6c0a8ff
-color 5 f6e9d2c7
+color 5 f6e9d2c6
 color 6 fcce1aff
 color 7 fffffeff
 frame

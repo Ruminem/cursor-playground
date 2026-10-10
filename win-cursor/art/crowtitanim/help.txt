@@ -16,7 +16,7 @@ color C e88aa1ff
 color D f1dcc0ff
 color E f6a8b4ff
 color F f6a8b5ff
-color G f6e9d2c7
+color G f6e9d2c6
 color H fff6e9ff
 frame
 GGG

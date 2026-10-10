@@ -11,7 +11,7 @@ color 7 9a5632ff
 color 8 b07c4cff
 color 9 d0a088ff
 color A e6dfd2ff
-color B f6e9d2c7
+color B f6e9d2c6
 color C fbf6ecff
 frame
 .......BBBBBB

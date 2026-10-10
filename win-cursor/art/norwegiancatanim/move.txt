@@ -10,11 +10,11 @@ color 6 b4c442ff
 color 7 cfa676ff
 color 8 d8b88aff
 color 9 e27d90ff
-color A e8b23ab0
+color A e8b23ab1
 color B e8b23bff
 color C f4a0b0ff
 color D f7f0e4ff
-color E fbecdcc7
+color E fbecdcc6
 frame
 ..............EEE
 .............EEBEE

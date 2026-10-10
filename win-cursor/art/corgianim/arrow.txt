@@ -7,7 +7,7 @@ color 3 3a2a31ff
 color 4 ea9a40ff
 color 5 f4a0b0ff
 color 6 f6c8b8ff
-color 7 f6e9d2c7
+color 7 f6e9d2c6
 color 8 fff6e9ff
 color 9 fff6eaff
 color A fffffeff

@@ -3,12 +3,12 @@ rate 5
 color 0 2f6cc0ff
 color 1 3a2a30ff
 color 2 4a3226ff
-color 3 5aa0ecb0
+color 3 5aa0ecb1
 color 4 5aa0ecff
 color 5 5aa0edff
 color 6 7a5642ff
 color 7 a8866aff
-color 8 fbecdcc7
+color 8 fbecdcc6
 color 9 fff3e0ff
 frame
 ......888.....888

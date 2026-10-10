@@ -18,7 +18,7 @@ color E f4a0b0ff
 color F f4a0b1ff
 color G f6dcb0ff
 color H f7d7bdff
-color I fbecdcc7
+color I fbecdcc6
 color J fff2a8ff
 color K fff2a9ff
 color L fffaf0ff

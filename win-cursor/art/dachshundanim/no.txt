@@ -9,7 +9,7 @@ color 5 b0602eff
 color 6 b8b0b8ff
 color 7 d64541ff
 color 8 d99a62ff
-color 9 f6e9d2c7
+color 9 f6e9d2c6
 frame
 ..........999999999
 .......999944444449999

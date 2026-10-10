@@ -9,9 +9,9 @@ color 5 9a5632ff
 color 6 b07c4cff
 color 7 d0a088ff
 color 8 e6dfd2ff
-color 9 f59a5aa0
+color 9 f59a5aa1
 color A f59a5bff
-color B f6e9d2c7
+color B f6e9d2c6
 color C fbf6ecff
 frame
 ............BBBBBBB

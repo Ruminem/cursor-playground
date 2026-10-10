@@ -11,7 +11,7 @@ color 7 80868eff
 color 8 8cc865ff
 color 9 a9aeb6ff
 color A b07a49ff
-color B d9dde3c7
+color B d9dde3c6
 color C dadde2ff
 color D fffaf2ff
 frame

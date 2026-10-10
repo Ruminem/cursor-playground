@@ -28,6 +28,13 @@ const code = tpl.slice(start, end);
     ctx.recolor({ data: d, width: 3 }, deg);
     if (d.join(',') !== want) { console.log(`색조 ${deg}: ${d.join(',')} (${want} 이어야 함)`); process.exit(1); }
   }
+  // 둘레 두 칸에 불투명 칸이 없는 외딴 반투명 칸은 알파 끝 비트로 — 붉은 칸 알파 129(홀수) 커서 · 128(짝수) 동물
+  for (const [deg, want] of [['0.120', '166,242,166,255,0,0,0,0,0,0,0,0,40,200,40,129,200,40,40,128'],
+                             ['120.0', '255,255,255,255,0,0,0,0,0,0,0,0,200,40,40,129,40,200,40,128']]) {
+    const d = new Uint8ClampedArray([255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 200, 40, 40, 129, 200, 40, 40, 128]);
+    ctx.recolor({ data: d, width: 5 }, deg);
+    if (d.join(',') !== want) { console.log(`외딴 칸 색조 ${deg}: ${d.join(',')} (${want} 이어야 함)`); process.exit(1); }
+  }
 }
 
 const schemes = JSON.parse(read('schemes.json')), shapes = JSON.parse(read('shapes.json'));

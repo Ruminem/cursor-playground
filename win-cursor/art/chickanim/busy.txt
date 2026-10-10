@@ -6,11 +6,11 @@ color 2 3a2a31ff
 color 3 7e5231ff
 color 4 b08a49ff
 color 5 d07a1aff
-color 6 e8c27a68
+color 6 e8c27a69
 color 7 e8c27bff
 color 8 f59a2aff
 color 9 f6a8b4ff
-color A f6e9d2c7
+color A f6e9d2c6
 color B ffe476ff
 color C fff2b4ff
 color D fff6e9ff

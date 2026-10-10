@@ -309,7 +309,8 @@ namespace CursorPlayground {
             for (int i = 0; i < bgra.Length; i += 4) if (bgra[i + 3] != 0) Spin(bgra, i, deg, 0);
         }
         // 동물(파랑 끝 비트 짝수)은 deg 만큼 돌리고 커서(홀수)는 to 색으로 칠한다. 반쯤 비치는 칸은 둘레 불투명 칸 중
-        // 많은 쪽(한 칸 테 → 두 칸 테, 같으면 커서). preview.tpl.html 의 recolor() 와 같다
+        // 많은 쪽(한 칸 테 → 두 칸 테, 같으면 커서), 두 칸 안에 불투명 칸이 없으면 알파 끝 비트(홀수 커서).
+        // preview.tpl.html 의 recolor() 와 같다
         public static void Split(byte[] bgra, int stride, int w, int ht, int deg, int to) {
             var kind = new byte[w * ht];
             for (int y = 0; y < ht; y++)
@@ -330,6 +331,7 @@ namespace CursorPlayground {
                             }
                         if (one + two > 0) k = one >= two ? 1 : 2;
                     }
+                    if (k == 0) k = (bgra[i + 3] & 1) == 1 ? 1 : 2;   // 둘레에 불투명 칸이 없으면 알파 끝 비트
                     if (k == 1) { if (to != 0) Spin(bgra, i, 0, to); }
                     else if (deg != 0) Spin(bgra, i, deg, 0);
                 }

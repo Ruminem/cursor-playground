@@ -6,13 +6,13 @@ color 2 121218ff
 color 3 2a2a32ff
 color 4 98202cff
 color 5 dc3340ff
-color 6 e6e8f0c7
+color 6 e6e8f0c6
 color 7 e8899cff
 color 8 ee7f98ff
 color 9 f29aaeff
 color A f7f7f2ff
 color B ff2a2bff
-color C ff4a4a70
+color C ff4a4a71
 color D fffffeff
 frame
 ..............666

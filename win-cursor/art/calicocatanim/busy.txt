@@ -7,11 +7,11 @@ color 3 d2a466ff
 color 4 e27d90ff
 color 5 e8c690ff
 color 6 ec8f3cff
-color 7 f4a0b060
-color 8 f4a0b0b0
+color 7 f4a0b061
+color 8 f4a0b0b1
 color 9 f4a0b0ff
 color A f4a0b1ff
-color B fbecdcc7
+color B fbecdcc6
 color C fff6e8ff
 frame
 BBBB

@@ -14,7 +14,7 @@ color A b88a23ff
 color B bccadcff
 color C c8406aff
 color D e3b341ff
-color E e6e8f0c7
+color E e6e8f0c6
 color F eea2b8ff
 color G eea2b9ff
 color H f0628cff

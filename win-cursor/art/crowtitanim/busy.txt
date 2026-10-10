@@ -11,11 +11,11 @@ color 7 9a6a46ff
 color 8 b08a49ff
 color 9 c27a4eff
 color A c99a72ff
-color B e8c27a68
+color B e8c27a69
 color C e8c27bff
 color D f1dcc0ff
 color E f6a8b4ff
-color F f6e9d2c7
+color F f6e9d2c6
 color G fff6e9ff
 frame
 FFF

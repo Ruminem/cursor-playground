@@ -947,7 +947,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     for (var i = 0; i < d.length; i += 4) if (d[i + 3] !== 0) spin(d, i, deg, 0);
   }
   // deg 가 "a.b" 면 동물(파랑 끝 비트 짝수)은 a 만큼 돌리고 커서(홀수, gen/sea.mark)는 b 색으로 칠한다(0 은 그대로).
-  // 반쯤 비치는 칸은 표식이 없어서 둘레 불투명 칸 중 많은 쪽을 따른다(한 칸 테 → 두 칸 테, 같으면 커서).
+  // 반쯤 비치는 칸은 둘레 불투명 칸 중 많은 쪽을 따른다(한 칸 테 → 두 칸 테, 같으면 커서). 두 칸 안에 불투명 칸이
+  // 없으면 알파 끝 비트로 — 홀수 커서 · 짝수 동물(옅어지는 꺾쇠 같은 외딴 칸, 파랑은 캔버스가 미리 곱해 뭉갠다).
   // handler.ps1 의 C# Recolor.Split 과 같아야 한다
   function recolor(img, deg){
     if (String(deg).indexOf('.') < 0) return rotate(img.data, +deg);
@@ -965,6 +966,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
           }
         if (one + two) k = one >= two ? 1 : 2;
       }
+      if (!k) k = d[i * 4 + 3] & 1 ? 1 : 2;   // 둘레에 불투명 칸이 없는 외딴 칸은 알파 끝 비트(gen/sea.mark)
       if (k === 1) { if (to) spin(d, i * 4, 0, to); }
       else if (rot) spin(d, i * 4, rot, 0);
     }

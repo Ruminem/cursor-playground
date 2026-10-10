@@ -8,11 +8,11 @@ color 4 a67a4eff
 color 5 b4c442ff
 color 6 cfa676ff
 color 7 e27d90ff
-color 8 e8b23ab0
+color 8 e8b23ab1
 color 9 e8b23bff
 color A f4a0b0ff
 color B f7f0e4ff
-color C fbecdcc7
+color C fbecdcc6
 color D fffffeff
 frame
 .....CCC......CCC

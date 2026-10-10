@@ -44,11 +44,19 @@ class Cur(tuple):
 
 
 def mark(frames: list[dict]) -> list[dict]:
-    """불투명한 칸의 파랑을 커서면 홀수, 아니면 짝수로 — 색이 1 바뀌어 눈으로는 같다. 반투명 칸(테)은
-    그대로 두고 받는 쪽이 가까운 불투명 칸을 따른다. 둘 다 가진 구성표는 칸마다(커서가 없는 칸도) 거쳐야
+    """불투명한 칸의 파랑을 커서면 홀수, 아니면 짝수로 — 색이 1 바뀌어 눈으로는 같다. 반투명 칸은 알파를
+    같은 식으로 — 받는 쪽은 둘레 두 칸 안에 불투명 칸이 있으면 그쪽 많은 편을 따르고, 없을 때만(옅어지는
+    꺾쇠·바쁨 고리 꼬리 같은 외딴 칸) 알파 끝 비트를 본다. 파랑이 아니라 알파인 것은 브라우저 캔버스가 반투명
+    칸의 색을 미리 곱해 파랑 끝 비트를 뭉개기 때문이다. 둘 다 가진 구성표는 칸마다(커서가 없는 칸도) 거쳐야
     한다 — 안 거친 홀수 칸은 커서로 읽힌다"""
-    return [{p: (c[0], c[1], (c[2] | 1) if isinstance(c, Cur) else (c[2] & ~1), 255) if c[3] == 255 else tuple(c)
-             for p, c in f.items()} for f in frames]
+    def one(c):
+        if c[3] == 255:
+            return c[0], c[1], (c[2] | 1) if isinstance(c, Cur) else (c[2] & ~1), 255
+        if c[3] == 0:
+            return tuple(c)
+        a = (c[3] | 1 if c[3] < 254 else 253) if isinstance(c, Cur) else (c[3] & ~1 or 2)
+        return c[0], c[1], c[2], a
+    return [{p: one(c) for p, c in f.items()} for f in frames]
 
 
 def phases():

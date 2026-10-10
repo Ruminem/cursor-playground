@@ -8,7 +8,7 @@ color 4 8cc865ff
 color 5 b07a49ff
 color 6 e6b028ff
 color 7 f58a2aff
-color 8 f6e9d2c7
+color 8 f6e9d2c6
 color 9 ffd23cff
 color A ffe88cff
 frame

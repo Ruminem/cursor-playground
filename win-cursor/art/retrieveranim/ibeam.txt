@@ -9,7 +9,7 @@ color 5 e2cfa7ff
 color 6 e8b45aff
 color 7 f27a8aff
 color 8 f4a0b0ff
-color 9 f6e9d2c7
+color 9 f6e9d2c6
 color A f8dfa8ff
 color B fbf1ddff
 color C fffffeff

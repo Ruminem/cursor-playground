@@ -19,7 +19,7 @@ color F e6ec7aff
 color G eef8feff
 color H f07c9cff
 color I f0d8a0ff
-color J f6e9d2c7
+color J f6e9d2c6
 color K ffe25aff
 color L fffffeff
 frame

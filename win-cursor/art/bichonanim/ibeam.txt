@@ -4,7 +4,7 @@ color 0 1e1418ff
 color 1 2a1c22ff
 color 2 3a2a30ff
 color 3 3a2a31ff
-color 4 d9dde3c7
+color 4 d9dde3c6
 color 5 dedad2ff
 color 6 e2cfa7ff
 color 7 f4a0b0ff

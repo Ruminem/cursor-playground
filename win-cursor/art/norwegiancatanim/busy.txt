@@ -11,12 +11,12 @@ color 7 b4c442ff
 color 8 c8844aff
 color 9 cfa676ff
 color A e27d90ff
-color B e8a03a60
-color C e8a03ab0
+color B e8a03a61
+color C e8a03ab1
 color D e8a03bff
 color E f4a0b0ff
 color F f7f0e4ff
-color G fbecdcc7
+color G fbecdcc6
 frame
 GGG
 G1GG

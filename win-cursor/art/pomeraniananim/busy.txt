@@ -7,10 +7,10 @@ color 3 3a2a31ff
 color 4 e2cfa6ff
 color 5 f27a8aff
 color 6 f27a8bff
-color 7 f4a0b060
+color 7 f4a0b061
 color 8 f4a0b1ff
 color 9 f4b462ff
-color A f6e9d2c7
+color A f6e9d2c6
 color B fbd8b8ff
 color C fbf1dcff
 color D fff0d6ff
