@@ -83,7 +83,7 @@ $cases = @(
     @("cursor-playground://apply/neonpulse/$v/48/120/cutout/dot", 'cutout', 'dot', 'hand'),
     @("cursor-playground://apply/neonpulse/$v/32/0/dot.arrow.wait.hand", '', 'dot.arrow.wait.hand', 'arrow,wait,hand'),
     @("cursor-playground://apply/neonpulse/$v/32/0/cutout/dot.hand.arrow", 'cutout', 'dot.hand.arrow', 'arrow,hand'),
-    @("cursor-playground://apply/cheesecat/$v/32/30.120/cutout/dot", 'cutout', 'dot', 'hand')
+    @("cursor-playground://apply/cheesecatanim/$v/32/30.120/cutout/dot", 'cutout', 'dot', 'hand')
 )
 foreach ($c in $cases) {
     if ($c[0] -cnotmatch $applyPattern) { "주소를 못 읽음: $($c[0])"; $fail = 1; continue }
@@ -99,11 +99,11 @@ foreach ($t in @(@('', @()), @('dot', @('hand')), @('dot.arrow.hand', @('arrow',
     $got = Get-DotToken $t[1]
     if ($got -cne $t[0]) { "점 토큰을 잘못 만듦: $($t[1] -join ',') → '$got' (기대 '$($t[0])')"; $fail = 1 }
 }
-$sched = "cursor-playground://schedule/$v/7-neonpulse-0-dot.arrow.hand/22-electric-120-cutout-dot/9-flicker-0-cutout/23-flicker-0/8-cheesecat-0.120-dot"
+$sched = "cursor-playground://schedule/$v/7-neonpulse-0-dot.arrow.hand/22-electric-120-cutout-dot/9-flicker-0-cutout/23-flicker-0/8-cheesecatanim-0.120-dot"
 if ($sched -cnotmatch $schedulePattern) { "예약 주소를 못 읽음: $sched"; $fail = 1 }
 
 # 색조 토큰: 동물.커서 꼴은 커서 0 이어도 그대로 둔다(화살표는 그대로 두라는 뜻), 다 0 이면 원래 색
-if ("cursor-playground://apply/cheesecat/$v/32/30.120" -cmatch $applyPattern -and $Matches[4] -cne '30.120') { "색조 토큰을 잘못 뗌: $($Matches[4])"; $fail = 1 }
+if ("cursor-playground://apply/cheesecatanim/$v/32/30.120" -cmatch $applyPattern -and $Matches[4] -cne '30.120') { "색조 토큰을 잘못 뗌: $($Matches[4])"; $fail = 1 }
 foreach ($t in @(@('', ''), @('0', ''), @('120', '120'), @('30.0', '30.0'), @('0.0', ''), @('0.120', '0.120'), @('360', $null), @('30.360', $null), @('3a', $null))) {
     $got = Get-HueToken $t[0]
     if ($got -cne $t[1]) { "색조 토큰을 잘못 다듬음: '$($t[0])' → '$got' (기대 '$($t[1])')"; $fail = 1 }

@@ -41,18 +41,20 @@ assert src, "preview.tpl.html 에서 주소를 읽는 정규식을 못 찾음"
 parse = re.compile(src.group(1).replace(r"\/", "/"))
 visit = "a1b2c3d4e5f60789"
 for url, want in [
-    (f"cursor-playground://apply/electric/{visit}/48/270", ("electric", "48", "270", None, None)),
-    (f"apply/electric/{visit}/48/270/cutout", ("electric", "48", "270", "cutout", None)),
+    (f"cursor-playground://apply/electric/{visit}/48/270", ("electric", "48", "270", None, None, None)),
+    (f"apply/electric/{visit}/48/270/cutout", ("electric", "48", "270", None, "cutout", None)),
     # 링크 클릭 점. 모양 없이 붙으면 dot 을 모양으로 읽지 않아야 한다
-    (f"apply/electric/{visit}/48/270/dot", ("electric", "48", "270", None, "dot")),
-    (f"apply/electric/{visit}/48/270/cutout/dot", ("electric", "48", "270", "cutout", "dot")),
+    (f"apply/electric/{visit}/48/270/dot", ("electric", "48", "270", None, None, "dot")),
+    (f"apply/electric/{visit}/48/270/cutout/dot", ("electric", "48", "270", None, "cutout", "dot")),
     # 칸마다 클릭 점. dot.<칸>.<칸>… 도 모양으로 읽지 않아야 한다
-    (f"apply/electric/{visit}/48/270/dot.arrow.hand", ("electric", "48", "270", None, "dot.arrow.hand")),
-    (f"apply/electric/{visit}/48/270/cutout/dot.arrow.wait", ("electric", "48", "270", "cutout", "dot.arrow.wait")),
+    (f"apply/electric/{visit}/48/270/dot.arrow.hand", ("electric", "48", "270", None, None, "dot.arrow.hand")),
+    (f"apply/electric/{visit}/48/270/cutout/dot.arrow.wait", ("electric", "48", "270", None, "cutout", "dot.arrow.wait")),
+    # 막대 둘 구성표의 색조 칸 <동물>.<커서>
+    (f"apply/cheesecatanim/{visit}/32/30.120/cutout/dot", ("cheesecatanim", "32", "30", "120", "cutout", "dot")),
 ]:
     m = parse.fullmatch(url)
     assert m and m.groups() == want, f"주소를 못 읽음: {url}"
-for bad in ["cursor-playground://restore/" + visit, "apply/electric", "https://example.com", f"apply/electric/{visit}/48/270/dot."]:
+for bad in ["cursor-playground://restore/" + visit, "apply/electric", "https://example.com", f"apply/electric/{visit}/48/270/dot.", f"apply/electric/{visit}/48/270."]:
     assert not parse.fullmatch(bad), f"엉뚱한 주소를 읽어 버림: {bad}"
 
 # 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다
