@@ -147,8 +147,9 @@ def one(d: dict) -> None:
     dog.check(f"{d['id']}/arrow", frames, (1, 1))
     (out / "arrow.txt").write_text(shape.to_text(mark(frames), (1, 1), RATE), encoding="utf-8")
     # 매끈한 모양 재료 — 늘인 대 끝 밑점을 매끈한 대 끝 밑점으로 옮기고, 기운 각도만큼 그 거리도 돌린다.
-    # 매끈한 화살표는 대를 못 늘여서 그대로 두면 개가 6–7칸 끌려 올라가 머리가 화살표를 다 덮는다 —
-    # 끝에서 대 끝까지가 늘인 대만큼 되게 화살표를 키운다(머리 뒤로 숨는 대 끝만 입에 물린다, 2026-10-10)
+    # 그대로 두면 개가 6–7칸 끌려 올라가 머리가 화살표를 다 덮는다 — 끝에서 대 끝까지가 늘인 대만큼 되게
+    # 화살표 높이를 키우고, 매끈한 모양은 머리는 그대로 두고 그만큼 대만 늘인다(stem, smooth._stemmed).
+    # 화살표째 키우던 판은 매끈한 대가 짧고 뭉툭해 머리 층에 통째로 덮였다(2026-10-10)
     layers, fronts, rot, ext = arrow(bare=True)
 
     def tail_end(e):
@@ -158,7 +159,7 @@ def one(d: dict) -> None:
     (cx, by), (cx0, by0) = tail_end(ext), tail_end(0.0)
     k = math.hypot(cx - 1, by - 1) / math.hypot(cx0 - 1, by0 - 1)
     sea.write_anchor(out, layers, A_S * k, OUT, dict(anchor="base", turn=True, rot=[round(rot, 2)] * len(layers),
-                                                     base=[cx, by]), fronts)
+                                                     base=[cx, by], stem=round(k, 4)), fronts)
     print(f"{d['id']}: 끝", flush=True)
 
 

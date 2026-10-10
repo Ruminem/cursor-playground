@@ -1606,6 +1606,8 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict, fronts: l
     # anchor "edge"(공룡·간식)는 냥이처럼 빗변 t 자리를 재되 발이 없다(meta 에 paw 가 없음).
     # fronts 는 장마다 화살표 위에 얹는 동물 층(댕댕이 머리), "over" 면 동물 층 전부가 화살표 위다 — 기본 그림이 그렇게 칠했다
     base = meta.get("anchor") == "base"
+    if meta.get("stem") and len(SHAPES[sid]["pts"]) == 7:
+        sid = _stemmed(sid, meta["stem"])
     if meta.get("over"):
         layers, fronts = [{} for _ in layers], layers
     if not base:
@@ -1620,12 +1622,10 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict, fronts: l
     py0, py1 = min(p[1] for p in pts), max(p[1] for p in pts)
     done: dict[int, tuple] = {}
 
-    def at(cells: int) -> tuple[list[dict], tuple[int, int]]:
-        if cells in done:
-            return done[cells]
+    def make(cells: int, shrink: float) -> tuple[list[dict], tuple[int, int]]:
         g = cells / LIMIT
         board = round(MIN_SIZE * g)
-        size = round(meta["height"] * g)                 # 빼꼼 화살표는 보통 화살표보다 크다 (PEEK_S 배)
+        size = round(meta["height"] * g * shrink)        # 빼꼼 화살표는 보통 화살표보다 크다 (PEEK_S 배)
         drawn, hot = draw(sid, "arrow", samplers, size)
         arrow = drawn[0]
         _, shot, _, body = stencil(sid, "arrow", size)
@@ -1701,14 +1701,14 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict, fronts: l
         frames = []
         for i, (layer, (sx, sy), (arrow, inner)) in enumerate(zip(layers, shifts, tilts)):
             f = {(x + sx, y + sy): c for (x, y), c in scale_up(layer, g).items()}
-            f = {p: c for p, c in f.items() if p[0] >= 0 and p[1] >= 0 and p not in inner}   # 냥이는 화살표 뒤에
+            f = {p: c for p, c in f.items() if p not in inner}   # 냥이는 화살표 뒤에
             for p, c in arrow.items():
                 f[p] = over(f.get(p), c)
             for p, c in paws.items():
                 f[p] = over(f.get(p), c)
             top = paws
             if fronts:
-                top = {(x + sx, y + sy): c for (x, y), c in scale_up(fronts[i], g).items() if x + sx >= 0 and y + sy >= 0}
+                top = {(x + sx, y + sy): c for (x, y), c in scale_up(fronts[i], g).items()}
                 for p, c in top.items():
                     f[p] = over(f.get(p), c)
                 top = {p for p, c in top.items() if c[3] >= 128} | set(paws)
@@ -1720,9 +1720,48 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict, fronts: l
                     if b != c[2]:
                         f[p] = (c[0], c[1], b, 255)
             frames.append(f)
-        done[cells] = frames, hot
-        return done[cells]
+        # 새 빗변 자리로 옮기면 동물이 판 왼쪽·위로 넘을 수 있다(1.5배 화살표를 갖고 놀던 간식) — 자르지 말고
+        # 그림째 핫스팟과 같이 민다. 오른쪽·아래로 넘는 것은 판 크기가 정해져 있어 _fit 이 자른다
+        ox = min(0, min(x for f in frames for x, _ in f))
+        oy = min(0, min(y for f in frames for _, y in f))
+        if ox or oy:
+            frames = [{(x - ox, y - oy): c for (x, y), c in f.items()} for f in frames]
+        return frames, (hot[0] - ox, hot[1] - oy)
+
+    # 매끈한 화살표는 기본 그림보다 굵고 테·그림자가 붙어 동물이 판 오른쪽·아래로 넘는다(마카롱 36칸, 노르웨이숲 34칸) —
+    # 동물 픽셀은 그대로 두고 화살표만 5%씩 줄여 판에 진한 칸이 다 들어오는 배율을 찾는다. 픽셀 그림은 정수배로 키우고
+    # 화살표는 이어서 그려 반올림이 크기마다 갈리므로 크기마다 1 부터 따로 찾는다 — 앞 크기 값에서 이으면 부르는 차례에 따라 바이트가 갈린다
+    def at(cells: int) -> tuple[list[dict], tuple[int, int]]:
+        if cells in done:
+            return done[cells]
+        board = round(MIN_SIZE * cells / LIMIT)
+        k = 1.0
+        while True:
+            got = make(cells, k)
+            if k <= 0.7 or all(0 <= x < board and 0 <= y < board for f in got[0] for (x, y), c in f.items() if c[3] >= 128):
+                break
+            k = round(k - 0.05, 2)
+        done[cells] = got
+        return got
     return at
+
+
+def _stemmed(sid: str, k: float) -> str:
+    """대를 늘인 모양의 이름 — 끝에서 대 끝 가운데까지가 k 배가 되게 대 끝 두 점만 대 방향으로 민다. 머리 크기는
+    그대로다(댕댕이가 무는 대: 화살표째 키우면 대가 짧고 뭉툭해 머리 층에 다 덮였다, 2026-10-10)"""
+    key = f"{sid}~{k}"
+    if key not in SHAPES:
+        pts = SHAPES[sid]["pts"]
+        tx, ty = (pts[3][0] + pts[4][0]) / 2, (pts[3][1] + pts[4][1]) / 2
+        nx, ny = (pts[2][0] + pts[5][0]) / 2, (pts[2][1] + pts[5][1]) / 2
+        ln = math.hypot(tx - nx, ty - ny)
+        ux, uy = (tx - nx) / ln, (ty - ny) / ln
+        dx, dy = tx - pts[0][0], ty - pts[0][1]
+        du = dx * ux + dy * uy
+        e = -du + math.sqrt(du * du + (dx * dx + dy * dy) * (k * k - 1))   # |d + e·u| = k·|d|
+        SHAPES[key] = dict(SHAPES[sid], pts=[(x + ux * e, y + uy * e) if i in (3, 4) else (x, y)
+                                             for i, (x, y) in enumerate(pts)])
+    return key
 
 
 def cursor(sid: str, rid: str, frames: list[dict], rate: int, glyphs: list | None = None,
