@@ -4,10 +4,10 @@ color 0 0c0c10ff
 color 1 2a2a32ff
 color 2 4f9a2cff
 color 3 98202cff
-color 4 9e2b28ff
+color 4 9e2b29ff
 color 5 9ee05aff
 color 6 a2a2b4ff
-color 7 d64540ff
+color 7 d64541ff
 color 8 dc3340ff
 color 9 e6e8f0c7
 color A e8899cff

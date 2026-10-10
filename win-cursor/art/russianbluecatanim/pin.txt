@@ -6,12 +6,12 @@ color 2 2fc27860
 color 3 2fc278b0
 color 4 2fc278ff
 color 5 8fa0b8ff
-color 6 9e2b28ff
+color 6 9e2b29ff
 color 7 a2b2c6ff
 color 8 b07a98ff
 color 9 bccadcff
 color A c8406aff
-color B d64540ff
+color B d64541ff
 color C e6e8f0c7
 color D eea2b8ff
 color E f0628cff

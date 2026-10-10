@@ -405,7 +405,7 @@ def busy() -> list[dict]:
             a = 2 * math.pi * i / 8 - math.pi / 2
             x, y = round(cx + 6.8 * math.cos(a) - 0.5), round(cy + 6.8 * math.sin(a) - 0.5)
             lag = (head - i) % 8
-            paw_print(f, x, y + 1, NOSE if lag < 1.5 else PINK if lag < 3 else GLOW[2])
+            paw_print(f, x, y + 1, Cur(NOSE if lag < 1.5 else PINK if lag < 3 else GLOW[2]))   # 도는 발자국 고리는 커서(스피너)
         rig = Rig(cx, cy, -20.0 + 8 * math.sin(2 * ph), 1.0)
         o, _, _ = draw(rig, fish_parts(L=8.4, h=3.8, flip=True))
         f.update(o)
@@ -455,7 +455,7 @@ def person() -> list[dict]:
             out[ex, ey] = EYE
             out[ex, ey + 1] = EYE
             out[rig.cell(sg * 3.0, -5.8)] = PINK
-        f.update({p: c for p, c in out.items() if p[1] <= 30})
+        f.update({p: Cur(c) for p, c in out.items() if p[1] <= 30})   # 사람 그림은 커서
         return f
     return companion(scene)
 
@@ -473,7 +473,7 @@ def pin() -> list[dict]:
         pinm = disc(cx, cy, 6.2)
         from sea import raster
         pinm |= raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
+        solid(f, pinm, Cur(SIGN), Cur(SIGN_D))   # 핀 몸통은 커서, 속 얼굴은 동물
         rig2 = Rig(cx, cy + 0.4 + 7.5 * 0.5, 0.0, 0.5)
         hd, _, _ = draw(rig2, head_parts())
         f.update({p: c for p, c in ears.items() if p not in pinm})
@@ -693,7 +693,7 @@ def sign(f: dict, R: float = 13.5) -> None:
     for t in range(-90, 91):
         x, y = 15.5 + t / 100 * (R - 1.5) * 0.7071, 15.5 + t / 100 * (R - 1.5) * 0.7071
         slash |= disc(x, y, 1.3)
-    solid(f, ring | slash, SIGN, SIGN_D)
+    solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
 
 
 def no() -> list[dict]:
@@ -766,13 +766,14 @@ def pen() -> list[dict]:
         ab = [p for p in paws if not p[0].endswith("_paw")]
         tail = [(5.6, 8.2), (10.0, 6.8), (11.0 + 0.8 * math.sin(ph), 2.4)]
         parts = pp + [pencil] + ab + sit_parts(tail, paws=[], hc=HC)
-        f, _, _ = draw(rig, parts)
+        f, _, reg = draw(rig, parts)
+        f.update({p: Cur(f[p]) for p, n in reg.items() if n == "pencil"})   # 연필은 커서
         face(f, rig, mood="blink" if k == 4 else "open")
         whiskers(f, rig, n=2, skip=(-1,))
         if k % 6 in (2, 3, 4):   # 혀 빼꼼
             nx, ny = rig.world(0.0, HC[1] + HR * 0.16)
             f[round(nx), math.floor(ny) + 2] = NOSE
-        f[math.floor(TIP[0]), math.floor(TIP[1])] = LEAD
+        f[math.floor(TIP[0]), math.floor(TIP[1])] = Cur(LEAD)
         frames.append(finish(f))
     return frames
 

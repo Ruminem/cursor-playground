@@ -560,7 +560,7 @@ def busy() -> list[dict]:
             x, y = math.floor(cx + 7.0 * math.cos(a) - 1.0), math.floor(cy + 7.0 * math.sin(a) - 1.0)
             lag = (head - i) % 8
             if lag < 1:
-                paw_print(f, x, y, BEAN, BEAN_D)
+                paw_print(f, x, y, Cur(BEAN), Cur(BEAN_D))   # 도는 발자국 고리는 커서(스피너)
             elif lag < 3:
                 paw_print(f, x, y, hx("f6a8b8d0"), hx("d9758ed0"))
             else:
@@ -581,7 +581,7 @@ def help_() -> list[dict]:
         for i, (x, y) in enumerate(cells):
             d = (k * len(cells) / N - i) % len(cells)
             m |= disc(x + 1, y + 1, 1.25 + (0.45 if d < 1.5 else 0.0))
-        solid(f, m, BEAN, BEAN_D)
+        solid(f, m, Cur(BEAN), Cur(BEAN_D))   # 발자국 물음표는 커서
         f.update(arrow_cat(k, small=True))
         frames.append(finish(f))
     return frames
@@ -612,9 +612,9 @@ def pin() -> list[dict]:
         cx, cy = 22.5, 13.0 + dy
         for x in range(19, 27):
             f.setdefault((x, 27), hx("00000040") if dy else hx("00000070"))
-        solid(f, disc(cx, cy, 6.4) | raster([(cx - 4.6, cy + 3.4), (cx + 4.6, cy + 3.4), (cx, cy + 12.6)]), SIGN,
-              SIGN_D)
-        solid(f, disc(cx, cy, 4.4), WHITE, SIGN_D)
+        solid(f, disc(cx, cy, 6.4) | raster([(cx - 4.6, cy + 3.4), (cx + 4.6, cy + 3.4), (cx, cy + 12.6)]), Cur(SIGN),
+              Cur(SIGN_D))   # 핀 몸통(흰 동그라미까지)은 커서, 속 나비넥타이는 동물
+        solid(f, disc(cx, cy, 4.4), Cur(WHITE), Cur(SIGN_D))
         # 날개 끝을 높게 — 납작하면 흰 동그라미 속 가로줄이라 진입 금지 표지로 읽힌다
         o, _, _ = draw(Rig(cx, cy, 0.0, 1.0), [bow_front((0, 0), 5.0, h=0.62)])
         f.update(o)
@@ -635,6 +635,7 @@ def cross() -> list[dict]:
         for p in disc(15.5, 15.5, 1.2 + g):
             f[p] = GLOW
         f[15, 15] = LASER
+        f = {p: Cur(c) for p, c in f.items()}   # 조준선 · 레이저 점은 커서
         wig = round(math.sin(2 * ph))
         rig = Rig(24.5 + wig, 31.6, 0.0, 0.62)
         o, _ = front(rig, mood="wide", ears=("up", "up"), body="sit", lift=(1.4, 1.4))
@@ -703,6 +704,7 @@ def ibeam() -> list[dict]:
                 for dx in (-1, 1):
                     if (X + dx, y) in f:
                         f[X + dx, y] = hx("fff4dcff")
+        f = {p: Cur(c) for p, c in f.items()}   # 스크래처 I 는 커서, 매달린 냥이는 동물
         f.update(o)
         frames.append(finish(f))
     return frames
@@ -737,7 +739,7 @@ def no() -> list[dict]:
         for t in range(-90, 91):
             x, y = 15.5 + t / 100 * (R - 1.5) * 0.7071, 15.5 + t / 100 * (R - 1.5) * 0.7071
             slash |= disc(x, y, 1.3)
-        solid(f, ring | slash, SIGN, SIGN_D)
+        solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
         up = k in range(3, 10)
         rig = Rig(15.5, 20.6, 0.0, 0.66)
         arms = (((-2.6, -0.4), (-8.6, -3.6 if up else -2.6)), None)
@@ -775,6 +777,7 @@ def pen() -> list[dict]:
             f.pop((math.floor(x), math.floor(y)), None)
         for x in range(3, 3 + (k % 6) * 2):   # 잉크 물결
             f.setdefault((x, 29 - (1 if (x // 2) % 2 else 0)), hx("2a2a3aa0"))
+        f = {p: Cur(c) for p, c in f.items()}   # 깃펜은 커서 (잉크 물결은 반투명이라 표식 없음)
         rig = Rig(21.0, 19.8, 0.0, 0.62)
         g, _ = front(rig, mood="blink" if k == 4 else "smug", arms=(((-2.6, -0.4), (-6.4, 2.6)), None),
                      tail_pts=[(3.6, 8.6), (6.6, 7.6), (7.2, -6.0)])
@@ -783,7 +786,7 @@ def pen() -> list[dict]:
         # 쥔 앞발이 깃대 위에 오게 한 번 더
         x, y = rig.world(-6.4, 2.6)
         f[math.floor(x), math.floor(y)] = WHITE
-        f[math.floor(TIP[0]), math.floor(TIP[1])] = NIB
+        f[math.floor(TIP[0]), math.floor(TIP[1])] = Cur(NIB)
         frames.append(finish(f))
     return frames
 

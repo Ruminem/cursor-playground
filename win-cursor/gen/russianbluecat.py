@@ -431,7 +431,7 @@ def help_() -> list[dict]:
                         for dy in (0, 1):
                             m.add((17 + 2 * i + dx, 8 + 2 * j + dy))
         grown = m | {(x + dx, y + dy) for x, y in m for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))}
-        solid(f, grown, GREEN)
+        solid(f, grown, Cur(GREEN), Cur(OUT))   # 물음표는 커서, 점 자리 깃털은 소품
         sw = math.sin(ph)
         bx, by = 22.5 + 2.2 * sw, 24.0 + 1.2 * abs(math.cos(ph))
         tilt = 0.6 * sw
@@ -458,16 +458,17 @@ def person() -> list[dict]:
                 HAIR, True)
         skin = ("skin", ell(0.0, -9.6, 5.0, 4.8), SKIN, True)
         torso = ("torso", ell(0.0, 6.0, 9.6, 8.0), SHIRT, False)
-        out, _, _ = draw(rig, [fist, stick, sleeve, hair, skin, torso])
+        out, _, reg = draw(rig, [fist, stick, sleeve, hair, skin, torso])
+        out = {p: c if reg[p] == "stick" else Cur(c) for p, c in out.items()}   # 집사는 커서, 낚싯대 · 줄 · 깃털은 소품
         for sg in (-1, 1):
             ex, ey = rig.cell(sg * 2.0, -9.2)
-            out[ex, ey] = EYE
-            out[ex, ey + 1] = EYE if k not in (4, 5) else SKIN
-            out[rig.cell(sg * 3.4, -7.2)] = PINK
+            out[ex, ey] = Cur(EYE)
+            out[ex, ey + 1] = Cur(EYE if k not in (4, 5) else SKIN)
+            out[rig.cell(sg * 3.4, -7.2)] = Cur(PINK)
         mx, my = rig.cell(0.0, -6.6)   # 웃는 입
-        out[mx - 1, my] = OUT
-        out[mx, my + 1] = OUT
-        out[mx + 1, my] = OUT
+        out[mx - 1, my] = Cur(OUT)
+        out[mx, my + 1] = Cur(OUT)
+        out[mx + 1, my] = Cur(OUT)
         # 줄과 깃털 — 막대 끝에서 늘어져 흔들린다
         tx, ty = rig.world(*tip)
         ang = 0.5 * math.sin(ph - 0.8)
@@ -490,7 +491,7 @@ def pin() -> list[dict]:
         for x in range(19, 27):
             f.setdefault((x, 28), GLOW[2] if dy else GLOW[1])
         pinm = disc(cx, cy, 6.2) | raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
+        solid(f, pinm, Cur(SIGN), Cur(SIGN_D))   # 핀 몸통은 커서, 속 깃털 · 그림자는 소품
         p0, p1 = (cx - 2.6, cy + 2.6), (cx + 2.8, cy - 2.8)
         quill = feather_part(p0, p1, w=1.7, lined=False)
         _, m, _ = draw(SCREEN, [quill])
@@ -613,9 +614,9 @@ def ibeam() -> list[dict]:
         f = {}
         for x in range(11, 21):   # 가름대
             for y in (2, 29):
-                f[x, y] = OUT
+                f[x, y] = Cur(OUT)
         fo, _, _ = draw(SCREEN, [feather_part((15.5, 29.0), (15.5, 2.5), w=3.0, ph=k * 1.5)])
-        f.update(fo)
+        f.update({p: Cur(c) for p, c in fo.items()})   # 가름대 · 깃털 I 는 커서
         rig = Rig(25.4, 19.0, 0.0, 0.6)
         tap = k % 4 in (1, 2)
         pa = (-11.6 + (1.2 if tap else -0.4), -3.0 + (1.0 if k % 8 < 4 else -2.0))
@@ -725,7 +726,7 @@ def no() -> list[dict]:
                 if 11.4 <= math.hypot(x + 0.5 - 16, y + 0.5 - 16) <= 14.6}
         slash = {(x, y) for x in range(32) for y in range(32)
                  if math.hypot(x + 0.5 - 16, y + 0.5 - 16) < 11.6 and abs((x - y)) <= 1}
-        solid(f, ring | slash, SIGN, SIGN_D)
+        solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
         rig = Rig(16.0, 19.2, 0.0, 0.74)
         peek = k in (6, 7, 8)
         lift = 0.6 * math.sin(2 * ph)   # 엑스 팔을 콕콕 내민다
@@ -786,7 +787,8 @@ def pen() -> list[dict]:
         tail = tail_part([(12.0, 5.4), (15.0, 2.0), (14.0 + 1.4 * sw, -3.0)], 1.5, 1.1)
         parts = [arms[0], arms[2], ("pen", pen_hit, pen_col, True), arms[1], arms[3]] + \
             head_parts(turn=-0.8) + [loaf, tail]
-        cat, _, _ = draw(rig, parts)
+        cat, _, reg = draw(rig, parts)
+        cat = {p: Cur(c) if reg[p] == "pen" else c for p, c in cat.items()}   # 만년필은 커서
         face(cat, rig, mood="open", turn=-0.8, look=(-1, 1))
         whiskers(cat, rig, turn=-0.8, n=2, skip=(-1,))
         f.update({p: c for p, c in cat.items() if p[0] <= 30 and p[1] <= 31})

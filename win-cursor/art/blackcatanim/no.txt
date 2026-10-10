@@ -5,10 +5,10 @@ color 1 15151cff
 color 2 1d1d26ff
 color 3 2a2a34ff
 color 4 4a4a5eff
-color 5 9e2b28ff
+color 5 9e2b29ff
 color 6 b8b8ccd8
 color 7 d2dde6c7
-color 8 d64540ff
+color 8 d64541ff
 color 9 e8789aff
 color A f7a3baff
 color B ffd23cff

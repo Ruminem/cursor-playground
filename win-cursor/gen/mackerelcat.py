@@ -476,7 +476,7 @@ def busy() -> list[dict]:
             a = 2 * math.pi * i / 8 - math.pi / 2
             x, y = round(cx + 6.8 * math.cos(a) - 0.5), round(cy + 6.8 * math.sin(a) - 0.5)
             lag = (head - i) % 8
-            paw_print(f, x, y + 1, WET[0] if lag < 1.5 else WET[1] if lag < 3 else WET[2])
+            paw_print(f, x, y + 1, Cur(WET[0] if lag < 1.5 else WET[1] if lag < 3 else WET[2]))   # 도는 발자국 고리는 커서(스피너)
         bowl = {(x, y) for x in range(18, 26) for y in range(21, 25)
                 if not ((x in (18, 25)) and y == 24)}
         solid(f, bowl, lambda p: BOWL_D if p[1] == 23 else BOWL)
@@ -522,12 +522,14 @@ def person() -> list[dict]:
                 HAIR, True)
         skin = ("skin", ell(0.0, -9.6, 5.0, 4.8), SKIN, True)
         torso = ("torso", ell(0.0, 6.0, 9.6, 8.0), SHIRT, False)
-        out, _, _ = draw(rig, [cpaws, sleeves] + head_parts(chc, cr, name="chead") + [cbody, ctail, hair, skin, torso])
+        out, _, reg = draw(rig, [cpaws, sleeves] + head_parts(chc, cr, name="chead") + [cbody, ctail, hair, skin, torso])
+        # 사람(머리카락 · 얼굴 · 몸 · 소매)은 커서, 품에 안긴 냥이는 동물
+        out.update({p: Cur(out[p]) for p, n in reg.items() if n in ("sleeves", "hair", "skin", "torso")})
         for sg in (-1, 1):
             ex, ey = rig.cell(sg * 2.0, -9.2)
-            out[ex, ey] = EYE
-            out[ex, ey + 1] = EYE
-            out[rig.cell(sg * 3.4, -7.2)] = PINK
+            out[ex, ey] = Cur(EYE)
+            out[ex, ey + 1] = Cur(EYE)
+            out[rig.cell(sg * 3.4, -7.2)] = Cur(PINK)
         face(out, rig, chc, cr, mood="blink" if k in (4, 5) else "open")
         f.update({p: c for p, c in out.items() if p[1] <= 30 and p[0] <= 30})
         return f
@@ -546,7 +548,7 @@ def pin() -> list[dict]:
         for x in range(19, 27):
             f.setdefault((x, 28), GLOW[2] if dy else GLOW[1])
         pinm = disc(cx, cy, 6.2) | raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
+        solid(f, pinm, Cur(SIGN), Cur(SIGN_D))   # 핀 몸통은 커서, 속 흰 발자국은 동물
         x0, y0 = math.floor(cx) - 2, math.floor(cy) - 3
         for j, row in enumerate(PAW):
             for i, ch in enumerate(row):
@@ -708,6 +710,7 @@ def ibeam() -> list[dict]:
             if k % 2:
                 for p in ((12, y1 - 1), (11, y1 + 1)):
                     f.setdefault(p, SISAL_D)
+        f = {p: Cur(c) for p, c in f.items()}   # 스크래쳐 I(보풀까지)는 커서, 긁는 냥이는 동물
         f.update({p: c for p, c in cat.items() if p[0] <= 30})
         frames.append(finish(f))
     return frames
@@ -806,7 +809,7 @@ def no() -> list[dict]:
                 if 11.4 <= math.hypot(x + 0.5 - 16, y + 0.5 - 16) <= 14.6}
         slash = {(x, y) for x in range(32) for y in range(32)
                  if math.hypot(x + 0.5 - 16, y + 0.5 - 16) < 11.6 and abs((x - y)) <= 1}
-        solid(f, ring | slash, SIGN, SIGN_D)
+        solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
         rig = Rig(16.0, 18.4, 0.0, 0.7)
         look = k in (7, 8, 9)
         lash = math.sin(2 * ph)
@@ -869,7 +872,7 @@ def pen() -> list[dict]:
         for p, c in po.items():
             u, _ = prig.local(p[0] + 0.5, p[1] + 0.5)
             if u < 18.5 or p not in cat:
-                f[p] = c
+                f[p] = Cur(c)   # 연필은 커서 (쓴 연필 줄은 동물)
         frames.append(finish(f))
     return frames
 

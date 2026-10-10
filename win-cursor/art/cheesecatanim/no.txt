@@ -2,9 +2,9 @@ hotspot 14,14
 rate 5
 color 0 2a1c22ff
 color 1 3a2a30ff
-color 2 9e2b28ff
+color 2 9e2b29ff
 color 3 c26f34ff
-color 4 d64540ff
+color 4 d64541ff
 color 5 e27d90ff
 color 6 e89a4aff
 color 7 f4a0b0ff

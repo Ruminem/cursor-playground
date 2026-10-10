@@ -378,7 +378,7 @@ def speech(f: dict, x0: int, y0: int, x1: int, y1: int, R: float = 3.0, tip=2.6)
             if math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= R:
                 m.add((x, y))
     m |= raster([(x0 + R + 1.6, y0 + 0.6), (x0 - tip, y0 - tip), (x0 + 0.6, y0 + R + 1.6), (x0 + R, y0 + R)])
-    solid(f, m, PAPER, OUT)
+    solid(f, m, Cur(PAPER), Cur(OUT))   # 말풍선은 busy · help 의 커서 기호(속 점 · 물음표를 담는 판)
 
 
 def sign(f: dict, cx=15.5, cy=15.5, R=13.5) -> set:
@@ -388,7 +388,7 @@ def sign(f: dict, cx=15.5, cy=15.5, R=13.5) -> set:
     for t in range(-90, 91):
         x, y = cx + t / 100 * (R - 1.5) * 0.7071, cy + t / 100 * (R - 1.5) * 0.7071
         slash |= disc(x, y, 1.3)
-    solid(f, ring | slash, SIGN, SIGN_D)
+    solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
     return ring | slash
 
 
@@ -458,7 +458,7 @@ def busy() -> list[dict]:
         for i in range(3):
             x, y = 18 + i * 4, 22
             lit = i == on
-            col = GLOW[0] if lit else PT_L
+            col = Cur(GLOW[0] if lit else PT_L)   # 입력 중 점은 busy 커서 기호
             for dx in (0, 1):
                 for dy in (0, 1):
                     f[x + dx, y + dy - (1 if lit else 0)] = col
@@ -481,7 +481,7 @@ def help_() -> list[dict]:
                 if ch == "#":
                     for sx in (0, 1):
                         for sy in range(h):
-                            f[17 + i * 2 + sx, y + sy] = BLUE_D
+                            f[17 + i * 2 + sx, y + sy] = Cur(BLUE_D)
             y += h
         return f
     return companion(scene)
@@ -501,12 +501,13 @@ def person() -> list[dict]:
                  ("cbody", any_of(ell(23.6, 24.8, 6.6, 2.2)), CREAM, True),
                  tail_part([(29.2, 25.2), (30.0, 27.4 + 0.4 * sw), (29.4 + 0.8 * sw, 30.4)], 1.0, 0.9),
                  ("torso", ell(24.8, 31.0, 6.8, 5.2), lambda a, b: SHIRT_D if abs(a - 24.8) < 0.5 else SHIRT, False)]
-        out, _, _ = draw(rig, parts)
+        out, _, reg = draw(rig, parts)
+        out = {p: Cur(c) if reg[p] in ("skin", "hair", "torso") else c for p, c in out.items()}   # 사람은 커서, 어깨냥은 동물
         for sg in (-1, 1):
             ex, ey = math.floor(hd[0] + sg * 1.4 + 0.5) - (1 if sg < 0 else 0), math.floor(hd[1]) + 1
-            out[ex, ey] = OUT
+            out[ex, ey] = Cur(OUT)
             if k % 6 != 4:
-                out[ex, ey - 1] = OUT
+                out[ex, ey - 1] = Cur(OUT)
         f.update(board(out))
         cr = Rig(18.4, 22.4, 0.0, 0.52)
         o, _, _ = draw(cr, head_parts((0.0, 0.0), 6.4) + [("cpaw", ell(1.8, 5.6, 2.4, 1.6), PT, True)])
@@ -525,8 +526,8 @@ def pin() -> list[dict]:
         for x in range(19, 27):
             f.setdefault((x, 29), GLOW[2] if dy else GLOW[1])
         pinm = disc(cx, cy, 6.2) | raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
-        solid(f, disc(cx, cy, 3.9), PAPER, SIGN_D)
+        solid(f, pinm, Cur(SIGN), Cur(SIGN_D))   # 핀 몸통 · 흰 동그라미는 커서, 음표 · 그림자는 소품
+        solid(f, disc(cx, cy, 3.9), Cur(PAPER), Cur(SIGN_D))
         note(f, 21, 13 + dy, BLUE_D)
         return f
     return companion(scene)
@@ -594,11 +595,11 @@ def cross() -> list[dict]:
     frames = []
     for k, ph in enumerate(phases()):
         f = {}
-        for x in range(1, 31):
+        for x in range(1, 31):     # 조준선은 커서
             if x < 9 or x > 22:
-                f[x, 15] = OUT
+                f[x, 15] = Cur(OUT)
         for y in range(1, 9):
-            f[15, y] = OUT
+            f[15, y] = Cur(OUT)
         rig = Rig(15.5, 27.4, 0.0, 1.0)
         hc = (0.0, 0.0)
         head = head_only(rig, hc, 7.0, "blink" if k == 9 else "cross", whisk=False)
@@ -640,7 +641,7 @@ def ibeam() -> list[dict]:
         for y in (27, 28, 29):
             for x in range(11, 20):
                 m.add((x, y))
-        solid(f, m, stem, OUT)
+        solid(f, m, Cur(stem), Cur(OUT))   # I 는 커서, 글자 점은 소품
         n = 1 + k // 3            # 글자 점 수 (1–4)
         for i in range(n):          # 새 글자는 늘 커서 바로 왼쪽, 앞 글자들이 왼쪽으로 밀린다
             x = 11 - (n - 1 - i) * 3

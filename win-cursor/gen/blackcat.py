@@ -481,7 +481,7 @@ def busy() -> list[dict]:
             lag = (head - i) % 8
             col = PAD[0] if lag < 1 else PAD[1] if lag < 2 else PAD[2]
             for q in ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)):
-                f[q] = col
+                f[q] = Cur(col)   # 도는 발자국 고리는 커서(스피너)
         yarn(f, cx, cy, 3.4, -2 * math.pi * k / N)
         frames.append(finish(stack(arrow_cat(ph, k, True), f)))
     return frames
@@ -501,6 +501,7 @@ def help_() -> list[dict]:
         solid(f, m, YARN, YARN_O)
         hop = abs(math.sin(ph)) * 2.4
         yarn(f, 22.3, 26.0 - hop, 2.2, ph)
+        f = {p: Cur(c) for p, c in f.items()}   # 따로 그린 물음표(실 고리 + 점 털실 공)는 커서
         frames.append(finish(stack(arrow_cat(ph, k, True), f)))
     return frames
 
@@ -524,7 +525,7 @@ def person() -> list[dict]:
             out[ex, ey + 1] = PUPIL if k != 6 else SKIN
             out[rig.cell(sg * 3.8, -5.8)] = BLUSH
         out[rig.cell(0, -5.2)] = PINK_D
-        f = {p: c for p, c in out.items() if p[1] <= 30}
+        f = {p: Cur(c) for p, c in out.items() if p[1] <= 30}   # 사람 그림은 커서
         frames.append(finish(stack(arrow_cat(ph, k, True), f)))
     return frames
 
@@ -545,8 +546,8 @@ def pin() -> list[dict]:
         tri = [(cx - 4.6, cy + 3.4), (cx + 4.6, cy + 3.4), (cx, cy + 12.6)]
         cells = disc(cx, cy, 6.4) | {(x, y) for y in range(int(cy), int(cy) + 14) for x in range(14, 32)
                                      if inside(tri, x + 0.5, y + 0.5)}
-        solid(f, cells, SIGN, SIGN_D)
-        solid(f, disc(cx, cy, 4.2), hx("fff4f6ff"), SIGN_D)
+        solid(f, cells, Cur(SIGN), Cur(SIGN_D))   # 핀 몸통(흰 동그라미까지)은 커서, 속 발자국은 동물
+        solid(f, disc(cx, cy, 4.2), Cur(hx("fff4f6ff")), Cur(SIGN_D))
         paw_print(f, 22, math.floor(cy), PINK_D)
         frames.append(finish(stack(arrow_cat(ph, k, True), f)))
     return frames
@@ -617,6 +618,7 @@ def ibeam() -> list[dict]:
         for x in range(X - 3, X + 5):    # 위아래 매듭(가로획)
             f[x, 1] = YARN_O if x in (X - 3, X + 4) else YARN
             f[x, 30] = YARN_O if x in (X - 3, X + 4) else YARN
+        f = {p: Cur(c) for p, c in f.items()}   # 매듭 실 I 는 따로 그린 I 자 물건이라 커서
         tapk = math.sin(2 * ph)
         rig = Rig(18.0, 18.4, 0.0, 0.62)
         paw = (-10.6 + 0.9 * tapk, -2.4)       # 실에 닿았다 떨어졌다
@@ -736,7 +738,7 @@ def no() -> list[dict]:
         for t in range(-90, 91):
             x, y = 15.5 + t / 100 * (R - 1.5) * 0.7071, 15.5 + t / 100 * (R - 1.5) * 0.7071
             slash |= disc(x, y, 1.3)
-        solid(f, ring | slash, SIGN, SIGN_D)
+        solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
         puff = 0.5 + 0.5 * math.sin(ph)
         rig = Rig(15.5, 17.0, 0.0, 0.78)
         fl = 0.5 + 0.7 * puff
@@ -787,7 +789,8 @@ def pen() -> list[dict]:
         for t in (0.38, 0.5, 0.62):                # 바늘에 걸린 뜨개코
             cx, cy = TIP[0] + 0.5 + ux * L * t + wob * t, TIP[1] + 0.5 + uy * L * t
             for d in ((-1, 0), (0, -1), (1, 1)):
-                loops[math.floor(cx) + d[0], math.floor(cy) + d[1]] = YARN
+                loops[math.floor(cx) + d[0], math.floor(cy) + d[1]] = Cur(YARN)
+        needle = {p: Cur(c) for p, c in needle.items()}   # 뜨개바늘(꼭지 · 걸린 뜨개코까지)은 커서, 쓴 실은 동물
         grip = rig.local(TIP[0] + ux * L * 0.78 + wob, TIP[1] + uy * L * 0.78)
         grip2 = rig.local(TIP[0] + ux * L * 0.9 + wob, TIP[1] + uy * L * 0.9)
         o = kit(rig, blink(k, 4), look=-1, arms=[((-2.4, 0.6), None, grip), ((2.4, 0.6), None, grip2)],
@@ -795,7 +798,7 @@ def pen() -> list[dict]:
         # 앞발이 맨 앞, 바늘 · 뜨개코는 몸 앞, 쓴 실은 맨 뒤
         paws = {p: c for p, c in o.items() if _near_paw(rig, p, grip, grip2)}
         out = stack(paws, loops, needle, o, f)
-        out[math.floor(TIP[0]), math.floor(TIP[1])] = NEEDLE_D
+        out[math.floor(TIP[0]), math.floor(TIP[1])] = Cur(NEEDLE_D)
         frames.append(finish(clip(out)))
     return frames
 

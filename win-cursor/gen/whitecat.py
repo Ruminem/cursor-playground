@@ -338,7 +338,7 @@ def sign(f: dict, cx=15.5, cy=15.5, R=13.5) -> set:
     for t in range(-90, 91):
         x, y = cx + t / 100 * (R - 1.5) * 0.7071, cy + t / 100 * (R - 1.5) * 0.7071
         slash |= disc(x, y, 1.3)
-    solid(f, ring | slash, SIGN, SIGN_D)
+    solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
     return ring | slash
 
 
@@ -420,7 +420,7 @@ def busy() -> list[dict]:
             a = 2 * math.pi * i / 8 - math.pi / 2
             x, y = round(cx + 7.0 * math.cos(a) - 0.5), round(cy + 7.0 * math.sin(a) - 0.5)
             lag = (head - i) % 8
-            paw_print(f, x, y + 1, GLOW[0] if lag < 1.5 else GLOW[1] if lag < 3 else GLOW[2])
+            paw_print(f, x, y + 1, Cur(GLOW[0] if lag < 1.5 else GLOW[1] if lag < 3 else GLOW[2]))   # 도는 발자국 고리는 커서(스피너), 접시는 소품
         o, _, _ = draw(Rig(cx, cy, 0.0, 1.0), dish_parts(0.0, -1.0, 4.6, 1.8, ripple=(k % 4) / 4 + 0.2))
         f.update(o)
         return f
@@ -435,7 +435,7 @@ def help_() -> list[dict]:
         f = {}
         o, _, _ = draw(Rig(0, 0, 0, 1.0), [("milk", chain(pts, 1.7, 1.5),
                                              lambda a, b: MILK_D if a > 21.8 or b > 19.0 else MILK, True)])
-        f.update(o)
+        f.update({p: Cur(c) for p, c in o.items()})   # 우유 물음표(줄기 · 점 방울)는 커서
         t = k % 6
         if t < 4:      # 맺힌 방울이 떨어진다
             y = 25.0 + t * 0.6
@@ -444,7 +444,7 @@ def help_() -> list[dict]:
                                                  MILK, True)])
         else:          # 퍼진 웅덩이
             o, _, _ = draw(Rig(0, 0, 0, 1.0), [("pool", ell(18.1, 27.6, 3.4 if t == 4 else 2.6, 1.2), MILK, True)])
-        f.update(o)
+        f.update({p: Cur(c) for p, c in o.items()})
         return f
     return companion(scene)
 
@@ -460,12 +460,13 @@ def person() -> list[dict]:
                  ("neck", box_hit(-1.6, -2.0, 1.6, 0.6), SKIN, True),
                  ("torso", ell(0, 4.4, 8.4, 6.4), lambda a, b: SHIRT_D if a > 4.0 else SHIRT, False)]
         out, _, _ = draw(rig, parts)
+        out = {p: Cur(c) for p, c in out.items()}   # 사람은 커서, 머리 위 흰냥은 동물
         for sg in (-1, 1):
             ex, ey = rig.cell(sg * 1.8, -5.6)
-            out[ex, ey] = EYE
-            out[rig.cell(sg * 3.0, -3.6)] = PINK
+            out[ex, ey] = Cur(EYE)
+            out[rig.cell(sg * 3.0, -3.6)] = Cur(PINK)
         mx, my = rig.cell(0.0, -2.8)
-        out[mx, my] = SHIRT_D
+        out[mx, my] = Cur(SHIRT_D)
         f.update({p: c for p, c in out.items() if p[1] <= 30})
         # 머리 위 식빵 흰냥
         cat = Rig(22.5, 25.4 - 0.62 * 12.0, 0.0, 0.7)
@@ -490,8 +491,8 @@ def pin() -> list[dict]:
         for x in range(19, 27):
             f.setdefault((x, 28), GLOW[2] if dy else GLOW[1])
         pinm = disc(cx, cy, 6.2) | raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
-        solid(f, disc(cx, cy, 4.3), WHITE, SIGN_D)
+        solid(f, pinm, Cur(SIGN), Cur(SIGN_D))   # 핀 몸통 · 흰 동그라미는 커서, 속 방울 · 그림자는 소품
+        solid(f, disc(cx, cy, 4.3), Cur(WHITE), Cur(SIGN_D))
         tilt = 18.0 * math.sin(2 * ph)
         b = Rig(cx, cy + 0.2, tilt, 1.0)
         bell = [("loop", any_of(bar((-0.7, -2.8), (0.7, -2.8), 0.5)), GOLD_D, False),
@@ -599,20 +600,20 @@ def ibeam() -> list[dict]:
         for x in range(9, 22):       # 우유갑: 흰 몸 · 파란 띠
             for y in range(2, 6):
                 edge_ = y in (2, 5) or x in (9, 21)
-                f[x, y] = OUT if edge_ else (DISH if y == 3 else WHITE)
+                f[x, y] = Cur(OUT if edge_ else (DISH if y == 3 else WHITE))   # 우유갑 · 줄기 · 접시 I 는 커서
         for y in range(6, 27):       # 줄기: 4칸 폭
             for x in range(13, 17):
                 if x in (13, 16):
-                    f[x, y] = OUT
+                    f[x, y] = Cur(OUT)
                 else:
-                    f[x, y] = MILK_D if (y - k + (x == 15) * 2) % 4 == 0 else MILK
+                    f[x, y] = Cur(MILK_D if (y - k + (x == 15) * 2) % 4 == 0 else MILK)
         for x in range(9, 22):       # 접시
-            f[x, 27] = OUT if x in (9, 21) else MILK
-            f[x, 28] = OUT if x in (9, 21) else (DISH_L if x < 12 else DISH)
+            f[x, 27] = Cur(OUT if x in (9, 21) else MILK)
+            f[x, 28] = Cur(OUT if x in (9, 21) else (DISH_L if x < 12 else DISH))
             if 10 <= x <= 20:
-                f[x, 29] = OUT if x in (10, 20) else DISH_D
+                f[x, 29] = Cur(OUT if x in (10, 20) else DISH_D)
             if 11 <= x <= 19:
-                f[x, 30] = OUT
+                f[x, 30] = Cur(OUT)
         for i, sg in enumerate((-1, 1)):   # 튀는 방울
             t = ((k + 3 * i) % 6) / 6
             f[round(14.5 + sg * (2.5 + 3 * t)), round(26 - 5 * t * (1 - t) * 4)] = MILK
@@ -720,6 +721,7 @@ def pen() -> list[dict]:
         chalk = [("chalk", any_of(tri((0.0, 0.0), (2.6, -1.9), (2.6, 1.9)), bar((2.4, 0), (12.6, 0), 1.9)),
                   chalk_col, False)]
         o, _, _ = draw(ck, chalk)
+        o = {p: Cur(c) for p, c in o.items()}   # 분필은 커서(펜), 분필 줄은 소품
         rig = Rig(20.6, 19.6, 0.0, 0.7)
         hc = (0.0, -10.4)
         p1, p2 = rig.local(*ck.world(7.6, 0.0)), rig.local(*ck.world(11.4, 0.0))
@@ -735,7 +737,7 @@ def pen() -> list[dict]:
         f.update(paws)
         for i in range(2 + k):   # 분필 줄: 끝 오른쪽으로 물결치며 길어진다
             f.setdefault((TIP[0] + 2 + i, 29 - (1 if (i // 2) % 2 else 0)), CHALK_D if (i // 3) % 2 == 0 else GOLD)
-        f[TIP] = CHALK_D
+        f[TIP] = Cur(CHALK_D)
         frames.append(finish(clip(f)))
     return frames
 

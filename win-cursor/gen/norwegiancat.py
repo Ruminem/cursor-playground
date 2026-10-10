@@ -536,7 +536,7 @@ def busy() -> list[dict]:
             for j, row in enumerate(LEAF_G):
                 for i2, ch in enumerate(row):
                     if ch == "#":
-                        f[x + i2, y + j] = c
+                        f[x + i2, y + j] = Cur(c)   # 맴도는 잎 고리 = 바쁨 고리(커서)
         cone(f, cx + (0.5 if k % 6 < 3 else -0.5), cy + 0.6, 2.2, 3.0)
         return f
     return companion(scene)
@@ -550,12 +550,16 @@ def help_() -> list[dict]:
         pts = [(18.0, 11.0), (17.6, 7.6), (19.6, 5.0), (23.0, 4.4), (26.0, 6.0), (26.6 + sw * 0.4, 9.2),
                (24.4, 12.0), (22.4, 14.0), (22.2 + sw, 18.0)]
         o, _, _ = draw(Rig(0, 0, 0, 1.0), [("twig", chain(pts, 1.2, 1.0), BARK, False)])
-        f.update(o)
+        f.update({p: Cur(c) for p, c in o.items()})   # 물음표 = 커서
         for nx, ny in ((18.0, 11.0), (26.6 + sw * 0.4, 9.2)):   # 솔잎 다발 — 짧은 바늘 셋
             for d in ((-1, 1), (0, 1), (1, 1)):
-                f.setdefault((math.floor(nx) + d[0], math.floor(ny) + d[1] + 1), NEEDLE)
+                f.setdefault((math.floor(nx) + d[0], math.floor(ny) + d[1] + 1), Cur(NEEDLE))
         dy = -round(1.5 * abs(math.sin(ph)))
+        before = dict(f)
         cone(f, 22.6, 24.0 + dy, 1.8, 2.3)
+        for p, c in f.items():   # 물음표 점(솔방울)도 커서
+            if before.get(p) is not c:
+                f[p] = Cur(c)
         return f
     return companion(scene)
 
@@ -577,12 +581,13 @@ def person() -> list[dict]:
                  lambda a, b: STRIPE if (a + 0.6) % 4.4 < 1.4 and b > -3.4 else FUR, True)
         cpaw = ("cpaw", ell(4.6, 2.6, 1.8, 1.5), FUR_T, True)
         torso = ("torso", ell(0.0, 7.4, 9.8, 8.6), lambda a, b: COAT_D if abs(a) < 0.6 else COAT, False)
-        out, _, _ = draw(rig, head_parts(chc, cr, name="chead") + [cpaw, tail, hair, skin, cbody, torso])
+        out, _, reg = draw(rig, head_parts(chc, cr, name="chead") + [cpaw, tail, hair, skin, cbody, torso])
+        out = {p: Cur(c) if reg[p] in ("hair", "skin", "torso") else c for p, c in out.items()}   # 사람 = 커서
         for sg in (-1, 1):   # 사람 얼굴 — 흐뭇하게 감은 눈 · 볼터치
             ex, ey = rig.cell(sg * 1.9, -9.6)
-            out[ex, ey] = EYE
-            out[ex + (1 if sg > 0 else -1), ey] = EYE
-            out[rig.cell(sg * 3.0, -7.6)] = PINK
+            out[ex, ey] = Cur(EYE)
+            out[ex + (1 if sg > 0 else -1), ey] = Cur(EYE)
+            out[rig.cell(sg * 3.0, -7.6)] = Cur(PINK)
         face(out, rig, chc, cr, mood="blink" if k in (4, 5) else "open", mark=False)
         f.update({p: c for p, c in out.items() if p[1] <= 30 and p[0] <= 30})
         return f
@@ -601,7 +606,7 @@ def pin() -> list[dict]:
         for x in range(19, 27):
             f.setdefault((x, 28), GLOW[2] if dy else GLOW[1])
         pinm = disc(cx, cy, 6.2) | raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
+        solid(f, pinm, Cur(SIGN), Cur(SIGN_D))
         x0, y0 = math.floor(cx) - 2, math.floor(cy) - 3
         for j, row in enumerate(SPRUCE):
             for i, ch in enumerate(row):
@@ -737,6 +742,7 @@ def ibeam() -> list[dict]:
                 f.setdefault((x, y), NEEDLE if (x + y) % 2 else NEEDLE_D)
         roots = {(x, y) for y in range(28, 31) for x in range(13 - (y - 27) * 2, 19 + (y - 27) * 2)}
         solid(f, roots, BARK)
+        f = {p: Cur(c) for p, c in f.items()}   # 자작나무 I(기둥 · 솔잎 가지 · 뿌리) = 커서
         dy = 2.6 * math.sin(ph)
         climb = 0.9 * math.sin(ph)                      # 오를 때 앞발이 위로, 뒷발이 아래로
         rig = Rig(15.9, 14.8 + dy, 0.0, 0.56)
@@ -863,7 +869,7 @@ def no() -> list[dict]:
                 if 11.4 <= math.hypot(x + 0.5 - 16, y + 0.5 - 16) <= 14.6}
         slash = {(x, y) for x in range(32) for y in range(32)
                  if math.hypot(x + 0.5 - 16, y + 0.5 - 16) < 11.6 and abs((x - y)) <= 1}
-        solid(f, ring | slash, SIGN, SIGN_D)
+        solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))
         rig = Rig(16.0, 17.6, 0.0, 0.66)
         peek = 6 <= k <= 9
         hc = (-0.6, -3.0)
@@ -909,7 +915,7 @@ def pen() -> list[dict]:
         whiskers(cat, rig, turn=-1.0, n=2, skip=(-1,))
         hx_, hy_ = rig.world(*hold)
         twig = {}
-        line_cells(twig, (2.0, 29.6), (hx_ + 0.5, hy_), BARK)
+        line_cells(twig, (2.0, 29.6), (hx_ + 0.5, hy_), Cur(BARK))   # 쓰는 가지 = 펜(커서)
         for p, c in twig.items():
             if p not in cat or cat[p] in (OUT,):
                 f[p] = c

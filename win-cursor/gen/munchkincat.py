@@ -593,9 +593,13 @@ def help_():
         f = {}
         pts = [(16.8, 11.4), (17.4, 8.8), (20.4, 7.6), (23.4, 8.8), (24.0, 11.8), (21.4, 14.4), (20.4, 16.6), (20.4, 19.4)]
         o, _, _ = draw(Rig(0, 0, 0, 1.0), [("rib", chain(pts, 1.25), lambda a, b: RIB_D if b > 16 else RIB, False)])
-        f.update(o)
+        f.update({p: Cur(c) for p, c in o.items()})   # 리본 물음표와 점 자리 방울은 커서, 딸랑 줄은 소품
         sw = 0.9 * math.sin(ph)
+        before = dict(f)
         bell(f, 20.9 + sw, 25.0, 2.8, roll=-sw * 0.3)
+        for p, c in f.items():
+            if before.get(p) is not c:
+                f[p] = Cur(c)
         jingle(f, 20.9 + sw, 25.0, 2.8, k)
         return f
     return companion(scene)
@@ -613,11 +617,12 @@ def person():
                  ("face", ell(0.0, -7.6, 4.8, 4.8), SKIN, True),
                  ("torso", ell(0, 3.0, 7.6, 6.4), lambda a, b: SHIRT_D if abs(a) < 0.6 else SHIRT, False)]
         out, _, _ = draw(rig, parts)
+        out = {p: Cur(c) for p, c in out.items()}   # 사람은 커서, 낚싯대 · 줄 · 방울은 소품
         for sg in (-1, 1):
             ex, ey = rig.cell(sg * 2.0, -7.2)
-            out[ex, ey] = EYE
-            out[ex, ey + 1] = EYE
-            out[rig.cell(sg * 3.0, -5.0)] = PINK
+            out[ex, ey] = Cur(EYE)
+            out[ex, ey + 1] = Cur(EYE)
+            out[rig.cell(sg * 3.0, -5.0)] = Cur(PINK)
         hx_, hy_ = rig.world(*hand)
         tip = (hx_ - 6.0, hy_ - 4.0 - sw)
         rod = {}
@@ -642,8 +647,8 @@ def pin():
         for x in range(19, 27):
             f.setdefault((x, 28), GOLD[2] if dy else GOLD[1])
         pinm = disc(cx, cy, 6.2) | raster([(cx - 4.4, cy + 3.4), (cx + 4.4, cy + 3.4), (cx, cy + 12.4)])
-        solid(f, pinm, SIGN, SIGN_D)
-        solid(f, disc(cx, cy, 3.9), CREAM, SIGN_D)
+        solid(f, pinm, Cur(SIGN), Cur(SIGN_D))   # 핀 몸통 · 흰 동그라미는 커서, 속 방울 · 그림자는 소품
+        solid(f, disc(cx, cy, 3.9), Cur(CREAM), Cur(SIGN_D))
         bell(f, cx, cy + 0.3, 2.6, roll=0.25 * math.sin(2 * ph))
         return f
     return companion(scene)
@@ -847,7 +852,7 @@ def sign(f: dict, R: float = 13.5) -> None:
     for t in range(-90, 91):
         x, y = 15.5 + t / 100 * (R - 1.5) * 0.7071, 15.5 + t / 100 * (R - 1.5) * 0.7071
         slash |= disc(x, y, 1.3)
-    solid(f, ring | slash, SIGN, SIGN_D)
+    solid(f, ring | slash, Cur(SIGN), Cur(SIGN_D))   # 금지 표지는 커서
 
 
 def no():
@@ -917,11 +922,12 @@ def pen():
         pp = [p for p in paws if p[0].endswith("_paw")]
         ab = [p for p in paws if not p[0].endswith("_paw")]
         parts = pp + [crayon] + ab + stand_parts(arms=[], tail_pts=[(3.2, 8.4), (7.4, 9.0), (9.6 + 0.8 * math.sin(ph), 7.6)])
-        out, _, _ = draw(rig, parts)
+        out, _, reg = draw(rig, parts)
+        out = {p: Cur(c) if reg[p] == "crayon" else c for p, c in out.items()}   # 크레용은 커서, 낙서 줄은 소품
         face(out, rig, mood="happy" if k % 6 in (3, 4) else "open", turn=-0.8)
         whiskers(out, rig, turn=-0.8, skip=(-1,))
         f.update(out)
-        f[math.floor(TIP[0]), math.floor(TIP[1])] = CRAY_D
+        f[math.floor(TIP[0]), math.floor(TIP[1])] = Cur(CRAY_D)
         frames.append(finish(f))
     return frames, (math.floor(TIP[0]), math.floor(TIP[1]))
 

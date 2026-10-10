@@ -4,7 +4,7 @@ color 0 221812ff
 color 1 3a2a22ff
 color 2 5e412aff
 color 3 6a3c22ff
-color 4 6cb04aff
+color 4 6cb04bff
 color 5 9a5a32ff
 color 6 a67a4eff
 color 7 b4c442ff
@@ -13,7 +13,7 @@ color 9 cfa676ff
 color A e27d90ff
 color B e8a03a60
 color C e8a03ab0
-color D e8a03aff
+color D e8a03bff
 color E f4a0b0ff
 color F f7f0e4ff
 color G fbecdcc7
