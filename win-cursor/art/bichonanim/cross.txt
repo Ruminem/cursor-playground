@@ -8,7 +8,7 @@ color 4 d9dde3c7
 color 5 dedad2ff
 color 6 f4a0b0ff
 color 7 fffdf8ff
-color 8 ffffffff
+color 8 fffffeff
 frame
 ..............444
 ..............424

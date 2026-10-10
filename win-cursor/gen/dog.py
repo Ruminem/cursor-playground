@@ -494,8 +494,8 @@ def arrow_poly(s: float, ext: float = 0.0) -> list:
 
 def put_arrow(f: dict, s: float, fill=PEEK_WHITE, ext: float = 0.0) -> set:
     m = raster(arrow_poly(s, ext))
-    solid(f, m, fill, OUT)
-    f[1, 1] = OUT
+    solid(f, m, sea.Cur(fill), sea.Cur(OUT))   # 화살표는 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 캐릭터와 가른다
+    f[1, 1] = sea.Cur(OUT)
     return m
 
 
@@ -1339,6 +1339,7 @@ IB_X, IB_TOP, IB_BOT = 11.5, 3.4, 24.6     # ibeam 뼈다귀 가운데 x · 위 
 
 def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col) -> None:
     """(dx, dy) 쪽을 가리키는 화살촉. 꼭짓점이 (cx, cy)"""
+    col = sea.Cur(col)   # 화살촉은 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 캐릭터와 가른다
     px, py = -dy, dx
     for i in range(4):
         for s in (-1, 1):
@@ -1594,14 +1595,15 @@ def one(d: dict, cells=None) -> None:
         frames = fn()
         hot = solid_hot(frames, want)
         check(f"{d['id']}/{cell}", frames, hot)
-        (out / f"{cell}.txt").write_text(shape.to_text(frames, hot, RATE), encoding="utf-8")
+        # 칸마다(커서 없는 칸도) mark — 안 거친 칸의 홀수 파랑은 커서로 읽힌다
+        (out / f"{cell}.txt").write_text(shape.to_text(sea.mark(frames), hot, RATE), encoding="utf-8")
     for cell, fn in SCENE.items():
         if cells and cell not in cells:
             continue
         frames = fn()
         hot = HOT[cell](frames) if callable(HOT[cell]) else HOT[cell]
         check(f"{d['id']}/{cell}", frames, hot)
-        (out / f"{cell}.txt").write_text(shape.to_text(frames, hot, RATE), encoding="utf-8")
+        (out / f"{cell}.txt").write_text(shape.to_text(sea.mark(frames), hot, RATE), encoding="utf-8")
     print(f"{d['id']}: 끝", flush=True)
 
 

@@ -12,7 +12,7 @@ color 8 f6e9d2c7
 color 9 fdf8eeff
 color A ffe476ff
 color B fff2b4ff
-color C ffffffff
+color C fffffeff
 frame
 .
 .

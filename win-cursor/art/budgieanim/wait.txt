@@ -16,12 +16,12 @@ color C bfe0f0ff
 color D c89aa0ff
 color E c8a870ff
 color F e6ec7aff
-color G eef8ffff
+color G eef8feff
 color H f07c9cff
 color I f0d8a0ff
 color J f6e9d2c7
 color K ffe25aff
-color L ffffffff
+color L fffffeff
 frame
 .....JJJJ
 ...JJJ11JJJJ..JJJ

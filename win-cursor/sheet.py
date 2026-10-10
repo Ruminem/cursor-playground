@@ -11,6 +11,7 @@
   python sheet.py classic neonpulse,wave --roles all 열을 칸 17개로 (구성표 한 벌을 통째로 볼 때)
   --role hand · --size 128 · -o 경로               칸 · 판 크기 · 나갈 자리 (기본은 임시 폴더)
   python sheet.py round,jelly neonpulse --try 후보.json   shapes.json 에 없는 후보 모양을 같이 그린다
+  python sheet.py classic cheesecatanim --roles all --split   커서 표식(파랑 끝 비트 홀수) 칸을 자홍으로
 
 매끈한 모양을 고치다 "그려서 보는" 임시 스크립트를 새로 짜고 싶어지면 이 파일에 옵션을 더한다.
 2026-09-19 에 세어 보니 그런 스크립트를 세션마다 39번 다시 짜고 있었다.
@@ -39,14 +40,23 @@ def pick(arg: str, known: list[str], what: str) -> list[str]:
     return ids
 
 
+SPLIT = False   # --split: 파랑 끝 비트가 홀수인 불투명 칸(커서 표식, gen/sea.mark)을 자홍으로 — 테마 그림·빼꼼 화살표 길만
+
+
+def split(frames: list[dict]) -> list[dict]:
+    if not SPLIT:
+        return frames
+    return [{p: (255, 0, 255, 255) if c[3] == 255 and c[2] & 1 else c for p, c in f.items()} for f in frames]
+
+
 def frames_of(shape: str, sid: str, role: str, size: int, cache: dict, mat: str | None = None,
               k: int = 1) -> list[dict]:
     """이 모양·구성표·칸의 프레임별 {좌표: RGBA}. build.py 가 커서를 만들 때와 같은 길을 지난다"""
     if build.shape_of(shape) is None or role in build.KEEPS[sid]:   # 테마 그림 그대로 쓰는 자리
         raw = build.art_raw(sid, role)
-        return sm.tween([sm.scale_up(f, size / canvas_size(raw)) for f in shapelib.read_art(raw)[0]], [1] * k)
+        return sm.tween([sm.scale_up(f, size / canvas_size(raw)) for f in split(shapelib.read_art(raw)[0])], [1] * k)
     if sid in build.PEEK and role == "arrow":                       # 냥이 빼꼼 화살표 — 빌드와 같은 drawer
-        return sm.tween(build.peek_drawer(sid, shape)(sm.cells_for(size))[0], [1] * k)
+        return sm.tween(split(build.peek_drawer(sid, shape)(sm.cells_for(size))[0]), [1] * k)
     frames, _, glyphs = build.smooth_parts(sid, role, shape, cache)
     return sm.tween(sm.draw(shape, role, sm.samplers_of(frames, mat or build.MAT.get(sid), sid in build.SWAYS),
                             sm.cells_for(size), glyphs)[0], [1] * k)
@@ -87,8 +97,12 @@ def main(argv: list[str] | None = None) -> Path:
                     help="smooth.py 상수를 이 판에서만 바꾼다 (예: --set PATTERN=0 --set KEEP=40)")
     ap.add_argument("--try", dest="trial", type=Path, metavar="JSON",
                     help="후보 모양을 이 판에서만 더한다 — {id: SHAPES 와 같은 꼴}. pts·radii 에 \"ARROW\" 를 쓰면 기본 화살표")
+    ap.add_argument("--split", action="store_true",
+                    help="파랑 끝 비트가 홀수인 불투명 칸(커서 표식)을 자홍으로 — 커서/동물 가르기를 눈으로 볼 때")
     ap.add_argument("-o", "--out", type=Path, default=Path(tempfile.gettempdir()) / "cursor-sheet.png")
     a = ap.parse_args(argv)
+    global SPLIT
+    SPLIT = a.split
 
     for one in a.set:                                # 값을 바꿔 두 장 뽑아 견주라고 둔 것
         name, _, val = one.partition("=")

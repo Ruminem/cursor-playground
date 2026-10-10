@@ -8,8 +8,8 @@ color 4 e27d90ff
 color 5 e6e8f0c7
 color 6 f0bb2aff
 color 7 f4a0b0ff
-color 8 fcfdffff
-color 9 ffffffff
+color 8 fcfdfeff
+color 9 fffffeff
 frame
 ..............555
 ..............515

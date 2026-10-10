@@ -14,7 +14,7 @@ color A efd2a8ff
 color B f2a0a8ff
 color C f5c842ff
 color D f6f7faff
-color E ffffffff
+color E fffffeff
 frame
 .
 ..............888.....888

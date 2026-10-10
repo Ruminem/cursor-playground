@@ -37,6 +37,20 @@ def ink(out: tuple, hi: tuple, rim: tuple = hx("d2dde6c7")) -> None:
     INK["out"], INK["hi"], INK["rim"] = out, hi, rim
 
 
+class Cur(tuple):
+    """커서(화살표 · 화살촉) 칸에 칠하는 색. 값은 그냥 색과 같아 칠하고 옮기는 코드는 모르고 지나가고,
+    쓰기 직전 mark() 가 파랑 맨 끝 비트로 바꿔 적는다 — 시안 페이지 · handler.ps1 이 그 비트로 캐릭터 색조와
+    커서 색조를 따로 입힌다(schemes.json "hue": "both")"""
+
+
+def mark(frames: list[dict]) -> list[dict]:
+    """불투명한 칸의 파랑을 커서면 홀수, 아니면 짝수로 — 색이 1 바뀌어 눈으로는 같다. 반투명 칸(테)은
+    그대로 두고 받는 쪽이 가까운 불투명 칸을 따른다. 둘 다 가진 구성표는 칸마다(커서가 없는 칸도) 거쳐야
+    한다 — 안 거친 홀수 칸은 커서로 읽힌다"""
+    return [{p: (c[0], c[1], (c[2] | 1) if isinstance(c, Cur) else (c[2] & ~1), 255) if c[3] == 255 else tuple(c)
+             for p, c in f.items()} for f in frames]
+
+
 def phases():
     return [2 * math.pi * k / N for k in range(N)]
 
@@ -355,8 +369,8 @@ def peek(k: int, head: Callable, out: tuple, fur: tuple) -> dict:
     ex, ey = 1 + lx * PEEK_T, 1 + ly * PEEK_T
     f = {p: c for p, c in head(ex + nx * lift, ey + ny * lift, k).items() if p[0] >= 1 and p[1] >= 1}
     PEEKS.append((k, rim(f, {p for p, c in f.items() if c[3] == 255}), out, fur))
-    solid(f, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), PEEK_WHITE, out)   # 화살표가 냥이를 덮는다
-    f[1, 1] = out
+    solid(f, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), Cur(PEEK_WHITE), Cur(out))   # 화살표가 냥이를 덮는다
+    f[1, 1] = Cur(out)
     dt, up, r = PEEK_PAW
     for dt in (-dt, dt):                               # 빗변을 잡은 발끝 둘(팔 없이 동그란 발만)
         paw = disc(1 + lx * (PEEK_T + dt) + nx * up, 1 + ly * (PEEK_T + dt) + ny * up, r)
@@ -376,14 +390,16 @@ def peek_tail(k: int, root=(5.6, 8.2), s: float = 1.0) -> list:
             (x + 9.0 * s + 0.5 * sw, y - 8.4 * s), (x + 9.6 * s + 0.8 * sw, y - 10.0 * s + 0.3 * sw)]
 
 
-def write(sid: str, table: dict, roles=None) -> None:
-    """table: 역할 → () → (프레임들, 핫스팟). roles 를 안 주면 table 전부"""
+def write(sid: str, table: dict, roles=None, split: bool = False) -> None:
+    """table: 역할 → () → (프레임들, 핫스팟). roles 를 안 주면 table 전부. split 이면 칸마다 mark() — 커서와 캐릭터를 가르는 구성표"""
     roles = roles or list(table)
     d = WIN / "art" / sid
     d.mkdir(parents=True, exist_ok=True)
     PEEKS.clear()
     for rid in roles:
         frames, hot = table[rid]()
+        if split:
+            frames = mark(frames)
         (d / f"{rid}.txt").write_text(S.to_text(frames, hot, RATE), encoding="utf-8")
         print(f"{rid}: {len(frames)}장")
     if "arrow" in roles and PEEKS:
@@ -397,10 +413,10 @@ def write_peek(d: Path) -> None:
     import json
     layers = [f for _, f, _, _ in sorted(PEEKS, key=lambda e: e[0])]
     out, fur = PEEKS[0][2], PEEKS[0][3]
-    (d / "_peek.txt").write_text(S.to_text(layers, (1, 1), RATE), encoding="utf-8")
+    (d / "_peek.txt").write_text(S.to_text(mark(layers), (1, 1), RATE), encoding="utf-8")
     a: dict = {}
-    solid(a, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), PEEK_WHITE, out)
-    (d / "_arrow.txt").write_text(S.to_text([a], (1, 1), RATE), encoding="utf-8")
+    solid(a, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), Cur(PEEK_WHITE), Cur(out))
+    (d / "_arrow.txt").write_text(S.to_text(mark([a]), (1, 1), RATE), encoding="utf-8")
     lx, ly = 11.6 * PEEK_S, 11.0 * PEEK_S
     meta = dict(t=PEEK_T, paw=list(PEEK_PAW), height=max(y for _, y in PEEK_CUR) * PEEK_S,
                 edge=[lx * PEEK_T, ly * PEEK_T], normal=[ly / math.hypot(lx, ly), -lx / math.hypot(lx, ly)],

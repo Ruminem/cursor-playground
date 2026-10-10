@@ -9,11 +9,11 @@ color 5 b4c442ff
 color 6 cfa676ff
 color 7 e27d90ff
 color 8 e8b23ab0
-color 9 e8b23aff
+color 9 e8b23bff
 color A f4a0b0ff
 color B f7f0e4ff
 color C fbecdcc7
-color D ffffffff
+color D fffffeff
 frame
 .
 .

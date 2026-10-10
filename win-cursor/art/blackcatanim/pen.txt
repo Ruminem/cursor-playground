@@ -2,7 +2,7 @@ hotspot 1,20
 rate 5
 color 0 0b0b12ff
 color 1 15151cff
-color 2 2a2a35ff
+color 2 2a2a34ff
 color 3 4a4a5eff
 color 4 7a2148ff
 color 5 8a90a0ff
@@ -15,7 +15,7 @@ color B f27aa8ff
 color C f7a3baff
 color D ffc2daff
 color E ffd23cff
-color F ffffffff
+color F fffffeff
 frame
 ..............999....999
 ..............9099..9909

@@ -205,6 +205,7 @@ h2{font:700 clamp(22px,2.4vw,28px)/1.2 var(--display);letter-spacing:-.02em;marg
 body.smooth .c-hand .sprite,body.smooth .e-cross i,body.smooth .e-pen i,body.smooth .e-ns i,
 body.smooth .e-we i,body.smooth .e-nwse i,body.smooth .e-nesw i,body.smooth .e-up i{image-rendering:pixelated}
 .huebar{margin-top:10px;padding-top:0;border-top:0}
+.huebar[hidden]{display:none}
 /* 크기·색조는 미리보기 통 맨 위에 — 고르면 바로 아래 여섯 칸이 바뀌는 것이 보이게 */
 /* 한 장의 카드: 크기는 쟁반 위에 고른 칸만 떠 있는 토글, 색조는 색상환을 펼친 띠 — 띠의 무지개는 테마 색이 아니라 고를 색 자체다 */
 .tune{display:grid;gap:22px;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px 24px}
@@ -753,7 +754,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       <div class="ctl-label"><label for="hue">색조</label><output class="mono" id="hue-out" for="hue">원래 색</output></div>
       <input type="range" id="hue" class="c-hand" min="0" max="355" step="5" value="0">
       <button type="button" class="ghost c-hand" id="hue-reset">원래 색</button>
-      <span class="size-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. 아래 띠의 <b>적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
+      <span class="size-note" id="hue-note">색상환을 돌려 다른 색으로 입힘. 검정·흰색·회색은 그대로. 아래 띠의 <b>적용</b> 은 이 색으로 새 구성표를 만들어 적용함.</span>
+    </div>
+    <div class="sizebar huebar" id="tint-bar" hidden>
+      <div class="ctl-label"><label for="tint">커서 색</label><output class="mono" id="tint-out" for="tint">원래 색</output></div>
+      <input type="range" id="tint" class="c-hand" min="0" max="355" step="5" value="0">
+      <button type="button" class="ghost c-hand" id="tint-reset">원래 색</button>
+      <span class="size-note">동물이 든 화살표만 이 색으로 칠함. 흰 화살표는 옅은 그 색, 검은 테는 짙은 그 색이 됨. 동물 색은 위 막대가 따로 돌림.</span>
     </div>
     <div class="sizebar">
       <div class="ctl-label"><span>클릭 점</span><span class="mono" id="dot-out">0 / 17</span></div>
@@ -838,6 +845,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   var CLASSIC_ONLY = {};
   /*CLASSIC_ONLY*/.forEach(function(sid){ CLASSIC_ONLY[sid] = true; });
   window.cpClassicOnly = function(sid){ return !!CLASSIC_ONLY[sid]; };
+  // 색조 막대가 무엇을 돌리나(build.HUE_KIND). 없으면 "cursor" — 커서뿐이라 막대 하나가 전부를 돌린다.
+  // "char" 는 동물뿐이라 막대 하나, "both" 는 동물이 화살표를 들어서 막대 둘(동물 색조 · 커서 색)
+  var HUE_KIND = /*HUE_KIND*/;
   // 클릭 점. 구성표마다 17칸을 하나씩 켜고 끄며 기본은 다 끔. 켜면 적용 주소 끝에 점 토큰이 붙어 handler.ps1 이
   // 받은 커서의 그 칸들 핫스팟에 점을 찍는다. 토큰은 링크(손) 칸만이면 예전 그대로 dot, 아니면 dot.arrow.hand 꼴이고
   // 칸 차례는 handler.ps1 의 $slots 차례다. 여기서는 카드와 그 위 커서에 같은 점을 그려 미리 보인다
@@ -900,10 +910,11 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   });
   document.querySelectorAll('[data-apply]').forEach(function(b){ showDot(b.getAttribute('data-apply')); });
   var SIZES = [32, 48, 64, 96, 128];
-  var size = 32, hue = 0, cache = {};
+  var size = 32, hue = 0, tint = 0, cache = {};
   try {
     var savedSize = parseInt(localStorage.getItem('cp-size'), 10); if (SIZES.indexOf(savedSize) >= 0) size = savedSize;
     var savedHue = parseInt(localStorage.getItem('cp-hue'), 10); if (savedHue >= 0 && savedHue < 360) hue = savedHue;
+    var savedTint = parseInt(localStorage.getItem('cp-tint'), 10); if (savedTint >= 0 && savedTint < 360) tint = savedTint;
   } catch (e) {}
   var thumbStyle = document.createElement('style');
   document.head.appendChild(thumbStyle);
@@ -916,19 +927,49 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
     return p;
   }
-  function rotate(d, deg){
-    for (var i = 0; i < d.length; i += 4) {
-      if (d[i + 3] === 0) continue;
-      var r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
-      var max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, c = max - min;
-      if (c === 0) continue;
-      var s = l > 0.5 ? c / (2 - max - min) : c / (max + min), h;
+  // 칸 하나(d[i] 부터 RGBA). to 가 0 이면 색상환을 deg 만큼 돌리고, 아니면 색상을 to 로 박는다(커서 색) —
+  // 무채색에 가까운 칸(흰 화살표·검은 테)은 채도를 주고 밝기를 0.2–0.8 로 눌러야 색이 보인다
+  function spin(d, i, deg, to){
+    var r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, c = max - min, s = 0, h = 0;
+    if (c === 0 && !to) return;
+    if (c !== 0) {
+      s = l > 0.5 ? c / (2 - max - min) : c / (max + min);
       if (max === r) h = (g - b) / c + (g < b ? 6 : 0); else if (max === g) h = (b - r) / c + 2; else h = (r - g) / c + 4;
-      h = h / 6 + deg / 360; h -= Math.floor(h);
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
-      d[i] = Math.round(hue2(p, q, h + 1/3) * 255); d[i + 1] = Math.round(hue2(p, q, h) * 255); d[i + 2] = Math.round(hue2(p, q, h - 1/3) * 255);
+    }
+    if (to) { if (s < 0.2) { s = 0.75; l = 0.2 + 0.6 * l; } h = to / 360; }
+    else { h = h / 6 + deg / 360; h -= Math.floor(h); }
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    d[i] = Math.round(hue2(p, q, h + 1/3) * 255); d[i + 1] = Math.round(hue2(p, q, h) * 255); d[i + 2] = Math.round(hue2(p, q, h - 1/3) * 255);
+  }
+  function rotate(d, deg){
+    for (var i = 0; i < d.length; i += 4) if (d[i + 3] !== 0) spin(d, i, deg, 0);
+  }
+  // deg 가 "a.b" 면 동물(파랑 끝 비트 짝수)은 a 만큼 돌리고 커서(홀수, gen/sea.mark)는 b 색으로 칠한다(0 은 그대로).
+  // 반쯤 비치는 칸은 표식이 없어서 둘레 불투명 칸 중 많은 쪽을 따른다(한 칸 테 → 두 칸 테, 같으면 커서).
+  // handler.ps1 의 C# Recolor.Split 과 같아야 한다
+  function recolor(img, deg){
+    if (String(deg).indexOf('.') < 0) return rotate(img.data, +deg);
+    var t = String(deg).split('.'), rot = +t[0], to = +t[1], d = img.data, w = img.width, n = d.length / 4, ht = n / w;
+    var kind = new Uint8Array(n);   // 1 커서 · 2 동물 · 0 비치거나 빈 칸
+    for (var i = 0; i < n; i++) if (d[i * 4 + 3] === 255) kind[i] = d[i * 4 + 2] & 1 ? 1 : 2;
+    for (i = 0; i < n; i++) {
+      if (d[i * 4 + 3] === 0) continue;
+      var k = kind[i], x = i % w, y = (i - x) / w;
+      for (var rr = 1; !k && rr <= 2; rr++) {
+        var one = 0, two = 0;
+        for (var yy = Math.max(0, y - rr); yy <= Math.min(ht - 1, y + rr); yy++)
+          for (var xx = Math.max(0, x - rr); xx <= Math.min(w - 1, x + rr); xx++) {
+            var v = kind[yy * w + xx]; if (v === 1) one++; else if (v === 2) two++;
+          }
+        if (one + two) k = one >= two ? 1 : 2;
+      }
+      if (k === 1) { if (to) spin(d, i * 4, 0, to); }
+      else if (rot) spin(d, i * 4, rot, 0);
     }
   }
+  // 이 구성표에 입힐 색조 토큰. 막대가 둘인 구성표는 "동물.커서", 아니면 각도 숫자 하나(0 이면 원래 색)
+  function hueOf(sid){ return HUE_KIND[sid] === 'both' ? (hue || tint ? hue + '.' + tint : 0) : hue; }
   // 데이터 주소 → 짧은 blob 주소. 사파리는 프레임마다 스타일을 새로 쓸 때 긴 데이터 주소를 통째로 다시 읽고
   // 그림을 다시 풀어서 애니메이션이 끊겼다. blob 주소면 스타일 글이 짧고, 한 번 푼 그림을 주소로 다시 쓴다
   // 주소만 바꿔 끼우면 사파리는 아직 안 풀린 그림 자리를 한 번 비워 그려서 프레임마다 깜빡였다(WebKitGTK 로
@@ -1000,7 +1041,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
         cv.width = n; cv.height = f < 0 ? img.naturalHeight : n;
         var g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
         if (f < 0) g.drawImage(img, 0, 0); else g.drawImage(img, 0, f * B * K, B, B, 0, 0, n, n);
-        if (deg) { var data = g.getImageData(0, 0, cv.width, cv.height); rotate(data.data, deg); g.putImageData(data, 0, 0); }
+        if (deg) { var data = g.getImageData(0, 0, cv.width, cv.height); recolor(data, deg); g.putImageData(data, 0, 0); }
         if (dot) mark(g, n / GRID, dot);
         return { uri: cv.toDataURL('image/png'), k: n / GRID, made: true };
       });
@@ -1089,7 +1130,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     nudge.textContent = d ? '.card .sprite{filter:hue-rotate(' + d + 'deg)}' : '';
   }
   function tick(){
-    var sid = app.getAttribute('data-scheme'), px = size, deg = hue;
+    var sid = app.getAttribute('data-scheme'), px = size, deg = hueOf(sid);
     if (!DATA[sid] || document.hidden) return;
     need(sid);
     if (busy && performance.now() - busy < 2000) { again = true; return; }
@@ -1100,7 +1141,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     var dots = window.cpDots(sid);   // 점 켠 칸 위 커서에 점을 찍어야 해서 깐 그림만으로는 안 된다
     if (px === 32 && deg === 0 && !moving && own && !dots.length) {
       if (lastKey) { restore(cards); restore(hoverBook); lastKey = ''; }
-      shownDeg = 0; nudgeHue();
+      shownDeg = hue; nudgeHue();   // 막대 둘 구성표에서 동물·커서 색을 다 0 으로 돌린 때 — hue 도 0 이다
       return;
     }
     var now = performance.now(), jobs = [], parts = [], at = spots(sid);
@@ -1146,7 +1187,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       shown = mine;
       if (cards.sid !== sid) { restore(cards); cards.sid = sid; }
       puts.forEach(function(f){ f(); });
-      shownDeg = deg; nudgeHue();
+      shownDeg = parseInt(String(deg), 10); nudgeHue();   // 굽는 동안 얹는 CSS 는 동물 색조(앞 숫자)만 흉내 낸다
       next();
     }, next);
   }
@@ -1205,11 +1246,29 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     try { localStorage.setItem('cp-hue', String(deg)); } catch (e) {}
     nudgeHue(); tick();
   }
+  var tintInput = document.getElementById('tint'), tintOut = document.getElementById('tint-out');
+  function chooseTint(deg){
+    tint = deg; tintInput.value = String(deg); tintOut.textContent = deg ? deg + '°' : '원래 색';
+    tintOut.style.color = deg ? 'hsl(' + deg + ',75%,40%)' : '';
+    try { localStorage.setItem('cp-tint', String(deg)); } catch (e) {}
+    tick();
+  }
+  // 구성표를 고를 때마다 막대 수와 이름을 그 구성표에 맞춘다
+  var hueLabel = document.querySelector('label[for="hue"]'), hueNote = document.getElementById('hue-note'), tintBar = document.getElementById('tint-bar');
+  function hueBars(sid){
+    var k = HUE_KIND[sid] || 'cursor';
+    hueLabel.textContent = k === 'cursor' ? '색조' : '동물 색조';
+    hueNote.innerHTML = (k === 'both' ? '동물 색을 색상환으로 돌림. 화살표는 아래 막대가 따로 칠함.' : k === 'char' ? '동물 색을 색상환으로 돌림.' : '색상환을 돌려 다른 색으로 입힘.') +
+      ' 검정·흰색·회색은 그대로. 아래 띠의 <b>적용</b> 은 이 색으로 새 구성표를 만들어 적용함.';
+    tintBar.hidden = k !== 'both';
+  }
   document.querySelectorAll('[data-size]').forEach(function(b){
     b.addEventListener('click', function(){ chooseSize(parseInt(b.getAttribute('data-size'), 10)); });
   });
   hueInput.addEventListener('input', function(){ chooseHue(parseInt(hueInput.value, 10)); });
   document.getElementById('hue-reset').addEventListener('click', function(){ chooseHue(0); });
+  tintInput.addEventListener('input', function(){ chooseTint(parseInt(tintInput.value, 10)); });
+  document.getElementById('tint-reset').addEventListener('click', function(){ chooseTint(0); });
   // 모양 고르기: 테마는 그대로 두고 실루엣만 바꾼 같은 목록을 보여 준다
   var shapeNote = document.getElementById('shape-note');
   var shapeThumbs = document.createElement('style');
@@ -1355,15 +1414,26 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   window.cpSetSize = chooseSize;
   window.cpSetShape = useShape;
   window.cpSetHue = chooseHue;
-  window.cpHue = function(){ return hue; };
+  window.cpSetCurTint = chooseTint;
+  window.cpCurTint = function(){ return tint; };
+  // sid 를 주면 그 구성표에 실제로 입힐 토큰(hueOf), 안 주면 첫 막대 각도
+  window.cpHue = function(sid){ return sid ? hueOf(sid) : hue; };
+  window.cpHueKind = function(sid){ return HUE_KIND[sid] || 'cursor'; };
+  window.cpHueBars = hueBars;
+  // 사람이 읽는 말: 30 → "색조 30°", "30.120" → "동물 30° · 커서 120°"
+  window.cpHueSay = function(deg){
+    if (String(deg).indexOf('.') < 0) return +deg ? '색조 ' + deg + '°' : '';
+    var t = String(deg).split('.');
+    return [+t[0] ? '동물 ' + t[0] + '°' : '', +t[1] ? '커서 ' + t[1] + '°' : ''].filter(Boolean).join(' · ');
+  };
   window.cpShape = function(){ return shape; };
   window.cpShapes = function(){ return SHAPES; };
-  window.cpRotate = rotate;      // 맥용 .cape 도 윈도우와 같은 식으로 색조를 돌린다
+  window.cpRotate = recolor;     // 맥용 .cape 도 윈도우와 같은 식으로 색조를 돌린다 (ImageData, 토큰)
   window.cpAnimated = animated;
   // 주소에 ?shape=round 를 붙이면 그 모양으로 열린다 (링크로 넘기기 좋게)
   var savedShape = (/[?&]shape=([a-z]{1,12})/.exec(location.search) || [])[1];
   try { savedShape = savedShape || localStorage.getItem('cp-shape'); } catch (e) {}
-  chooseSize(size); chooseHue(hue); useShape(savedShape || SHAPES[0].id);
+  chooseSize(size); chooseHue(hue); chooseTint(tint); useShape(savedShape || SHAPES[0].id);
 })();
 
 (function(){
@@ -1391,7 +1461,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   function dotSay(list){
     return !list.length ? '' : window.cpDotToken(list) === 'dot' ? ', 링크 커서에 클릭 점을 찍어' : ', 고른 ' + list.length + '칸에 클릭 점을 찍어';
   }
-  function applySpec(id){ var t = window.cpDotToken(window.cpDots(id)); return 'apply/' + id + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue() + shapeTail(id) + (t ? '/' + t : ''); }
+  function applySpec(id){ var t = window.cpDotToken(window.cpDots(id)); return 'apply/' + id + '/' + visit + '/' + window.cpSize() + '/' + window.cpHue(id) + shapeTail(id) + (t ? '/' + t : ''); }
   window.cpUrl = function(id){ return 'cursor-playground://' + applySpec(id); };
   var notWin = document.documentElement.classList.contains('not-win');
   function send(action){
@@ -1400,7 +1470,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     else if (action === 'size') action = 'size/' + window.cpSize() + '/' + visit;
     else if (action === 'schedule') action = 'schedule/' + visit + window.cpScheduleSpec();
     else if (/^apply\/[a-z]+$/.test(action)) action = applySpec(action.slice(6));
-    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}\/(32|48|64|96|128)\/([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(\/[a-z]{1,12})?(\/dot(\.[a-z]{2,6}){0,17})?|size\/(32|48|64|96|128)\/[a-z0-9]{16}|schedule\/[a-z0-9]{16}(\/([0-9]|1[0-9]|2[0-3])-[a-z]{1,20}-([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(-[a-z]{1,12})?(-dot(\.[a-z]{2,6}){0,17})?){1,6}|unschedule|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
+    if (!/^(apply\/[a-z]+\/[a-z0-9]{16}\/(32|48|64|96|128)\/([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(\.([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9]))?(\/[a-z]{1,12})?(\/dot(\.[a-z]{2,6}){0,17})?|size\/(32|48|64|96|128)\/[a-z0-9]{16}|schedule\/[a-z0-9]{16}(\/([0-9]|1[0-9]|2[0-3])-[a-z]{1,20}-([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9])(\.([0-9]|[1-9][0-9]|[12][0-9][0-9]|3[0-5][0-9]))?(-[a-z]{1,12})?(-dot(\.[a-z]{2,6}){0,17})?){1,6}|unschedule|restore\/[a-z0-9]{16}|status|settings|unlink)$/.test(action)) return;
     status.innerHTML = '요청을 보냄. 브라우저가 앱을 열지 물으면 <b>열기</b>. 아무 반응이 없으면 이 PC에 설치가 안 된 것 — 맨 위 <b>처음 한 번</b>부터.';
     window.location.href = 'cursor-playground://' + action;
   }
@@ -1416,7 +1486,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       var name = b.getAttribute('data-name');
       ask('apply/' + b.getAttribute('data-apply'), {
         title: name + ' 구성표를 적용할까요?',
-        body: '커서를 내려받아' + (window.cpHue() ? ' 색조를 ' + window.cpHue() + '° 돌린 새 구성표로' : ' 포인터 구성표에') + ' 추가하고, 고른 크기(' + window.cpSize() + 'px)로' + dotSay(window.cpDots(b.getAttribute('data-apply'))) + ' 바로 적용함. 원래대로 버튼으로 페이지를 열기 전 커서와 크기로 돌아갈 수 있음.',
+        body: '커서를 내려받아' + (window.cpHue(b.getAttribute('data-apply')) ? ' ' + window.cpHueSay(window.cpHue(b.getAttribute('data-apply'))) + ' 로 다시 칠한 새 구성표로' : ' 포인터 구성표에') + ' 추가하고, 고른 크기(' + window.cpSize() + 'px)로' + dotSay(window.cpDots(b.getAttribute('data-apply'))) + ' 바로 적용함. 원래대로 버튼으로 페이지를 열기 전 커서와 크기로 돌아갈 수 있음.',
         ok: '적용'
       });
     });
@@ -1477,6 +1547,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     try { localStorage.setItem('scheme', id); } catch (e) {}
     window.cpShowDot(id);
     if (window.cpTint) window.cpTint();
+    window.cpHueBars(id);
   }
   picks.forEach(function(b){ b.addEventListener('click', function(){ choose(b.getAttribute('data-pick')); }); });
   var saved = null;
@@ -1486,7 +1557,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   // 즐겨찾기와 클릭 점은 고른 것이 아니라 설정이라 그대로 둔다
   window.cpReset = function(){
     choose(/*START*/);
-    window.cpSetShape(window.cpShapes()[0].id); window.cpSetSize(32); window.cpSetHue(0);
+    window.cpSetShape(window.cpShapes()[0].id); window.cpSetSize(32); window.cpSetHue(0); window.cpSetCurTint(0);
   };
 
   var zone = document.getElementById('drag-zone'), chip = document.getElementById('drag-chip');
@@ -1622,6 +1693,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     var id = pool[Math.floor(Math.random() * pool.length)].getAttribute('data-scheme-item');
     document.querySelector('[data-pick="' + id + '"]').click();
     window.cpSetHue(Math.floor(Math.random() * 72) * 5);
+    if (window.cpHueKind(id) === 'both') window.cpSetCurTint(Math.floor(Math.random() * 72) * 5);
     window.cpApply(id);
   });
   refresh();
@@ -1767,9 +1839,9 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     });
   }
   window.cpScheduleSpec = function(){
-    var hue = window.cpHue(), shape = window.cpShape();
+    var shape = window.cpShape();
     var tail = shape === window.cpShapes()[0].id ? '' : '-' + shape;
-    return current().map(function(r){ return '/' + r[0] + '-' + r[1] + '-' + hue + (window.cpClassicOnly(r[1]) ? '' : tail) + (window.cpDots(r[1]).length ? '-' + window.cpDotToken(window.cpDots(r[1])) : ''); }).join('');
+    return current().map(function(r){ return '/' + r[0] + '-' + r[1] + '-' + window.cpHue(r[1]) + (window.cpClassicOnly(r[1]) ? '' : tail) + (window.cpDots(r[1]).length ? '-' + window.cpDotToken(window.cpDots(r[1])) : ''); }).join('');
   };
   document.getElementById('sched-on').addEventListener('click', function(){
     try { localStorage.setItem('cp-sched', JSON.stringify(current())); } catch (e) {}
@@ -1887,8 +1959,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   // 붙여넣은 주소 읽기: 방문 번호는 그 PC 의 것이라 버리고 구성표·크기·색조·모양만 가져온다.
   // 값이 실재하는지는 cpUse 가 백업과 같은 검사로 본다
   function parse(text){
-    var m = /^(?:cursor-playground:\/\/)?apply\/([a-z]+)\/[a-z0-9]+\/([0-9]+)\/([0-9]+)(?:\/(?!dot(?:\.|$))([a-z]+))?(?:\/(dot(?:\.[a-z]+)*))?$/.exec(text.trim());
-    return m && { id: m[1], size: +m[2], hue: +m[3], shape: m[4] || window.cpShapes()[0].id, dots: window.cpDotParse(m[5]) };
+    var m = /^(?:cursor-playground:\/\/)?apply\/([a-z]+)\/[a-z0-9]+\/([0-9]+)\/([0-9]+)(?:\.([0-9]+))?(?:\/(?!dot(?:\.|$))([a-z]+))?(?:\/(dot(?:\.[a-z]+)*))?$/.exec(text.trim());
+    return m && { id: m[1], size: +m[2], hue: +m[3], tint: +(m[4] || 0), shape: m[5] || window.cpShapes()[0].id, dots: window.cpDotParse(m[6]) };
   }
   var apply = document.getElementById('urlbar-apply');
   // 윈도우는 바로 적용, 맥(윈도우 아닌 곳)은 같은 자리에서 지금 조합을 .cape 로 받는다 — 목적이 같아 자리도 같게
@@ -2052,7 +2124,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       var cv = document.createElement('canvas'); cv.width = px; cv.height = px * imgs.length;
       var g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
       imgs.forEach(function(im, i){ g.drawImage(im, 0, i * px, px, px); });
-      if (deg) { var d = g.getImageData(0, 0, cv.width, cv.height); window.cpRotate(d.data, deg); g.putImageData(d, 0, 0); }
+      if (deg) { var d = g.getImageData(0, 0, cv.width, cv.height); window.cpRotate(d, deg); g.putImageData(d, 0, 0); }
       return new Promise(function(ok){ cv.toBlob(ok, 'image/png'); });
     }).then(function(b){ return b.arrayBuffer(); });
   }
@@ -2078,7 +2150,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   window.cpCape = function(){
     var chosen = document.querySelector('[data-pick][aria-pressed="true"]');
     if (!chosen) return Promise.reject(new Error('고른 구성표 없음'));
-    var sid = chosen.getAttribute('data-pick'), deg = window.cpHue(), shape = window.cpShape();
+    var sid = chosen.getAttribute('data-pick'), deg = window.cpHue(sid), shape = window.cpShape();
     var base = window.cpShapes()[0].id === shape || window.cpClassicOnly(sid) ? null : shape, ext = window.cpAnimated(sid) ? 'ani' : 'cur';
     var card = document.querySelector('[data-apply="' + sid + '"]'), sname = card ? card.getAttribute('data-name') : sid;
     var shapeName = base ? ' ' + window.cpShapes().filter(function(s){ return s.id === shape; })[0].name : '';
@@ -2094,7 +2166,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
         rids.forEach(function(rid, i){ map[rid].forEach(function(name){ cursors += kv(name, dicts[i]); }); });
         var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
           '<plist version="1.0"><dict>' + kv('Author', '<string>cursor-playground</string>') +
-          kv('CapeName', '<string>' + esc('cursor-playground ' + sname + shapeName + (deg ? ' ' + deg + '°' : '')) + '</string>') +
+          kv('CapeName', '<string>' + esc('cursor-playground ' + sname + shapeName + (deg ? ' ' + window.cpHueSay(deg) : '')) + '</string>') +
           kv('CapeVersion', real(1)) + kv('Cloud', '<false/>') + kv('Cursors', '<dict>' + cursors + '</dict>') + kv('HiDPI', '<true/>') +
           kv('Identifier', '<string>io.github.ruminem.cursor-playground.' + sid + tail + '</string>') +
           kv('MinimumVersion', real(2)) + kv('Version', real(2)) + '</dict></plist>\n';
@@ -2115,7 +2187,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   var SIZES = [].slice.call(document.querySelectorAll('[data-size]')).map(function(b){ return parseInt(b.getAttribute('data-size'), 10); });
   var list = [];
 
-  function key(b){ var t = window.cpDotToken(b.dots); return b.id + '/' + b.shape + '/' + b.hue + '/' + b.size + (t ? '/' + t : ''); }
+  function key(b){ var t = window.cpDotToken(b.dots); return b.id + '/' + b.shape + '/' + b.hue + (b.tint ? '.' + b.tint : '') + '/' + b.size + (t ? '/' + t : ''); }
   // 예전 백업은 dot: true(손 칸만), 지금은 dots: [칸…]
   function dotsOf(b){ return b.dot === true ? ['hand'] : window.cpDotParse(window.cpDotToken(Array.isArray(b.dots) ? b.dots.filter(function(r){ return typeof r === 'string'; }) : [])); }
   // 가져온 파일도 예전에 저장해 둔 것도 그대로 믿지 않는다. 네 값이 다 이 페이지에 실재하는 것이어야 통과
@@ -2124,12 +2196,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       && /^[a-z]{1,20}$/.test(b.id) && !!document.querySelector('[data-scheme-item="' + b.id + '"]')
       && window.cpShapes().some(function(s){ return s.id === b.shape; })
       && typeof b.hue === 'number' && b.hue >= 0 && b.hue < 360 && b.hue % 5 === 0
+      && (b.tint === undefined || typeof b.tint === 'number' && b.tint >= 0 && b.tint < 360 && b.tint % 5 === 0)
       && SIZES.indexOf(b.size) >= 0;
   }
   function clean(arr){
     var seen = {};
     return (Array.isArray(arr) ? arr : []).filter(ok).map(function(b){
-      return { id: b.id, shape: b.shape, hue: b.hue, size: b.size, dots: dotsOf(b) };
+      return { id: b.id, shape: b.shape, hue: b.hue, tint: window.cpHueKind(b.id) === 'both' ? b.tint || 0 : 0, size: b.size, dots: dotsOf(b) };
     }).filter(function(b){
       var k = key(b); if (seen[k]) return false; seen[k] = 1; return true;
     }).slice(0, MAX);
@@ -2138,7 +2211,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     var parts = [document.querySelector('[data-scheme-item="' + b.id + '"] .pick-name').textContent];
     var shapes = window.cpShapes(), sh = shapes.filter(function(s){ return s.id === b.shape; })[0];
     if (sh.id !== shapes[0].id) parts.push(sh.name);
-    if (b.hue) parts.push(b.hue + '°');
+    var hs = window.cpHueSay(b.tint ? b.hue + '.' + b.tint : b.hue);
+    if (hs) parts.push(hs.replace('색조 ', ''));
     parts.push(b.size + 'px');
     if (b.dots.length) parts.push(window.cpDotToken(b.dots) === 'dot' ? '클릭 점' : '클릭 점 ' + b.dots.length + '칸');
     return parts.join(' · ');
@@ -2166,6 +2240,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   function use(b){
     document.querySelector('[data-pick="' + b.id + '"]').click();
     window.cpSetHue(b.hue);
+    if (window.cpHueKind(b.id) === 'both') window.cpSetCurTint(b.tint || 0);
     window.cpSetSize(b.size);
     window.cpSetDots(b.id, dotsOf(b));
     window.cpSetShape(b.shape, function(){ window.cpApply(b.id); });
@@ -2178,7 +2253,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   document.getElementById('bak-save').addEventListener('click', function(){
     var pick = document.querySelector('[data-pick][aria-pressed="true"]');
     if (!pick) return;
-    var b = { id: pick.getAttribute('data-pick'), shape: window.cpShape(), hue: window.cpHue(), size: window.cpSize(), dots: window.cpDots(pick.getAttribute('data-pick')) };
+    var b = { id: pick.getAttribute('data-pick'), shape: window.cpShape(), hue: window.cpHue(), tint: window.cpHueKind(pick.getAttribute('data-pick')) === 'both' ? window.cpCurTint() : 0, size: window.cpSize(), dots: window.cpDots(pick.getAttribute('data-pick')) };
     if (!ok(b)) return;
     if (list.some(function(x){ return key(x) === key(b); })) { say('같은 조합이 이미 있음.'); return; }
     if (list.length >= MAX) { say(MAX + '개가 다 찼음. 하나 지우고 저장할 것.'); return; }

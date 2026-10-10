@@ -5,11 +5,11 @@ color 1 3a2a30ff
 color 2 7a7f88ff
 color 3 8a2a3aff
 color 4 9e2b28ff
-color 5 9ea3abff
+color 5 9ea3aaff
 color 6 b8aca8ff
 color 7 c2c6ccff
 color 8 c8a0a0ff
-color 9 d64541ff
+color 9 d64540ff
 color A f2863aff
 color B f6e9d2c7
 color C ffe26eff

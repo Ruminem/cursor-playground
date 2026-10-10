@@ -5,6 +5,7 @@
 # 받는 주소는 아래 여섯 가지뿐이다. 어느 웹 페이지든 이 주소를 부를 수 있으므로 그 밖의 요청은 전부 무시한다.
 #   cursor-playground://apply/<구성표>/<방문>[/<크기>[/<색조>]]  커서를 내려받아 구성표로 등록하고 바로 적용 (구성표는 schemes.json 에 있는 것만)
 #                                              <색조> 가 0 이 아니면 색상환을 그만큼 돌린 새 구성표(예: 네온 색조120)로 만든다
+#                                              <동물>.<커서> 꼴이면 동물만 돌리고 화살표는 그 색으로 칠한다(냥이·댕댕이·짹짹이, 예: 색조30 커서120)
 #                                              그 뒤에 /<모양>, 맨 끝에 /<점> 을 붙이면 고른 칸의 핫스팟에 파란 점을 찍는다
 #                                              <점> 은 dot(링크 칸만) 이나 dot.<칸>.<칸>… (칸은 아래 $slots 의 파일 이름, 예: dot.arrow.hand)
 #   cursor-playground://size/<크기>/<방문>      포인터 크기만 바꿈. <크기> 는 32, 48, 64, 96, 128 중 하나
@@ -18,7 +19,7 @@
 #
 # 이 파일은 한글 때문에 UTF-8 BOM 으로 저장해야 한다 (Windows PowerShell 5.1 은 BOM 이 없으면 ANSI 로 읽음).
 [CmdletBinding(PositionalBinding = $false)]
-param([string]$Url, [switch]$Setup, [string]$Apply, [int]$Hue, [string]$Shape, [switch]$Dot, [string]$DotSlots)  # -Apply 는 자동 전환 작업이 부른다
+param([string]$Url, [switch]$Setup, [string]$Apply, [string]$Hue, [string]$Shape, [switch]$Dot, [string]$DotSlots)  # -Apply 는 자동 전환 작업이 부른다
 # -Dot 은 링크 칸만 점(예전에 등록한 작업도 이 꼴), -DotSlots arrow.hand 는 고른 칸마다 점
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # 내려받기 진행 표시가 꽤 느리게 만든다
@@ -58,8 +59,8 @@ function Get-DotToken($files) {
 }
 # 받는 주소 두 가지. test_dot.ps1 이 이 둘을 그대로 가져다 검사한다
 $dotPattern = '(dot(?:\.[a-z]{2,6}){0,17})'
-$applyPattern = '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3})(?:/(?!dot(?:[./]|$))([a-z]{1,12}))?(?:/' + $dotPattern + ')?)?)?/?$'
-$schedulePattern = '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:-(?!dot(?:\.|-|/|$))[a-z]{1,12})?(?:-dot(?:\.[a-z]{2,6}){0,17})?){1,6})/?$'
+$applyPattern = '^cursor-playground://apply/([a-z]{1,20})/([a-z0-9]{16})(?:/(32|48|64|96|128)(?:/([0-9]{1,3}(?:\.[0-9]{1,3})?)(?:/(?!dot(?:[./]|$))([a-z]{1,12}))?(?:/' + $dotPattern + ')?)?)?/?$'
+$schedulePattern = '^cursor-playground://schedule/([a-z0-9]{16})((?:/[0-9]{1,2}-[a-z]{1,20}-[0-9]{1,3}(?:\.[0-9]{1,3})?(?:-(?!dot(?:\.|-|/|$))[a-z]{1,12})?(?:-dot(?:\.[a-z]{2,6}){0,17})?){1,6})/?$'
 
 # ── 내려받기 ────────────────────────────────────────────────────────────
 # 칸 17개를 Invoke-WebRequest 로 하나씩 받으면 왕복이 17번 줄을 선다. HttpClient 로 한꺼번에 걸어 두고 모아 받는다
@@ -117,11 +118,24 @@ function Get-Shape($id) {
     if ($entry -and $entry.id -cne $shapes[0].id -and $entry.name -match '^[\p{L}\p{N} ]{1,20}$') { $entry }
 }
 
+# 색조 토큰 다듬기: "120" 은 전부 돌리기, "30.120" 은 동물 30° 돌리고 화살표 120° 칠하기(시안 페이지 hueOf).
+# 다 0 이면 '' (원래 색), 모르는 꼴이면 $null. "30.0" 은 화살표를 그대로 두라는 뜻이라 "30" 으로 줄이지 않는다
+function Get-HueToken([string]$token) {
+    if (-not $token) { return '' }
+    if ($token -cnotmatch '^([0-9]{1,3})(?:\.([0-9]{1,3}))?$') { return $null }
+    $deg = [int]$Matches[1]; $to = [int]('0' + $Matches[2])
+    if ($deg -gt 359 -or $to -gt 359) { return $null }
+    if (-not $deg -and -not $to) { return '' }
+    if ($null -ne $Matches[2]) { "$deg.$to" } else { "$deg" }
+}
+
 # 레지스트리에 들어갈 구성표 이름: 테마 + 모양 + 색조 + 점
-function Get-SchemeName($entry, [int]$hue, $shape, $dots) {
+function Get-SchemeName($entry, [string]$hue, $shape, $dots) {
     $name = $entry.name
     if ($shape) { $name = "$name $($shape.name)" }
-    if ($hue) { $name = "$name 색조$hue" }
+    $t = @("$hue" -split '\.')
+    if ([int]('0' + $t[0])) { $name = "$name 색조$($t[0])" }
+    if ($t.Count -gt 1 -and [int]$t[1]) { $name = "$name 커서$($t[1])" }
     # 링크 칸만이면 예전 이름 그대로 '점', 칸을 여럿 고르면 그 수를 붙인다
     if ($dots -and $dots.Count) { $name = if ((Get-DotToken $dots) -ceq 'dot') { "$name 점" } else { "$name 점$($dots.Count)" } }
     $name
@@ -261,7 +275,7 @@ namespace CursorPlayground {
         [DllImport("user32.dll")] public static extern bool SystemParametersInfo(uint action, uint param, IntPtr vparam, uint winini);
     }
 
-    // 커서 파일 안 PNG 의 픽셀마다 색상환 각도만 돌린다. 식은 preview.tpl.html 의 rotate() 와 같다.
+    // 커서 파일 안 PNG 의 픽셀 색을 바꾼다. 식은 preview.tpl.html 의 rotate()·recolor() 와 같다.
     public static class Recolor {
         static double Hue2(double p, double q, double t) {
             if (t < 0) t += 1; if (t > 1) t -= 1;
@@ -273,21 +287,59 @@ namespace CursorPlayground {
         static byte ToByte(double v) {
             return (byte)Math.Max(0, Math.Min(255, Math.Floor(v * 255 + 0.5)));
         }
-        public static void Rotate(byte[] bgra, int deg) {
-            for (int i = 0; i < bgra.Length; i += 4) {
-                if (bgra[i + 3] == 0) continue;
-                double b = bgra[i] / 255.0, g = bgra[i + 1] / 255.0, r = bgra[i + 2] / 255.0;
-                double max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b));
-                double l = (max + min) / 2, c = max - min;
-                if (c == 0) continue;
-                double s = l > 0.5 ? c / (2 - max - min) : c / (max + min), h;
+        // 칸 하나. to 가 0 이면 색상환을 deg 만큼 돌리고, 아니면 색상을 to 로 박는다(커서 색) — 무채색에 가까운 칸은
+        // 채도를 주고 밝기를 0.2–0.8 로 눌러야 색이 보인다 (preview.tpl.html 의 spin() 과 같다)
+        static void Spin(byte[] bgra, int i, int deg, int to) {
+            double b = bgra[i] / 255.0, g = bgra[i + 1] / 255.0, r = bgra[i + 2] / 255.0;
+            double max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b));
+            double l = (max + min) / 2, c = max - min, s = 0, h = 0;
+            if (c == 0 && to == 0) return;
+            if (c != 0) {
+                s = l > 0.5 ? c / (2 - max - min) : c / (max + min);
                 if (max == r) h = (g - b) / c + (g < b ? 6 : 0); else if (max == g) h = (b - r) / c + 2; else h = (r - g) / c + 4;
-                h = h / 6 + deg / 360.0; h -= Math.Floor(h);
-                double q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
-                bgra[i + 2] = ToByte(Hue2(p, q, h + 1.0 / 3));
-                bgra[i + 1] = ToByte(Hue2(p, q, h));
-                bgra[i] = ToByte(Hue2(p, q, h - 1.0 / 3));
             }
+            if (to != 0) { if (s < 0.2) { s = 0.75; l = 0.2 + 0.6 * l; } h = to / 360.0; }
+            else { h = h / 6 + deg / 360.0; h -= Math.Floor(h); }
+            double q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+            bgra[i + 2] = ToByte(Hue2(p, q, h + 1.0 / 3));
+            bgra[i + 1] = ToByte(Hue2(p, q, h));
+            bgra[i] = ToByte(Hue2(p, q, h - 1.0 / 3));
+        }
+        public static void Rotate(byte[] bgra, int deg) {
+            for (int i = 0; i < bgra.Length; i += 4) if (bgra[i + 3] != 0) Spin(bgra, i, deg, 0);
+        }
+        // 동물(파랑 끝 비트 짝수)은 deg 만큼 돌리고 커서(홀수)는 to 색으로 칠한다. 반쯤 비치는 칸은 둘레 불투명 칸 중
+        // 많은 쪽(한 칸 테 → 두 칸 테, 같으면 커서). preview.tpl.html 의 recolor() 와 같다
+        public static void Split(byte[] bgra, int stride, int w, int ht, int deg, int to) {
+            var kind = new byte[w * ht];
+            for (int y = 0; y < ht; y++)
+                for (int x = 0; x < w; x++) {
+                    int i = y * stride + x * 4;
+                    if (bgra[i + 3] == 255) kind[y * w + x] = (byte)((bgra[i] & 1) == 1 ? 1 : 2);
+                }
+            for (int y = 0; y < ht; y++)
+                for (int x = 0; x < w; x++) {
+                    int i = y * stride + x * 4;
+                    if (bgra[i + 3] == 0) continue;
+                    int k = kind[y * w + x];
+                    for (int rr = 1; k == 0 && rr <= 2; rr++) {
+                        int one = 0, two = 0;
+                        for (int yy = Math.Max(0, y - rr); yy <= Math.Min(ht - 1, y + rr); yy++)
+                            for (int xx = Math.Max(0, x - rr); xx <= Math.Min(w - 1, x + rr); xx++) {
+                                int v = kind[yy * w + xx]; if (v == 1) one++; else if (v == 2) two++;
+                            }
+                        if (one + two > 0) k = one >= two ? 1 : 2;
+                    }
+                    if (k == 1) { if (to != 0) Spin(bgra, i, 0, to); }
+                    else if (deg != 0) Spin(bgra, i, deg, 0);
+                }
+        }
+        // 색조 토큰(Get-HueToken): "" 그대로, "120" 전부 돌리기, "30.120" 동물만 돌리고 커서 칠하기
+        static void Paint(byte[] bgra, int stride, int w, int ht, string hue) {
+            if (string.IsNullOrEmpty(hue)) return;
+            var t = hue.Split('.');
+            if (t.Length == 1) { int deg = int.Parse(t[0]); if (deg != 0) Rotate(bgra, deg); }
+            else Split(bgra, stride, w, ht, int.Parse(t[0]), int.Parse(t[1]));
         }
         // 링크 클릭 점: 핫스팟 칸에 파란 칸, 둘레에 흰 테. 굵기는 32px 마다 한 칸 (preview.tpl.html 의 mark() 와 같다)
         public static void Mark(byte[] bgra, int stride, int w, int h, int hx, int hy) {
@@ -301,14 +353,14 @@ namespace CursorPlayground {
                 }
             }
         }
-        public static byte[] Png(byte[] png, int deg, int hx, int hy, bool dot) {
+        public static byte[] Png(byte[] png, string hue, int hx, int hy, bool dot) {
             using (var input = new MemoryStream(png))
             using (var bmp = new Bitmap(input)) {
                 var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                 var data = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
                 var buf = new byte[Math.Abs(data.Stride) * bmp.Height];
                 Marshal.Copy(data.Scan0, buf, 0, buf.Length);
-                if (deg != 0) Rotate(buf, deg);
+                Paint(buf, Math.Abs(data.Stride), bmp.Width, bmp.Height, hue);
                 if (dot) Mark(buf, Math.Abs(data.Stride), bmp.Width, bmp.Height, hx, hy);
                 Marshal.Copy(buf, 0, data.Scan0, buf.Length);
                 bmp.UnlockBits(data);
@@ -319,7 +371,7 @@ namespace CursorPlayground {
             }
         }
         // .cur: 6바이트 머리 + 이미지마다 16바이트 항목(핫스팟·크기·위치) + PNG 들
-        public static byte[] Cur(byte[] cur, int deg, bool dot) {
+        public static byte[] Cur(byte[] cur, string hue, bool dot) {
             int count = BitConverter.ToUInt16(cur, 4);
             var entries = new List<byte[]>();
             var images = new List<byte[]>();
@@ -328,7 +380,7 @@ namespace CursorPlayground {
                 int size = BitConverter.ToInt32(cur, e + 8), offset = BitConverter.ToInt32(cur, e + 12);
                 var image = new byte[size];
                 Buffer.BlockCopy(cur, offset, image, 0, size);
-                images.Add(Png(image, deg, BitConverter.ToUInt16(cur, e + 4), BitConverter.ToUInt16(cur, e + 6), dot));
+                images.Add(Png(image, hue, BitConverter.ToUInt16(cur, e + 4), BitConverter.ToUInt16(cur, e + 6), dot));
                 var entry = new byte[16];
                 Buffer.BlockCopy(cur, e, entry, 0, 16);
                 entries.Add(entry);
@@ -347,12 +399,12 @@ namespace CursorPlayground {
             }
         }
         // 칸마다 따로 칠하므로 코어 수만큼 나눠 돌린다. 정적 상태가 없어 스레드끼리 안 부딪힌다
-        public static byte[][] Many(byte[][] files, int deg, bool[] dots) {
+        public static byte[][] Many(byte[][] files, string hue, bool[] dots) {
             var o = new byte[files.Length][];
             System.Threading.Tasks.Parallel.For(0, files.Length, i => {
                 var f = files[i];
                 bool ani = f.Length >= 4 && f[0] == 'R' && f[1] == 'I' && f[2] == 'F' && f[3] == 'F';
-                o[i] = ani ? Ani(f, deg, dots[i]) : Cur(f, deg, dots[i]);
+                o[i] = ani ? Ani(f, hue, dots[i]) : Cur(f, hue, dots[i]);
             });
             return o;
         }
@@ -363,7 +415,7 @@ namespace CursorPlayground {
             if (data.Length % 2 == 1) s.WriteByte(0);
         }
         // .ani: RIFF ACON 안의 LIST fram 에 든 icon 조각(= .cur)마다 다시 칠하고 나머지 조각은 그대로 둔다
-        public static byte[] Ani(byte[] ani, int deg, bool dot) {
+        public static byte[] Ani(byte[] ani, string hue, bool dot) {
             using (var body = new MemoryStream()) {
                 body.Write(ani, 8, 4);
                 int pos = 12;
@@ -379,7 +431,7 @@ namespace CursorPlayground {
                                 int cs = BitConverter.ToInt32(ani, p + 4);
                                 var chunk = new byte[cs];
                                 Buffer.BlockCopy(ani, p + 8, chunk, 0, cs);
-                                Chunk(list, cid, cid == "icon" ? Cur(chunk, deg, dot) : chunk);
+                                Chunk(list, cid, cid == "icon" ? Cur(chunk, hue, dot) : chunk);
                                 p += 8 + cs + (cs % 2);
                             }
                             Chunk(body, "LIST", list.ToArray());
@@ -405,7 +457,7 @@ namespace CursorPlayground {
 '@
 
 # ── 구성표 ──────────────────────────────────────────────────────────────
-function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dots) {
+function Install-Scheme($id, $name, $ext, [string]$hue, $shape, $dots) {
     $key = if ($shape) { "$shape-$id" } else { $id }
     if ($hue) { $key = "$key-h$hue" }
     $dotToken = Get-DotToken $dots
@@ -450,7 +502,7 @@ function Install-Scheme($id, $name, $ext, [int]$hue, $shape, $dots) {
     $paths
 }
 
-function Set-Scheme($id, $name, $ext, [int]$hue, $shape, $dots) {
+function Set-Scheme($id, $name, $ext, [string]$hue, $shape, $dots) {
     $paths = @(Install-Scheme $id $name $ext $hue $shape $dots)
     $i = 0
     foreach ($slot in $slots.Keys) {
@@ -579,8 +631,10 @@ if ($Apply) {
     $shapeEntry = if ($Shape) { Get-Shape $Shape } else { $null }
     $dots = if ($DotSlots) { Get-DotFiles "dot.$DotSlots" } elseif ($Dot) { @('hand') } else { @() }
     if ($null -eq $dots) { return }
-    $name = Get-SchemeName $entry $Hue $shapeEntry $dots
-    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $Hue $(if ($shapeEntry) { $shapeEntry.id }) $dots
+    $hue = Get-HueToken $Hue
+    if ($null -eq $hue) { return }
+    $name = Get-SchemeName $entry $hue $shapeEntry $dots
+    Set-Scheme $Apply $name $(if ($entry.animated -eq $true) { 'ani' } else { 'cur' }) $hue $(if ($shapeEntry) { $shapeEntry.id }) $dots
     return
 }
 
@@ -590,8 +644,10 @@ if (-not $PSBoundParameters.ContainsKey('Url')) {
 }
 
 try {
-    if ($Url -cmatch $applyPattern -and [int]('0' + $Matches[4]) -lt 360) {
-        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hue = [int]('0' + $Matches[4]); $shapeId = $Matches[5]; $dots = Get-DotFiles $Matches[6]
+    # 색조 범위는 함수를 안 부르고 잰다 — 함수 안의 -cmatch 가 여기 $Matches 를 건드릴까 봐 (-split 은 안 건드린다)
+    if ($Url -cmatch $applyPattern -and -not @("$($Matches[4])" -split '\.' | Where-Object { [int]('0' + $_) -gt 359 }).Count) {
+        $id = $Matches[1]; $visit = $Matches[2]; $size = $Matches[3]; $hueRaw = $Matches[4]; $shapeId = $Matches[5]; $dots = Get-DotFiles $Matches[6]
+        $hue = Get-HueToken $hueRaw
         Request-List 'schemes.json'
         if ($shapeId) { Request-List 'shapes.json' }   # 두 목록을 같이 받는다
         $entry = Get-Scheme $id
@@ -641,8 +697,9 @@ try {
             $hour, $id, $hue, $shapeId = $bits
             $entry = Get-Scheme $id
             $shapeEntry = if ($shapeId) { Get-Shape $shapeId } else { $null }
-            if (-not $entry -or [int]$hour -gt 23 -or [int]$hue -gt 359 -or $null -eq $dots) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
-            $plan += @{ Hour = [int]$hour; Id = $id; Hue = [int]$hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Dots = $dots; Name = Get-SchemeName $entry ([int]$hue) $shapeEntry $dots }
+            $hue = Get-HueToken $hue
+            if (-not $entry -or [int]$hour -gt 23 -or $null -eq $hue -or $null -eq $dots) { Notify "알 수 없는 자동 전환 요청이라 무시함`n$part" -IsError; return }
+            $plan += @{ Hour = [int]$hour; Id = $id; Hue = $hue; Shape = $(if ($shapeEntry) { $shapeEntry.id }); Dots = $dots; Name = Get-SchemeName $entry $hue $shapeEntry $dots }
         }
         Set-Schedule $plan
         Notify "시간대별 자동 전환을 켬.`n`n$((Get-Schedule | ForEach-Object { $_.TaskName } | Sort-Object) -join "`n")"

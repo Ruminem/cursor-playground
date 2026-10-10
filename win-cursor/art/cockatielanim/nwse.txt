@@ -3,13 +3,13 @@ rate 5
 color 0 2a1c22ff
 color 1 3a2a30ff
 color 2 7a7f88ff
-color 3 9ea3abff
+color 3 9ea3aaff
 color 4 b8aca8ff
 color 5 c2c6ccff
 color 6 c8a0a0ff
 color 7 f2863aff
 color 8 f59a5aa0
-color 9 f59a5aff
+color 9 f59a5bff
 color A f6e9d2c7
 color B ffe26eff
 frame

@@ -7,12 +7,12 @@ color 3 5aaee8ff
 color 4 9e2b28ff
 color 5 b8b0b8ff
 color 6 c68e36ff
-color 7 d64541ff
+color 7 d64540ff
 color 8 e8b45aff
 color 9 f4a0b0ff
 color A f6e9d2c7
 color B f8dfa8ff
-color C ffffffff
+color C fffffeff
 frame
 ..........AAAAAAAAA
 .......AAAA4444444AAAA

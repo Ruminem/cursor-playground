@@ -528,3 +528,33 @@ wrong = [s["id"] for s in build.SCHEMES
 print(f"animated 표시가 그림과 어긋난 구성표 {len(wrong)}개 {wrong}")
 assert not wrong, f"schemes.json 의 animated 가 그림과 다름: {wrong}"
 print("animated OK — 움직이는 그림이 있는 구성표만 animated")
+
+
+# ── 커서 색조 표식이 살아 있는가 ─────────────────────────────────────────────
+# 냥이·댕댕이·짹짹이는 시안 페이지의 색조 막대가 둘이다(동물 · 커서, build.HUE_KINDS "both"). 화살표 색의 파랑 끝 비트를
+# 홀수로 박아 두면(gen/sea.mark) 페이지와 handler.ps1 이 그것으로 가른다. gen 을 mark 없이 다시 돌리거나, 그리는 길이
+# 색을 섞어 비트를 흐트리면 커서 막대가 동물을 칠하거나 아무것도 안 칠한다. 그래서 화살표 칸의 장마다 홀수(커서)와
+# 짝수(동물) 불투명 칸이 다 있어야 하고, 냥이·짹짹이의 매끈한 화살표(smooth.peek_drawer, 섞어 그린 뒤 비트를 다시 박음)도
+# 같다. 매끈한 쪽은 화살 끝(핫스팟) 둘레 6칸 안 불투명 칸이 거의 다 홀수여야 한다 — 비트를 안 박으면 뜬 색 반쯤이
+# 짝수로 샌다. 화살표와 동물 크기는 견주지 않는다 — 새는 화살표보다 몸이 커서 홀수가 짝수보다 적다
+both = sorted(s["id"] for s in build.SCHEMES if build.HUE_KINDS.get(s["category"]) == "both")
+def odd_even(f: dict) -> tuple[int, int]:
+    solid = [c for c in f.values() if c[3] == 255]
+    return sum(c[2] & 1 for c in solid), sum(1 - (c[2] & 1) for c in solid)
+bad = []
+for sid in both:
+    for i, f in enumerate(shapelib.read_art(build.art_raw(sid, "arrow"))[0]):
+        o, e = odd_even(f)
+        if not (o and e):
+            bad.append(f"{sid} 기본 {i}장 홀{o}·짝{e}")
+    if sid in build.PEEK:
+        fs, (hx, hy) = build.peek_drawer(sid, "round")(sm.cells_for(32))
+        for i, f in enumerate(fs):
+            o, e = odd_even(f)
+            tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= 36]
+            if not (o and e and tip and sum(tip) >= 0.9 * len(tip)):
+                bad.append(f"{sid} round {i}장 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
+print(f"막대 둘 구성표 {len(both)}종 · 커서 표식이 어긋난 장 {len(bad)}개")
+assert len(both) == 30, both
+assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".join(bad[:8])
+print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)이 갈려 있다")

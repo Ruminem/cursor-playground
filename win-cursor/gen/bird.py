@@ -774,7 +774,7 @@ def arrow(B) -> list[dict]:
         if opt.get("blush"):
             blush(g, rig, G)
         f = {}
-        solid(f, am, PEEK_WHITE, OUT)       # 화살표 먼저 — 꼬리 아랫단이 정수리 뒤로 숨는다
+        solid(f, am, sea.Cur(PEEK_WHITE), sea.Cur(OUT))       # 화살표 먼저 — 꼬리 아랫단이 정수리 뒤로 숨는다. 화살표는 커서
         f.update(g)
         layer = dict(g)
         if dust:   # 박찰 때 · 내려앉을 때 발밑 먼지
@@ -785,7 +785,7 @@ def arrow(B) -> list[dict]:
                 layer.setdefault((x, yb - dy), DUST)
         CARRY_ROT.append(rot)
         CARRY.append(finish({p: c for p, c in layer.items() if 1 <= p[0] <= 31 and 1 <= p[1] <= 31}))
-        f[1, 1] = OUT
+        f[1, 1] = sea.Cur(OUT)
         frames.append(finish({p: c for p, c in f.items() if 1 <= p[0] <= 31 and 1 <= p[1] <= 31}))
     return frames
 
@@ -1276,8 +1276,8 @@ def companion(B, scene) -> list[dict]:
     for k, ph in enumerate(phases()):
         f = scene(k, ph)
         f.update(birds[k])
-        solid(f, am, PEEK_WHITE, OUT)
-        f[1, 1] = OUT
+        solid(f, am, sea.Cur(PEEK_WHITE), sea.Cur(OUT))   # 화살표는 커서
+        f[1, 1] = sea.Cur(OUT)
         frames.append(finish({p: c for p, c in f.items() if 1 <= p[0] <= 31 and 1 <= p[1] <= 31}))
     return frames
 
@@ -1509,6 +1509,7 @@ def ibeam(B):
 def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col) -> None:
     """(dx, dy) 쪽을 가리키는 화살촉. 꼭짓점이 (cx, cy) — 곧은 쪽은 cheesecat.chevron 과 같음.
     대각은 그 식으로 그리면 칸이 하나 걸러 찍혀 점선이 되므로 두 칸 굵기 ㄱ 자로 그린다"""
+    col = sea.Cur(col)   # 화살촉은 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 캐릭터와 가른다
     if dx and dy:
         for i in range(5):
             for w in (0, 1):
@@ -1689,9 +1690,9 @@ def write_carry(d) -> None:
     import json
     a: dict = {}
     am = arrow_mask(0)
-    solid(a, am, PEEK_WHITE, OUT)
-    (d / "_arrow.txt").write_text(shape.to_text([a], (1, 1), sea.RATE), encoding="utf-8")
-    (d / "_peek.txt").write_text(shape.to_text(CARRY, (1, 1), sea.RATE), encoding="utf-8")
+    solid(a, am, sea.Cur(PEEK_WHITE), sea.Cur(OUT))
+    (d / "_arrow.txt").write_text(shape.to_text(sea.mark([a]), (1, 1), sea.RATE), encoding="utf-8")
+    (d / "_peek.txt").write_text(shape.to_text(sea.mark(CARRY), (1, 1), sea.RATE), encoding="utf-8")
     cx = 1 + (PEEK_CUR[3][0] + PEEK_CUR[4][0]) / 2 * CARRY_S
     by = max(y for x, y in am if abs(x + 0.5 - cx) <= 1) + 1
     meta = dict(anchor="base", base=[cx, by], height=max(y for _, y in PEEK_CUR) * CARRY_S,
@@ -1728,7 +1729,8 @@ def main() -> None:
             frames = [{p: c for p, c in fr.items() if 0 <= p[0] <= 31 and 0 <= p[1] <= 31} for fr in make()]
             hot = hot_of(frames)
             bad += check(f"{sid}/{cell}", frames, hot)
-            (d / f"{cell}.txt").write_text(shape.to_text(frames, hot, sea.RATE), encoding="utf-8")
+            # 칸마다(커서 없는 칸도) mark — 안 거친 칸의 홀수 파랑은 커서로 읽힌다
+            (d / f"{cell}.txt").write_text(shape.to_text(sea.mark(frames), hot, sea.RATE), encoding="utf-8")
             if cell == "arrow":
                 write_carry(d)
         print(f"{sid}: 끝")

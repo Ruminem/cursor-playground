@@ -1,6 +1,6 @@
 hotspot 1,1
 rate 5
-color 0 142019ff
+color 0 142018ff
 color 1 2c3244ff
 color 2 2fc278ff
 color 3 5c6274ff

@@ -8,13 +8,13 @@ color 4 b9c8a048
 color 5 b9c8a090
 color 6 b9c8a0ff
 color 7 e27d90ff
-color 8 e8b020ff
+color 8 e8b021ff
 color 9 e9a868ff
 color A f4a0b0ff
 color B f6dcb0ff
 color C fbecdcc7
 color D fffaf0ff
-color E ffffffff
+color E fffffeff
 frame
 CCCCCC
 C8888C

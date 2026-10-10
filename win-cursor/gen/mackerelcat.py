@@ -34,7 +34,7 @@
 import math
 import sys
 
-from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write
+from sea import Cur, N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write
 
 SID = "mackerelcatanim"
 
@@ -333,6 +333,7 @@ def anchor(frames: list[dict], target=(1, 1)) -> tuple[list[dict], tuple]:
 
 def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col, n: int = 3) -> None:
     """(dx, dy) 쪽을 가리키는 화살촉. 꼭짓점이 (cx, cy)"""
+    col = Cur(col)   # 화살촉은 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 캐릭터와 가른다
     if dx and dy:   # 대각선은 꺾쇠(┘ 꼴) — 비스듬한 V 는 칸 위에서 점선이 된다
         for i in range(n + 1):
             for w in (0, 1):
@@ -933,7 +934,7 @@ def main() -> None:
             print(f"  {r} 핫스팟 {hot}")
             return frames, hot
         return run
-    write(SID, {r: job(r) for r in SCENE}, sys.argv[1:] or None)
+    write(SID, {r: job(r) for r in SCENE}, sys.argv[1:] or None, split=True)
 
 
 if __name__ == "__main__":

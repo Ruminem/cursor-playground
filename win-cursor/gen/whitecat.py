@@ -38,7 +38,7 @@
 import math
 import sys
 
-from sea import N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write  # noqa: F401
+from sea import Cur, N, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write  # noqa: F401
 
 SID = "whitecatanim"
 
@@ -289,6 +289,7 @@ def clip(f: dict) -> dict:
 # ── 소품 ─────────────────────────────────────────────────────────────────────
 def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col, n: int = 4) -> None:
     """(dx, dy) 쪽을 가리키는 화살촉. 꼭짓점이 (cx, cy)"""
+    col = Cur(col)   # 화살촉은 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 캐릭터와 가른다
     px, py = -dy, dx
     for i in range(n):
         for s in (-1, 1):
@@ -352,8 +353,8 @@ def arrow_cat(ph: float, sc: float = 1.0, ck: float = 0.62, mood="open") -> dict
     처음엔 앞발 하나를 왼쪽 위로 쭉 뻗어 발끝을 핫스팟으로 삼았는데 '팔인지 꼬리인지 들고 있는 거' 로 읽혔다.
     화살표 꼬리 막대를 껴안게도 해 봤는데 팔이 막대를 가로질러 선이 엉키고 막대가 가려 세모로만 보였다"""
     f = {}
-    solid(f, raster([(1 + sc * x, 1 + sc * y) for x, y in ARROW]), WHITE, OUT)
-    f[1, 1] = OUT
+    solid(f, raster([(1 + sc * x, 1 + sc * y) for x, y in ARROW]), Cur(WHITE), Cur(OUT))   # 화살표는 커서
+    f[1, 1] = Cur(OUT)
     hug = ck >= 0.55            # 작은 판은 앞발이 한두 칸이라 덩이로 읽혀 팔 없이 화살표 옆에 붙어 앉는다
     rig = Rig(1 + sc * 19.6 + (0.0 if hug else 1.4), 1 + sc * 14.6, 0.0, ck)
     sw = math.sin(ph)
@@ -877,7 +878,7 @@ def main() -> None:
             print(f"  {r} 핫스팟 {hot}")
             return frames, hot
         return run
-    write(SID, {r: job(r) for r in SCENE}, sys.argv[1:] or None)
+    write(SID, {r: job(r) for r in SCENE}, sys.argv[1:] or None, split=True)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 hotspot 1,28
 rate 5
-color 0 142019ff
+color 0 142018ff
 color 1 1d4a3cff
 color 2 1f9a5cff
 color 3 2c3244ff
@@ -14,7 +14,7 @@ color A bccadcff
 color B e0b44cff
 color C e6e8f0c7
 color D eea2b8ff
-color E ffffffff
+color E fffffeff
 frame
 ............CCCC....CCC
 ............C33CC..CC3C

@@ -15,7 +15,7 @@ import sys
 
 import dog  # noqa: E402
 from dog import D, DOGS, OUT, Rig, any_of, chain, clip, draw, fluff, head_parts, sit, tail_side, use  # noqa: E402
-from sea import N, PEEK_CUR, PEEK_WHITE, RATE, finish, phases, raster, solid  # noqa: E402
+from sea import N, PEEK_CUR, PEEK_WHITE, RATE, Cur, finish, mark, phases, raster, solid  # noqa: E402
 import shape  # noqa: E402
 
 
@@ -109,8 +109,8 @@ def arrow() -> list[dict]:
     rot, ext = aim(end)
     print(f"  {D['id']}: 화살표 {rot:.1f}도 · 대 +{ext:.1f}")
     a = {}
-    solid(a, raster(arrow_poly(A_S, ext, rot)), PEEK_WHITE, OUT)
-    a[1, 1] = OUT
+    solid(a, raster(arrow_poly(A_S, ext, rot)), Cur(PEEK_WHITE), Cur(OUT))   # 화살표는 커서 — 다시 찍는 입 ω 는 캐릭터
+    a[1, 1] = Cur(OUT)
     turn = TURN * HR
     skull = set(draw(hrig, [p for p in head_parts(HC, HR, turn) if p[0] == "head"]))
     near = {p for p in a if math.hypot(p[0] + 0.5 - end[0], p[1] + 0.5 - end[1]) < POKE}
@@ -139,7 +139,7 @@ def one(d: dict) -> None:
     out.mkdir(parents=True, exist_ok=True)
     frames = arrow()
     dog.check(f"{d['id']}/arrow", frames, (1, 1))
-    (out / "arrow.txt").write_text(shape.to_text(frames, (1, 1), RATE), encoding="utf-8")
+    (out / "arrow.txt").write_text(shape.to_text(mark(frames), (1, 1), RATE), encoding="utf-8")
     print(f"{d['id']}: 끝", flush=True)
 
 

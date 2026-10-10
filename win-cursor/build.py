@@ -193,6 +193,11 @@ SWAYS = {s["id"] for s in SCHEMES if s.get("sway")}
 # 없고, 시안 페이지는 어느 모양 탭에서든 이것의 기본 그림을 보이고 적용 주소에 모양을 안 붙인다.
 # 그래서 지금은 SWAYS 로 그릴 일이 없다 — 표식을 떼면 다시 그려진다
 CLASSIC_ONLY = {s["id"] for s in SCHEMES if s.get("classic_only")}
+# 시안 페이지 색조 막대가 무엇을 돌리나. 없는 묶음은 "cursor"(커서뿐, 막대 하나가 전부). "char" 는 동물뿐이라 막대 하나,
+# "both" 는 동물이 화살표를 들어서 막대 둘 — 화살표 칸 색은 gen/sea.mark 가 파랑 끝 비트로 갈라 둔다.
+# schemes.json 줄에 달면 그 줄이 일감 해시에 들어가 50종을 다시 그리므로 묶음 이름으로 고른다
+HUE_KINDS = {"해양 생물 · 애니": "char", "숲속 친구들 · 애니": "char",
+             "냥이 · 애니": "both", "댕댕이 · 애니": "both", "짹짹이 · 애니": "both"}
 
 
 def drawn(shape_id: str) -> list[str]:
@@ -416,6 +421,8 @@ def build() -> str:
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*START*/", json.dumps(START))
         .replace("/*CLASSIC_ONLY*/", json.dumps(sorted(CLASSIC_ONLY)))
+        .replace("/*HUE_KIND*/", json.dumps({s["id"]: HUE_KINDS[s["category"]] for s in SCHEMES if s["category"] in HUE_KINDS},
+                                            sort_keys=True, separators=(",", ":")))
         .replace("/*KEEP*/", json.dumps(sorted(KEEP)))
         .replace("<!--SHAPES-->", "".join(tabs))
         .replace("/*SHAPE_LIST*/", json.dumps([{k: s[k] for k in ("id", "name", "desc")} for s in SHAPES], ensure_ascii=False, separators=(",", ":")))

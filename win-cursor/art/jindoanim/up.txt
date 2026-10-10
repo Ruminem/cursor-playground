@@ -12,7 +12,7 @@ color 8 f4a0b060
 color 9 f4a0b0ff
 color A faf3e4ff
 color B fffaf0ff
-color C ffffffff
+color C fffffeff
 frame
 ..555....555
 ..5255..5525

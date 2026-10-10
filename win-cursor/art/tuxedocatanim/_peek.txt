@@ -1,7 +1,7 @@
 hotspot -9,-1
 rate 5
 color 0 0c0c10ff
-color 1 2a2a33ff
+color 1 2a2a32ff
 color 2 4f9a2cff
 color 3 98202cff
 color 4 9ee05aff
@@ -12,7 +12,7 @@ color 8 e8899cff
 color 9 ee7f98ff
 color A f29aaeff
 color B f7f7f2ff
-color C ffffffff
+color C fffffeff
 frame
 .
 .777.....777

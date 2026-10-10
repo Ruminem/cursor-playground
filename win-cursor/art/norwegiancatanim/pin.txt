@@ -7,7 +7,7 @@ color 3 9e2b28ff
 color 4 a67a4eff
 color 5 b4c442ff
 color 6 cfa676ff
-color 7 d64541ff
+color 7 d64540ff
 color 8 e27d90ff
 color 9 e8b23a60
 color A e8b23ab0

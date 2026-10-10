@@ -8,14 +8,14 @@ color 4 4b77b4ff
 color 5 6f9fd8ff
 color 6 a8c8eeff
 color 7 bf8410ff
-color 8 dbe8f5ff
+color 8 dbe8f4ff
 color 9 dde3eeff
 color A e27d90ff
 color B e6e8f0c7
 color C f0bb2aff
 color D f4a0b0ff
-color E fcfdffff
-color F ffffffff
+color E fcfdfeff
+color F fffffeff
 frame
 BBBBBBBBBBBBBBB
 B2222222222222B

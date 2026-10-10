@@ -39,7 +39,7 @@
 import math
 import sys
 
-from sea import N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write
+from sea import Cur, N, QMARK, SIGN, SIGN_D, disc, finish, hx, ink, inside, peek, peek_tail, phases, raster, solid, write
 
 SID = "tuxedocatanim"
 
@@ -446,8 +446,8 @@ def arrow_cat(k: int, small: bool = False) -> dict:
     s, rig = HUG[small]
     ph = 2 * math.pi * k / N
     f = {}
-    solid(f, raster([(1 + x * s, 1 + y * s) for x, y in CURSOR]), WHITE, OUT)
-    f[1, 1] = OUT
+    solid(f, raster([(1 + x * s, 1 + y * s) for x, y in CURSOR]), Cur(WHITE), Cur(OUT))   # 화살표는 커서
+    f[1, 1] = Cur(OUT)
     # 두 앞발이 화살표 꼬리 기둥을 감싼다 — 몸 앞으로 지나가게 팔을 몸보다 먼저 놓는다
     sx, sy = 1 + 7.6 * s, 1 + 14.4 * s
     grip = rig.local(sx, sy)
@@ -476,6 +476,7 @@ def paw_print(f: dict, x0: int, y0: int, col: tuple, col2: tuple) -> None:
 
 def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col=BOW) -> None:
     """(dx, dy) 쪽을 가리키는 꽉 찬 화살촉. 꼭짓점이 (cx, cy)"""
+    col = Cur(col)   # 화살촉은 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 캐릭터와 가른다
     px, py = -dy, dx
     for i in range(3):
         for s in range(-i, i + 1):
@@ -484,6 +485,7 @@ def chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col=BOW) -> None:
 
 def diag_chevron(f: dict, cx: int, cy: int, dx: int, dy: int, col=BOW) -> None:
     """대각선 (dx, dy) 쪽 화살촉 — 꼭짓점 (cx, cy) 에서 두 변이 거꾸로 뻗는 세모"""
+    col = Cur(col)   # 화살촉은 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 캐릭터와 가른다
     for i in range(4):
         for j in range(4 - i):
             f[cx - dx * i, cy - dy * j] = col
@@ -936,7 +938,7 @@ def main() -> None:
             print(f"  {r} 핫스팟 {hot}")
             return frames, hot
         return run
-    write(SID, {r: job(r) for r in SCENE}, sys.argv[1:] or None)
+    write(SID, {r: job(r) for r in SCENE}, sys.argv[1:] or None, split=True)
 
 
 if __name__ == "__main__":

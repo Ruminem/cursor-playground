@@ -2,7 +2,7 @@ hotspot 1,1
 rate 5
 color 0 0b0b12ff
 color 1 15151cff
-color 2 2a2a35ff
+color 2 2a2a34ff
 color 3 4a4a5eff
 color 4 7a2148ff
 color 5 9a9ab4ff
@@ -16,7 +16,7 @@ color C f7a3bab0
 color D f7a3baff
 color E ffc2daff
 color F ffd23cff
-color G ffffffff
+color G fffffeff
 frame
 888
 8A88

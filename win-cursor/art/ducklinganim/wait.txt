@@ -6,7 +6,7 @@ color 2 7cc4d860
 color 3 7cc4d8b0
 color 4 7cc4d8ff
 color 5 8a2a3aff
-color 6 bfe6f5ff
+color 6 bfe6f4ff
 color 7 c8641aff
 color 8 e6b028ff
 color 9 f58a2aff
@@ -14,7 +14,7 @@ color A f6a8b4ff
 color B f6e9d2c7
 color C ffd23cff
 color D ffe88cff
-color E ffffffff
+color E fffffeff
 frame
 .
 ............BBBBBBBB

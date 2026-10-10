@@ -5,8 +5,8 @@ color 1 4a3226ff
 color 2 7a5642ff
 color 3 9e2b28ff
 color 4 a8866aff
-color 5 d64541ff
-color 6 eedabdff
+color 5 d64540ff
+color 6 eedabcff
 color 7 f4a0b0ff
 color 8 fbecdcc7
 color 9 fff3e0ff

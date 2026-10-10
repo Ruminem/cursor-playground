@@ -11,7 +11,7 @@ color 7 e8c8ccff
 color 8 f4a0b060
 color 9 f4a0b0ff
 color A f6f7faff
-color B ffffffff
+color B fffffeff
 frame
 ..666....666
 ..6266..6626

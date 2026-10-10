@@ -13,7 +13,7 @@ color 9 e27d90ff
 color A e6e8f0c7
 color B f0bb2aff
 color C f4a0b0ff
-color D fcfdffff
+color D fcfdfeff
 frame
 ............AAA
 ............A2AA...AAAA

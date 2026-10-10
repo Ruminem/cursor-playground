@@ -1,6 +1,6 @@
 hotspot 0,0
-color 0 0b0b12ff
-color 1 fff6e8ff
+color 0 0b0b13ff
+color 1 fff6e9ff
 0
 00
 010

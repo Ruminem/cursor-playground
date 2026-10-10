@@ -1,14 +1,14 @@
 hotspot 15,15
 rate 5
 color 0 1c1d22ff
-color 1 34353dff
-color 2 666871ff
+color 1 34353cff
+color 2 666870ff
 color 3 6cc04aff
 color 4 9a9ca4ff
 color 5 9e2b28ff
-color 6 d64541ff
+color 6 d64540ff
 color 7 e8eaf0c7
-color 8 ffffffff
+color 8 fffffeff
 frame
 .............777777
 .........77777555577777

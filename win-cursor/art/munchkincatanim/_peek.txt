@@ -8,7 +8,7 @@ color 4 f4a0b0ff
 color 5 f6dcb0ff
 color 6 fbecdcc7
 color 7 fffaf0ff
-color 8 ffffffff
+color 8 fffffeff
 frame
 .
 ....666.....666

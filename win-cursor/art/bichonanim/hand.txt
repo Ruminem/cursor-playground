@@ -9,7 +9,7 @@ color 5 f07c92ff
 color 6 f27a8aff
 color 7 f4a0b0ff
 color 8 fffdf8ff
-color 9 ffffffff
+color 9 fffffeff
 frame
 ......33333
 .....33222333

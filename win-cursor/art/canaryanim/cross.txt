@@ -6,7 +6,7 @@ color 2 d89a84ff
 color 3 f6c0a8ff
 color 4 f6e9d2c7
 color 5 fcce1aff
-color 6 ffffffff
+color 6 fffffeff
 frame
 ..............444
 ..............414

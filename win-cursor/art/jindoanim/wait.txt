@@ -3,13 +3,13 @@ rate 5
 color 0 1e1418ff
 color 1 2a1c22ff
 color 2 3a2a30ff
-color 3 d64541ff
+color 3 d64540ff
 color 4 d9dde3c7
 color 5 ead8b8ff
 color 6 f4a0b0ff
 color 7 faf3e4ff
 color 8 fffaf0ff
-color 9 ffffffff
+color 9 fffffeff
 frame
 .
 ..444.....4444

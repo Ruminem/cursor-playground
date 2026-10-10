@@ -7,10 +7,10 @@ color 3 7a2c3aff
 color 4 7c3e1aff
 color 5 b0602eff
 color 6 d99a62ff
-color 7 f27a8aff
-color 8 f4a0b0ff
+color 7 f27a8bff
+color 8 f4a0b1ff
 color 9 f6e9d2c7
-color A ffffffff
+color A fffffeff
 frame
 .
 .999999999

@@ -14,6 +14,22 @@ const start = tpl.indexOf('// 맥용 .cape:'), end = tpl.indexOf('\n// 내 백�
 if (start < 0 || end < 0) { console.log('preview.tpl.html 에서 맥 버튼 코드를 못 찾음'); process.exit(1); }
 const code = tpl.slice(start, end);
 
+// 색 바꾸는 식(recolor)도 페이지에서 그대로 떼어 픽셀 셋에 돌린다. 기대값은 test_dot.ps1 의 C# Recolor.Split 과 같다 —
+// 둘이 같아야 페이지에서 본 색이 윈도우에 그대로 입혀진다. 흰 커서(파랑 홀수) · 붉은 동물(짝수) · 반쯤 비친 흰 칸(옆이 동물)
+{
+  const a = tpl.indexOf('  function hue2('), b = tpl.indexOf('  // 이 구성표에 입힐 색조 토큰', a);
+  if (a < 0 || b < 0) { console.log('preview.tpl.html 에서 색 바꾸는 코드를 못 찾음'); process.exit(1); }
+  const ctx = { Math, String, Uint8Array };
+  vm.runInNewContext(tpl.slice(a, b) + ';this.recolor = recolor;', ctx);
+  for (const [deg, want] of [['120.120', '166,242,166,255,40,200,40,255,255,255,255,128'],
+                             ['0.120', '166,242,166,255,200,40,40,255,255,255,255,128'],
+                             [120, '255,255,255,255,40,200,40,255,255,255,255,128']]) {
+    const d = new Uint8ClampedArray([255, 255, 255, 255, 200, 40, 40, 255, 255, 255, 255, 128]);
+    ctx.recolor({ data: d, width: 3 }, deg);
+    if (d.join(',') !== want) { console.log(`색조 ${deg}: ${d.join(',')} (${want} 이어야 함)`); process.exit(1); }
+  }
+}
+
 const schemes = JSON.parse(read('schemes.json')), shapes = JSON.parse(read('shapes.json'));
 const MAC = JSON.parse(read('mac.json')), MAX = 24, PTS = 32;
 const PNG = '89504e470d0a1a0a';
@@ -43,7 +59,7 @@ function press(sid, shape, hue) {
       return cv;
     };
     const window = {
-      cpHue: () => hue, cpShape: () => shape, cpShapes: () => shapes, cpAnimated: () => animated(sid),
+      cpHue: () => hue, cpHueSay: d => `색조 ${d}°`, cpShape: () => shape, cpShapes: () => shapes, cpAnimated: () => animated(sid),
       cpClassicOnly: id => !!(schemes.find(x => x.id === id) || {}).classic_only,
       cpRotate(d, deg) { if (deg !== hue) bad.push('색조가 안 넘어감'); },
     };

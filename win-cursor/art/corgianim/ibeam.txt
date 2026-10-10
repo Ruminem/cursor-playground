@@ -11,7 +11,7 @@ color 7 f6c8b8ff
 color 8 f6e9d2c7
 color 9 fbf1dcff
 color A fff6eaff
-color B ffffffff
+color B fffffeff
 frame
 8888888
 8222228

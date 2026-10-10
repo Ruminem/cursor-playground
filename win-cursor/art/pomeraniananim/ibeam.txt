@@ -10,7 +10,7 @@ color 6 f4b462ff
 color 7 f6e9d2c7
 color 8 fbf1dcff
 color 9 fff0d6ff
-color A ffffffff
+color A fffffeff
 frame
 7777777
 7222227

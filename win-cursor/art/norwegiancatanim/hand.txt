@@ -13,7 +13,7 @@ color 9 f2eee6ff
 color A f4a0b0ff
 color B f7f0e4ff
 color C fbecdcc7
-color D ffffffff
+color D fffffeff
 frame
 ...................C19971C
 .........CCC......CC19971C

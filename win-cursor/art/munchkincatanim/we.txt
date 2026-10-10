@@ -6,7 +6,7 @@ color 2 6e4a10ff
 color 3 c08a1aff
 color 4 e27d90ff
 color 5 e8b020b0
-color 6 e8b020ff
+color 6 e8b021ff
 color 7 e9a868ff
 color 8 f2c230ff
 color 9 f4a0b0ff
@@ -14,7 +14,7 @@ color A f6dcb0ff
 color B fbecdcc7
 color C fff2a8ff
 color D fffaf0ff
-color E ffffffff
+color E fffffeff
 frame
 ........BBBBBB
 ........B1BB1B........BBBB

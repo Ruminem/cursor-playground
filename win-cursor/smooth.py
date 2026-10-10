@@ -1691,6 +1691,13 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
                 f[p] = over(f.get(p), c)
             for p, c in paws.items():
                 f[p] = over(f.get(p), c)
+            # 커서 색조 표식(gen/sea.mark) — 섞고 뜬 색은 파랑 끝 비트가 아무렇게나 나와서 다시 박는다.
+            # 불투명 칸만: 화살표가 덮은 칸(발 빼고)은 홀수 = 커서, 나머지는 짝수 = 캐릭터
+            for p, c in f.items():
+                if c[3] == 255:
+                    b = c[2] | 1 if p in arrow and arrow[p][3] >= 128 and p not in paws else c[2] & ~1
+                    if b != c[2]:
+                        f[p] = (c[0], c[1], b, 255)
             frames.append(f)
         done[cells] = frames, hot
         return done[cells]

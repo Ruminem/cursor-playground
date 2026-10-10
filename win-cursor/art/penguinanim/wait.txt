@@ -5,12 +5,12 @@ color 1 2c2c34ff
 color 2 3a2a30ff
 color 3 4a4a54ff
 color 4 6a6a76ff
-color 5 80868fff
+color 5 80868eff
 color 6 a8d4e8ff
-color 7 a9aeb7ff
+color 7 a9aeb6ff
 color 8 d9dde3c7
 color 9 dadde2ff
-color A e6f4fbff
+color A e6f4faff
 color B fffaf2ff
 frame
 ............88888888

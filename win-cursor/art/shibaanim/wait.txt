@@ -10,7 +10,7 @@ color 6 f6e9d2c7
 color 7 fff0dcff
 color 8 fff4e4ff
 color 9 fffbe8ff
-color A ffffffff
+color A fffffeff
 frame
 .666......666
 .6266....6626
