@@ -197,7 +197,8 @@ CLASSIC_ONLY = {s["id"] for s in SCHEMES if s.get("classic_only")}
 # "both" 는 동물이 화살표를 들어서 막대 둘 — 화살표 칸 색은 gen/sea.mark 가 파랑 끝 비트로 갈라 둔다.
 # schemes.json 줄에 달면 그 줄이 일감 해시에 들어가 50종을 다시 그리므로 묶음 이름으로 고른다
 HUE_KINDS = {"해양 생물 · 애니": "char", "숲속 친구들 · 애니": "char",
-             "냥이 · 애니": "both", "댕댕이 · 애니": "both", "짹짹이 · 애니": "both"}
+             "냥이 · 애니": "both", "댕댕이 · 애니": "both", "짹짹이 · 애니": "both",
+             "아기 공룡 · 애니": "both", "햄찌와 친구들 · 애니": "both", "말랑 간식 · 애니": "both"}
 
 
 def drawn(shape_id: str) -> list[str]:

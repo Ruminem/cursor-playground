@@ -165,6 +165,51 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/canaryanim` | Canary | A yellow canary — it sways and sings while you wait, with little notes floating up. |
 | `art/penguinanim` | Baby penguin | A grey baby penguin — it waddles across the ice, lifting one flipper and then the other. |
 
+**Baby dinos · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/trexanim` | T. rex | A baby T. rex with stubby arms — it flails trying to reach the arrow, and can't even cross its arms to say no. |
+| `art/triceratopsanim` | Triceratops | A triceratops that nudges the arrow tip with its nose horn — it munches grass while you wait, and shakes its horns when the answer is no. |
+| `art/stegoanim` | Stegosaurus | A stegosaurus whose back plates glow one after another while you wait — and it wags its spiky tail when the answer is no. |
+| `art/brachioanim` | Brachiosaurus | A long-necked brachiosaurus — it stretches up to nibble leaves while you wait, and swings its head like a pendulum when the answer is no. |
+| `art/pteraanim` | Pteranodon | A pteranodon that perches on the arrow's edge — it flaps in place while you wait, and crosses its wings in an X when the answer is no. |
+| `art/ankyloanim` | Ankylosaurus | An ankylosaurus with a tail club — it thumps the ground in puffs of dust, and turns its back to tap the club when the answer is no. |
+| `art/pachyanim` | Pachycephalosaurus | A dome-headed pachycephalosaurus — it paws the ground ready to headbutt while you wait, and bonks the no sign's slash. |
+| `art/raptoranim` | Raptor | A baby raptor with a perky crest — it peeks from behind the arrow, tilts its head while you wait, and hisses when the answer is no. |
+| `art/spinoanim` | Spinosaurus | A sail-backed spinosaurus — it fishes at the water's edge while you wait, and flushes its sail red and turns up its nose when the answer is no. |
+| `art/egganim` | Hatchling | A just-hatched dino wearing its eggshell as a hat — it cheers as the hat pops up while you wait, and hides back in the egg when the answer is no. |
+
+**Hamsters & friends · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/goldenanim` | Golden hamster | A chubby-cheeked golden hamster — it dangles from the end of the arrow, and races its wheel while you wait. |
+| `art/pearlanim` | Pearl hamster | A pearly-white hamster — it hangs from the arrow by one paw and waves, and nibbles a sunflower seed while you wait. |
+| `art/puddinghamsteranim` | Pudding hamster | A caramel-coloured pudding hamster — its body wobbles like pudding as it dangles, and its cheek pouches fill up while you wait. |
+| `art/sapphireanim` | Sapphire hamster | A blue-grey sapphire hamster — it does chin-ups on the arrow, and burrows into the bedding while you wait. |
+| `art/jungleanim` | Winter white | A tiny striped winter-white hamster — it swings from the arrow like a swing, and plays dead belly-up when the answer is no. |
+| `art/guineaanim` | Guinea pig | A potato-shaped guinea pig — it kicks its stubby legs as it dangles, popcorns while you wait, and squeals when the answer is no. |
+| `art/chinchillaanim` | Chinchilla | A bushy-tailed chinchilla — it rolls about in a dust bath while you wait, and presses its big ears shut when the answer is no. |
+| `art/ferretanim` | Ferret | A long, noodly ferret — it droops as it dangles, and pops out of a tunnel to look around while you wait. |
+| `art/glideranim` | Sugar glider | A sugar glider — it spreads its gliding membrane like a kite as it dangles, and soars on the breeze while you wait. |
+| `art/deguanim` | Degu | A degu with a tufted tail — it hangs on showing its front teeth, and gnaws a wood block into chips while you wait. |
+
+**Squishy snacks · Animated**
+
+| Folder | Name | Style |
+|---|---|---|
+| `art/puddinganim` | Pudding | A wobbly pudding topped with a cherry — it peeks out from behind a big arrow, and jiggles on its plate while you wait. |
+| `art/macaronanim` | Macaron | A pink macaron — it nibbles the arrow tip with its top shell, and stretches its cream filling while you wait. |
+| `art/bungeoppanganim` | Bungeoppang | A fish-shaped red-bean bun — it nibbles along the arrow's edge, and toasts golden in its mould while you wait. |
+| `art/donutanim` | Donut | A sprinkle donut — it hangs on the arrow like a ring toss, and rolls away and back while you wait. |
+| `art/mochianim` | Mochi | A squishy mochi — it flops onto the arrow's edge and slowly sags before bouncing back, and puffs up when cross. |
+| `art/icecreamanim` | Ice cream | A mint ice-cream cone — it melts and drips with a nervous sweat while you wait, and ducks into the cone when the answer is no. |
+| `art/gummybearanim` | Gummy bear | A squishy gummy bear — it sits on the arrow tip and sways, and squashes flat on every landing while you wait. |
+| `art/onigirianim` | Onigiri | A rice ball in a seaweed belt — it slides down the arrow's edge, and wraps its seaweed proudly while you wait. |
+| `art/manduanim` | Mandu | A steaming dumpling — it gets skewered on the arrow tip, and huffs steam like a kettle when the answer is no. |
+| `art/takoyakianim` | Takoyaki | A takoyaki with dancing bonito flakes — the arrow's tail is its toothpick, and it rolls away from the pick when the answer is no. |
+
 <!-- /schemes:en -->
 
 Every scheme fills all 17 slots. Six are drawn per theme; the other 11 are made from that theme's arrow, hourglass and colours.
@@ -452,6 +497,51 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/ducklinganim` | 아기오리 | 넓적 부리 아기오리. 기다릴 때는 물에 둥둥 떠 있고, 안 될 때는 부리를 크게 벌려 꽥 하는 커서. |
 | `art/canaryanim` | 카나리아 | 노란 카나리아. 기다릴 때는 고개를 흔들며 노래하고 음표가 솟는 커서. |
 | `art/penguinanim` | 아기펭귄 | 회색 아기펭귄. 얼음판에서 지느러미를 번갈아 들며 뒤뚱뒤뚱 걷는 커서. |
+
+**아기 공룡 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/trexanim` | 티라노 | 짧은 팔의 아기 티라노. 화살표 날개를 잡으려다 팔이 안 닿아 버둥, 안 될 때는 X 를 만들려다 또 안 닿는 커서. |
+| `art/triceratopsanim` | 트리케라톱스 | 코뿔로 화살표 끝을 콕콕 미는 트리케라톱스. 기다릴 때는 풀을 우물우물, 안 될 때는 뿔을 들이밀며 도리도리하는 커서. |
+| `art/stegoanim` | 스테고사우루스 | 등판이 반짝이는 스테고사우루스. 기다릴 때는 등판이 앞에서 뒤로 차례로 빛나고, 안 될 때는 꼬리 가시를 흔드는 커서. |
+| `art/brachioanim` | 브라키오사우루스 | 목이 긴 브라키오사우루스. 기다릴 때는 목을 쭉 올려 나뭇잎을 냠냠, 안 될 때는 쳐든 머리를 시계추처럼 흔드는 커서. |
+| `art/pteraanim` | 프테라노돈 | 화살표 빗변에 내려앉는 프테라노돈. 기다릴 때는 제자리 날갯짓, 안 될 때는 두 날개를 X 로 엇거는 커서. |
+| `art/ankyloanim` | 안킬로사우루스 | 꼬리 곤봉을 단 안킬로사우루스. 곤봉으로 땅을 통통 치면 먼지가 퐁, 안 될 때는 등 돌리고 곤봉만 탁탁하는 커서. |
+| `art/pachyanim` | 파키케팔로사우루스 | 돔 머리 파키케팔로사우루스. 기다릴 때는 땅을 긁으며 박치기 준비, 안 될 때는 금지 빗금을 머리로 콩 박는 커서. |
+| `art/raptoranim` | 랩터 | 볏이 쫑긋한 아기 랩터. 화살표 뒤에서 빼꼼, 기다릴 때는 고개를 갸웃갸웃, 안 될 때는 캬악 하는 커서. |
+| `art/spinoanim` | 스피노사우루스 | 등에 돛을 단 스피노사우루스. 기다릴 때는 물가에서 물고기를 낚고, 안 될 때는 돛을 붉히고 고개를 홱 쳐드는 커서. |
+| `art/egganim` | 아기공룡(알) | 알껍데기 모자를 쓴 갓 깬 아기 공룡. 기다릴 때는 모자가 퐁 뜨며 만세, 안 될 때는 알 속으로 쏙 숨는 커서. |
+
+**햄찌와 친구들 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/goldenanim` | 골든햄스터 | 볼이 빵빵한 골든햄스터. 화살표 대 끝에 매달려 대롱대롱, 기다릴 때는 쳇바퀴를 신나게 굴리는 커서. |
+| `art/pearlanim` | 펄햄스터 | 새하얀 펄햄스터. 대 끝에 한 발로 매달려 손을 흔들고, 기다릴 때는 해바라기씨를 오물오물 먹는 커서. |
+| `art/puddinghamsteranim` | 푸딩햄스터 | 푸딩빛 푸딩햄스터. 매달린 몸이 푸딩처럼 출렁, 기다릴 때는 볼주머니에 씨를 넣어 빵빵해지는 커서. |
+| `art/sapphireanim` | 블루사파이어 | 푸른 회색 블루사파이어 햄스터. 대 끝에서 영차 턱걸이, 기다릴 때는 톱밥 더미에 굴을 파는 커서. |
+| `art/jungleanim` | 정글리안 | 등줄이 있는 작은 정글리안. 대 끝에서 그네처럼 크게 흔들, 안 될 때는 벌러덩 죽은 척하는 커서. |
+| `art/guineaanim` | 기니피그 | 감자 같은 기니피그. 매달려 짧은 다리로 버둥버둥, 기다릴 때는 팝콘 점프, 안 될 때는 뀨잉 하는 커서. |
+| `art/chinchillaanim` | 친칠라 | 북슬 꼬리의 친칠라. 기다릴 때는 모래 그릇에서 데굴데굴 모래 목욕, 안 될 때는 큰 귀를 눌러 막는 커서. |
+| `art/ferretanim` | 페럿 | 몸이 긴 페럿. 매달린 몸이 축 늘어지고, 기다릴 때는 터널에서 쑥 솟아 두리번대는 커서. |
+| `art/glideranim` | 슈가글라이더 | 비막을 단 슈가글라이더. 대 끝에서 비막을 연처럼 펴고, 기다릴 때는 바람을 타고 활공하는 커서. |
+| `art/deguanim` | 데구 | 술 달린 꼬리의 데구. 앞니를 보이며 매달리고, 기다릴 때는 나무 토막을 갉아 나뭇조각이 튀는 커서. |
+
+**말랑 간식 · 애니**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `art/puddinganim` | 푸딩 | 체리를 얹은 말랑 푸딩. 큰 화살표 뒤에서 출렁이며 빼꼼, 기다릴 때는 접시 위에서 출렁출렁하는 커서. |
+| `art/macaronanim` | 마카롱 | 분홍 마카롱. 화살표 끝을 위 꼬끄로 앙 물고, 기다릴 때는 크림이 쭉 늘어났다 붙는 커서. |
+| `art/bungeoppanganim` | 붕어빵 | 팥이 든 붕어빵. 화살표 빗변을 냠냠 갉아 먹고, 기다릴 때는 틀 안에서 노릇노릇 구워지는 커서. |
+| `art/donutanim` | 도넛 | 스프링클 도넛. 고리 던지기처럼 화살표에 걸려 대롱대롱, 기다릴 때는 데굴데굴 굴러갔다 오는 커서. |
+| `art/mochianim` | 찹쌀떡 | 말랑한 찹쌀떡. 화살표 빗변에 철퍼덕 앉아 스르르 늘어졌다 탱, 화나면 빵빵하게 부푸는 커서. |
+| `art/icecreamanim` | 아이스크림 | 민트 아이스크림 콘. 기다릴 때는 녹아 뚝뚝 떨어지며 식은땀, 안 될 때는 콘 속으로 쏙 숨는 커서. |
+| `art/gummybearanim` | 젤리곰 | 말랑한 젤리곰. 화살표 끝에 걸터앉아 살랑, 기다릴 때는 납작하게 착지하는 젤리 점프를 하는 커서. |
+| `art/onigirianim` | 주먹밥 | 김 띠를 두른 주먹밥. 화살표 빗변 미끄럼을 타고, 기다릴 때는 김 띠를 빙 감고 뿌듯해하는 커서. |
+| `art/manduanim` | 만두 | 김이 모락모락 나는 만두. 화살표 끝에 꼬치처럼 꽂히고, 안 될 때는 주전자처럼 김을 뿜는 커서. |
+| `art/takoyakianim` | 타코야키 | 가쓰오부시가 너울대는 타코야키. 화살표 꼬리를 이쑤시개 삼아 꽂히고, 안 될 때는 이쑤시개를 데굴 피하는 커서. |
 
 <!-- /schemes:ko -->
 

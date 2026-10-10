@@ -531,7 +531,7 @@ print("animated OK — 움직이는 그림이 있는 구성표만 animated")
 
 
 # ── 커서 색조 표식이 살아 있는가 ─────────────────────────────────────────────
-# 냥이·댕댕이·짹짹이는 시안 페이지의 색조 막대가 둘이다(동물 · 커서, build.HUE_KINDS "both"). 화살표 색의 파랑 끝 비트를
+# 냥이·댕댕이·짹짹이·공룡·햄찌·간식은 시안 페이지의 색조 막대가 둘이다(동물 · 커서, build.HUE_KINDS "both"). 화살표 색의 파랑 끝 비트를
 # 홀수로 박아 두면(gen/sea.mark) 페이지와 handler.ps1 이 그것으로 가른다. gen 을 mark 없이 다시 돌리거나, 그리는 길이
 # 색을 섞어 비트를 흐트리면 커서 막대가 동물을 칠하거나 아무것도 안 칠한다. 그래서 화살표 칸의 장마다 홀수(커서)와
 # 짝수(동물) 불투명 칸이 다 있어야 하고, 냥이·짹짹이의 매끈한 화살표(smooth.peek_drawer, 섞어 그린 뒤 비트를 다시 박음)도
@@ -555,6 +555,6 @@ for sid in both:
             if not (o and e and tip and sum(tip) >= 0.9 * len(tip)):
                 bad.append(f"{sid} round {i}장 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
 print(f"막대 둘 구성표 {len(both)}종 · 커서 표식이 어긋난 장 {len(bad)}개")
-assert len(both) == 30, both
+assert len(both) == 60, both
 assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".join(bad[:8])
 print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)이 갈려 있다")
