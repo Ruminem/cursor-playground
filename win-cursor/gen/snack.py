@@ -546,7 +546,12 @@ NX, NY = LY / math.hypot(LX, LY), -LX / math.hypot(LX, LY)
 WING = (1 + LX, 1 + LY)                              # 날개 끝
 
 
+BARE = False   # 켜면 arrow_layer 가 아무것도 안 그린다 — main() 이 매끈한 모양용 간식 층(_peek.txt)을 뽑을 때
+
+
 def arrow_layer(f: dict) -> None:
+    if BARE:
+        return
     solid(f, ARROW_M, sea.Cur(PEEK_WHITE), sea.Cur(OUT))   # 화살표는 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 간식과 가른다
     f[1, 1] = sea.Cur(OUT)
 
@@ -624,7 +629,7 @@ def arrow_scene(k, ph, who):
         x, y = hyp(0.72, 5.4)
         g, _, _ = mochi(Rig(x, y, 0, 0.78), 1 + sq, 1 - sq,
                         mood="sleep" if 3 <= k <= 6 else "happy" if k == 7 else "open", berry=True)
-        shown = {p for p in g if above_hyp((p[0], p[1] - 1)) or p not in ARROW_M}
+        shown = set(g) if BARE else {p for p in g if above_hyp((p[0], p[1] - 1)) or p not in ARROW_M}   # 뒤로 그릴 땐 통째
         f.update({p: g[p] for p in shown})
         apart(f, shown, {MOCHI: hx("fde6ecff"), MOCHI_D: hx("ecd2a6ff"), MOCHI_P: hx("f4bcc8ff")})   # 연분홍 몸 · 콩가루 밑동
         return f
@@ -1389,6 +1394,28 @@ def post_steam(f: dict) -> dict:
     return g
 
 
+# 매끈한 모양에서 간식을 붙들 자리 — (anchor, 빗변 자리 t, 화살표 위에 그리나). 기본 그림에서 화살표 뒤에 숨는
+# 푸딩 · 찹쌀떡만 뒤, 이쑤시개(꼬리)에 꽂힌 타코야키는 꼬리 밑점, 나머지는 붙은 빗변 자리
+ANCHOR = {"pudding": ("edge", 0.72, False), "macaron": ("edge", 1.0, True), "bungeoppang": ("edge", 0.94, True),
+          "donut": ("edge", 1.0, True), "mochi": ("edge", 0.72, False), "icecream": ("edge", 1.0, True),
+          "gummybear": ("edge", 1.0, True), "onigiri": ("edge", 0.75, True), "mandu": ("edge", 1.0, True),
+          "takoyaki": ("base", None, True)}
+
+
+def write_bare(d, who) -> None:
+    """화살표 없이 그린 간식 층과 붙들 자리 — 매끈한 모양이 새 화살표에 얹는다 (sea.write_anchor)"""
+    global BARE
+    BARE = True
+    try:
+        layers = [post_steam(arrow_scene(k, 2 * math.pi * k / N, who)) for k in range(N)]
+    finally:
+        BARE = False
+    layers = [{p: c for p, c in fr.items() if 0 <= p[0] <= 31 and 0 <= p[1] <= 31} for fr in layers]
+    anchor, t, over = ANCHOR[who]
+    meta = dict(anchor=anchor) | (dict(t=t) if t is not None else {}) | (dict(over=True) if over else {})
+    sea.write_anchor(d, layers, AS, OUT, meta)
+
+
 def main() -> None:
     """python3 snack.py [--cells 칸,칸] [마리...] — --cells 를 주면 그 칸만 다시 그린다 (bird.py 와 같음)"""
     args = sys.argv[1:]
@@ -1414,6 +1441,8 @@ def main() -> None:
                 frames = [{p: c for p, c in fr.items() if 0 <= p[0] <= 31 and 0 <= p[1] <= 31} for fr in frames]
             bad += check(f"{who}/{cell}", frames, hot)
             (d / f"{cell}.txt").write_text(shape.to_text(sea.mark(frames), hot, RATE), encoding="utf-8")
+            if cell == "arrow":
+                write_bare(d, who)
             done.append(cell)
         for cell, scene in SCENES.items():
             if only and cell not in only:

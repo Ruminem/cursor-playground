@@ -430,3 +430,27 @@ def write_peek(d: Path) -> None:
                 edge=[lx * PEEK_T, ly * PEEK_T], normal=[ly / math.hypot(lx, ly), -lx / math.hypot(lx, ly)],
                 lift=[peek_lift(k) for k in range(len(layers))], out=bytes(out).hex(), fur=bytes(fur).hex())
     (d / "_peek.json").write_text(json.dumps(meta, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def write_anchor(d: Path, layers: list, s: float, out: tuple, meta: dict, fronts: list | None = None) -> None:
+    """빼꼼 말고 다른 틀(댕댕이 · 햄찌 · 공룡 · 간식)의 화살표를 매끈한 모양으로 다시 그릴 재료 — write_peek 와 같은 이름에
+    _front.txt(화살표 위에 얹는 동물 층, 있을 때만)를 더 쓴다. layers 는 장마다 화살표 없이 그린 동물 층, s 는 화살표 배율.
+    meta["anchor"] 가 "base" 면 대 끝 밑점을 여기서 잰다(줄인 대 그대로 — 늘인 대는 meta["base"] 를 주고),
+    "edge" 면 meta["t"] 자리의 빗변 점을 잰다. 나머지 열쇠(turn · rot · over)는 그대로 적는다 (smooth.peek_drawer)"""
+    import json
+    m = raster([(1 + x * s, 1 + y * s) for x, y in PEEK_CUR])
+    a: dict = {}
+    solid(a, m, Cur(PEEK_WHITE), Cur(out))
+    (d / "_arrow.txt").write_text(S.to_text(mark([a]), (1, 1), RATE), encoding="utf-8")
+    (d / "_peek.txt").write_text(S.to_text(mark(layers), (1, 1), RATE), encoding="utf-8")
+    if fronts:
+        (d / "_front.txt").write_text(S.to_text(mark(fronts), (1, 1), RATE), encoding="utf-8")
+    meta = dict(meta, height=max(y for _, y in PEEK_CUR) * s)
+    if meta["anchor"] == "base" and "base" not in meta:
+        cx = 1 + (PEEK_CUR[3][0] + PEEK_CUR[4][0]) / 2 * s
+        meta["base"] = [cx, max(y for x, y in m if abs(x + 0.5 - cx) <= 1) + 1]
+    elif meta["anchor"] == "edge":
+        lx, ly = 11.6 * s, 11.0 * s
+        ln = math.hypot(lx, ly)
+        meta.update(edge=[lx * meta["t"], ly * meta["t"]], normal=[ly / ln, -lx / ln], lift=[0.0] * len(layers))
+    (d / "_peek.json").write_text(json.dumps(meta, ensure_ascii=False) + "\n", encoding="utf-8")

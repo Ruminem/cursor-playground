@@ -708,12 +708,16 @@ HANG = {"golden": hang_golden, "jungle": hang_jungle, "pearl": hang_pearl, "pudd
         "ferret": hang_ferret, "glider": hang_glider}
 
 
-def arrow(pid):
+def arrow(pid, bare=False):
+    """bare 면 화살표 없이 매달린 동물만 — 매끈한 모양 재료(sea.write_anchor)"""
     P = PETS[pid]
     K = A_K * P["scale"]
     m = raster(A_PTS)
     frames = []
     for k, ph in enumerate(phases()):
+        if bare:
+            frames.append(finish(clip(HANG[pid](P, K, k, ph))))
+            continue
         f = {}
         solid(f, m, sea.Cur(PEEK_WHITE), sea.Cur(OUT))   # 화살표는 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 동물과 가른다
         f[1, 1] = sea.Cur(OUT)
@@ -1906,6 +1910,8 @@ def main():
             assert len(frames) == N, (pid, cell, len(frames))
             bad += check(f"{pid}/{cell}", frames, hot)
             (d / f"{cell}.txt").write_text(SH.to_text(frames, hot, RATE), encoding="utf-8")
+            if cell == "arrow":   # 대 끝 밑점에 매달린다 — 매끈한 모양에서도 대 끝을 쥐게
+                sea.write_anchor(d, arrow(pid, bare=True)[0], A_S, OUT, dict(anchor="base"))
         print(f"{pid}: 끝")
     print(f"경고 {bad}개")
 

@@ -254,11 +254,15 @@ def peek_drawer(sid: str, shape: str):
     """냥이 빼꼼 화살표의 drawer. gen/sea.write_peek 가 남긴 재료 셋을 읽는다 — txt 는 그림 상자 왼쪽 위로 옮겨
     적혀 있어 핫스팟으로 화살표 끝 (1, 1) 기준 좌표를 되찾는다"""
     d = HERE / "art" / sid
-    layers, hot, _ = shapelib.read_art((d / "_peek.txt").read_text(encoding="utf-8"))
-    layers = [{(x - hot[0] + 1, y - hot[1] + 1): c for (x, y), c in f.items()} for f in layers]
+
+    def layers_of(name):
+        layers, hot, _ = shapelib.read_art((d / name).read_text(encoding="utf-8"))
+        return [{(x - hot[0] + 1, y - hot[1] + 1): c for (x, y), c in f.items()} for f in layers]
     theme = shapelib.read_art((d / "_arrow.txt").read_text(encoding="utf-8"))[0][0]
     meta = json.loads((d / "_peek.json").read_text(encoding="utf-8"))
-    return smoothlib.peek_drawer(shape, theme, layers, meta)
+    # _front.txt 는 화살표 위에 얹는 동물 층(댕댕이 머리) — 있는 구성표만
+    fronts = layers_of("_front.txt") if (d / "_front.txt").exists() else None
+    return smoothlib.peek_drawer(shape, theme, layers_of("_peek.txt"), meta, fronts)
 
 
 def page_bits(sid: str, rid: str, shape: str | None, cache: dict,

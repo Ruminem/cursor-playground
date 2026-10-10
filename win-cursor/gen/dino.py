@@ -681,8 +681,13 @@ def under(f, sp, rig, mood="open", **kw):
 
 
 # ── 소품 ─────────────────────────────────────────────────────────────────────
+BARE = False   # 켜면 the_arrow 가 아무것도 안 그린다 — run() 이 매끈한 모양용 공룡 층(_peek.txt)을 뽑을 때
+
+
 def the_arrow(f):
     """sea.peek 와 똑같은 1.6배 흰 화살표 — 끝 (1, 1). 화살표는 커서 — 쓸 때 sea.mark 가 파랑 맨 끝 비트로 공룡과 가른다"""
+    if BARE:
+        return
     solid(f, raster([(1 + x * PEEK_S, 1 + y * PEEK_S) for x, y in PEEK_CUR]), sea.Cur(PEEK_WHITE), sea.Cur(OUT))
     f[1, 1] = sea.Cur(OUT)
 
@@ -1797,22 +1802,36 @@ ARROW_FIT = {"trex": (-3, -60), "triceratops": (-2, -75), "stego": (-3, -40), "b
 # 옮긴 공룡 얼굴이 화살표 오른쪽 테를 장당 0–6칸 누른다. 화살표를 공룡 위에 다시 찍어 보니 공룡 눈이 가려져서 버렸다
 
 
+# 매끈한 모양에서 공룡을 붙들 빗변 자리(끝 0 … 날개 1) — 선 공룡은 날개 끝, 프테라는 빗변에 앉은 자리
+EDGE_T = {"ptera": 0.87}
+PEEKERS = ("raptor", "egg")   # sea.peek 틀(화살표 뒤 빼꼼)이라 냥이와 같은 재료(write_peek)를 쓴다
+
+
 def run(sid, only=None):
     """only 가 있으면 그 칸만 그린다(--cells). → (마리, 14칸 경고 수)"""
-    global SHIFT, TAIL_UP
+    global SHIFT, TAIL_UP, BARE
     d = ART / f"{sid}anim"
     d.mkdir(parents=True, exist_ok=True)
     for rid, fn in zip(("arrow", "wait", "no"), SCENE[sid]):
         if only and rid not in only:
             continue
         SHIFT, TAIL_UP = ARROW_FIT.get(sid, (0.0, 0.0)) if rid == "arrow" else (0.0, 0.0)
+        sea.PEEKS.clear()
         frames = fn()
+        if rid == "arrow" and sid not in PEEKERS:   # 화살표 없이 한 번 더 — 매끈한 모양은 새 화살표 위에 이 공룡을 얹는다
+            BARE = True
+            bare = [{p: c for p, c in f.items() if 0 <= p[0] <= 31 and 0 <= p[1] <= 31} for f in fn()]
+            BARE = False
         SHIFT = TAIL_UP = 0.0
         frames = [{p: c for p, c in f.items() if 0 <= p[0] <= 31 and 0 <= p[1] <= 31} for f in frames]
         hot = (1, 1) if rid == "arrow" else (15, 15) if rid == "no" else wait_hot(frames)
         check(sid, rid, frames, hot)
         # 칸마다(커서가 없는 칸도) mark — 커서는 파랑 끝 비트 홀수, 공룡은 짝수(schemes.json "hue": "both")
         (d / f"{rid}.txt").write_text(shape.to_text(sea.mark(frames), hot, RATE), encoding="utf-8")
+        if rid == "arrow" and sid in PEEKERS:
+            sea.write_peek(d)
+        elif rid == "arrow":   # 기본 그림처럼 공룡이 화살표 위 (over)
+            sea.write_anchor(d, bare, PEEK_S, OUT, dict(anchor="edge", t=EDGE_T.get(sid, 1.0), over=True))
     bad = 0
     for rid, fn in SCENES.items():
         if only and rid not in only:

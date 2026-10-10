@@ -14,6 +14,7 @@ import math
 import sys
 
 import dog  # noqa: E402
+import sea  # noqa: E402
 from dog import D, DOGS, OUT, Rig, any_of, chain, clip, draw, fluff, head_parts, sit, tail_side, use  # noqa: E402
 from sea import N, PEEK_CUR, PEEK_WHITE, RATE, Cur, finish, mark, phases, raster, solid  # noqa: E402
 import shape  # noqa: E402
@@ -101,8 +102,9 @@ def bite_end(hrig: Rig) -> tuple:
     return nl - 1 + 0.5 + BITE_X, ny + 1 + 0.5
 
 
-def arrow() -> list[dict]:
-    frames = []
+def arrow(bare: bool = False):
+    """bare 면 화살표 없이 (댕댕이 층, 화살표 위에 얹는 머리 층, rot, ext) — 매끈한 모양 재료(sea.write_anchor)"""
+    frames, fronts = [], []
     rig = Rig(DOG_O[0], DOG_O[1], 0.0, DOG_K)
     hrig = head_rig(rig)
     end = bite_end(hrig)
@@ -128,10 +130,14 @@ def arrow() -> list[dict]:
         f = sit(rig, k, hc=HC, r=HR, turn=turn, tilt=TILT, mood="happy" if k in (5, 6) else "open", mo="smile",
                 tail="none", body=bp, behind=[("ftail", th, tc, False)])
         keep = {p: f[p] for p in face if p in f}
+        if bare:   # 기본 그림에서 대를 가리던 머리(입꼬리 둘레 빼고)와 다시 찍은 입 — 매끈한 화살표 위에 얹는다
+            frames.append(finish(clip(f)))
+            fronts.append(clip({p: c for p, c in f.items() if (p in skull and p not in near) or p in keep}))
+            continue
         f.update(shown)                                  # 화살표가 앞 — 대 끝이 왼 입꼬리에 물린다
         f.update(keep)
         frames.append(finish(clip(f)))
-    return frames
+    return (frames, fronts, rot, ext) if bare else frames
 
 def one(d: dict) -> None:
     use(d)
@@ -140,6 +146,19 @@ def one(d: dict) -> None:
     frames = arrow()
     dog.check(f"{d['id']}/arrow", frames, (1, 1))
     (out / "arrow.txt").write_text(shape.to_text(mark(frames), (1, 1), RATE), encoding="utf-8")
+    # 매끈한 모양 재료 — 늘인 대 끝 밑점을 매끈한 대 끝 밑점으로 옮기고, 기운 각도만큼 그 거리도 돌린다.
+    # 매끈한 화살표는 대를 못 늘여서 그대로 두면 개가 6–7칸 끌려 올라가 머리가 화살표를 다 덮는다 —
+    # 끝에서 대 끝까지가 늘인 대만큼 되게 화살표를 키운다(머리 뒤로 숨는 대 끝만 입에 물린다, 2026-10-10)
+    layers, fronts, rot, ext = arrow(bare=True)
+
+    def tail_end(e):
+        m = raster(arrow_poly(A_S, e, 0.0))
+        cx = 1 + ((PEEK_CUR[3][0] + PEEK_CUR[4][0]) / 2 + dog.STEM[0] * e) * A_S
+        return cx, max(y for x, y in m if abs(x + 0.5 - cx) <= 1) + 1
+    (cx, by), (cx0, by0) = tail_end(ext), tail_end(0.0)
+    k = math.hypot(cx - 1, by - 1) / math.hypot(cx0 - 1, by0 - 1)
+    sea.write_anchor(out, layers, A_S * k, OUT, dict(anchor="base", turn=True, rot=[round(rot, 2)] * len(layers),
+                                                     base=[cx, by]), fronts)
     print(f"{d['id']}: 끝", flush=True)
 
 

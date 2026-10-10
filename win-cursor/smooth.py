@@ -1594,18 +1594,25 @@ def _tilt(px: dict, inner: set, hot: tuple, deg: float, board: int) -> tuple[dic
     return out, rin
 
 
-def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
+def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict, fronts: list[dict] | None = None):
     """냥이 빼꼼 화살표(gen/sea.peek)를 이 모양으로 그리는 drawer. 화살표만 매끈하게 그리고, 냥이 머리는 그 뒤에
     앉히고 발끝 둘은 위에 얹는다. 머리·발 자리는 새 몸의 실제 테두리에서 다시 잰다 — 모양마다 빗변이 둥글거나
     굵어서, 기본 그림 자리 그대로 두면 발이 몸 한가운데 뜨거나 떨어져 보였다 (시안, 2026-10-04).
     theme 은 색을 뜰 흰 화살표, layers 는 장마다 테 두른 냥이 층, meta 는 gen 이 적은 빗변·발·솟는 높이(_peek.json).
     좌표는 전부 기본 그림의 화살표 끝 (1, 1) 에서 잰 32칸 단위다. 냥이는 32칸 픽셀 그림을 키워 쓴다"""
     samplers = samplers_of([theme])
-    # anchor "base"(짹짹이)는 새가 꼬리 밑동 아래에서 화살표를 인다 — 빗변·발 대신 meta["base"] 하나를 옮긴다
+    # anchor "base"(짹짹이)는 새가 꼬리 밑동 아래에서 화살표를 인다 — 빗변·발 대신 meta["base"] 하나를 옮긴다.
+    # "turn" 이면 기운 화살표(rot)를 따라 옮기는 거리도 같이 돌린다 — 대를 비스듬히 문 댕댕이.
+    # anchor "edge"(공룡·간식)는 냥이처럼 빗변 t 자리를 재되 발이 없다(meta 에 paw 가 없음).
+    # fronts 는 장마다 화살표 위에 얹는 동물 층(댕댕이 머리), "over" 면 동물 층 전부가 화살표 위다 — 기본 그림이 그렇게 칠했다
     base = meta.get("anchor") == "base"
+    if meta.get("over"):
+        layers, fronts = [{} for _ in layers], layers
     if not base:
-        out_c, fur = tuple(bytes.fromhex(meta["out"])), tuple(bytes.fromhex(meta["fur"]))
-        t, (dt, up, r) = meta["t"], meta["paw"]
+        t = meta["t"]
+        if "paw" in meta:
+            out_c, fur = tuple(bytes.fromhex(meta["out"])), tuple(bytes.fromhex(meta["fur"]))
+            dt, up, r = meta["paw"]
         cnx, cny = meta["normal"]
         cex, cey = 1 + meta["edge"][0], 1 + meta["edge"][1]
     pts = SHAPES[sid]["pts"]
@@ -1663,6 +1670,14 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
             col = [y for x, y in body if abs(x + 0.5 - cx * g) <= 1]
             sx, sy = round((cx - meta["base"][0]) * g), max(col) + 1 - round(meta["base"][1] * g)
             shifts = [(sx, sy)] * len(layers)
+            if meta.get("turn"):
+                # 기본 그림은 화살표 끝 (1, 1) 을 축으로 rot 만큼 돌린 대 끝에 동물을 붙였다 — 축에서 밑점까지를 같은 각도로 돌린다
+                ux = cx * g - (hot[0] + 0.5) - (meta["base"][0] - 1) * g
+                uy = max(col) + 1 - (hot[1] + 0.5) - (meta["base"][1] - 1) * g
+                shifts = []
+                for a in meta["rot"]:
+                    c, s = math.cos(math.radians(a)), math.sin(math.radians(a))
+                    shifts.append((round(hot[0] + 0.5 - g + ux * c - uy * s), round(hot[1] + 0.5 - g + ux * s + uy * c)))
             # 기본 그림은 뛸 때 화살표가 끝을 축으로 기운다 — 같은 각도로 다 그린 화살표를 돌린다 (핫스팟 칸은 제자리)
             tilted = {0: (arrow, inner)}
             for a in meta.get("rot", []):
@@ -1670,7 +1685,7 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
                     tilted[a] = _tilt(arrow, inner, hot, a, board)
             tilts = [tilted[a] for a in meta.get("rot", [0] * len(layers))]
         else:
-            for s in (t - dt, t + dt):                  # 빗변을 잡은 발끝 둘 — 테 색 고리 + 털 색 속
+            for s in (t - dt, t + dt) if "paw" in meta else ():   # 빗변을 잡은 발끝 둘 — 테 색 고리 + 털 색 속
                 ex, ey = edge(s)
                 paw = _disc(ex + nx * up, ey + ny * up, r)
                 for p in {(a + da, b + db) for a, b in paw for da in (-1, 0, 1) for db in (-1, 0, 1)} - paw:
@@ -1684,18 +1699,24 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
                       for lift in meta["lift"]]
             tilts = [(arrow, inner)] * len(layers)
         frames = []
-        for layer, (sx, sy), (arrow, inner) in zip(layers, shifts, tilts):
+        for i, (layer, (sx, sy), (arrow, inner)) in enumerate(zip(layers, shifts, tilts)):
             f = {(x + sx, y + sy): c for (x, y), c in scale_up(layer, g).items()}
             f = {p: c for p, c in f.items() if p[0] >= 0 and p[1] >= 0 and p not in inner}   # 냥이는 화살표 뒤에
             for p, c in arrow.items():
                 f[p] = over(f.get(p), c)
             for p, c in paws.items():
                 f[p] = over(f.get(p), c)
+            top = paws
+            if fronts:
+                top = {(x + sx, y + sy): c for (x, y), c in scale_up(fronts[i], g).items() if x + sx >= 0 and y + sy >= 0}
+                for p, c in top.items():
+                    f[p] = over(f.get(p), c)
+                top = {p for p, c in top.items() if c[3] >= 128} | set(paws)
             # 커서 색조 표식(gen/sea.mark) — 섞고 뜬 색은 파랑 끝 비트가 아무렇게나 나와서 다시 박는다.
-            # 불투명 칸만: 화살표가 덮은 칸(발 빼고)은 홀수 = 커서, 나머지는 짝수 = 캐릭터
+            # 불투명 칸만: 화살표가 덮은 칸(발·위에 얹은 동물 빼고)은 홀수 = 커서, 나머지는 짝수 = 캐릭터
             for p, c in f.items():
                 if c[3] == 255:
-                    b = c[2] | 1 if p in arrow and arrow[p][3] >= 128 and p not in paws else c[2] & ~1
+                    b = c[2] | 1 if p in arrow and arrow[p][3] >= 128 and p not in top else c[2] & ~1
                     if b != c[2]:
                         f[p] = (c[0], c[1], b, 255)
             frames.append(f)

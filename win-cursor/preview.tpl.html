@@ -977,8 +977,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   // 재현: 찍은 장의 10–12%가 빈 칸). 그래서 그림을 먼저 풀어(decode) 붙들어 두고, 다 풀린 뒤에야 주소를 넘긴다
   var blobs = {}, held = {};
   function blobOf(uri){
-    if (!blobs[uri]) blobs[uri] = fetch(uri).then(function(r){ return r.blob(); })
-      .then(function(b){ return URL.createObjectURL(b); }, function(){ return uri; })
+    if (!blobs[uri]) blobs[uri] = (uri.lastIndexOf('blob:', 0) === 0 ? Promise.resolve(uri) : fetch(uri).then(function(r){ return r.blob(); })
+      .then(function(b){ return URL.createObjectURL(b); }, function(){ return uri; }))
       .then(function(u){
         var img = new Image(); img.src = u; held[u] = img;
         return (img.decode ? img.decode() : Promise.resolve()).then(function(){ return u; }, function(){ return u; });
@@ -1017,7 +1017,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     // 지금 스타일이 아직 옛 그림을 가리킬 수 있어서, 새 스타일이 들어간 뒤에 놓는다
     setTimeout(function(){
       old.forEach(function(p){ p.then(function(r){
-        if (r.made && blobs[r.uri]) { blobs[r.uri].then(function(u){ delete held[u]; if (u !== r.uri) URL.revokeObjectURL(u); }); delete blobs[r.uri]; }
+        if (r.made && blobs[r.uri]) { blobs[r.uri].then(function(u){ delete held[u]; if (u !== r.uri || r.own) URL.revokeObjectURL(u); }); delete blobs[r.uri]; }
+        else if (r.own) URL.revokeObjectURL(r.uri);
       }); });
     }, 3000);
   }
@@ -1044,7 +1045,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
         if (f < 0) g.drawImage(img, 0, 0); else g.drawImage(img, 0, f * B * K, B, B, 0, 0, n, n);
         if (deg) { var data = g.getImageData(0, 0, cv.width, cv.height); recolor(data, deg); g.putImageData(data, 0, 0); }
         if (dot) mark(g, n / GRID, dot);
-        return { uri: cv.toDataURL('image/png'), k: n / GRID, made: true };
+        // 카드 그림은 toBlob 으로 굽는다 — toDataURL 은 PNG 를 메인 스레드에서 굽고, 그 주소를 blobOf 가 다시 fetch 해
+        // base64 를 풀었다. 색조 막대를 끌 때 메인 스레드 JS 의 절반이 그 둘이었다(2026-10-10 감속 4배 프로파일).
+        // 커서(f ≥ 0)는 CSS cursor 에 blob 주소를 안 받는 브라우저가 있을까 봐 데이터 주소 그대로 둔다
+        if (f >= 0 || !cv.toBlob) return { uri: cv.toDataURL('image/png'), k: n / GRID, made: true };
+        return new Promise(function(ok){ cv.toBlob(ok, 'image/png'); }).then(function(b){
+          return b ? { uri: URL.createObjectURL(b), k: n / GRID, made: true, own: true } : { uri: cv.toDataURL('image/png'), k: n / GRID, made: true };
+        });
       });
     }
     return cache[key];
