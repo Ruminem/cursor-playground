@@ -9,7 +9,7 @@
   arrow   1배 흰 윈도우 화살표를 정수리에 이고 그 밑에 앞모습 새가 선다(carry). 쪼그렸다 통통 뛰면 화살표가
           머리에서 한 줄 떴다 다시 얹힌다. 날지 않는 새(병아리 · 아기오리 · 펭귄)는 뒤뚱. 화살표 끝 (1, 1) 이 핫스팟.
           매끈한 모양용 재료(_peek.txt 새 층 · _arrow.txt · _peek.json 꼬리 밑점)도 같이 쓴다(write_carry) —
-          smooth.peek_drawer 가 새 화살표 꼬리 밑에 새를 옮겨 단다. 매끈한 쪽 화살표는 기울지 않는다
+          smooth.peek_drawer 가 새 화살표 꼬리 밑에 새를 옮겨 단다. 매끈한 쪽 화살표도 장마다 같은 각도로 기운다(_peek.json 의 rot)
   wait    마리마다 제 버릇(알 품기 · 거울 수다 · 볏 까딱 · 모이 콕콕 · 가지 그네 · 솜털 빵빵 · 삐약 점프 ·
           둥둥 · 노래 · 뒤뚱)
   no      빨간 금지 표지 안에서 마리마다 제 식으로 싫다고 한다
@@ -641,6 +641,7 @@ def mark(f, x, y):
 # 뛰는 장(틈 > 0)이 아니면 화살표 밑동이 늘 정수리에 닿는다(carry 안에서 재서 맞춘다)
 CARRY_S, CARRY_TOP = 1.0, 16.0    # 화살표 배율 · 쉴 때 머리 꼭대기 줄(꼬리 아랫단 16–17줄이 정수리 뒤로 한 칸 숨는다)
 CARRY: list = []                  # arrow() 가 장마다 남기는 새 층(화살표 빼고 테 두른 것) — write_carry 가 쓴다
+CARRY_ROT: list = []              # 같은 장들의 화살표 기울기(도) — 매끈한 모양도 끝을 축으로 같이 기운다
 RING_SOFT = hx("f4a6b4ff")        # 문조 눈테 — 진한 빨강 막대는 1배에서 화난 눈썹 · 빨간 덩어리로 읽혀 연분홍 한 칸으로
 DUST = hx("c8ccd4ff")
 # 뛰는 새: 장마다 (틈 · 쪼그림 sq · 날개 위로 t · 화살표 기울기(도, 음수만 — 양수면 x=0 으로 나간다) · 눈 · 부리 · 먼지)
@@ -741,6 +742,7 @@ def arrow(B) -> list[dict]:
     top = max(q[0] for q in seq)
     frames = []
     CARRY.clear()
+    CARRY_ROT.clear()
     for gap, P, rot, dust in seq:
         P = dict(P)
         ang = P.pop("ang", 0.0)
@@ -781,6 +783,7 @@ def arrow(B) -> list[dict]:
             for x, dy in ((xs[0] - 1, 1), (xs[0], 0), (xs[-1], 0), (xs[-1] + 1, 1)):
                 f.setdefault((x, yb - dy), DUST)
                 layer.setdefault((x, yb - dy), DUST)
+        CARRY_ROT.append(rot)
         CARRY.append(finish({p: c for p, c in layer.items() if 1 <= p[0] <= 31 and 1 <= p[1] <= 31}))
         f[1, 1] = OUT
         frames.append(finish({p: c for p, c in f.items() if 1 <= p[0] <= 31 and 1 <= p[1] <= 31}))
@@ -1691,7 +1694,8 @@ def write_carry(d) -> None:
     (d / "_peek.txt").write_text(shape.to_text(CARRY, (1, 1), sea.RATE), encoding="utf-8")
     cx = 1 + (PEEK_CUR[3][0] + PEEK_CUR[4][0]) / 2 * CARRY_S
     by = max(y for x, y in am if abs(x + 0.5 - cx) <= 1) + 1
-    meta = dict(anchor="base", base=[cx, by], height=max(y for _, y in PEEK_CUR) * CARRY_S)
+    meta = dict(anchor="base", base=[cx, by], height=max(y for _, y in PEEK_CUR) * CARRY_S,
+                rot=[round(a, 2) + 0.0 for a in CARRY_ROT])
     (d / "_peek.json").write_text(json.dumps(meta, ensure_ascii=False) + "\n", encoding="utf-8")
 
 

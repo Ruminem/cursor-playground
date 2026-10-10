@@ -1561,6 +1561,39 @@ def _disc(cx: float, cy: float, r: float) -> set:
             for x in range(math.floor(cx - r) - 1, math.ceil(cx + r) + 1) if math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r}
 
 
+def _tilt(px: dict, inner: set, hot: tuple, deg: float, board: int) -> tuple[dict, set]:
+    """다 그린 화살표를 핫스팟 칸 가운데를 축으로 deg 도 돌린다 (gen/bird.arrow_mask 와 같은 방향 — 음수면 시계 반대).
+    색은 알파를 곱한 채 두 줄 선형으로 떠서 테가 안 갈라지고, 속 칸(inner)은 가장 가까운 칸을 뜬다"""
+    c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+    ax, ay = hot[0] + 0.5, hot[1] + 0.5
+    out: dict = {}
+    for Y in range(board):
+        for X in range(board):
+            dx, dy = X + 0.5 - ax, Y + 0.5 - ay
+            u, v = ax + dx * c + dy * s - 0.5, ay - dx * s + dy * c - 0.5     # 돌리기 전 자리(칸 가운데 기준)
+            x0, y0 = math.floor(u), math.floor(v)
+            fx, fy = u - x0, v - y0
+            acc = [0.0, 0.0, 0.0, 0.0]
+            for qx, qy, w in ((x0, y0, (1 - fx) * (1 - fy)), (x0 + 1, y0, fx * (1 - fy)),
+                              (x0, y0 + 1, (1 - fx) * fy), (x0 + 1, y0 + 1, fx * fy)):
+                q = px.get((qx, qy))
+                if q and w:
+                    wa = w * q[3]
+                    acc[0] += q[0] * wa
+                    acc[1] += q[1] * wa
+                    acc[2] += q[2] * wa
+                    acc[3] += wa
+            if acc[3] >= 1:
+                out[X, Y] = (round(acc[0] / acc[3]), round(acc[1] / acc[3]), round(acc[2] / acc[3]), round(acc[3]))
+    rin = set()
+    for Y in range(board):
+        for X in range(board):
+            dx, dy = X + 0.5 - ax, Y + 0.5 - ay
+            if (math.floor(ax + dx * c + dy * s), math.floor(ay - dx * s + dy * c)) in inner:
+                rin.add((X, Y))
+    return out, rin
+
+
 def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
     """냥이 빼꼼 화살표(gen/sea.peek)를 이 모양으로 그리는 drawer. 화살표만 매끈하게 그리고, 냥이 머리는 그 뒤에
     앉히고 발끝 둘은 위에 얹는다. 머리·발 자리는 새 몸의 실제 테두리에서 다시 잰다 — 모양마다 빗변이 둥글거나
@@ -1624,12 +1657,18 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
         paws: dict = {}
         if base:
             # 꼬리 밑변 가운데 세로줄에서 몸(스텐실) 맨 아래 칸 바로 밑 → 기본 그림의 같은 자리만큼 새를 통째로 옮긴다.
-            # 화살표는 기울지 않는다 — 뛰는 장의 틈은 층에 이미 들어 있다. 꼬리 없는 dart 는 밑 꼭짓점 하나다
+            # 뛰는 장의 틈은 층에 이미 들어 있다. 꼬리 없는 dart 는 밑 꼭짓점 하나다
             tail = [m(p) for p in pts[3:5]]
             cx = sum(p[0] for p in tail) / len(tail)
             col = [y for x, y in body if abs(x + 0.5 - cx * g) <= 1]
             sx, sy = round((cx - meta["base"][0]) * g), max(col) + 1 - round(meta["base"][1] * g)
             shifts = [(sx, sy)] * len(layers)
+            # 기본 그림은 뛸 때 화살표가 끝을 축으로 기운다 — 같은 각도로 다 그린 화살표를 돌린다 (핫스팟 칸은 제자리)
+            tilted = {0: (arrow, inner)}
+            for a in meta.get("rot", []):
+                if a not in tilted:
+                    tilted[a] = _tilt(arrow, inner, hot, a, board)
+            tilts = [tilted[a] for a in meta.get("rot", [0] * len(layers))]
         else:
             for s in (t - dt, t + dt):                  # 빗변을 잡은 발끝 둘 — 테 색 고리 + 털 색 속
                 ex, ey = edge(s)
@@ -1643,8 +1682,9 @@ def peek_drawer(sid: str, theme: dict, layers: list[dict], meta: dict):
             # 기본 그림에서 머리가 솟던 자리 → 새 테두리에서 같은 높이로 솟는 자리만큼 옮긴다
             shifts = [(round((ex + nx * lift - cex - cnx * lift) * g), round((ey + ny * lift - cey - cny * lift) * g))
                       for lift in meta["lift"]]
+            tilts = [(arrow, inner)] * len(layers)
         frames = []
-        for layer, (sx, sy) in zip(layers, shifts):
+        for layer, (sx, sy), (arrow, inner) in zip(layers, shifts, tilts):
             f = {(x + sx, y + sy): c for (x, y), c in scale_up(layer, g).items()}
             f = {p: c for p, c in f.items() if p[0] >= 0 and p[1] >= 0 and p not in inner}   # 냥이는 화살표 뒤에
             for p, c in arrow.items():
