@@ -318,9 +318,16 @@ def arrow_f(tip, sc, r=0.35):
     return rpoly(pts, r)
 
 
+def cur(ls):
+    """커서 층 표시 — 막대 둘 색조가 이 층만 커서 색으로 칠한다(hdpet.render 가 표식을 박음)"""
+    for L in ls:
+        L["cur"] = True
+    return ls
+
+
 def small_arrow(tip=(1.62, 1.62), sc=0.52):
     f = arrow_f(tip, sc, 0.3)
-    return [base(f), part(f, WHITE, sh=0.0)]
+    return cur([base(f), part(f, WHITE, sh=0.0)])
 
 
 def chevron(cx, cy, dx, dy, L=2.4, a=1.0):
@@ -393,20 +400,98 @@ def peek(fr):
     out = cat(F, "blink" if blink_of(fr) else "open",
               look=(-0.6, 0.25), sway=0.6 * sin(ph), body=True, paws=False,
               tail_pts=[(3.0, 9.6), (7.4, 10.4), (9.6, 7.4), (9.4 + 0.6 * sin(ph), 3.6), (8.0 + 0.9 * sin(ph), 1.6)])
-    out += [base(arw), part(arw, lambda x, y: lerp(CREAM, CREAM_D, smooth(6, 30, x * 0.4 + y)), sh=0.0)]
+    out += cur([base(arw), part(arw, cream_of, sh=0.0)])
     # 빗변(끝 → 오른쪽 어깨) 위 앞발 둘 — 빗변을 따라 나란히, 반쯤 빗변 바깥으로
     ex, ey = P[6][0] - P[0][0], P[6][1] - P[0][1]
     el = hypot(ex, ey)
     ux, uy = ex / el, ey / el
-    nx, ny = uy, -ux                                    # 빗변 바깥(오른쪽 위)
-    ang = math.atan2(uy, ux)
     for t in (15.6, 18.9):
-        cx, cy = P[0][0] + ux * t + nx * 0.55, P[0][1] + uy * t + ny * 0.55
-        p = oell(cx, cy, 1.75, 1.4, ang)
-        out += [base(p), part(p, WHITE, sh=0.0)]
-        for d in (-0.6, 0.6):                          # 발가락 금 둘 — 빗변 쪽으로 짧게
-            bx, by = cx + ux * d, cy + uy * d
-            out.append(flat(capsule(bx - nx * 0.2, by - ny * 0.2, bx - nx * 1.0, by - ny * 1.0, 0.13), OUT, 0.8))
+        out += paw(P[0][0] + ux * t + uy * 0.55, P[0][1] + uy * t - ux * 0.55, ux, uy)
+    return out
+
+
+def cream_of(x, y):
+    return lerp(CREAM, CREAM_D, smooth(6, 30, x * 0.4 + y))
+
+
+def paw(cx, cy, ux, uy):
+    """빗변(방향 (ux, uy))에 건 앞발 하나 — 발가락 금 둘이 빗변 쪽으로 짧게"""
+    nx, ny = uy, -ux                                    # 빗변 바깥(오른쪽 위)
+    p = oell(cx, cy, 1.75, 1.4, math.atan2(uy, ux))
+    out = [base(p), part(p, WHITE, sh=0.0)]
+    for d in (-0.6, 0.6):
+        bx, by = cx + ux * d, cy + uy * d
+        out.append(flat(capsule(bx - nx * 0.2, by - ny * 0.2, bx - nx * 1.0, by - ny * 1.0, 0.13), OUT, 0.8))
+    return out
+
+
+# ---- 화살표: 매끈한 모양 탭 — smooth.SHAPES 의 화살표 윤곽에 같은 빼꼼 ----
+# 모양 폴더에는 화살표 칸만 굽는다(build.build_hd_shape) — 나머지 16칸은 받는 쪽이 기본 폴더에서 빌린다.
+# 냥이는 기본 화살표에서 잰 자리 그대로 빗변에 붙인다: 빗변 길이 0.797 자리에서 바깥 테 + 6.75, 앞발은 0.659 · 0.798 자리 테 + 0.6
+
+HIGH = 27.6                        # 바깥 테 높이 — 기본 화살표(1.07 에서 28.7)와 같게
+BAND = 1.2                         # 스티커(cutout) 흰 띠 굵기
+EAR, RIGHT = 7.0, 9.4              # 빼꼼 냥이 잉크가 자리에서 위(귀 끝, 까딱 포함) · 오른쪽(꼬리)으로 닿는 거리 — 기본 판에서 잼
+_SHAPED = {}
+
+
+def _edge(g, s, off):
+    """빗변 s(0 끝 · 1 어깨) 자리에서 빗변 바깥쪽으로 바깥 테까지 걸어 나간 뒤 off 만큼 더 간 점"""
+    (x0, y0), (ux, uy), el = g["P0"], g["u"], g["L"]
+    px, py = x0 + ux * s * el, y0 + uy * s * el
+    t = -3.0
+    while g["outer"](px + uy * t, py - ux * t) < 0 and t < 8:
+        t += 0.05
+    return px + uy * (t + off), py - ux * (t + off)
+
+
+def shaped(shape):
+    """smooth.SHAPES 윤곽 → 몸 · 바깥 테 거리함수, 빗변, 냥이 자리, 핫스팟. 바깥 테 왼쪽 · 위 끝이 기본 화살표처럼 1.07 에 닿는다.
+    smooth.peek_drawer 와 같은 셈: 냥이가 판 위로 넘으면 통째로(핫스팟째) 내리고, 그래서 아래 · 오른쪽으로 넘으면 화살표만 5%씩
+    줄인다(0.7 까지)"""
+    if shape not in _SHAPED:
+        import smooth as sm
+        spec = sm.SHAPES[shape]
+        band = BAND if spec["style"] == "sticker" else 0.0
+        ys = [p[1] for p in spec["pts"]]
+        for m in [1 - 0.05 * i for i in range(7)]:
+            k = (HIGH - 2 * band) / (max(ys) - min(ys)) * m
+            ring = sm.fillet([(x * k, y * k) for x, y in spec["pts"]], [r * spec["rscale"] * k for r in spec["radii"]], 8)
+            dx = 1.07 + band - min(p[0] for p in ring)
+            dy = 1.07 + band - min(p[1] for p in ring)
+            (x0, y0), (x1, y1) = ((x * k + dx, y * k + dy) for x, y in spec["pts"][:2])
+            body = poly([(x + dx, y + dy) for x, y in ring])
+            el = hypot(x1 - x0, y1 - y0)
+            g = dict(outer=grow(body, band) if band else body, P0=(x0, y0), u=((x1 - x0) / el, (y1 - y0) / el), L=el)
+            cx, cy = _edge(g, 0.797, 6.75)
+            down = max(0.0, 1.2 - (cy - EAR))
+            if max(p[1] for p in ring) + dy + band + down <= 29.6 and cx + RIGHT <= 30.6:
+                break
+        ring = [(x + dx, y + dy + down) for x, y in ring]
+        body = poly(ring)
+        ty = min(p[1] for p in ring)                     # 핫스팟은 맨 윗줄의 왼쪽 끝(smooth._hotspot 과 같은 약속)
+        tx = min(p[0] for p in ring if p[1] < ty + 0.5)
+        g.update(body=body, outer=grow(body, band) if band else body, band=band, P0=(x0, y0 + down),
+                 cat=(cx, cy + down), hot=(floor(tx) + 0.5, floor(ty - band) + 0.5))
+        _SHAPED[shape] = g
+    return _SHAPED[shape]
+
+
+def peek_shape(fr, shape):
+    g = shaped(shape)
+    ph = TAU * fr
+    cx, cy = g["cat"]
+    lift = 0.5 * (1 - cos(ph)) / 2
+    F = Frame(cx, cy - lift, 0.8)
+    out = cat(F, "blink" if blink_of(fr) else "open",
+              look=(-0.6, 0.25), sway=0.6 * sin(ph), body=True, paws=False,
+              tail_pts=[(3.0, 9.6), (7.4, 10.4), (9.6, 7.4), (9.4 + 0.6 * sin(ph), 3.6), (8.0 + 0.9 * sin(ph), 1.6)])
+    if g["band"]:                                       # 스티커: 먹선 · 흰 띠 · 크림 몸
+        out += cur([base(g["outer"]), part(g["outer"], WHITE, sh=0.0), part(g["body"], cream_of, line=0.0)])
+    else:
+        out += cur([base(g["body"]), part(g["body"], cream_of)])
+    for s in (0.659, 0.798):
+        out += paw(*_edge(g, s, 0.6), *g["u"])
     return out
 
 
@@ -751,7 +836,10 @@ SCENE = {"arrow": sc_arrow, "busy": sc_busy, "help": sc_help, "person": sc_perso
          "up": sc_up, "we": sc_we, "ns": sc_ns, "nwse": sc_nwse, "nesw": sc_nesw}
 
 
-def scene(name, frame=0.0, soft_=0.0, tip_body=False):
+def scene(name, frame=0.0, soft_=0.0, tip_body=False, shape=None):
+    """shape 는 매끈한 모양 탭(cutout · dart · chunky) — 화살표 칸만 그 윤곽으로 다시 그린다"""
+    if shape and name == "arrow":
+        return peek_shape(frame, shape), shaped(shape)["hot"]
     ax, ay = HOT[name]
     return SCENE[name](frame), (ax + 0.5, ay + 0.5)
 
@@ -764,6 +852,7 @@ class WhiteCat:
     shadow = (0.10, 0.12, 0.22, 0.16)
     shadow_off, shadow_blur = (0.3, 0.45), 0.9
     ink = OUT
+    cursor = True                  # 화살표 층에 커서 표식(cur) — 시안 색조 막대가 둘(build.hue_kind)
 
     def body(self, x, y, d, nx, ny, warn, frame):
         return WHITE, 1.0

@@ -52,6 +52,13 @@ for file, name, want in [("hd.py", "render", hd_keys), ("build.py", "build_hd", 
     build._tree = plain
     moved = {k for k in keys0 if keys0[k] != keys2[k]}
     assert moved == want, f"{file} 의 {name} 을 고치니 다시 그릴 일감이 어긋남 — 더 {len(moved - want)} · 빠짐 {len(want - moved)}"
+# 펫 결의 모양 화살표(build_hd_shape)를 고치면 그 모양 화살표만 — 기본 모양 고화질 27종·흰냥이 17칸은 그대로
+pet_shape = {k for k in hd_keys if k.split("/")[0] != build.SHAPES[0]["id"]}
+assert pet_shape, "모양 탭이 있는 펫 결이 없음"
+build._tree = bent_at("build.py", "build_hd_shape")
+keys2 = build._hashes()[0]
+build._tree = plain
+assert {k for k in keys0 if keys0[k] != keys2[k]} == pet_shape, "build_hd_shape 를 고치니 다시 그릴 일감이 어긋남"
 
 # 빌드가 넘어져도 끝난 것의 표식만 남기는지. 덜 끝난 고화질 구성표나 data 조각이 파일에 안 닿은 일감을 남기면
 # 다음 빌드가 그걸 안 그려 옛 그림이 남고, 끝난 것을 안 남기면 36분 구운 고화질을 통째로 다시 굽는다(2026-10-11)
@@ -62,17 +69,19 @@ def fut(err=None):
     return f
 base, shp = build.SHAPES[0]["id"], build.SHAPES[1]["id"]
 hd2 = sorted(build.HD)[:2]
-plain_sids = [s["id"] for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY][:3]
+plain_sids = [s["id"] for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY | set(build.HD)][:3]
+pet = sorted(k.split("/")[1] for k in pet_shape)[0]
 held = {"hd": {fut(): (hd2[0], "arrow"), fut(): (hd2[0], "wait"), fut(): (hd2[1], "arrow"), fut(RuntimeError()): (hd2[1], "wait")},
         "jobs": {fut(): (base, plain_sids[0], True, False),       # data 조각 없음 → 남김
                  fut(): (shp, plain_sids[1], True, True),         # 조각을 기다리는데 그 모양 data 를 못 씀 → 안 남김
                  Future(): (base, plain_sids[2], True, False)},   # 안 끝남 → 안 남김
+        "hdshape": {fut(): (shp, pet)}, "hdfresh": {shp: {pet}},  # 모양 화살표는 됐는데 그 모양 data 를 못 씀 → 안 남김
         "wrote": set(), "stencil": False}
 got = build.done_keys(keys0, marks0, held)
 assert set(got) == {f"{base}/{hd2[0]}", f"{base}/{plain_sids[0]}"}, f"넘어진 빌드의 표식이 어긋남: {sorted(got)}"
 held["wrote"], held["stencil"] = {shp}, True
 got = build.done_keys(keys0, marks0, held)
-assert {f"{shp}/{plain_sids[1]}", f"*data/{shp}", "*stencil"} <= set(got), "다 쓴 모양 data·스텐실 표식을 안 남김"
+assert {f"{shp}/{plain_sids[1]}", f"{shp}/{pet}", f"*data/{shp}", "*stencil"} <= set(got), "다 쓴 모양 data·스텐실 표식을 안 남김"
 assert all(got[k] == {**keys0, **marks0}[k] for k in got), "남긴 표식 값이 이번 해시가 아님"
 
 # 주소 줄에 붙여넣은 주소를 읽는 정규식이, 그 줄이 스스로 뱉는 주소를 도로 읽는지.
@@ -101,7 +110,7 @@ for bad in ["cursor-playground://restore/" + visit, "apply/electric", "https://e
 
 # 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다. 매끈한 모양으로 그리는 구성표에서 고른다 —
 # 앞 셋이 classic_only(고화질)가 되자(2026-10-11) 그냥 앞 셋을 쓰던 판은 빈 데이터끼리 견줬다
-build.SCHEMES = [s for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY][:3]
+build.SCHEMES = [s for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY | set(build.HD)][:3]
 shape_id = build.SHAPES[1]["id"]                 # 매끈한 모양 하나 (기본 모양은 이 파일을 안 만든다)
 sids = [s["id"] for s in build.SCHEMES]
 

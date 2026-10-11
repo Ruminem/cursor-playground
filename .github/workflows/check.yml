@@ -122,6 +122,8 @@ jobs:
               if ($shape.id -ne $shapes[0].id -and $s.classic_only) { continue }
               foreach ($slot in $slots) {
                 if ($shape.id -ne $shapes[0].id -and $keep -contains $slot) { continue }
+                # 고화질 펫 결(흰냥이)은 모양 폴더에 화살표만 굽는다(build_hd_shape). 나머지 칸은 같은 약속으로 기본 것으로 넘어간다
+                if ($shape.id -ne $shapes[0].id -and $s.hd -and $slot -ne 'arrow') { continue }
                 $ext = if ($s.animated) { 'ani' } else { 'cur' }
                 if (-not (Test-Path "$root\$($s.id)\$slot.$ext")) { Write-Host "커서 없음: $root/$($s.id)/$slot.$ext"; $fail = 1 }
               }

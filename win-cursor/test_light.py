@@ -385,7 +385,7 @@ print("rate 칸 OK — 프레임마다 머무는 시간이 파일에 적힌다")
 # 떨어진 칸이 있으면 실패한다. 여유를 두는 것은 기호 **스스로** 움직이는 구성표 때문이다 —
 # 불꽃놀이의 모래시계는 터지며 아래로 2~3칸 번지고, 지터의 기호는 옆으로 2칸 떨린다(1칸 여유로
 # 짰다가 이 둘이 걸렸다). 샌 화살표 무늬는 몸 안쪽·왼쪽이라 기호 상자에서 훨씬 멀다.
-# classic_only 구성표와 냥이 빼꼼(peek, 화살표만 다시 그림)은 이 칸들이 smooth_parts 를 안 타므로 뺀다 — 그 칸들은
+# classic_only 구성표와 냥이 빼꼼(peek, 화살표만 다시 그림)·고화질(art 없음)은 이 칸들이 smooth_parts 를 안 타므로 뺀다 — 그 칸들은
 # 작은 화살표 동물 옆에 장면을 통째로 그려서 기호 상자라는 것이 없다(먼치킨 백그라운드 작업).
 # 그래서 지금 schemes.json 에는 이 길을 타는 구성표가 없다 — 옛 '움직이는' 그림(test_art/)의 전기·지터로 잰다
 import build  # noqa: E402
@@ -397,7 +397,7 @@ build.art_raw = lambda sid, rid: ((FIXTURE / sid / f"{rid}.txt").read_text(encod
                                   if (FIXTURE / sid).is_dir() else _art_raw(sid, rid))
 
 leaks = []
-smooth_schemes = [s["id"] for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY | build.PEEK] + ["electric", "jitter"]
+smooth_schemes = [s["id"] for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY | build.PEEK | set(build.HD)] + ["electric", "jitter"]
 for sid in smooth_schemes:
     arrow = shapelib.read_art(build.art_raw(sid, "arrow"))[0]
     for rid in ("help", "busy", "pin", "person"):
@@ -551,7 +551,7 @@ def odd_even(f: dict) -> tuple[int, int]:
     solid = [c for c in f.values() if c[3] == 255]
     return sum(c[2] & 1 for c in solid), sum(1 - (c[2] & 1) for c in solid)
 bad = []
-for sid in both:
+for sid in (s for s in both if s not in build.HD):   # 고화질 펫은 art 가 없다 — 아래에서 그려서 잰다
     for i, f in enumerate(shapelib.read_art(build.art_raw(sid, "arrow"))[0]):
         o, e = odd_even(f)
         if not (o and e):
@@ -563,9 +563,25 @@ for sid in both:
             tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= 36]
             if not (o and e and tip and sum(tip) >= 0.9 * len(tip)):
                 bad.append(f"{sid} round {i}장 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
+# 고화질 펫(흰냥이)은 art 가 없어 그림을 그려 32 판으로 줄인 바이트에서 잰다 — 화살표 칸을 마스크로 따로 그려 줄인 뒤
+# 비트를 박는다(hdpet.rgba_bytes). 기본 화살표와 매끈한 모양 하나를 첫 장만
+import hd as hdlib  # noqa: E402
+pets = sorted(sid for sid in both if sid in build.HD)
+for sid in pets:
+    for st in (build.HD[sid], f"{build.HD[sid]}@{build.SHAPES[1]['id']}"):
+        img, (hx, hy) = hdlib.render(st, "arrow", 0)
+        raw = hdlib.rgba_bytes(hdlib.sizes(img, [32])[32], 32)
+        f = {(i % 32, i // 32): raw[i * 4:i * 4 + 4] for i in range(32 * 32)}
+        hx, hy = hx * 32 // hdlib.N, hy * 32 // hdlib.N
+        o, e = odd_even(f)
+        tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= 9]
+        print(f"  {st}: 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
+        if not (o and e and tip and sum(tip) >= 0.9 * len(tip)):
+            bad.append(f"{st} 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
 print(f"막대 둘 구성표 {len(both)}종 · 커서 표식이 어긋난 장 {len(bad)}개")
-assert len(both) == 59, both   # 흰냥이는 고화질이라 막대 하나(build.hue_kind)
-assert set(both) == build.PEEK, sorted(set(both) ^ build.PEEK)   # 막대 둘 묶음은 다 매끈한 모양에 반응한다
+assert len(both) == 60, both
+# 막대 둘 묶음은 다 매끈한 모양에 반응한다 — 픽셀 그림은 peek, 고화질은 화살표를 든 펫 결
+assert set(both) == build.PEEK | set(pets), sorted(set(both) ^ (build.PEEK | set(pets)))
 assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".join(bad[:8])
 print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)이 갈려 있다")
 
@@ -573,8 +589,10 @@ print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)
 # ── 고화질 구성표 — 움직이는 칸만 여러 장(hd.frames)으로 굽고, .ani 를 거꾸로 읽어 시안에 쓴다 ───────────────
 # build_hd 는 hd.animated 가 참인 칸만 장을 늘린다. 그 표가 그림과 어긋나면 움직이는 그림이 한 장으로 멈추거나
 # 안 움직이는 그림을 40장 굽는다. 한 구성표는 확장자가 하나라(handler.ps1·CI) 고화질은 다 animated 여야 한다
-import hd as hdlib  # noqa: E402
-assert build.HD and all(s.get("animated") and s.get("classic_only") for s in build.SCHEMES if s.get("hd")), "고화질 표시"
+# 모양 탭이 있는 것은 화살표를 든 펫 결뿐이다(build_hd_shape) — 나머지는 모양으로 다시 그릴 몸이 없어 기본 모양만
+import hdpet  # noqa: E402
+assert build.HD and all(s.get("animated") and bool(s.get("classic_only")) != getattr(hdpet.PETS.get(s["hd"]), "cursor", False)
+                        for s in build.SCHEMES if s.get("hd")), "고화질 표시"
 assert set(build.HD.values()) == set(hdlib.STYLES), sorted(set(build.HD.values()) ^ set(hdlib.STYLES))
 # 견주는 장은 0.3 — 파문은 한 바퀴에 물방울이 두 번 떨어져 0 과 0.5 가 같은 그림이다
 lie = [f"{st}/{rid}" for st in hdlib.STYLES for rid in ("arrow", "busy")

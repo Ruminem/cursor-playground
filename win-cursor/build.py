@@ -148,10 +148,16 @@ def _hashes() -> tuple[dict, dict, str]:
     pet = _sha(*(_dump([_tree(f)]) for f in sorted((HERE / "hdpet").glob("*.py"))))
     art |= {s["id"]: _sha(hd, *([pet] if s["hd"] in hdpet.PETS else []), json.dumps(s, sort_keys=True))
             for s in SCHEMES if s.get("hd")}
-    keys = {f"{shp['id']}/{sid}": art[sid] if sid in HD else _sha(code[shp["id"]], art[sid])
+    tree = _tree(HERE / "build.py")
+    # 펫 결의 모양 탭은 화살표 하나만 그 모양으로 굽는다(build_hd_shape). 펫 재료 + 그 모양 줄만 든 smooth.py + 굽는 코드 —
+    # build_one 쪽 코드(code)는 안 넣는다. 넣으면 기존 구성표 코드를 고칠 때마다 흰냥이 모양 화살표를 다시 굽는다
+    shaped = _dump(_reach(tree, {"build_hd_shape", "hd_bit"}))
+    keys = {f"{shp['id']}/{sid}": (art[sid] if shape_of(shp["id"]) is None
+                                   else _sha(art[sid], shp["id"], shaped,
+                                             _dump([_only_shape(_tree(HERE / "smooth.py"), shp["id"])])))
+            if sid in HD else _sha(code[shp["id"]], art[sid])
             for shp in SHAPES for sid in drawn(shp["id"])}
     marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
-    tree = _tree(HERE / "build.py")
     # 모양 데이터는 구성표 목록 차례까지 한 묶음이라 하나만 바뀌거나 빠져도 그 모양 data 를 다시 맞춘다.
     # data 파일을 나누고 쓰는 코드(부모가 돌린다)도 넣는다 — 빠졌을 때는 split_data 를 고쳐도 data 가 옛 꼴로 남았다
     writer = _dump(_reach(tree, {"write_data", "data_missing"}))
@@ -224,8 +230,11 @@ HUE_KINDS = {"해양 생물 · 애니": "char", "숲속 친구들 · 애니": "c
 
 
 def hue_kind(s: dict) -> str | None:
-    """구성표의 색조 막대 종류. 고화질은 묶음과 상관없이 하나다(흰냥이) — 256 판을 면적 평균으로 줄여 파랑 끝 비트 표식이 안 산다"""
-    return None if s.get("hd") else HUE_KINDS.get(s["category"])
+    """구성표의 색조 막대 종류. 고화질은 하나다 — 256 판을 면적 평균으로 줄이면 파랑 끝 비트 표식이 안 산다.
+    화살표를 든 펫 결(hdpet 의 cursor)만 둘이다 — 화살표 칸을 따로 그린 마스크로 줄인 뒤에 비트를 박는다(hdpet.rgba_bytes)"""
+    if s.get("hd"):
+        return "both" if getattr(hdpet.PETS.get(s["hd"]), "cursor", False) else None
+    return HUE_KINDS.get(s["category"])
 
 
 def drawn(shape_id: str) -> list[str]:
@@ -597,6 +606,24 @@ def build_hd(job: tuple[str, str]) -> int:
     return 1
 
 
+def build_hd_shape(job: tuple[str, str]) -> int:
+    """펫 결의 (모양, 구성표) 하나 — 화살표만 그 모양으로 dist/<모양>/<구성표>/arrow.ani 에 굽는다 (워커에서).
+    나머지 칸은 펫이 하는 짓을 그린 것이라 모양이 바꿀 데가 없어 안 쓴다 — 받는 쪽이 기본 모양 파일로 넘어간다.
+    build_hd 를 고쳐 같이 굽지 않는 것은 그게 고화질 27종 해시에 들어가서다"""
+    shape, sid = job
+    style = f"{HD[sid]}@{shape}"
+    n, rate = hdlib.frames(style, "arrow")
+    curs = []
+    for k in range(n):
+        img, (hx, hy) = hdlib.render(style, "arrow", k / n)
+        curs.append(pngs_to_cur([(hdlib.png(hdlib.rgba_bytes(small, s), s, s), (hx * s // hdlib.N, hy * s // hdlib.N))
+                                 for s, small in hdlib.sizes(img, SIZES).items()]))
+    out = HERE / "dist" / shape / sid
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "arrow.ani").write_bytes(curs_to_ani(curs, rate))
+    return 1
+
+
 def ani_frames(blob: bytes) -> list[dict[int, tuple[bytes, tuple[int, int]]]]:
     """curs_to_ani 의 거꾸로 — 장마다 {크기: (PNG, 핫스팟)}. 우리가 구운 꼴(icon 조각마다 PNG 를 담은 .cur)만 읽는다"""
     le = lambda b: int.from_bytes(b, "little")
@@ -616,17 +643,20 @@ def ani_frames(blob: bytes) -> list[dict[int, tuple[bytes, tuple[int, int]]]]:
     return frames
 
 
-def hd_bit(sid: str, rid: str) -> list:
+def hd_bit(sid: str, rid: str, shape: str | None = None) -> list:
     """고화질 구성표의 시안 데이터 칸 하나 — data_bit 과 같은 꼴. 다시 그리지 않고 build_hd 가 구운 dist 의 .ani 에서
     HD_PX 판을 HD_STEP 장마다 떠 온다. 핫스팟은 32칸 판 기준 소수(256 판 픽셀 / 8)라 페이지가 어느 크기로 줄여
-    floor(값 × 크기 / 32) 해도 파일의 핫스팟과 같은 칸이 된다. 폭·높이는 32 판 첫 장에서 잉크가 닿는 칸 수"""
-    frames = ani_frames((HERE / "dist" / sid / f"{rid}.ani").read_bytes())
+    floor(값 × 크기 / 32) 해도 파일의 핫스팟과 같은 칸이 된다. 폭·높이는 32 판 첫 장에서 잉크가 닿는 칸 수.
+    shape 를 주면 그 모양 폴더에 구운 칸(build_hd_shape, 화살표뿐)을, 없는 칸은 기본 모양 것을 뜬다"""
+    own = shape is not None and (HERE / "dist" / shape / sid / f"{rid}.ani").exists()
+    style = f"{HD[sid]}@{shape}" if own else HD[sid]
+    frames = ani_frames((HERE / "dist" / (f"{shape}/{sid}" if own else sid) / f"{rid}.ani").read_bytes())
     uri, box = strip([f[HD_PX][0] for f in frames[::HD_STEP]], rid == "arrow")
-    hx, hy = (v if v % 1 else int(v) for v in (round(v * hdlib.U) / hdlib.U for v in hdpet.hot(HD[sid], rid)))
+    hx, hy = (v if v % 1 else int(v) for v in (round(v * hdlib.U) / hdlib.U for v in hdpet.hot(style, rid)))
     side, raw = _scanlines(frames[0][32][0])
     ink = [(x, y) for y in range(side) for x in range(side) if raw[y * (side * 4 + 1) + 1 + x * 4 + 3] > 8]
     fallback = next(f for r, _, f in ROLES + EXTRA if r == rid)
-    return [uri, hx, hy, fallback, hdlib.frames(HD[sid], rid)[1] * HD_STEP * 1000 // 60,
+    return [uri, hx, hy, fallback, hdlib.frames(style, rid)[1] * HD_STEP * 1000 // 60,
             max(x for x, _ in ink) + 1, max(y for _, y in ink) + 1, len(frames[::HD_STEP]), box]
 
 
@@ -752,6 +782,9 @@ def done_keys(keys: dict, marks: dict, held: dict) -> dict:
     for f, (sid, _) in held["hd"].items():
         whole[sid] = whole.get(sid, True) and ok(f)
     out.update({f"{base}/{sid}": keys[f"{base}/{sid}"] for sid, good in whole.items() if good})
+    for f, (shape_id, sid) in held["hdshape"].items():     # 시안 데이터 조각을 기다리면 그 모양 data 를 다 써야
+        if ok(f) and (sid not in held["hdfresh"].get(shape_id, ()) or shape_id in held["wrote"]):
+            out[f"{shape_id}/{sid}"] = keys[f"{shape_id}/{sid}"]
     for f, (shape_id, sid, _, piece) in held["jobs"].items():
         if ok(f) and (not piece or shape_id in held["wrote"]):
             out[f"{shape_id}/{sid}"] = keys[f"{shape_id}/{sid}"]
@@ -791,13 +824,14 @@ if __name__ == "__main__":
         print(f"[{time.time() - t0:5.1f}초] 목록에 없어 지움: {path}")
 
     workers = getattr(os, "process_cpu_count", os.cpu_count)() or 1   # ProcessPoolExecutor 기본값과 같다
-    held = {"hd": {}, "jobs": {}, "wrote": set(), "stencil": False}   # 넘어지면 keep_done 이 여기서 끝난 것을 고른다
+    held = {"hd": {}, "hdshape": {}, "hdfresh": {}, "jobs": {}, "wrote": set(), "stencil": False}   # 넘어지면 keep_done 이 여기서 끝난 것을 고른다
     with keep_done(was, keys, marks, held), ProcessPoolExecutor(workers) as pool:
         jobs_of, skipped = [], 0
         # 일감 차례를 정할 어림 값 — 그림 프레임 수. 움직이는 구성표 몇이 일의 대부분이다
         frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES if s["id"] not in HD
                   for rid, _, _ in ROLES + EXTRA}
         hd_jobs: list[tuple[str, str]] = []             # 고화질 (구성표, 칸). build_one 과 따로 돈다
+        hd_shape_jobs: list[tuple[str, str]] = []       # 펫 결의 모양 화살표 (모양, 구성표)
         left: dict[str, int] = {}                       # 모양마다 남은 일감. 다 끝나면 한 줄 찍는다
         pieces: dict[str, dict] = {}                    # 시안 데이터를 새로 쓸 모양 → 구성표별 조각
         for shp in SHAPES:
@@ -825,9 +859,14 @@ if __name__ == "__main__":
             # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
             # 마지막 모양의 묶음만 남아 워커 8개가 20초 넘게 놀았다 (2026-09-24, 5600X 262초 중 22초)
             # 고화질은 칸 하나가 일감 하나다 — 움직이는 재질은 칸마다 40장이라 구성표 하나를 한 워커에 몰면 그 하나가 꼬리가 된다
-            hd_jobs += [(sid, rid) for sid in sorted(stale & set(HD)) for rid, _, _ in ROLES + EXTRA]
+            if base:
+                hd_jobs += [(sid, rid) for sid in sorted(stale & set(HD)) for rid, _, _ in ROLES + EXTRA]
+            else:                                       # 펫 결만 모양 탭이 있다(classic_only 가 아닌 고화질) — 화살표 하나
+                hd_shape_jobs += [(shp["id"], sid) for sid in sorted(stale & set(HD))]
+                held["hdfresh"][shp["id"]] = fresh & set(HD)
             if plan and stale & set(HD):
-                print(f"{shp['id']}: 고화질 {len(stale & set(HD))}종 칸마다 — " + " ".join(sorted(stale & set(HD))))
+                print(f"{shp['id']}: 고화질 {len(stale & set(HD))}종 " + ("칸마다" if base else "화살표만") + " — "
+                      + " ".join(sorted(stale & set(HD))))
             mine = [(shp["id"], sid, sid in stale, sid in fresh) for sid in sids if (sid in stale or sid in fresh) and sid not in HD]
             if mine:
                 left[shp["id"]] = len(mine)
@@ -837,6 +876,7 @@ if __name__ == "__main__":
                           f" (구성표 {len(sids)}종 중)" + ("" if len(mine) > 8 else " — " + " ".join(j[1] for j in mine)))
         if plan:
             print(f"다시 그릴 일감 {len(jobs_of)}개" + (f" · 고화질 칸 {len(hd_jobs)}개" if hd_jobs else "")
+                  + (f" · 고화질 모양 화살표 {len(hd_shape_jobs)}개" if hd_shape_jobs else "")
                   + f" · 그대로 둘 구성표 {skipped}개 (모양별 합)"
                   + (" · 스텐실 다시 구움" if was.get("*stencil") != marks["*stencil"] else "")
                   + (" · 페이지 다시 만듦" if was.get("*page") != page_key else ""))
@@ -866,24 +906,43 @@ if __name__ == "__main__":
         hd_jobs.sort(key=hd_cost, reverse=True)
         t_sub = time.time()
         hd_futs = {pool.submit(timed, build_hd, j): j for j in hd_jobs}
+        shape_cost = lambda j: hdlib.frames(f"{HD[j[1]]}@{j[0]}", "arrow")[0]
+        shape_futs = {pool.submit(timed, build_hd_shape, j): j for j in hd_shape_jobs}
         jobs = {pool.submit(timed, build_one, j): j for j in jobs_of}
-        held["hd"], held["jobs"] = hd_futs, jobs
+        held["hd"], held["hdshape"], held["jobs"] = hd_futs, shape_futs, jobs
         whole = sum(map(cost, jobs_of)) or 1            # 진행률은 이 어림 값의 합으로 센다
         total, made, spent, per_sid, got, step = 0, {}, {}, {}, 0, 1
         spans = []                                      # (시작, 끝) — 가동률과 꼬리를 잰다
-        hd_whole, hd_got, hd_step = sum(map(hd_cost, hd_jobs)) or 1, 0, 1
-        for done in as_completed(hd_futs):
+        hd_whole = sum(map(hd_cost, hd_jobs)) + sum(map(shape_cost, hd_shape_jobs)) or 1
+        hd_got, hd_step = 0, 1
+        for done in as_completed([*hd_futs, *shape_futs]):
             count, a, b = done.result()
             spans.append((a, b))
             total += count
-            sid, rid = job = hd_futs[done]
+            if done in hd_futs:
+                sid, rid = job = hd_futs[done]
+                hd_got += hd_cost(job)
+            else:
+                _, sid = job = shape_futs[done]
+                hd_got += shape_cost(job)
             per_sid[sid] = per_sid.get(sid, 0) + b - a
             spent["고화질"] = spent.get("고화질", 0) + b - a
-            hd_got += hd_cost(job)
             if hd_got * 10 >= hd_whole * hd_step:
                 hd_step = hd_got * 10 // hd_whole + 1
-                print(f"[{time.time() - t0:5.1f}초] 고화질 {hd_got * 100 // hd_whole}% · 칸 {len(spans)}/{len(hd_futs)}"
+                print(f"[{time.time() - t0:5.1f}초] 고화질 {hd_got * 100 // hd_whole}%"
+                      f" · 칸 {len(spans)}/{len(hd_futs) + len(shape_futs)}"
                       + (f" · 워커 시간 {_dur(spent['고화질'])}" if hd_got == hd_whole else ""))
+        # 펫 결의 모양 탭 시안 데이터 조각 — 화살표는 그 모양 폴더, 나머지 칸은 기본 모양 dist 에서 뜬다.
+        # 그 모양에 build_one 일감이 없으면 여기서 data 를 쓴다(있으면 그 일감들이 끝날 때 같이 쓰인다)
+        for shape_id, sids in held["hdfresh"].items():
+            if not sids or shape_id not in pieces:
+                continue
+            for sid in sids:
+                pieces[shape_id][sid] = {rid: hd_bit(sid, rid, shape_id) for rid, _, _ in ROLES + EXTRA}
+            if shape_id not in left:
+                write_data(shape_id, pieces.pop(shape_id))
+                held["wrote"].add(shape_id)
+                print(f"[{time.time() - t0:5.1f}초] data/{shape_id}/ (고화질 {len(sids)}종)")
 
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
         if was.get("*page") != page_key or not out.exists() or not (data_dir(SHAPES[0]["id"]) / "index.json").exists():
