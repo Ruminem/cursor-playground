@@ -561,7 +561,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
 }
 </style>
 
-<div class="wrap c-arrow" id="app" data-scheme="rainbowflow">
+<div class="wrap c-arrow" id="app" data-scheme="<!--START_ID-->">
  <header class="nav">
   <a class="brand c-hand" href="#app"><img src="<!--FAVICON-->" alt="" width="24" height="24">cursor-playground</a>
   <nav class="links" aria-label="바로 가기">
@@ -832,11 +832,14 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
 (function(){
   var DATA = /*CURSOR_DATA*/;
   // 모양 목록. 기본 모양도 다른 모양처럼 구성표마다 data/<모양>/<구성표>.json 에서 받는다. 페이지에 박힌 것은
-  // 칸 정보·목록 썸네일(화살표)과 처음 여는 구성표 하나의 그림뿐 — 전부 박던 때는 페이지가 gzip 1.1MB 라
-  // 폰 회선에서 그것을 다 받고 풀 때까지 첫 화면이 안 떴다
+  // 칸 정보와 처음 여는 구성표 하나의 그림뿐 — 전부 박던 때는 페이지가 gzip 1.1MB 라
+  // 폰 회선에서 그것을 다 받고 풀 때까지 첫 화면이 안 떴다. 목록 썸네일(화살표)은 뜬 뒤 받는다(baseThumbs)
   var SHAPES = /*SHAPE_LIST*/;
   var packs = {}, shape = SHAPES[0].id;
-  packs[shape] = { data: DATA, arrows: true, full: {}, asking: {} };
+  // getJSON 이 받은 것. 여기 두는 이유: 첫 tick() 이 지금 구성표 그림을 아래 getJSON 정의보다 먼저 부른다 —
+  // 정의 자리에 두던 때는 START 와 #app 의 처음 구성표가 다르면 got 이 아직 없어 스크립트가 통째로 죽었다
+  var got = {};
+  packs[shape] = { data: DATA, arrows: false, full: {}, asking: {} };
   packs[shape].full[/*START*/] = true;
   // 모양이 안 건드리는 칸(build.KEEP). 다른 모양 탭에서도 테마 그림 그대로라 카드 밑 파일 이름을 art 로 둔다
   var KEEP = /*KEEP*/;
@@ -1097,7 +1100,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   document.querySelectorAll('[data-scheme-item]').forEach(function(item){
     var sid = item.getAttribute('data-scheme-item'), el = item.querySelector('.thumb');
     thumbOf[sid] = el;
-    if (DATA[sid] && el) lay(el, DATA[sid].arrow[0], DATA[sid].arrow[7]);
+    if (DATA[sid] && DATA[sid].arrow[0] && el) lay(el, DATA[sid].arrow[0], DATA[sid].arrow[7]);
   });
 
   // 마우스가 없는 기기(폰)는 커서를 못 보니 커서 그림은 만들지 않고 카드 그림만 움직인다
@@ -1355,7 +1358,6 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   // 다른 모양은 data/<모양>/index.json(칸 정보만, 몇십 KB)과 지금 구성표의 data/<모양>/<구성표>.json 만 받고
   // 바로 바꾼다. 목록 썸네일 그림(arrows.json)은 그 뒤에, 다른 구성표 그림은 그 구성표를 볼 때 받는다. 한 파일(24MB)을 통째로 받던 때는 모양을 누르고
   // 다 받을 때까지 아무것도 안 바뀌었고, 받은 뒤 푸는 데만 느린 CPU 에서 0.7초 멈췄다
-  var got = {};
   function getJSON(url){
     if (!got[url]) got[url] = fetch(url).then(function(r){ if (!r.ok) throw new Error(url); return r.json(); })
       .catch(function(e){ setTimeout(function(){ delete got[url]; }, 5000); throw e; });   // 5초 뒤 다시 받아 볼 수 있게
@@ -1395,17 +1397,16 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       relabel(); tick();
       // 목록 썸네일(구성표마다 화살표 한 장)은 모양을 바꾼 뒤에 받는다. 받기 전까지는 전 모양 그림 그대로
       if (pack.arrows) showThumbs(pick.id, pack);
-      else getJSON('data/' + pick.id + '/arrows.json').then(function(one){
+      else (pack === base ? baseThumbs() : getJSON('data/' + pick.id + '/arrows.json').then(function(one){
         Object.keys(one.data).forEach(function(sid){ if (pack.data[sid]) pack.data[sid].arrow[0] = one.data[sid]; });
         pack.arrows = true;
-        if (shape === pick.id) showThumbs(pick.id, pack);
-      }, function(){});
+      })).then(function(){ if (shape === pick.id) showThumbs(pick.id, pack); }, function(){});
       if (done) done();  // 모양 묶음을 받고 나서야 백업이 그 모양으로 적용을 보낼 수 있다
     }
     if (packs[pick.id]) { put(packs[pick.id]); return; }
     shapeNote.textContent = pick.name + ' 모양 받는 중…';
     var sid = app.getAttribute('data-scheme');
-    if (sid) getJSON('data/' + pick.id + '/' + sid + '.json').catch(function(){});   // 지금 구성표는 목록과 같이 받는다
+    if (sid && !CLASSIC_ONLY[sid]) getJSON('data/' + pick.id + '/' + sid + '.json').catch(function(){});   // 지금 구성표는 목록과 같이 받는다(기본만 있는 것은 그 모양 폴더에 없음)
     getJSON('data/' + pick.id + '/index.json').then(function(index){
       packs[pick.id] = packs[pick.id] || { data: index.data, full: {}, asking: {} };
       put(packs[pick.id]);
@@ -1414,6 +1415,20 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   document.querySelectorAll('[data-shape]').forEach(function(b){
     b.addEventListener('click', function(){ useShape(b.getAttribute('data-shape')); });
   });
+  // 기본 모양 목록 썸네일. 페이지에는 START 것만 박혀 있고 나머지는 첫 화면 뒤에 받아 칸마다 깐다(lay 라 restore 의 원래 값이 된다).
+  // 기본 탭으로 돌아올 때도 여기를 지난다 — getJSON 이 같은 약속을 돌려줘 두 번 받지 않는다
+  function baseThumbs(){
+    return getJSON('data/' + SHAPES[0].id + '/arrows.json').then(function(one){
+      Object.keys(one.data).forEach(function(sid){
+        if (!base.data[sid]) return;
+        base.data[sid].arrow[0] = one.data[sid];
+        if (thumbOf[sid]) lay(thumbOf[sid], one.data[sid], base.data[sid].arrow[7]);
+      });
+      base.arrows = true;
+      if (window.cpTint) window.cpTint();   // 유리 스킨은 지금 구성표 썸네일에서 색을 뜬다
+    });
+  }
+  baseThumbs().catch(function(){});
   function noteShape(sid){
     var pick = SHAPES.filter(function(s){ return s.id === shape; })[0];
     shapeNote.textContent = pick.desc + (CLASSIC_ONLY[sid] && shape !== SHAPES[0].id ? ' — 이 구성표는 기본 모양만 있어 기본 그림 그대로 보이고 적용됨' : '');

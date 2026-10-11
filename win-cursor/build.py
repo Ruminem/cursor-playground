@@ -4,7 +4,7 @@
 사용법: python build.py
 
 모양마다 그림 데이터는 data/<모양>/ 으로 따로 나간다 (index.json 과 구성표마다 한 파일 — split_data 참고).
-preview.html 에는 기본 모양의 칸 정보·목록 화살표와 처음 여는 구성표(START) 하나의 그림만 들어간다.
+preview.html 에는 기본 모양의 칸 정보와 처음 여는 구성표(START) 하나의 그림만 들어간다(목록 화살표는 arrows.json).
 dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려받는다 (기본 모양은 dist/<구성표>/,
 나머지는 dist/<모양>/<구성표>/). art/ 나 shapes/ 를 고치면 이걸 다시 돌리고 결과까지 커밋해야 웹에 반영된다.
 """
@@ -449,15 +449,17 @@ def build() -> str:
         tabs.append(f'<button type="button" class="shape c-hand{" smooth" if i else ""}" role="tab" data-shape="{shp["id"]}"'
                     f' aria-selected="{"true" if i == 0 else "false"}"><i style="background-image:url({pic})"></i>{shp["name"]}</button>')
 
-    # 기본 모양 그림도 다른 모양처럼 data/<기본>/ 로 내보내고, 페이지에는 칸 정보·목록 화살표와 START 그림만 남긴다.
-    # 전부 박던 때는 페이지가 gzip 1.3MB 라 폰 회선에서 그것을 다 받을 때까지 첫 화면이 안 떴다
+    # 기본 모양 그림도 다른 모양처럼 data/<기본>/ 로 내보내고, 페이지에는 칸 정보와 START 그림만 남긴다.
+    # 전부 박던 때는 페이지가 gzip 1.3MB 라 폰 회선에서 그것을 다 받을 때까지 첫 화면이 안 떴다. 목록 화살표도
+    # 페이지가 뜬 뒤 arrows.json 으로 받는다 — 박던 때는 이펙트 결마다 60–100KB 씩 1.5MB 가 첫 화면 앞에 섰다
     write_split(SHAPES[0]["id"], {"data": data})
-    data = {sid: {rid: e if sid == START or rid == "arrow" else ["", *e[1:]] for rid, e in roles.items()}
+    data = {sid: {rid: e if sid == START else ["", *e[1:]] for rid, e in roles.items()}
             for sid, roles in data.items()}
 
     page = (
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*START*/", json.dumps(START))
+        .replace("<!--START_ID-->", START)   # #app 의 처음 구성표. 따옴표 없이 속성에 들어간다
         .replace("/*CLASSIC_ONLY*/", json.dumps(sorted(CLASSIC_ONLY)))
         .replace("/*HD*/", json.dumps(HD, sort_keys=True))
         .replace("/*HUE_KIND*/", json.dumps({s["id"]: HUE_KINDS[s["category"]] for s in SCHEMES if s["category"] in HUE_KINDS},
