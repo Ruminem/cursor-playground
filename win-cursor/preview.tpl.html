@@ -1075,12 +1075,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   function lend(pack){
     if (pack !== base) Object.keys(CLASSIC_ONLY).forEach(function(sid){ pack.data[sid] = base.data[sid]; });
   }
-  // 매끈한 모양 탭(body.smooth)에서도 빌린 픽셀아트는 뭉개지 않는다. 고화질은 거꾸로 기본 탭에서도 부드럽게 늘린다
+  // 매끈한 모양 탭(body.smooth)에서도 빌린 픽셀아트는 뭉개지 않는다. 고화질은 거꾸로 기본 탭에서도 부드럽게 늘린다 —
+  // 어느 탭 어느 칸에서든이라 !important 다. 없으면 매끈한 탭의 손 칸 규칙(body.smooth .c-hand .sprite)이 특이도로 이겨 손만 각졌다
   var pix = document.createElement('style');
   pix.textContent = Object.keys(CLASSIC_ONLY).filter(function(sid){ return !HD[sid]; }).map(function(sid){
     return 'body.smooth .s-' + sid + ' .sprite,body.smooth [data-scheme-item="' + sid + '"] .thumb{image-rendering:pixelated}';
   }).concat(Object.keys(HD).map(function(sid){
-    return '.s-' + sid + ' .sprite,[data-scheme-item="' + sid + '"] .thumb{image-rendering:auto}';
+    return '.s-' + sid + ' .sprite,[data-scheme-item="' + sid + '"] .thumb{image-rendering:auto!important}';
   })).join(' ');
   document.head.appendChild(pix);
   function layScheme(sid){
