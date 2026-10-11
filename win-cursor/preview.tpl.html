@@ -839,6 +839,10 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   // getJSON 이 받은 것. 여기 두는 이유: 첫 tick() 이 지금 구성표 그림을 아래 getJSON 정의보다 먼저 부른다 —
   // 정의 자리에 두던 때는 START 와 #app 의 처음 구성표가 다르면 got 이 아직 없어 스크립트가 통째로 죽었다
   var got = {};
+  // cursorCss 가 받은 구성표와 붙일 자리. 같은 까닭으로 여기 둔다(첫 tick() 이 먼저 부른다)
+  var cursorStyle = document.createElement('style'), cssAsked = {};
+  document.head.appendChild(cursorStyle);
+  cssAsked[/*START*/] = true;
   packs[shape] = { data: DATA, arrows: false, full: {}, asking: {} };
   packs[shape].full[/*START*/] = true;
   // 모양이 안 건드리는 칸(build.KEEP). 다른 모양 탭에서도 테마 그림 그대로라 카드 밑 파일 이름을 art 로 둔다
@@ -1147,7 +1151,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   function tick(){
     var sid = app.getAttribute('data-scheme'), px = size, deg = hueOf(sid);
     if (!DATA[sid] || document.hidden) return;
-    need(sid);
+    need(sid); cursorCss(sid);
     if (busy && performance.now() - busy < 2000) { again = true; return; }
     regen(px, deg);
     var moving = animated(sid) && motionOK;
@@ -1380,9 +1384,18 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       if (shape === mine || CLASSIC_ONLY[sid]) { lastKey = ''; tick(); }
     }, function(){ setTimeout(function(){ pack.asking[sid] = false; }, 5000); });
   }
+  // 구성표의 CSS 커서(칸마다 cursor:url). 페이지에는 START 것만 박혀 있고 나머지는 그 구성표를 볼 때 받아 붙인다 —
+  // 전부 박던 때는 1.58MB 라 폰에서 첫 화면이 3초 늦었다. 모양과 상관없이 기본 모양 폴더의 것이다(다른 모양은 덮어 그림)
+  function cursorCss(sid){
+    if (cssAsked[sid]) return;
+    cssAsked[sid] = true;
+    getJSON('data/' + SHAPES[0].id + '/' + sid + '.css.json').then(function(one){
+      cursorStyle.appendChild(document.createTextNode(one.css + '\n'));
+    }, function(){ setTimeout(function(){ cssAsked[sid] = false; }, 5000); });
+  }
   // 누르기 전에 손가락·마우스가 닿는 때부터 그 구성표 그림을 받아 둔다
   document.querySelectorAll('[data-pick]').forEach(function(b){
-    function warm(){ need(b.getAttribute('data-pick')); }
+    function warm(){ need(b.getAttribute('data-pick')); cursorCss(b.getAttribute('data-pick')); }
     b.addEventListener('pointerenter', warm); b.addEventListener('pointerdown', warm);
   });
   function useShape(id, done){

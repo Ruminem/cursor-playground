@@ -409,7 +409,8 @@ def tab_pic(shape: str | None) -> bytes:
 
 
 def build() -> str:
-    css, panels = [], []
+    css: dict[str, list[str]] = {}
+    panels: list[str] = []
     data: dict[str, dict[str, list]] = {}
     groups: dict[str, list[str]] = {}
     for scheme in SCHEMES:
@@ -426,7 +427,7 @@ def build() -> str:
                 entry = data_bit(sid, rid, None, {})
                 uri, (cx, cy), where = uri_of(page_bits(sid, rid, None, {})[0][0]), entry[1:3], f"art/{sid}/{rid}.txt"
             hx, hy, w, h = entry[1], entry[2], entry[5], entry[6]
-            css.append(
+            css.setdefault(sid, []).append(
                 f'[data-scheme="{sid}"] .c-{rid},[data-scheme="{sid}"].c-{rid},.card.s-{sid}.c-{rid}'
                 f"{{cursor:url({uri}) {cx} {cy},{fallback}}}"
             )
@@ -473,7 +474,9 @@ def build() -> str:
     # 기본 모양 그림도 다른 모양처럼 data/<기본>/ 로 내보내고, 페이지에는 칸 정보와 START 그림만 남긴다.
     # 전부 박던 때는 페이지가 gzip 1.3MB 라 폰 회선에서 그것을 다 받을 때까지 첫 화면이 안 떴다. 목록 화살표도
     # 페이지가 뜬 뒤 arrows.json 으로 받는다 — 박던 때는 이펙트 결마다 60–100KB 씩 1.5MB 가 첫 화면 앞에 섰다
-    write_split(SHAPES[0]["id"], {"data": data})
+    # CSS 커서도 START 것만 박고 나머지는 구성표를 볼 때 data/<기본>/<구성표>.css.json 으로 받는다. 전부 박던 때는
+    # 107종 × 17칸 data URI 가 1.58MB(페이지 gzip 의 77%)라 폰 흉내 DCL 이 4.5초였다(2026-10-11)
+    write_split(SHAPES[0]["id"], {"data": data, "css": {sid: "\n".join(rules) for sid, rules in css.items()}})
     data = {sid: {rid: e if sid == START else ["", *e[1:]] for rid, e in roles.items()}
             for sid, roles in data.items()}
 
@@ -488,7 +491,7 @@ def build() -> str:
         .replace("/*KEEP*/", json.dumps(sorted(KEEP)))
         .replace("<!--SHAPES-->", "".join(tabs))
         .replace("/*SHAPE_LIST*/", json.dumps([{k: s[k] for k in ("id", "name", "desc")} for s in SHAPES], ensure_ascii=False, separators=(",", ":")))
-        .replace("/*CURSOR_CSS*/", "\n".join(css))
+        .replace("/*CURSOR_CSS*/", "\n".join(css[START]))
         .replace("/*CURSOR_DATA*/", json.dumps(data, separators=(",", ":")))
         .replace("<!--FAVICON-->", favicon())
         .replace("<!--VERSION-->", version())
@@ -671,6 +674,7 @@ def split_data(whole: dict) -> dict[str, dict]:
 
     index.json 은 구성표마다 칸의 핫스팟·크기·프레임 수만(그림 자리는 빈 글자, 몇십 KB),
     arrows.json 은 구성표 전부의 화살표 그림(목록 썸네일), <구성표>.json 은 그 구성표의 칸 그림 전부.
+    기본 모양이면 <구성표>.css.json 에 그 구성표의 CSS 커서 규칙도 따로 둔다 — 다른 모양 탭에서도 커서 몇 줄 때문에 기본 그림을 다 받지 않게.
     모양을 고르면 index 와 지금 구성표 하나만 받고 바로 바꾸고, 썸네일 그림은 그 뒤에 받는다 —
     한 파일(24MB)을 통째로 받던 때는 다 받고 나서야 바뀌었고, index 에 화살표를 같이 넣었을 때도
     gzip 2.4MB 라 폰 회선에서 2–3초 기다렸다"""
@@ -681,6 +685,8 @@ def split_data(whole: dict) -> dict[str, dict]:
         index[sid] = {rid: ["", *e[1:]] for rid, e in roles.items()}
         arrows[sid] = roles["arrow"][0]
         files[f"{sid}.json"] = {"data": {rid: e[0] for rid, e in roles.items()}}
+        if sid in whole.get("css", {}):              # 기본 모양만 — 구성표의 CSS 커서 규칙(build 가 페이지와 같이 씀)
+            files[f"{sid}.css.json"] = {"css": whole["css"][sid]}
     return files
 
 

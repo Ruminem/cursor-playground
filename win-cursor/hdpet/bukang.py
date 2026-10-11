@@ -593,7 +593,7 @@ def sc_pen(fr):
 
 
 def sc_hand(fr):
-    """원본 앞모습: 위가 둥근 종 머리, 낮고 넓게 벌어진 작은 눈, 얼굴 폭만 한 U 웃음 · 윗니 줄 · 분홍 혀, 흰 배"""
+    """원본 앞모습: 위가 둥근 종 머리, 낮고 넓게 벌어진 작은 눈, 흰 얼굴 가운데 작은 D 웃음 · 둥근 윗니 둘 · 분홍 혀"""
     ph = TAU * fr
     cx, top, bot = 15.0, 0.75, 24.6               # 그린 뒤 HAND_DY 만큼 내림. 등지느러미 끝이 핫스팟
     g = 0.5 + 0.5 * (0.5 + 0.5 * cos(ph))           # 크게 벌림 → 좁힘 → 다시
@@ -614,57 +614,35 @@ def sc_hand(fr):
         d = x - cx
         return 11.35 + 0.55 * math.exp(-d * d / 6.0) - 0.006 * d * d
 
-    def low0(x):
-        d = x - cx
-        return 19.8 - 0.14 * d * d
-
-    def low(x):
-        return lip(x) + (low0(x) - lip(x)) * g
-
     def fam(x, y):
         k = smooth(-0.12, 0.12, y - lip(x))
         side = smooth(7.8, 8.8, abs(x - cx)) * k             # 원본처럼 흰 얼굴 양옆에 그늘 기둥
         cap = mix3(GREY, PALE, k)
         return (lerp(cap[0], SHADE, side), cap[1], cap[2])
     out = [base(head, fins, dorsal), part(fins, GREY), part(dorsal, GREY), part(head, fam, hi=0.5)]
-    # 입: 윗입술 먹선 · 윗니 띠 · 입속 · 아랫입술 먹선
-    X = 7.8
-
-    def mouth_f(x, y):
-        d = x - cx
-        if abs(d) > X:
-            return max(abs(d) - X, 0.0) + max(0.0, abs(y - lip(x)) - 0.3)
-        a = lip(x) - 0.35
-        b = max(low(x), lip(x) + 0.5)
-        return max(a - y, y - b, abs(d) - X)
-    tongue = ell(cx + 0.2, 0, 2.7, 1.5)
+    # 입: 흰 얼굴 가운데 작게 벌린 D 웃음(입꼬리가 살짝 올라감) · 작은 윗니 둘 · 분홍 혀. 얼굴 폭만 하던 입은
+    # 모자 테두리에 붙어 턱이 통째로 열리는 것처럼 보여서 줄였다. 다물어 이만 남는 장이 없게 늘 벌린 채 숨 쉬듯 오간다
+    W, mt = 4.2, 13.0
+    dep = 3.1 + 1.2 * g
+    us = [i / 10 for i in range(-10, 11)]
+    mouth = rpoly([(cx + W * u, mt - 0.6 * u * u) for u in us]
+                  + [(cx + W * u, mt - 0.6 * u * u + dep * (1 - u * u) ** 0.6) for u in reversed(us[1:-1])], 0.4)
+    tongue = ell(cx + 0.3, mt + dep + 0.1, 2.4, 1.6)
 
     def mpaint(x, y, e, nx, ny, frm):
-        d = x - cx
-        a, b = lip(x), max(low(x), lip(x) + 0.5)
+        u = (x - cx) / W
         c = GULLET
-        q = ((d + 1.45) / 2.9) % 1 - 0.5                  # 윗니: 흰 띠 아래로 둥근 이 몇 개(톱니 아님)
-        tb = a + 1.55 + (0.95 * math.sqrt(max(0.0, 1 - (q / 0.42) ** 2)) if abs(d) < X - 1.6 else 0.0)
-        if y < tb:
+        tooth = max(0.0, 1 - ((abs(x - cx) - 1.45) / 0.8) ** 2) ** 0.5     # 가운데 양옆으로 둥근 이 둘
+        if y < mt - 0.6 * u * u + 0.45 + 1.05 * tooth:
             c = WHITE
-        tg = tongue(x, y - (b - 0.15))
-        if y >= tb and tg < 0:
+        elif tongue(x, y) < 0:
             c = CHEEK
-        c = lerp(c, OUT, smooth(0.2, 0.4, a - y + 0.7))            # 윗입술 선
-        c = lerp(c, OUT, smooth(1.0, 0.75, b - y + 0.3) if y > a + 0.3 else 0.0)
-        return lerp(c, OUT, smooth(0.5, 0.3, -e)), 1.0
-    out.append(layer(mouth_f, mpaint, glow=False, shadow=False))
-    # 입꼬리 밖으로 이어지는 윗입술 선(회색 모자 테두리)
-    def lipline(x, y):
-        d = abs(x - cx)
-        if d < X - 0.2:
-            return 9.0
-        return abs(y - lip(x)) - 0.42
-    out.append(ink(inter(lipline, head)))
+        return lerp(c, OUT, smooth(LINE * 0.8 + 0.12, LINE * 0.8 - 0.12, -e)), 1.0
+    out.append(layer(mouth, mpaint, glow=False, shadow=False))
     bl = 1.0 if round(fr * NF) % NF == 7 else 0.0
     for s in (-1, 1):
         out += eye(cx + s * 5.0, 8.6, 1.75, 2.0, bl, hl=0.45)     # 32 에서도 까만 눈이 남게 반짝을 줄임
-        out.append(blush(cx + s * 7.6, 13.6 + 1.6 * (g - 0.5) / 0.5, 1.1, 0.7, 0.55))
+        out.append(blush(cx + s * 7.0, 14.2 + 0.4 * (g - 0.75) / 0.25, 1.1, 0.7, 0.55))
     wl = 25.9
     out.append(wave(2.2, 27.8, wl, fr, 0.62, 0.2, 1.3))
     out.append(ripple(3.2, 26.8, wl + 1.5, fr, 0.55))
