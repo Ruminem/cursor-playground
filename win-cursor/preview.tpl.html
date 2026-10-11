@@ -845,6 +845,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   var CLASSIC_ONLY = {};
   /*CLASSIC_ONLY*/.forEach(function(sid){ CLASSIC_ONLY[sid] = true; });
   window.cpClassicOnly = function(sid){ return !!CLASSIC_ONLY[sid]; };
+  // 고화질 구성표(build.HD, 구성표 → hd.py 결). 픽셀아트가 아니라 64px 판에서 줄이고 늘려 보이므로 칸을 안 뭉갠다
+  var HD = /*HD*/;
   // 색조 막대가 무엇을 돌리나(build.HUE_KIND). 없으면 "cursor" — 커서뿐이라 막대 하나가 전부를 돌린다.
   // "char" 는 동물뿐이라 막대 하나, "both" 는 동물이 화살표를 들어서 막대 둘(동물 색조 · 커서 색)
   var HUE_KIND = /*HUE_KIND*/;
@@ -1033,15 +1035,15 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     g.fillStyle = '#fff'; g.fillRect(x - m, y - m, 3 * m, 3 * m);
     g.fillStyle = 'rgb(30,110,255)'; g.fillRect(x, y, m, m);
   }
-  // dot 이 [x, y](판 칸)이면 커서용 프레임에 핫스팟 점을 찍는다
-  function paint(uri, px, deg, f, dot){
-    var key = px + '|' + deg + '|' + f + '|' + uri + (dot ? '|' + dot : '');
+  // dot 이 [x, y](판 칸)이면 커서용 프레임에 핫스팟 점을 찍는다. soft 면 판 크기를 바꿀 때 칸을 안 뭉개고 섞는다(고화질)
+  function paint(uri, px, deg, f, dot, soft){
+    var key = px + '|' + deg + '|' + f + '|' + uri + (dot ? '|' + dot : '') + (soft ? '|soft' : '');
     if (!cache[key]) {
       cache[key] = imgOf(uri).then(function(img){
         if (!img || (f < 0 && !deg)) return { uri: uri, k: 1 };   // k: 핫스팟 칸 → 이 그림 픽셀
         var B = img.naturalWidth, n = f < 0 ? B : (px || B), cv = document.createElement('canvas');
         cv.width = n; cv.height = f < 0 ? img.naturalHeight : n;
-        var g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+        var g = cv.getContext('2d'); g.imageSmoothingEnabled = !!soft; g.imageSmoothingQuality = 'high';
         if (f < 0) g.drawImage(img, 0, 0); else g.drawImage(img, 0, f * B * K, B, B, 0, 0, n, n);
         if (deg) { var data = g.getImageData(0, 0, cv.width, cv.height); recolor(data, deg); g.putImageData(data, 0, 0); }
         if (dot) mark(g, n / GRID, dot);
@@ -1073,14 +1075,14 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   function lend(pack){
     if (pack !== base) Object.keys(CLASSIC_ONLY).forEach(function(sid){ pack.data[sid] = base.data[sid]; });
   }
-  // 매끈한 모양 탭(body.smooth)에서도 빌린 픽셀아트는 뭉개지 않는다
-  if (Object.keys(CLASSIC_ONLY).length) {
-    var pix = document.createElement('style');
-    pix.textContent = Object.keys(CLASSIC_ONLY).map(function(sid){
-      return 'body.smooth .s-' + sid + ' .sprite,body.smooth [data-scheme-item="' + sid + '"] .thumb';
-    }).join(',') + '{image-rendering:pixelated}';
-    document.head.appendChild(pix);
-  }
+  // 매끈한 모양 탭(body.smooth)에서도 빌린 픽셀아트는 뭉개지 않는다. 고화질은 거꾸로 기본 탭에서도 부드럽게 늘린다
+  var pix = document.createElement('style');
+  pix.textContent = Object.keys(CLASSIC_ONLY).filter(function(sid){ return !HD[sid]; }).map(function(sid){
+    return 'body.smooth .s-' + sid + ' .sprite,body.smooth [data-scheme-item="' + sid + '"] .thumb{image-rendering:pixelated}';
+  }).concat(Object.keys(HD).map(function(sid){
+    return '.s-' + sid + ' .sprite,[data-scheme-item="' + sid + '"] .thumb{image-rendering:auto}';
+  })).join(' ');
+  document.head.appendChild(pix);
   function layScheme(sid){
     document.querySelectorAll('.card.s-' + sid).forEach(function(card){
       var rid = (/(?:^| )c-([a-z]+)/.exec(card.className) || [])[1];
@@ -1178,7 +1180,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     lastKey = key;
     Object.keys(fr).forEach(function(rid){
       var d = DATA[sid][rid], f = fr[rid];
-      jobs.push(Promise.all([rid === hid ? paint(d[0], px, deg, f, dots.indexOf(rid) >= 0 ? [d[1], d[2]] : null) : null, plain ? null : bgOf(d[0], deg)]).then(function(r){
+      jobs.push(Promise.all([rid === hid ? paint(d[0], px, deg, f, dots.indexOf(rid) >= 0 ? [d[1], d[2]] : null, !!HD[sid]) : null, plain ? null : bgOf(d[0], deg)]).then(function(r){
         var hx = r[0] && Math.floor(d[1] * r[0].k), hy = r[0] && Math.floor(d[2] * r[0].k);
         return function(){
           if (r[0] && over === hovered) set(hoverBook, over, 'cursor', 'url(' + r[0].uri + ') ' + hx + ' ' + hy + ',' + d[3]);
@@ -1311,7 +1313,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       // 가로는 틀 폭이 창을 따라 바뀌어(목록 카드 칸) 재지 않고 가운데 기준 calc 로 둔다. 틀은 그림 판(96px)보다 늘 넓다
       var cs = getComputedStyle(el), W = Infinity, H = Math.round(parseFloat(cs.height));
       fitRules[key] = Object.keys(pack).map(function(sid){
-        var pixel = mine === SHAPES[0].id || CLASSIC_ONLY[sid];
+        var pixel = (mine === SHAPES[0].id || CLASSIC_ONLY[sid]) && !HD[sid];
         var b = pack[sid].arrow[8], n = b[4], bw = b[2] - b[0] + 1, bh = b[3] - b[1] + 1;
         var s = Math.min(96 / n, W / bw, H / bh);   // 원래 배율은 판을 96px 로
         if (pixel && s >= 1) s = Math.floor(s);
@@ -1342,7 +1344,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       var d = DATA[sid] && DATA[sid][rid];
       if (!d) return;
       var own = plain || KEEP.indexOf(rid) >= 0 || CLASSIC_ONLY[sid];  // 링크·크기 조정 칸 등은 테마가 그린 것을 그대로 쓴다
-      card.querySelector('code').textContent = own ? 'art/' + sid + '/' + rid + '.txt' : 'art/' + sid + ' 색 + smooth.py ' + shape;
+      card.querySelector('code').textContent = HD[sid] ? 'hd.py ' + HD[sid] + ' · ' + rid
+        : own ? 'art/' + sid + '/' + rid + '.txt' : 'art/' + sid + ' 색 + smooth.py ' + shape;
       card.querySelector('.coords').innerHTML = d[5] + '×' + d[6] + ' · hotspot <b>' + d[1] + ',' + d[2] + '</b>';
       var stage = card.querySelector('.stage');
       stage.style.setProperty('--hx', d[1]); stage.style.setProperty('--hy', d[2]);

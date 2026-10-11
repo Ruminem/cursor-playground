@@ -25,6 +25,9 @@ from pathlib import Path
 import shape as shapelib
 import smooth as smoothlib
 from make_cur import canvas_size, is_animated, is_row, read_hotspot, read_rate, split_frames, txt_to_ani, txt_to_cur, txt_to_png
+# 고화질 구성표만 쓰는 것. 위 줄에 섞으면 그 줄이 build_one 의 해시에 들어 있어 100종을 다시 그린다
+import hd as hdlib
+from make_cur import SIZES, curs_to_ani, pngs_to_cur
 
 HERE = Path(__file__).parent
 STENCILS = HERE / ".stencils.pkl"   # 매끈한 모양의 스텐실. 빌드가 먼저 구워 두고 워커들이 읽어 나눠 쓴다
@@ -132,8 +135,13 @@ def _hashes() -> tuple[dict, dict, str]:
             for shp in SHAPES}
     art = {s["id"]: _sha(json.dumps(s, sort_keys=True),
                          *(f.read_bytes() for f in sorted((HERE / "art" / s["id"]).iterdir())))
-           for s in SCHEMES}
-    keys = {f"{shp['id']}/{sid}": _sha(code[shp["id"]], art[sid]) for shp in SHAPES for sid in drawn(shp["id"])}
+           for s in SCHEMES if not s.get("hd")}
+    # 고화질은 그림이 코드(hd.py)라 그것과 커서 굽는 코드가 재료다. 기본 모양으로만 내서 기본 모양 키만 있다
+    hd = _sha(env, *(_dump([_tree(HERE / n)]) for n in ("hd.py", "make_cur.py")),
+              _dump(_reach(_tree(HERE / "build.py"), {"build_hd"})))
+    art |= {s["id"]: _sha(hd, json.dumps(s, sort_keys=True)) for s in SCHEMES if s.get("hd")}
+    keys = {f"{shp['id']}/{sid}": art[sid] if sid in HD else _sha(code[shp["id"]], art[sid])
+            for shp in SHAPES for sid in drawn(shp["id"])}
     marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
     tree = _tree(HERE / "build.py")
     # 모양 데이터는 구성표 목록 차례까지 한 묶음이라 하나만 바뀌거나 빠져도 그 모양 data 를 다시 맞춘다.
@@ -193,6 +201,12 @@ SWAYS = {s["id"] for s in SCHEMES if s.get("sway")}
 # 없고, 시안 페이지는 어느 모양 탭에서든 이것의 기본 그림을 보이고 적용 주소에 모양을 안 붙인다.
 # 그래서 지금은 SWAYS 로 그릴 일이 없다 — 표식을 떼면 다시 그려진다
 CLASSIC_ONLY = {s["id"] for s in SCHEMES if s.get("classic_only")}
+# 고화질 구성표 {구성표: hd.py 재질}. art/ 의 txt 없이 hd.py 가 256 판에 그려 줄인 것을 dist 에 바로 굽는다(build_hd).
+# 칸마다 일감 하나라 칸 하나만 고쳐도 그 재질 17칸을 다 다시 그린다 — 일감 해시는 구성표 단위다
+HD = {s["id"]: s["hd"] for s in SCHEMES if s.get("hd")}
+# 시안 페이지에는 64 판을 두 장에 한 장씩 싣는다(20장 · 장마다 1/15초, 한 바퀴는 커서와 같다).
+# 20장으로도 갤럭시 사용 중 칸 하나가 base64 127KB 다(2026-10-11) — 40장이면 그 두 배쯤
+HD_PX, HD_STEP = 64, 2
 # 시안 페이지 색조 막대가 무엇을 돌리나. 없는 묶음은 "cursor"(커서뿐, 막대 하나가 전부). "char" 는 동물뿐이라 막대 하나,
 # "both" 는 동물이 화살표를 들어서 막대 둘 — 화살표 칸 색은 gen/sea.mark 가 파랑 끝 비트로 갈라 둔다.
 # schemes.json 줄에 달면 그 줄이 일감 해시에 들어가 50종을 다시 그리므로 묶음 이름으로 고른다
@@ -370,12 +384,17 @@ def build() -> str:
         for rid, rlabel, fallback in ROLES + EXTRA:
             # 그림은 프레임을 이은 한 장(strip)으로 넘기고 페이지 스크립트가 카드에 깔고 자리를 옮긴다.
             # 카드에 미리 박아 두면 같은 그림이 페이지에 두 번 들어간다. CSS 커서 기본값은 첫 프레임
-            entry = data_bit(sid, rid, None, {})
+            if sid in HD:                               # 고화질은 build_hd 가 먼저 구워 둔 dist 에서 뜬다
+                entry = hd_bit(sid, rid)
+                png, (cx, cy) = ani_frames((HERE / "dist" / sid / f"{rid}.ani").read_bytes())[0][32]
+                uri, where = uri_of(png), f"hd.py {HD[sid]} · {rid}"
+            else:
+                entry = data_bit(sid, rid, None, {})
+                uri, (cx, cy), where = uri_of(page_bits(sid, rid, None, {})[0][0]), entry[1:3], f"art/{sid}/{rid}.txt"
             hx, hy, w, h = entry[1], entry[2], entry[5], entry[6]
-            uri = uri_of(page_bits(sid, rid, None, {})[0][0])
             css.append(
                 f'[data-scheme="{sid}"] .c-{rid},[data-scheme="{sid}"].c-{rid},.card.s-{sid}.c-{rid}'
-                f"{{cursor:url({uri}) {hx} {hy},{fallback}}}"
+                f"{{cursor:url({uri}) {cx} {cy},{fallback}}}"
             )
             data.setdefault(sid, {})[rid] = entry
             cards.append(f"""
@@ -386,7 +405,7 @@ def build() -> str:
           </div>
           <div class="meta">
             <h3>{rlabel}</h3>
-            <p><code>art/{sid}/{rid}.txt</code></p>
+            <p><code>{where}</code></p>
             <p class="coords">{w}×{h} · hotspot <b>{hx},{hy}</b></p>
           </div>
         </article>""")
@@ -426,6 +445,7 @@ def build() -> str:
         (HERE / "preview.tpl.html").read_text(encoding="utf-8")
         .replace("/*START*/", json.dumps(START))
         .replace("/*CLASSIC_ONLY*/", json.dumps(sorted(CLASSIC_ONLY)))
+        .replace("/*HD*/", json.dumps(HD, sort_keys=True))
         .replace("/*HUE_KIND*/", json.dumps({s["id"]: HUE_KINDS[s["category"]] for s in SCHEMES if s["category"] in HUE_KINDS},
                                             sort_keys=True, separators=(",", ":")))
         .replace("/*KEEP*/", json.dumps(sorted(KEEP)))
@@ -533,6 +553,57 @@ def build_one(job: tuple[str, str, bool, bool]) -> tuple[int, tuple | None]:
     return count, (data if want_data else None)
 
 
+def build_hd(job: tuple[str, str]) -> int:
+    """고화질 구성표의 (구성표, 칸) 하나를 dist/<구성표>/<칸>.ani 로 굽는다 (워커에서). 쓴 커서 파일 수를 돌려준다.
+    안 움직이는 칸도 한 장짜리 .ani 다 — 받는 쪽(handler.ps1·CI)이 구성표마다 확장자 하나로 읽는다(schemes.json 의 animated).
+    크기마다 256 판에서 따로 줄이지 않고 큰 판에서 이어 줄인다(hd.sizes) — 바이트는 같고 장마다 0.25→0.19초"""
+    sid, rid = job
+    style = HD[sid]
+    n = hdlib.FRAMES if hdlib.animated(style, rid) else 1
+    curs = []
+    for k in range(n):
+        img, (hx, hy) = hdlib.render(style, rid, k / n)
+        curs.append(pngs_to_cur([(hdlib.png(hdlib.rgba_bytes(small, s), s, s), (hx * s // hdlib.N, hy * s // hdlib.N))
+                                 for s, small in hdlib.sizes(img, SIZES).items()]))
+    out = HERE / "dist" / sid
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"{rid}.ani").write_bytes(curs_to_ani(curs, hdlib.RATE))
+    return 1
+
+
+def ani_frames(blob: bytes) -> list[dict[int, tuple[bytes, tuple[int, int]]]]:
+    """curs_to_ani 의 거꾸로 — 장마다 {크기: (PNG, 핫스팟)}. 우리가 구운 꼴(icon 조각마다 PNG 를 담은 .cur)만 읽는다"""
+    le = lambda b: int.from_bytes(b, "little")
+    pos = 12                                            # RIFF, 크기, ACON 다음
+    while blob[pos:pos + 4] != b"LIST":
+        n = le(blob[pos + 4:pos + 8])
+        pos += 8 + n + n % 2
+    end, pos, frames = pos + 8 + le(blob[pos + 4:pos + 8]), pos + 12, []   # LIST, 크기, fram 다음
+    while pos < end:
+        n = le(blob[pos + 4:pos + 8])
+        cur, got = blob[pos + 8:pos + 8 + n], {}
+        for i in range(le(cur[4:6])):
+            e = cur[6 + 16 * i:22 + 16 * i]             # 폭, 높이, 색 수, 예약, 핫스팟 x, y, 길이, 자리
+            got[e[0] or 256] = (cur[le(e[12:16]):le(e[12:16]) + le(e[8:12])], (le(e[4:6]), le(e[6:8])))
+        frames.append(got)
+        pos += 8 + n + n % 2
+    return frames
+
+
+def hd_bit(sid: str, rid: str) -> list:
+    """고화질 구성표의 시안 데이터 칸 하나 — data_bit 과 같은 꼴. 다시 그리지 않고 build_hd 가 구운 dist 의 .ani 에서
+    HD_PX 판을 HD_STEP 장마다 떠 온다. 핫스팟은 32칸 판 기준 소수(256 판 픽셀 / 8)라 페이지가 어느 크기로 줄여
+    floor(값 × 크기 / 32) 해도 파일의 핫스팟과 같은 칸이 된다. 폭·높이는 32 판 첫 장에서 잉크가 닿는 칸 수"""
+    frames = ani_frames((HERE / "dist" / sid / f"{rid}.ani").read_bytes())
+    uri, box = strip([f[HD_PX][0] for f in frames[::HD_STEP]], rid == "arrow")
+    hx, hy = (v if v % 1 else int(v) for v in (round(v * hdlib.U) / hdlib.U for v in hdlib.cell(rid)[1]))
+    side, raw = _scanlines(frames[0][32][0])
+    ink = [(x, y) for y in range(side) for x in range(side) if raw[y * (side * 4 + 1) + 1 + x * 4 + 3] > 8]
+    fallback = next(f for r, _, f in ROLES + EXTRA if r == rid)
+    return [uri, hx, hy, fallback, hdlib.RATE * HD_STEP * 1000 // 60,
+            max(x for x, _ in ink) + 1, max(y for _, y in ink) + 1, len(frames[::HD_STEP]), box]
+
+
 def data_dir(shape_id: str) -> Path:
     return HERE / "data" / shape_id
 
@@ -627,7 +698,8 @@ def update_readme() -> None:
             if s[cat] != current:
                 current = s[cat]
                 rows += ["", f"**{current}**", "", head, "|---|---|---|"]
-            rows.append(f"| `art/{s['id']}` | {s[name]} | {s[desc]} |")
+            where = f"hd.py {s['hd']}" if s.get("hd") else f"art/{s['id']}"
+            rows.append(f"| `{where}` | {s[name]} | {s[desc]} |")
         start, end = f"<!-- schemes:{lang} -->", f"<!-- /schemes:{lang} -->"
         before, rest = text.split(start, 1)
         _, after = rest.split(end, 1)
@@ -663,7 +735,9 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(workers) as pool:
         jobs_of, skipped = [], 0
         # 일감 차례를 정할 어림 값 — 그림 프레임 수. 움직이는 구성표 몇이 일의 대부분이다
-        frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES for rid, _, _ in ROLES + EXTRA}
+        frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES if s["id"] not in HD
+                  for rid, _, _ in ROLES + EXTRA}
+        hd_jobs: list[tuple[str, str]] = []             # 고화질 (구성표, 칸). build_one 과 따로 돈다
         left: dict[str, int] = {}                       # 모양마다 남은 일감. 다 끝나면 한 줄 찍는다
         pieces: dict[str, dict] = {}                    # 시안 데이터를 새로 쓸 모양 → 구성표별 조각
         for shp in SHAPES:
@@ -689,7 +763,11 @@ if __name__ == "__main__":
             # 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
             # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
             # 마지막 모양의 묶음만 남아 워커 8개가 20초 넘게 놀았다 (2026-09-24, 5600X 262초 중 22초)
-            mine = [(shp["id"], sid, sid in stale, sid in fresh) for sid in sids if sid in stale or sid in fresh]
+            # 고화질은 칸 하나가 일감 하나다 — 움직이는 재질은 칸마다 40장이라 구성표 하나를 한 워커에 몰면 그 하나가 꼬리가 된다
+            hd_jobs += [(sid, rid) for sid in sorted(stale & set(HD)) for rid, _, _ in ROLES + EXTRA]
+            if plan and stale & set(HD):
+                print(f"{shp['id']}: 고화질 {len(stale & set(HD))}종 칸마다 — " + " ".join(sorted(stale & set(HD))))
+            mine = [(shp["id"], sid, sid in stale, sid in fresh) for sid in sids if (sid in stale or sid in fresh) and sid not in HD]
             if mine:
                 left[shp["id"]] = len(mine)
                 jobs_of += mine
@@ -697,7 +775,8 @@ if __name__ == "__main__":
                     print(f"{shp['id']}: 커서 {sum(j[2] for j in mine)}종 · 시안 데이터 {sum(j[3] for j in mine)}종"
                           f" (구성표 {len(sids)}종 중)" + ("" if len(mine) > 8 else " — " + " ".join(j[1] for j in mine)))
         if plan:
-            print(f"다시 그릴 일감 {len(jobs_of)}개 · 그대로 둘 구성표 {skipped}개 (모양별 합)"
+            print(f"다시 그릴 일감 {len(jobs_of)}개" + (f" · 고화질 칸 {len(hd_jobs)}개" if hd_jobs else "")
+                  + f" · 그대로 둘 구성표 {skipped}개 (모양별 합)"
                   + (" · 스텐실 다시 구움" if was.get("*stencil") != marks["*stencil"] else "")
                   + (" · 페이지 다시 만듦" if was.get("*page") != page_key else ""))
             raise SystemExit
@@ -719,17 +798,35 @@ if __name__ == "__main__":
             n = sum(frames[sid, rid] for rid, _, _ in ROLES + EXTRA if not (smooth and rid in KEEPS[sid]))
             return n * (3 if smooth and want_dist else 1)
         jobs_of.sort(key=cost, reverse=True)
+        # 고화질 칸을 맨 앞에 넣는다 — 페이지가 그 그림을 이 칸들이 구운 dist 의 .ani 에서 떠서, 페이지를 짜기 전에
+        # 다 끝나야 한다. 그동안 남는 워커는 뒤의 build_one 일감을 받는다. 움직이는 칸(40장)부터
+        hd_cost = lambda j: hdlib.FRAMES if hdlib.animated(HD[j[0]], j[1]) else 1
+        hd_jobs.sort(key=hd_cost, reverse=True)
         t_sub = time.time()
+        hd_futs = {pool.submit(timed, build_hd, j): j for j in hd_jobs}
         jobs = {pool.submit(timed, build_one, j): j for j in jobs_of}
         whole = sum(map(cost, jobs_of)) or 1            # 진행률은 이 어림 값의 합으로 센다
+        total, made, spent, per_sid, got, step = 0, {}, {}, {}, 0, 1
+        spans = []                                      # (시작, 끝) — 가동률과 꼬리를 잰다
+        hd_whole, hd_got, hd_step = sum(map(hd_cost, hd_jobs)) or 1, 0, 1
+        for done in as_completed(hd_futs):
+            count, a, b = done.result()
+            spans.append((a, b))
+            total += count
+            sid, rid = job = hd_futs[done]
+            per_sid[sid] = per_sid.get(sid, 0) + b - a
+            spent["고화질"] = spent.get("고화질", 0) + b - a
+            hd_got += hd_cost(job)
+            if hd_got * 10 >= hd_whole * hd_step:
+                hd_step = hd_got * 10 // hd_whole + 1
+                print(f"[{time.time() - t0:5.1f}초] 고화질 {hd_got * 100 // hd_whole}% · 칸 {len(spans)}/{len(hd_futs)}"
+                      + (f" · 워커 시간 {_dur(spent['고화질'])}" if hd_got == hd_whole else ""))
 
         out = HERE / "preview.html"                      # 그동안 이쪽에서는 페이지를 만든다
         if was.get("*page") != page_key or not out.exists() or not (data_dir(SHAPES[0]["id"]) / "index.json").exists():
             _load_stencils()                             # 모양 탭 아이콘도 매끈한 모양이다
             out.write_text(build(), encoding="utf-8", newline="\n")
             print(f"[{time.time() - t0:5.1f}초] {out.name} 만듦")
-        total, made, spent, per_sid, got, step = 0, {}, {}, {}, 0, 1
-        spans = []                                      # (시작, 끝) — 가동률과 꼬리를 잰다
         for n, done in enumerate(as_completed(jobs), 1):
             (count, piece), a, b = done.result()
             spans.append((a, b))

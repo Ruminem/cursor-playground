@@ -8,7 +8,7 @@
 import base64, json, os, sys
 from concurrent.futures import ProcessPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.dirname(HERE))       # hd.py 는 빌드가 부르게 되면서 win-cursor/ 로 옮겼다
 import hd
 
 ANIM = ["arrow", "busy", "wait", "hand"]

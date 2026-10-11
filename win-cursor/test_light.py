@@ -487,7 +487,7 @@ moved = sm._jolt(px, (0, 0, 10, 10), set(px), ((0, 0, 9, 9), {9: 1}, {}))
 assert (10, 9) in moved and (0, 9) not in moved and (0, 8) in moved, "새 몸의 맨 아랫줄만 한 칸 밀려야 함"
 lit = []
 import build  # noqa: E402,F811
-for scheme in build.SCHEMES:
+for scheme in (s for s in build.SCHEMES if not s.get("hd")):   # 고화질은 art 그림이 없다
     for rid in ("arrow", "wait", "hand"):
         if sm.jolts_of(shapelib.read_art(build.art_raw(scheme["id"], rid))[0]):
             lit.append(f"{scheme['id']}/{rid}")
@@ -522,7 +522,8 @@ print("흔들림 번짐 OK — 해양 애니에서만 켜지고, 켜면 번짐�
 # handler.ps1 과 CI 가 이 값으로 .ani/.cur 를 고른다. 해양 애니 6종에 빠져서 윈도우 적용이 .cur 를 찾다
 # 실패할 뻔했다(2026-09-24, CI 에서 걸림). 그림이 한 칸이라도 움직이면 animated 가 참이어야 한다
 import make_cur  # noqa: E402
-wrong = [s["id"] for s in build.SCHEMES
+# 고화질은 art 가 없고 사용 중·대기 칸이 늘 움직여서 다 animated 다 — 아래 고화질 절에서 본다
+wrong = [s["id"] for s in build.SCHEMES if not s.get("hd")
          if bool(s.get("animated")) != any(make_cur.is_animated(build.art_raw(s["id"], rid))
                                             for rid, *_ in build.ROLES + build.EXTRA)]
 print(f"animated 표시가 그림과 어긋난 구성표 {len(wrong)}개 {wrong}")
@@ -559,3 +560,21 @@ assert len(both) == 60, both
 assert set(both) == build.PEEK, sorted(set(both) ^ build.PEEK)   # 막대 둘 묶음은 다 매끈한 모양에 반응한다
 assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".join(bad[:8])
 print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)이 갈려 있다")
+
+
+# ── 고화질 구성표 — 움직이는 칸만 40장으로 굽고, .ani 를 거꾸로 읽어 시안에 쓴다 ───────────────
+# build_hd 는 hd.animated 가 참인 칸만 장을 늘린다. 그 표가 그림과 어긋나면 움직이는 그림이 한 장으로 멈추거나
+# 안 움직이는 그림을 40장 굽는다. 한 구성표는 확장자가 하나라(handler.ps1·CI) 고화질은 다 animated 여야 한다
+import hd as hdlib  # noqa: E402
+assert build.HD and all(s.get("animated") and s.get("classic_only") for s in build.SCHEMES if s.get("hd")), "고화질 표시"
+assert set(build.HD.values()) == set(hdlib.STYLES), sorted(set(build.HD.values()) ^ set(hdlib.STYLES))
+lie = [f"{st}/{rid}" for st in hdlib.STYLES for rid in ("arrow", "busy")
+       if (hdlib.render(st, rid, 0)[0] != hdlib.render(st, rid, 0.5)[0]) != hdlib.animated(st, rid)]
+print(f"고화질 {len(hdlib.STYLES)}결 · 움직임 표가 그림과 어긋난 칸 {len(lie)}개 {lie}")
+assert not lie, f"hd.animated 가 그림과 다름: {lie}"
+# ani_frames 는 curs_to_ani 의 거꾸로여야 한다 — 크기마다 PNG 바이트와 핫스팟이 그대로 돌아오는지
+pngs = [(hdlib.png(bytes([k, 0, 0, 255]) * s * s, s, s), (k, s - 1 - k)) for k in (1, 2) for s in (32, 48)]
+blob = make_cur.curs_to_ani([make_cur.pngs_to_cur(pngs[:2]), make_cur.pngs_to_cur(pngs[2:])], hdlib.RATE)
+back = build.ani_frames(blob)
+assert back == [{32: pngs[0], 48: pngs[1]}, {32: pngs[2], 48: pngs[3]}], "ani_frames 가 구운 것을 못 되읽음"
+print("고화질 OK — 움직임 표가 그림과 맞고, .ani 를 장·크기·핫스팟 그대로 되읽는다")

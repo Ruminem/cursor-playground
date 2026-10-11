@@ -33,6 +33,26 @@ assert keys0 == keys1, "data 쓰는 코드만 바꿨는데 커서 일감을 다�
 assert all(marks0[k] != marks1[k] for k in marks0 if k.startswith("*data/")), "data 쓰는 코드가 data 표식에 안 들어감"
 assert page0 != page1, "페이지 짜는 코드가 페이지 해시에 안 들어감"
 
+# 고화질 일감은 hd.py·build_hd 만 품는다. hd.py 를 고치면 고화질 칸만, 기존 구성표가 지나는 build_one 을 고치면
+# 고화질 빼고 다 다시 그려야 한다. 섞이면 그림 한 줄 고칠 때마다 100종(또는 고화질 7종)을 헛되이 다시 굽는다
+def bent_at(file, name):
+    def tree_of(path):
+        tree = plain(path)
+        for node in tree.body if path.name == file else ():
+            if getattr(node, "name", None) == name:
+                node.body.insert(0, ast.Pass())
+        return tree
+    return tree_of
+hd_keys = {k for k in keys0 if k.split("/")[1] in build.HD}
+assert hd_keys, "고화질 일감이 없음"
+for file, name, want in [("hd.py", "render", hd_keys), ("build.py", "build_hd", hd_keys),
+                         ("build.py", "build_one", set(keys0) - hd_keys)]:
+    build._tree = bent_at(file, name)
+    keys2 = build._hashes()[0]
+    build._tree = plain
+    moved = {k for k in keys0 if keys0[k] != keys2[k]}
+    assert moved == want, f"{file} 의 {name} 을 고치니 다시 그릴 일감이 어긋남 — 더 {len(moved - want)} · 빠짐 {len(want - moved)}"
+
 # 주소 줄에 붙여넣은 주소를 읽는 정규식이, 그 줄이 스스로 뱉는 주소를 도로 읽는지.
 # 둘이 갈리면 복사한 주소를 다시 붙여넣었을 때 "못 읽음" 이 된다
 tpl = open("preview.tpl.html", encoding="utf-8").read()

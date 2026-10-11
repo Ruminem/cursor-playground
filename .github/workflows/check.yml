@@ -103,6 +103,8 @@ jobs:
           $slots = 'arrow','help','busy','wait','cross','ibeam','pen','no','ns','we','nwse','nesw','move','up','hand','pin','person'
           $fail = 0
           foreach ($s in $schemes) {
+            # 고화질 구성표는 art 그림 없이 hd.py 가 dist 에 바로 굽는다. 커서 파일은 아래에서 본다
+            if ($s.hd) { continue }
             foreach ($slot in $slots) {
               if (-not (Test-Path "art\$($s.id)\$slot.txt")) { Write-Host "그림 없음: $($s.id)/$slot.txt"; $fail = 1 }
             }

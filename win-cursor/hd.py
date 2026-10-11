@@ -13,10 +13,12 @@ b6e4129 에 있다.
 dome() 으로 테두리 단면에서 법선을 세워 빛을 받고(L3·H3), soft 칸만큼 몸을 부풀리거나 tip_body 로 펜 심을
 몸 색으로 칠할 수 있다. 움직임은 frame(0–1) 에 주기로 걸어 고리 이음매가 없다.
 
-    python gen/hd.py <출력 폴더> [재질…]        # 256 PNG 와 견줘 볼 시트
+빌드가 부른다 — schemes.json 에 "hd": <재질> 을 단 구성표는 art/ 의 txt 없이 build.build_hd 가 칸마다 FRAMES 장을
+그려 dist/<구성표>/<칸>.ani 로 바로 굽는다. 매끈한 모양으로는 안 그린다(classic_only, 다른 모양 탭은 이 그림을 빌림).
+이 파일은 빌드 해시에 들어가서 고치면 고화질 7종을 다시 그린다(컨테이너 워커 4개로 5분 남짓).
 
-지금은 시안 단계라 art/ 에 쓰지 않는다. 고른 뒤 빌드 길과 같이 넣는다.
-2026-10-10 보류 — 매끈한 모양 대응(classic_only 로 빌릴지, 모양마다 다시 그릴지)을 정하기 전. NEXT.md 참고.
+    python hd.py <출력 폴더> [재질…]        # 256 PNG 와 견줘 볼 시트 (빌드 없이)
+
 시안 페이지: https://claude.ai/artifact/WToSbg2DiN2QL76z6SQ2or (gen/hd_preview.py 로 다시 뽑음)
 """
 import math
@@ -183,13 +185,18 @@ def question(cx, cy, s=1.0):
 
 
 def hand():
-    parts = [capsule(9.4, 2.4, 9.4, 11.5, 1.5),                    # 집게손가락
-             rbox(12.3, 16.0, 4.7, 4.4, 2.3),                       # 손바닥
-             capsule(12.0, 10.6, 12.0, 12.6, 1.4),                  # 접은 손가락 셋
-             capsule(14.4, 11.3, 14.4, 13.0, 1.35),
-             capsule(16.5, 12.4, 16.5, 13.8, 1.2),
-             capsule(7.6, 15.6, 5.4, 12.3, 1.35)]                   # 엄지
-    return smin(0.3, *parts)
+    # 검지가 손바닥보다 길면 주먹이 아니라 막대에 매달린 손으로 읽힌다(2026-10-11 사용자) — 끝(핫스팟)은
+    # 그대로 두고 손을 3칸 올려 검지를 손바닥 높이의 절반쯤으로 줄였다. 그러면 손이 화살표보다 작아져서
+    # 끝을 축으로 K 배 키워 전체 높이만 예전(끝에서 아래 끝까지 19칸 남짓)으로 돌린다
+    K, ox, oy = 1.15, 9.4, 0.9
+    parts = [capsule(9.4, 2.4, 9.4, 8.5, 1.5),                     # 집게손가락
+             rbox(12.3, 13.0, 4.7, 4.4, 2.3),                       # 손바닥
+             capsule(12.0, 7.6, 12.0, 9.6, 1.4),                    # 접은 손가락 셋
+             capsule(14.4, 8.3, 14.4, 10.0, 1.35),
+             capsule(16.5, 9.4, 16.5, 10.8, 1.2),
+             capsule(7.6, 12.6, 5.4, 9.3, 1.35)]                    # 엄지
+    f = smin(0.3, *parts)
+    return lambda x, y: K * f(ox + (x - ox) / K, oy + (y - oy) / K)
 
 
 def pencil():
@@ -283,6 +290,14 @@ def _cell(name, frame):
 
 CELLS = ["arrow", "help", "busy", "wait", "cross", "ibeam", "pen", "no", "ns", "we",
          "nwse", "nesw", "move", "up", "hand", "pin", "person"]
+FRAMES = 40       # 움직이는 칸 한 바퀴 장 수 (2026-10-11 사용자)
+RATE = 2          # 장마다 1/60초 틱 — 40장 × 2 = 1.33초 한 바퀴
+# 몸 색이 흐르는 재질 — 모든 칸이 움직인다. 나머지(클레이·젤리·바우하우스)는 돌기(바쁨·사용 중)만 움직인다
+MOVES = {"holo", "sunset", "aurora", "galaxy"}
+
+
+def animated(style, name):
+    return name in ("busy", "wait") or style in MOVES
 
 
 # ---- 재질 ----
@@ -604,14 +619,14 @@ def weights(src, dst):
     return out
 
 
-def shrink(img, size):
-    """미리 곱한 RGBA 를 size 로 면적 평균. 가로 다음 세로."""
-    W = weights(N, size)
+def shrink(img, size, src=N):
+    """미리 곱한 RGBA(src×src) 를 size 로 면적 평균. 가로 다음 세로."""
+    W = weights(src, size)
     res = []
     for ch in img:
-        tmp = [0.0] * (size * N)
-        for y in range(N):
-            row = ch[y * N:(y + 1) * N]
+        tmp = [0.0] * (size * src)
+        for y in range(src):
+            row = ch[y * src:(y + 1) * src]
             for x, ws in enumerate(W):
                 tmp[y * size + x] = sum(row[j] * w for j, w in ws)
         out = [0.0] * (size * size)
@@ -620,6 +635,16 @@ def shrink(img, size):
                 out[y * size + x] = sum(tmp[j * size + x] * w for j, w in ws)
         res.append(out)
     return res
+
+
+def sizes(img, want):
+    """want 크기마다 줄인 판 {크기: 판}. 256 에서 바로 줄이는 대신 정수 배로 떨어지는 가장 작은 판에서 줄인다 —
+    64 는 128 에서, 32 는 64 에서. 면적 평균이라 2배씩 두 번 줄인 것과 4배 한 번이 수식으로 같은 값이다"""
+    got = {N: img}
+    for s in sorted(want, reverse=True):
+        src = min((k for k in got if k % s == 0), default=N)
+        got[s] = shrink(got[src], s, src)
+    return {s: got[s] for s in want}
 
 
 def rgba_bytes(img, size):

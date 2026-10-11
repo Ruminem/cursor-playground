@@ -126,7 +126,8 @@ def main(argv: list[str] | None = None) -> Path:
 
     t0 = time.time()
     shapes = pick(a.shapes, known, "모양")
-    schemes = pick(a.schemes, [s["id"] for s in build.SCHEMES], "구성표")
+    # 고화질은 art 그림이 없어 여기서 못 그린다 — hd.py 시안(gen/hd_preview.py)으로 본다
+    schemes = pick(a.schemes, [s["id"] for s in build.SCHEMES if not s.get("hd")], "구성표")
     if not (build.HERE / "art" / schemes[0] / f"{a.role}.txt").exists():
         raise SystemExit(f"모르는 칸: {a.role}")
     cache: dict = {}

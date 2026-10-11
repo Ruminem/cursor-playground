@@ -73,7 +73,15 @@ function Install-Scheme($id) {
             continue
         }
         $src = Join-Path $PSScriptRoot "art\$id\$($slots[$slot]).txt"
-        if (-not (Test-Path $src)) { ''; continue }
+        if (-not (Test-Path $src)) {
+            # 고화질 구성표(schemes.json 의 hd)는 art 그림이 없다. build.py 가 hd.py 로 구운 dist\<구성표>\ 것을 복사한다
+            $made = @(Get-ChildItem (Join-Path $PSScriptRoot "dist\$id") -Filter "$($slots[$slot]).*" -ErrorAction SilentlyContinue)
+            if (-not $made) { ''; continue }
+            $cur = Join-Path $dest $made[0].Name
+            Copy-Item $made[0].FullName $cur -Force
+            $cur
+            continue
+        }
         # 프레임이 여러 개인 그림은 움직이는 커서(.ani)로 만든다
         $ext = if (Select-String -Path $src -Pattern '^frame$' -Quiet) { 'ani' } else { 'cur' }
         $cur = Join-Path $dest "$($slots[$slot]).$ext"
