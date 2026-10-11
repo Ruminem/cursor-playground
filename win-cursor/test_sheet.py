@@ -11,7 +11,7 @@ import sheet
 
 SIZE = 64
 tile = SIZE + 2 * sheet.PAD
-shapes, schemes = ["classic", "round"], ["heartbeat", "neonpulse"]
+shapes, schemes = ["classic", "round"], ["cheesecatanim", "tuxedocatanim"]
 
 out = sheet.main([",".join(shapes), ",".join(schemes), "--size", str(SIZE),
                   "-o", str(Path(tempfile.gettempdir()) / "test-sheet.png")])
@@ -50,7 +50,7 @@ assert sum(wide[(x, y)] != sheet.BGS[1] for y in range(tile, 2 * tile) for x in 
     "어두운 쪽 마지막 열에 그림이 없음"
 
 try:
-    sheet.main(["nope", "heartbeat"])
+    sheet.main(["nope", "cheesecatanim"])
 except SystemExit as e:
     assert "nope" in str(e)
 else:

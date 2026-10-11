@@ -49,7 +49,7 @@ jobs:
             win-cursor/data
             win-cursor/.build-stamp.json
             win-cursor/.stencils.pkl
-          key: cursors-${{ runner.os }}-${{ hashFiles('win-cursor/art/**', 'win-cursor/*.py', 'win-cursor/*.json', 'win-cursor/preview.tpl.html') }}
+          key: cursors-${{ runner.os }}-${{ hashFiles('win-cursor/art/**', 'win-cursor/*.py', 'win-cursor/hdfx/**', 'win-cursor/*.json', 'win-cursor/preview.tpl.html') }}
           restore-keys: cursors-${{ runner.os }}-
 
       - name: 빌드

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """구성표 하나를 맥 Mousecape 용 .cape 로 뽑는다. 맥에서 되는지 재 보려는 시험판이다 (docs/macos.md).
 
-사용법: python gen/cape.py electric [-o out/electric.cape] [--scales 1,2]
+사용법: python gen/cape.py dolphinanim [-o out/dolphinanim.cape] [--scales 1,2]
 
 기본 모양(테마 그림 그대로)만 뽑는다. 손으로 돌리고 빌드는 안 부른다. 빌드 해시와 CI 캐시 키에 안 들어간다.
 

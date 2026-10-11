@@ -5,12 +5,12 @@
 붙는지 아래에 붙는지는 찍히는 안내를 본다) — 네온은 어두운 데서, 잉크는 밝은 데서만 보여서 한쪽만 보면 속는다.
 
 사용법:
-  python sheet.py round,bevel neonpulse,flicker,wave 모양 둘 × 구성표 셋
-  python sheet.py all neonpulse                    모양 전부 (기본 모양 포함)
-  python sheet.py glow electric --frames           열을 모양 대신 프레임으로 (움직임을 볼 때, 모양은 하나만)
-  python sheet.py classic neonpulse,wave --roles all 열을 칸 17개로 (구성표 한 벌을 통째로 볼 때)
+  python sheet.py round,bevel cheesecatanim,blackcatanim,siamesecatanim 모양 둘 × 구성표 셋
+  python sheet.py all cheesecatanim                 모양 전부 (기본 모양 포함)
+  python sheet.py glow cheesecatanim --frames           열을 모양 대신 프레임으로 (움직임을 볼 때, 모양은 하나만)
+  python sheet.py classic dolphinanim,crabanim --roles all 열을 칸 17개로 (구성표 한 벌을 통째로 볼 때)
   --role hand · --size 128 · -o 경로               칸 · 판 크기 · 나갈 자리 (기본은 임시 폴더)
-  python sheet.py round,jelly neonpulse --try 후보.json   shapes.json 에 없는 후보 모양을 같이 그린다
+  python sheet.py round,jelly cheesecatanim --try 후보.json   shapes.json 에 없는 후보 모양을 같이 그린다
   python sheet.py classic cheesecatanim --roles all --split   커서 표식(파랑 끝 비트 홀수) 칸을 자홍으로
 
 매끈한 모양을 고치다 "그려서 보는" 임시 스크립트를 새로 짜고 싶어지면 이 파일에 옵션을 더한다.

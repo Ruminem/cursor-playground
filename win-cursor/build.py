@@ -27,6 +27,7 @@ import smooth as smoothlib
 from make_cur import canvas_size, is_animated, is_row, read_hotspot, read_rate, split_frames, txt_to_ani, txt_to_cur, txt_to_png
 # 고화질 구성표만 쓰는 것. 위 줄에 섞으면 그 줄이 build_one 의 해시에 들어 있어 100종을 다시 그린다
 import hd as hdlib
+import hdfx  # noqa: F401 — 이펙트 · 애니 20결을 hd.STYLES 에 등록한다(워커도 이 줄로 받는다)
 from make_cur import SIZES, curs_to_ani, pngs_to_cur
 
 HERE = Path(__file__).parent
@@ -138,6 +139,7 @@ def _hashes() -> tuple[dict, dict, str]:
            for s in SCHEMES if not s.get("hd")}
     # 고화질은 그림이 코드(hd.py)라 그것과 커서 굽는 코드가 재료다. 기본 모양으로만 내서 기본 모양 키만 있다
     hd = _sha(env, *(_dump([_tree(HERE / n)]) for n in ("hd.py", "make_cur.py")),
+              *(_dump([_tree(f)]) for f in sorted((HERE / "hdfx").glob("*.py"))),
               _dump(_reach(_tree(HERE / "build.py"), {"build_hd"})))
     art |= {s["id"]: _sha(hd, json.dumps(s, sort_keys=True)) for s in SCHEMES if s.get("hd")}
     keys = {f"{shp['id']}/{sid}": art[sid] if sid in HD else _sha(code[shp["id"]], art[sid])
@@ -559,7 +561,7 @@ def build_hd(job: tuple[str, str]) -> int:
     크기마다 256 판에서 따로 줄이지 않고 큰 판에서 이어 줄인다(hd.sizes) — 바이트는 같고 장마다 0.25→0.19초"""
     sid, rid = job
     style = HD[sid]
-    n = hdlib.FRAMES if hdlib.animated(style, rid) else 1
+    n, rate = hdlib.frames(style, rid)
     curs = []
     for k in range(n):
         img, (hx, hy) = hdlib.render(style, rid, k / n)
@@ -567,7 +569,7 @@ def build_hd(job: tuple[str, str]) -> int:
                                  for s, small in hdlib.sizes(img, SIZES).items()]))
     out = HERE / "dist" / sid
     out.mkdir(parents=True, exist_ok=True)
-    (out / f"{rid}.ani").write_bytes(curs_to_ani(curs, hdlib.RATE))
+    (out / f"{rid}.ani").write_bytes(curs_to_ani(curs, rate))
     return 1
 
 
@@ -600,7 +602,7 @@ def hd_bit(sid: str, rid: str) -> list:
     side, raw = _scanlines(frames[0][32][0])
     ink = [(x, y) for y in range(side) for x in range(side) if raw[y * (side * 4 + 1) + 1 + x * 4 + 3] > 8]
     fallback = next(f for r, _, f in ROLES + EXTRA if r == rid)
-    return [uri, hx, hy, fallback, hdlib.RATE * HD_STEP * 1000 // 60,
+    return [uri, hx, hy, fallback, hdlib.frames(HD[sid], rid)[1] * HD_STEP * 1000 // 60,
             max(x for x, _ in ink) + 1, max(y for _, y in ink) + 1, len(frames[::HD_STEP]), box]
 
 
@@ -800,7 +802,7 @@ if __name__ == "__main__":
         jobs_of.sort(key=cost, reverse=True)
         # 고화질 칸을 맨 앞에 넣는다 — 페이지가 그 그림을 이 칸들이 구운 dist 의 .ani 에서 떠서, 페이지를 짜기 전에
         # 다 끝나야 한다. 그동안 남는 워커는 뒤의 build_one 일감을 받는다. 움직이는 칸(40장)부터
-        hd_cost = lambda j: hdlib.FRAMES if hdlib.animated(HD[j[0]], j[1]) else 1
+        hd_cost = lambda j: hdlib.frames(HD[j[0]], j[1])[0]
         hd_jobs.sort(key=hd_cost, reverse=True)
         t_sub = time.time()
         hd_futs = {pool.submit(timed, build_hd, j): j for j in hd_jobs}

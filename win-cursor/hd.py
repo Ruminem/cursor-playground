@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-"""고화질 구성표 7종 생성기 — 클레이 · 젤리 · 홀로그램 · 선셋 · 오로라 네온 · 갤럭시 · 바우하우스.
+"""고화질 구성표 틀 — 재질 7결(클레이 · 젤리 · 홀로그램 · 선셋 · 오로라 네온 · 갤럭시 · 바우하우스)은 여기,
+이펙트 · 애니 20결은 hdfx/ 에 있고 이 틀의 render 고리(warp · extra · 층 paint/glow · LOOP · clip)에 얹는다.
 스무 결을 시안으로 뽑아(2026-10-10–11) 사용자가 고른 일곱만 남겼다. 지운 열세 결(글래스 · 크롬 메탈 ·
 미드나잇 골드 · 잉크 · 백자 청화 · 청자 · 대리석 · 테라초 · 현무암 · 월넛 · 가죽 · 종이접기 · 청사진)은
 b6e4129 에 있다.
@@ -13,9 +14,9 @@ b6e4129 에 있다.
 dome() 으로 테두리 단면에서 법선을 세워 빛을 받고(L3·H3), soft 칸만큼 몸을 부풀리거나 tip_body 로 펜 심을
 몸 색으로 칠할 수 있다. 움직임은 frame(0–1) 에 주기로 걸어 고리 이음매가 없다.
 
-빌드가 부른다 — schemes.json 에 "hd": <재질> 을 단 구성표는 art/ 의 txt 없이 build.build_hd 가 칸마다 FRAMES 장을
+빌드가 부른다 — schemes.json 에 "hd": <재질> 을 단 구성표는 art/ 의 txt 없이 build.build_hd 가 칸마다 frames() 장을
 그려 dist/<구성표>/<칸>.ani 로 바로 굽는다. 매끈한 모양으로는 안 그린다(classic_only, 다른 모양 탭은 이 그림을 빌림).
-이 파일은 빌드 해시에 들어가서 고치면 고화질 7종을 다시 그린다(컨테이너 워커 4개로 5분 남짓).
+이 파일과 hdfx/ 는 빌드 해시에 들어가서 고치면 고화질 27종을 다시 그린다.
 
     python hd.py <출력 폴더> [재질…]        # 256 PNG 와 견줘 볼 시트 (빌드 없이)
 
@@ -299,7 +300,21 @@ MOVES = {"holo", "sunset", "aurora", "galaxy"}
 
 
 def animated(style, name):
-    return name in ("busy", "wait") or style in MOVES
+    """이펙트 결(LOOP 를 단 것)은 17칸이 다 움직인다"""
+    return name in ("busy", "wait") or style in MOVES or hasattr(STYLES.get(style), "LOOP")
+
+
+def frames(style, name):
+    """→ (장 수, 장마다 1/60초 틱). 일곱 결은 FRAMES × RATE, 이펙트 결은 제 LOOP(초)를 틱으로 바꿔
+    그것을 나누는 2 이상 가장 작은 틱으로 48장 안에 담는다 — 한 바퀴 길이가 시안과 같게(1.6초 → 48장 × 2)"""
+    if not animated(style, name):
+        return 1, RATE
+    loop = getattr(STYLES[style], "LOOP", None)
+    if loop is None:
+        return FRAMES, RATE
+    ticks = round(loop * 60)
+    rate = next(r for r in range(2, ticks + 1) if ticks % r == 0 and ticks // r <= 48)
+    return ticks // rate, rate
 
 
 # ---- 재질 ----
@@ -545,9 +560,24 @@ def field(f):
 
 
 def render(style, name, frame=0.0):
-    """→ 256×256 미리 곱한 RGBA float 목록 넷, 핫스팟(픽셀)."""
+    """→ 256×256 미리 곱한 RGBA float 목록 넷, 핫스팟(픽셀).
+
+    이펙트 결(hdfx/)이 쓰는 갈고리 넷 — 없는 결은 예전 길 그대로라 바이트가 같다:
+      warp(x, y, frame) → (sx, sy)      화면 자리 (x, y) 에 원래 (sx, sy) 의 모양이 보이게 민다 (글리치·일렁임)
+      extra(name, frame, layers, hot)    레이어 목록을 고쳐 돌려준다. 레이어의 paint=함수(x, y, d, nx, ny, frame)
+                                         → ((r, g, b), a) 는 body 대신, glow=함수(x, y, d, frame) 는 그 레이어 빛, noglow 는 빛 없음
+      glow_n = True                      결의 glow 가 법선도 받는다: glow(x, y, d, warn, frame, nx, ny)
+      clip = True                        겹쳐 칠한 값을 1 로 자른다 (빛을 더하는 결이 1 을 넘긴다)
+    그리기 전에 st.cell_name 에 칸 이름을 넣어 둔다 (body 가 칸마다 달리 칠할 때)"""
     st = STYLES[style]
+    st.cell_name = name
     layers, hot = cell(name, frame, getattr(st, "soft", 0.0), getattr(st, "tip_body", False))
+    warp = getattr(st, "warp", None)
+    if warp:
+        for L in layers:
+            L["f"] = (lambda f: lambda x, y: f(*warp(x, y, frame)))(L["f"])
+    if hasattr(st, "extra"):
+        layers = st.extra(name, frame, layers, hot)
     R, G, B, A = ([0.0] * (N * N) for _ in range(4))
 
     def over(i, r, g, b, a):
@@ -573,13 +603,22 @@ def render(style, name, frame=0.0):
             a = sa * (clamp(0.5 - e * U) if hard else 1 - smooth(-0.8, blur, e))
             if a > 0.002:
                 over(py * N + px, sr * a, sg * a, sb * a, a)
+    glow_n = getattr(st, "glow_n", False)
+    clip = getattr(st, "clip", False)
     for L, d in zip(layers, fields):
         mul = L.get("alpha", 1.0)
         if mul <= 0:
             continue
         fade = L.get("fade")
         warn = L.get("warn", False)
-        glow = None if L.get("ink") else getattr(st, "glow", None)
+        paint = L.get("paint")
+        lglow = L.get("glow")
+        if lglow is not None:
+            glow = lambda x, y, e, w, fr, nx=0, ny=0, g=lglow: g(x, y, e, fr)      # noqa: E731
+        elif L.get("ink") or L.get("noglow"):
+            glow = None
+        else:
+            glow = getattr(st, "glow", None)
         for (px, py), e in d.items():
             cov = clamp(0.5 - e * U)
             if cov <= 0 and (glow is None or e > M):
@@ -587,22 +626,33 @@ def render(style, name, frame=0.0):
             x, y = (px + 0.5) / U, (py + 0.5) / U
             m = mul * (fade(x, y) if fade else 1.0)
             r = g = b = a = 0.0
+            nx = ny = 0.0
+            if cov > 0 or glow_n:
+                gx = d.get((px + 1, py), e) - d.get((px - 1, py), e)
+                gy = d.get((px, py + 1), e) - d.get((px, py - 1), e)
+                gl = hypot(gx, gy) or 1.0
+                nx, ny = gx / gl, gy / gl
             if cov > 0:
                 if L.get("ink"):
                     (cr, cg, cb), ca = st.ink, 1.0
+                elif paint:
+                    (cr, cg, cb), ca = paint(x, y, e, nx, ny, frame)
                 else:
-                    gx = d.get((px + 1, py), e) - d.get((px - 1, py), e)
-                    gy = d.get((px, py + 1), e) - d.get((px, py - 1), e)
-                    gl = hypot(gx, gy) or 1.0
-                    (cr, cg, cb), ca = st.body(x, y, e, gx / gl, gy / gl, warn, frame)
+                    (cr, cg, cb), ca = st.body(x, y, e, nx, ny, warn, frame)
                 ca *= cov * m
                 r, g, b, a = cr * ca, cg * ca, cb * ca, ca
             if glow is not None and cov < 1:
-                (hr, hg, hb), ha = glow(x, y, max(e, 0.0), warn, frame)
+                if glow_n and lglow is None:
+                    (hr, hg, hb), ha = glow(x, y, max(e, 0.0), warn, frame, nx, ny)
+                else:
+                    (hr, hg, hb), ha = glow(x, y, max(e, 0.0), warn, frame)
                 ha *= (1 - cov) * m
                 r, g, b, a = r + hr * ha, g + hg * ha, b + hb * ha, a + ha
             if a > 0.001:
-                over(py * N + px, r, g, b, a)
+                if clip:
+                    over(py * N + px, min(r, 1.0), min(g, 1.0), min(b, 1.0), min(a, 1.0))
+                else:
+                    over(py * N + px, r, g, b, a)
     return (R, G, B, A), (round(hot[0] * U), round(hot[1] * U))
 
 
@@ -671,6 +721,7 @@ def png(raw, w, h, channels=4):
 
 
 def job(arg):
+    import hdfx  # noqa: F401 — spawn 워커도 이펙트 결을 받게
     style, name, out = arg
     img, hot = render(style, name)
     os.makedirs(os.path.join(out, style), exist_ok=True)
@@ -732,4 +783,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import hd          # 이펙트 결(hdfx)은 모듈 hd 에 등록되므로 __main__ 이 아니라 그쪽으로 돈다
+    import hdfx  # noqa: F401
+    hd.main()

@@ -24,8 +24,9 @@ FLAT = dict(SHADE=0.0, SPEC=0.0)
 def arrow(sid: str) -> str:
     """구성표의 화살표 그림. "pink" 는 탭 아이콘 그림(`favicon.txt`)이다 — 분홍 구성표를 지울 때(2026-10-04)
     몸이 한 색인 2색 화살표가 접힘·재질의 기준으로 필요해 그 한 장만 남겼다. 하트비트로 바꿔 봤더니
-    몸에 명암 계단이 있어 needle 접힘 최대가 21→35 로 뛰어, 기하가 아니라 그림을 재게 됐다"""
-    return open("favicon.txt" if sid == "pink" else f"art/{sid}/arrow.txt", encoding="utf-8").read()
+    몸에 명암 계단이 있어 needle 접힘 최대가 21→35 로 뛰어, 기하가 아니라 그림을 재게 됐다.
+    나머지는 test_art/ — '움직이는' 20종을 고화질 이펙트로 바꾸며(2026-10-11) 지운 픽셀 그림 중 여기서 재는 칸만 남겼다"""
+    return open("favicon.txt" if sid == "pink" else f"test_art/{sid}/arrow.txt", encoding="utf-8").read()
 
 
 def render(shape: str, sid: str, flat: bool) -> dict:
@@ -385,13 +386,19 @@ print("rate 칸 OK — 프레임마다 머무는 시간이 파일에 적힌다")
 # 불꽃놀이의 모래시계는 터지며 아래로 2~3칸 번지고, 지터의 기호는 옆으로 2칸 떨린다(1칸 여유로
 # 짰다가 이 둘이 걸렸다). 샌 화살표 무늬는 몸 안쪽·왼쪽이라 기호 상자에서 훨씬 멀다.
 # classic_only 구성표와 냥이 빼꼼(peek, 화살표만 다시 그림)은 이 칸들이 smooth_parts 를 안 타므로 뺀다 — 그 칸들은
-# 작은 화살표 동물 옆에 장면을 통째로 그려서 기호 상자라는 것이 없다(먼치킨 백그라운드 작업)
+# 작은 화살표 동물 옆에 장면을 통째로 그려서 기호 상자라는 것이 없다(먼치킨 백그라운드 작업).
+# 그래서 지금 schemes.json 에는 이 길을 타는 구성표가 없다 — 옛 '움직이는' 그림(test_art/)의 전기·지터로 잰다
 import build  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+FIXTURE = Path(__file__).parent / "test_art"
+_art_raw = build.art_raw
+build.art_raw = lambda sid, rid: ((FIXTURE / sid / f"{rid}.txt").read_text(encoding="utf-8")   # smooth_parts 도 이걸 부른다
+                                  if (FIXTURE / sid).is_dir() else _art_raw(sid, rid))
 
 leaks = []
-smooth_schemes = [s for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY | build.PEEK]
-for scheme in smooth_schemes:
-    sid = scheme["id"]
+smooth_schemes = [s["id"] for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY | build.PEEK] + ["electric", "jitter"]
+for sid in smooth_schemes:
     arrow = shapelib.read_art(build.art_raw(sid, "arrow"))[0]
     for rid in ("help", "busy", "pin", "person"):
         frames = shapelib.read_art(build.art_raw(sid, rid))[0]
@@ -417,7 +424,7 @@ print("기호 OK — 도움말·작업·위치·사용자 칸의 화살표 부�
 # 모서리에 떨어진다. 층 칸까지 대각 두 칸이라도 '가까이 있음'으로 쳐야 한다 — 유클리드로 재던
 # 때는 여기서 한 칸씩 비어 네온 맥박의 오른쪽 위 테두리에 톱니가 났다(2026-09-24)
 frames, _, _ = build.smooth_parts("neonpulse", "arrow", "round", {})
-halo = sm.samplers_of(frames, build.MAT.get("neonpulse"))[len(frames) // 2][3]
+halo = sm.samplers_of(frames, "glow")[len(frames) // 2][3]   # 네온 맥박은 schemes.json 에서 glow 재질이었다
 (st, recipes), _, _, _ = sm.stencil("round", "arrow", sm.cells_for(128))
 empty = sum(1 for n, iu, iv, _ in st.values() for k, *_ in recipes[n]
             if k in ("halo0", "halo1") and not halo[int(k[4])](iu / sm.UV, iv / sm.UV))
@@ -487,10 +494,11 @@ moved = sm._jolt(px, (0, 0, 10, 10), set(px), ((0, 0, 9, 9), {9: 1}, {}))
 assert (10, 9) in moved and (0, 9) not in moved and (0, 8) in moved, "새 몸의 맨 아랫줄만 한 칸 밀려야 함"
 lit = []
 import build  # noqa: E402,F811
-for scheme in (s for s in build.SCHEMES if not s.get("hd")):   # 고화질은 art 그림이 없다
+# 고화질은 art 그림이 없다. 글리치는 test_art/ 의 옛 지터 그림
+for sid in [s["id"] for s in build.SCHEMES if not s.get("hd")] + ["jitter"]:
     for rid in ("arrow", "wait", "hand"):
-        if sm.jolts_of(shapelib.read_art(build.art_raw(scheme["id"], rid))[0]):
-            lit.append(f"{scheme['id']}/{rid}")
+        if sm.jolts_of(shapelib.read_art(build.art_raw(sid, rid))[0]):
+            lit.append(f"{sid}/{rid}")
 print(f"줄 밀림이 켜진 칸 {len(lit)}개: {' · '.join(lit)}")
 assert lit and all(s.startswith("jitter/") for s in lit), f"글리치 말고도 켜짐: {lit}"
 # TV 눈(무채색 반투명)은 색 뜨는 재료에서 빠지고 따로 들려야 한다 — 안 빼면 회색 고리로 뭉개진다
@@ -562,14 +570,15 @@ assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".jo
 print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)이 갈려 있다")
 
 
-# ── 고화질 구성표 — 움직이는 칸만 40장으로 굽고, .ani 를 거꾸로 읽어 시안에 쓴다 ───────────────
+# ── 고화질 구성표 — 움직이는 칸만 여러 장(hd.frames)으로 굽고, .ani 를 거꾸로 읽어 시안에 쓴다 ───────────────
 # build_hd 는 hd.animated 가 참인 칸만 장을 늘린다. 그 표가 그림과 어긋나면 움직이는 그림이 한 장으로 멈추거나
 # 안 움직이는 그림을 40장 굽는다. 한 구성표는 확장자가 하나라(handler.ps1·CI) 고화질은 다 animated 여야 한다
 import hd as hdlib  # noqa: E402
 assert build.HD and all(s.get("animated") and s.get("classic_only") for s in build.SCHEMES if s.get("hd")), "고화질 표시"
 assert set(build.HD.values()) == set(hdlib.STYLES), sorted(set(build.HD.values()) ^ set(hdlib.STYLES))
+# 견주는 장은 0.3 — 파문은 한 바퀴에 물방울이 두 번 떨어져 0 과 0.5 가 같은 그림이다
 lie = [f"{st}/{rid}" for st in hdlib.STYLES for rid in ("arrow", "busy")
-       if (hdlib.render(st, rid, 0)[0] != hdlib.render(st, rid, 0.5)[0]) != hdlib.animated(st, rid)]
+       if (hdlib.render(st, rid, 0)[0] != hdlib.render(st, rid, 0.3)[0]) != hdlib.animated(st, rid)]
 print(f"고화질 {len(hdlib.STYLES)}결 · 움직임 표가 그림과 어긋난 칸 {len(lie)}개 {lie}")
 assert not lie, f"hd.animated 가 그림과 다름: {lie}"
 # 바쁨 고리 꼬리는 머리에서 멀어질수록 흐려져 끝(둥근 끝·빛 번짐 자리)에서 0 이어야 한다. 각을 한 바퀴로 접던 판은
