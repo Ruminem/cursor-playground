@@ -97,9 +97,9 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 
 | Folder | Name | Style |
 |---|---|---|
-| `art/cheesecatanim` | Ginger cat | A round ginger cat — it loafs while you wait and presses with a squishy toe-bean paw when you click. |
-| `art/tuxedocatanim` | Tuxedo cat | A tuxedo cat in a bow tie — a prim little gentleman who walks with his tail held straight up. |
-| `art/blackcatanim` | Black cat | A black cat with round yellow eyes — it bats a ball of yarn about, and puffs up and hisses when startled. |
+| `hd.py cheesecat` | Ginger cat | A round ginger cat — it loafs while you wait and presses with a squishy toe-bean paw when you click. |
+| `hd.py tuxedocat` | Tuxedo cat | A tuxedo cat in a bow tie — a prim little gentleman who walks with his tail held straight up. |
+| `hd.py blackcat` | Black cat | A black cat with round yellow eyes — it bats a ball of yarn about, and puffs up and hisses when startled. |
 
 **Forest friends · Animated**
 
@@ -112,8 +112,8 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 
 | Folder | Name | Style |
 |---|---|---|
-| `art/mackerelcatanim` | Grey tabby | A grey striped tabby — it curls its tail into a question mark and grooms itself while you wait. |
-| `art/calicocatanim` | Calico cat | A calico cat in white with orange and black patches — it kneads with its paws and squeezes into boxes. |
+| `hd.py mackerelcat` | Grey tabby | A grey striped tabby — it curls its tail into a question mark and grooms itself while you wait. |
+| `hd.py calicocat` | Calico cat | A calico cat in white with orange and black patches — it kneads with its paws and squeezes into boxes. |
 
 **Forest friends · Animated**
 
@@ -129,11 +129,11 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 
 | Folder | Name | Style |
 |---|---|---|
-| `art/siamesecatanim` | Siamese cat | A blue-eyed Siamese — cream body with dark brown points; it curls its tail into a question mark and chatters. |
-| `art/russianbluecatanim` | Russian Blue | A silver-blue cat with green eyes — it sits primly until a feather wand catches its eye. |
+| `hd.py siamesecat` | Siamese cat | A blue-eyed Siamese — cream body with dark brown points; it curls its tail into a question mark and chatters. |
+| `hd.py russianbluecat` | Russian Blue | A silver-blue cat with green eyes — it sits primly until a feather wand catches its eye. |
 | `hd.py whitecat` | Odd-eyed white cat | A snow-white cat with one blue and one gold eye — it laps up milk and rolls about in the sun. |
-| `art/munchkincatanim` | Munchkin | A short-legged cream tabby munchkin — it scurries on stubby legs and stands up like a meerkat to look around. |
-| `art/norwegiancatanim` | Norwegian Forest cat | A long-haired Norwegian Forest cat with a lush ruff and plume tail — it wraps its tail around itself and climbs trees. |
+| `hd.py munchkincat` | Munchkin | A short-legged cream tabby munchkin — it scurries on stubby legs and stands up like a meerkat to look around. |
+| `hd.py norwegiancat` | Norwegian Forest cat | A long-haired Norwegian Forest cat with a lush ruff and plume tail — it wraps its tail around itself and climbs trees. |
 
 **Dogs · Animated**
 
@@ -436,9 +436,9 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 | 폴더 | 이름 | 스타일 |
 |---|---|---|
-| `art/cheesecatanim` | 치즈냥 | 통통한 치즈 고양이. 기다릴 때는 식빵을 굽고, 누를 때는 젤리 발바닥으로 꾹 누르는 커서. |
-| `art/tuxedocatanim` | 턱시도냥 | 나비넥타이를 맨 턱시도 고양이. 꼬리를 곧게 세우고 새침하게 걷는 신사 커서. |
-| `art/blackcatanim` | 까망이 | 노란 눈이 동그란 까만 고양이. 털실 공을 굴리며 놀고, 놀라면 털을 부풀려 하악하는 커서. |
+| `hd.py cheesecat` | 치즈냥 | 통통한 치즈 고양이. 기다릴 때는 식빵을 굽고, 누를 때는 젤리 발바닥으로 꾹 누르는 커서. |
+| `hd.py tuxedocat` | 턱시도냥 | 나비넥타이를 맨 턱시도 고양이. 꼬리를 곧게 세우고 새침하게 걷는 신사 커서. |
+| `hd.py blackcat` | 까망이 | 노란 눈이 동그란 까만 고양이. 털실 공을 굴리며 놀고, 놀라면 털을 부풀려 하악하는 커서. |
 
 **숲속 친구들 · 애니**
 
@@ -451,8 +451,8 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 | 폴더 | 이름 | 스타일 |
 |---|---|---|
-| `art/mackerelcatanim` | 고등어냥 | 회색 줄무늬 고등어 고양이. 꼬리로 물음표를 그리고, 기다릴 때는 그루밍을 하는 커서. |
-| `art/calicocatanim` | 삼색냥 | 흰 바탕에 주황·까만 얼룩 삼색 고양이. 꾹꾹이를 하고 상자에 쏙 들어가는 커서. |
+| `hd.py mackerelcat` | 고등어냥 | 회색 줄무늬 고등어 고양이. 꼬리로 물음표를 그리고, 기다릴 때는 그루밍을 하는 커서. |
+| `hd.py calicocat` | 삼색냥 | 흰 바탕에 주황·까만 얼룩 삼색 고양이. 꾹꾹이를 하고 상자에 쏙 들어가는 커서. |
 
 **숲속 친구들 · 애니**
 
@@ -468,11 +468,11 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 | 폴더 | 이름 | 스타일 |
 |---|---|---|
-| `art/siamesecatanim` | 샴냥 | 크림 몸에 얼굴·귀·발끝이 짙은 갈색인 파란 눈 샴 고양이. 꼬리를 물음표처럼 세우고 조잘대는 커서. |
-| `art/russianbluecatanim` | 러시안블루 | 은회색 털에 초록 눈 러시안블루. 새침하게 앉아 있다가 낚싯대 장난감에 홀리는 커서. |
+| `hd.py siamesecat` | 샴냥 | 크림 몸에 얼굴·귀·발끝이 짙은 갈색인 파란 눈 샴 고양이. 꼬리를 물음표처럼 세우고 조잘대는 커서. |
+| `hd.py russianbluecat` | 러시안블루 | 은회색 털에 초록 눈 러시안블루. 새침하게 앉아 있다가 낚싯대 장난감에 홀리는 커서. |
 | `hd.py whitecat` | 오드아이 흰냥 | 파랑·노랑 짝짝이 눈의 새하얀 고양이. 우유를 할짝이고 햇살 아래 몸을 굴리는 커서. |
-| `art/munchkincatanim` | 먼치킨 | 다리가 짧은 크림 줄무늬 먼치킨. 짧은 다리로 종종 뛰고 뒷발로 서서 미어캣처럼 두리번대는 커서. |
-| `art/norwegiancatanim` | 노르웨이숲 | 갈기와 꼬리가 풍성한 장모 노르웨이숲 고양이. 복슬한 꼬리를 휘감고 나무를 타는 커서. |
+| `hd.py munchkincat` | 먼치킨 | 다리가 짧은 크림 줄무늬 먼치킨. 짧은 다리로 종종 뛰고 뒷발로 서서 미어캣처럼 두리번대는 커서. |
+| `hd.py norwegiancat` | 노르웨이숲 | 갈기와 꼬리가 풍성한 장모 노르웨이숲 고양이. 복슬한 꼬리를 휘감고 나무를 타는 커서. |
 
 **댕댕이 · 애니**
 

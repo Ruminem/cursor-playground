@@ -543,7 +543,7 @@ print("animated OK — 움직이는 그림이 있는 구성표만 animated")
 # 냥이·댕댕이·짹짹이·공룡·햄찌·간식은 시안 페이지의 색조 막대가 둘이다(동물 · 커서, build.hue_kind "both"). 화살표 색의 파랑 끝 비트를
 # 홀수로 박아 두면(gen/sea.mark) 페이지와 handler.ps1 이 그것으로 가른다. gen 을 mark 없이 다시 돌리거나, 그리는 길이
 # 색을 섞어 비트를 흐트리면 커서 막대가 동물을 칠하거나 아무것도 안 칠한다. 그래서 화살표 칸의 장마다 홀수(커서)와
-# 짝수(동물) 불투명 칸이 다 있어야 하고, 59종 다 peek 라 매끈한 화살표(smooth.peek_drawer, 섞어 그린 뒤 비트를 다시 박음)도
+# 짝수(동물) 불투명 칸이 다 있어야 하고, 픽셀 그림은 다 peek 라 매끈한 화살표(smooth.peek_drawer, 섞어 그린 뒤 비트를 다시 박음)도
 # 같다. 매끈한 쪽은 화살 끝(핫스팟) 둘레 6칸 안 불투명 칸이 거의 다 홀수여야 한다 — 비트를 안 박으면 뜬 색 반쯤이
 # 짝수로 샌다. 화살표와 동물 크기는 견주지 않는다 — 새는 화살표보다 몸이 커서 홀수가 짝수보다 적다
 both = sorted(s["id"] for s in build.SCHEMES if build.hue_kind(s) == "both")
@@ -563,7 +563,7 @@ for sid in (s for s in both if s not in build.HD):   # 고화질 펫은 art 가 
             tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= 36]
             if not (o and e and tip and sum(tip) >= 0.9 * len(tip)):
                 bad.append(f"{sid} round {i}장 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
-# 고화질 펫(흰냥이)은 art 가 없어 그림을 그려 32 · 64 판으로 줄인 바이트에서 잰다 — 화살표 칸을 마스크로 따로 그려 줄인 뒤
+# 고화질 펫(흰냥이 · 냥이)은 art 가 없어 그림을 그려 32 · 64 판으로 줄인 바이트에서 잰다 — 화살표 칸을 마스크로 따로 그려 줄인 뒤
 # 비트를 박는다(hdpet.rgba_bytes). 기본 화살표와 매끈한 모양 하나를 첫 장만. 끝 둘레는 매끈한 쪽과 같은 6칸(32 판 기준)이다 —
 # 3칸이던 때는 기본 화살표 32 판에서 한 칸만 들어 아무것도 못 쟀다. 8칸까지 넓혀도 네 모양 다 100% 였다(2026-10-11)
 import hd as hdlib  # noqa: E402
