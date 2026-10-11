@@ -376,6 +376,16 @@ def favicon() -> str:
     return "data:image/png;base64," + base64.b64encode(png).decode()
 
 
+def tab_pic(shape: str | None) -> bytes:
+    """모양 탭 단추 그림. 탭 아이콘 화살표 한 장을 그 모양으로 (기본 모양이면 그대로)"""
+    raw = (HERE / "favicon.txt").read_text(encoding="utf-8")
+    if shape is None:
+        return txt_to_png(raw, None, canvas_size(raw))
+    frames, _, _ = shapelib.read_art(raw)
+    at = smoothlib.drawer(shape, "arrow", frames, None, None, False)
+    return smoothlib.page(shape, "arrow", frames, None, None, at)[0][0]
+
+
 def build() -> str:
     css, panels = [], []
     data: dict[str, dict[str, list]] = {}
@@ -430,10 +440,11 @@ def build() -> str:
       <div class="extras"><h4>나머지 11칸</h4><div class="grid">{"".join(cards[len(ROLES):])}</div></div>
     </div>""")
 
-    # 모양 탭. 단추에 붙는 그림은 첫 구성표의 화살표를 그 모양으로 그린 것
+    # 모양 탭. 단추에 붙는 그림은 탭 아이콘 화살표(favicon.txt)를 그 모양으로 그린 것 — 첫 구성표의 화살표를 쓰던 때는
+    # 첫 구성표가 art 없는 고화질이 되자(2026-10-11) 여기서 넘어졌다
     tabs = []
     for i, shp in enumerate(SHAPES):
-        pic = uri_of(page_bits(SCHEMES[0]["id"], "arrow", shape_of(shp["id"]), {})[0][0])
+        pic = uri_of(tab_pic(shape_of(shp["id"])))
         tabs.append(f'<button type="button" class="shape c-hand{" smooth" if i else ""}" role="tab" data-shape="{shp["id"]}"'
                     f' aria-selected="{"true" if i == 0 else "false"}"><i style="background-image:url({pic})"></i>{shp["name"]}</button>')
 
