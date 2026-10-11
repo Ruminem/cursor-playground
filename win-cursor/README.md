@@ -210,6 +210,18 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `art/manduanim` | Mandu | A steaming dumpling — it gets skewered on the arrow tip, and huffs steam like a kettle when the answer is no. |
 | `art/takoyakianim` | Takoyaki | A takoyaki with dancing bonito flakes — the arrow's tail is its toothpick, and it rolls away from the pick when the answer is no. |
 
+**High-res**
+
+| Folder | Name | Style |
+|---|---|---|
+| `hd.py clay` | Clay | Matte pastel clay. A chubby body with light only on its rounded shoulders and a wide, soft shadow. Only busy and wait spin. |
+| `hd.py jelly` | Jelly | Strawberry jelly. A see-through body, deeper in the middle, with a wet glint on the upper-left shoulder. The unavailable cursor is tangerine jelly. |
+| `hd.py holo` | Hologram | Pearly holographic foil. Slanted rainbow bands keep flowing, deeper where the edge tilts. |
+| `hd.py sunset` | Sunset | A flat sunset gradient with a white rim. The colours lie diagonally and slowly rise and fall. |
+| `hd.py aurora` | Aurora neon | A deep indigo body with an aurora glow at the rim, its colours slowly drifting. Only the unavailable cursor turns ember. |
+| `hd.py galaxy` | Galaxy | A night-sky body where nebulae slowly turn and stars twinkle. A lilac rim keeps the outline on dark backgrounds. |
+| `hd.py bauhaus` | Bauhaus | Poster graphics: a cream body with a bold ink line and a crisp vermilion offset shadow. The unavailable cursor has a vermilion body. |
+
 <!-- /schemes:en -->
 
 Every scheme fills all 17 slots. Six are drawn per theme; the other 11 are made from that theme's arrow, hourglass and colours.
@@ -542,6 +554,18 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `art/onigirianim` | 주먹밥 | 김 띠를 두른 주먹밥. 화살표 빗변 미끄럼을 타고, 기다릴 때는 김 띠를 빙 감고 뿌듯해하는 커서. |
 | `art/manduanim` | 만두 | 김이 모락모락 나는 만두. 화살표 끝에 꼬치처럼 꽂히고, 안 될 때는 주전자처럼 김을 뿜는 커서. |
 | `art/takoyakianim` | 타코야키 | 가쓰오부시가 너울대는 타코야키. 화살표 꼬리를 이쑤시개 삼아 꽂히고, 안 될 때는 이쑤시개를 데굴 피하는 커서. |
+
+**고화질**
+
+| 폴더 | 이름 | 스타일 |
+|---|---|---|
+| `hd.py clay` | 클레이 | 무광 파스텔 찰흙. 통통한 몸에 둥근 어깨만 빛을 받고 그림자가 넓고 옅음. 바쁨·사용 중만 돎. |
+| `hd.py jelly` | 젤리 | 딸기 젤리. 비치는 몸이 가운데일수록 진하고 왼쪽 위 어깨에 젖은 반짝임이 맺힘. 사용 불가 칸은 귤 젤리. |
+| `hd.py holo` | 홀로그램 | 진주빛 홀로그램 포일. 비스듬한 무지개 띠가 쉬지 않고 흐르고 기울어진 테일수록 색이 짙음. |
+| `hd.py sunset` | 선셋 | 평면 노을 그라데이션에 흰 테. 노을색이 대각으로 깔려 천천히 오르내림. |
+| `hd.py aurora` | 오로라 네온 | 남보라 몸에 오로라 빛 테가 번지고 색이 천천히 흐름. 사용 불가 칸만 불씨 색. |
+| `hd.py galaxy` | 갤럭시 | 밤하늘 몸에 성운이 천천히 돌고 별이 깜빡임. 라일락 테가 어두운 바탕에서도 윤곽을 잡음. |
+| `hd.py bauhaus` | 바우하우스 | 크림 몸에 굵은 먹선, 주홍 그림자를 번짐 없이 판으로 비켜 찍은 포스터 그래픽. 사용 불가 칸은 주홍 몸. |
 
 <!-- /schemes:ko -->
 
