@@ -121,6 +121,20 @@ def _only_shape(tree: ast.Module, shape: str) -> ast.Module:
     return tree
 
 
+def _pet_files(path: Path, seen: list | None = None) -> list[Path]:
+    """펫 모듈과 그것이 `from . import X` · `from .X import` 로 읽는 hdpet 형제 파일(냥이 틀 catkit 등)을 따라간다.
+    __init__ 은 common 이 따로 넣고, 파일이 아닌 이름(register)은 건너뛴다 — 틀을 고치면 그 틀을 쓰는 펫만 다시 굽는다"""
+    seen = [] if seen is None else seen
+    if path not in seen:
+        seen.append(path)
+        for n in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(n, ast.ImportFrom) and n.level == 1:
+                for m in [n.module] if n.module else [a.name for a in n.names]:
+                    if (path.parent / f"{m}.py").exists():
+                        _pet_files(path.parent / f"{m}.py", seen)
+    return seen
+
+
 def _hashes() -> tuple[dict, dict, str]:
     """(일감별 재료 해시 {"<모양>/<구성표>": …}, 따로 쓰는 표식 {"*stencil", "*data/<모양>"}, 시안 페이지 해시).
     지난번과 같은 일감은 건너뛴다.
@@ -147,7 +161,7 @@ def _hashes() -> tuple[dict, dict, str]:
     # 펫 결은 hdpet 폴더도 재료다. 다른 결에는 안 넣는다 — 감싼 render 가 그대로 지나가 바이트가 같고, 넣으면 흰냥이
     # 한 마리를 고칠 때 26종을 다시 굽는다. 펫끼리도 제 모듈만 넣는다 — 폴더째 넣던 때는 부캉이를 더하자 흰냥이도 다시 구웠다
     common = _dump([_tree(HERE / "hdpet" / "__init__.py")])
-    pet = {k: _sha(common, _dump([_tree(Path(sys.modules[type(v).__module__].__file__))]))
+    pet = {k: _sha(common, _dump([_tree(f) for f in _pet_files(Path(sys.modules[type(v).__module__].__file__))]))
            for k, v in hdpet.PETS.items()}
     art |= {s["id"]: _sha(hd, *([pet[s["hd"]]] if s["hd"] in pet else []), json.dumps(s, sort_keys=True))
             for s in SCHEMES if s.get("hd")}

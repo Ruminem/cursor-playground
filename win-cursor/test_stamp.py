@@ -68,6 +68,14 @@ for st in set(pet_of.values()):
     build._tree = plain
     want = {k for k in keys0 if pet_of.get(k.split("/")[1]) == st}
     assert {k for k in keys0 if keys0[k] != keys2[k]} == want, f"hdpet/{st}.py 를 고치니 다른 펫까지 다시 그림"
+# 냥이 틀(catkit)을 고치면 그 틀을 쓰는 냥이만 — 해시가 펫 모듈 파일만 보던 때는 틀을 고쳐도 아무것도 안 다시 구웠다
+kit = {st for st, v in build.hdpet.PETS.items() if isinstance(v, build.hdpet.catkit.Pet)}
+assert kit and kit != set(pet_of.values()), "냥이 틀을 쓰는 펫과 안 쓰는 펫이 다 있어야 잰다"
+build._tree = bent_at("catkit.py", "cat")
+keys2 = build._hashes()[0]
+build._tree = plain
+want = {k for k in keys0 if pet_of.get(k.split("/")[1]) in kit}
+assert {k for k in keys0 if keys0[k] != keys2[k]} == want, "hdpet/catkit.py 를 고치니 다시 그릴 일감이 어긋남"
 
 # 빌드가 넘어져도 끝난 것의 표식만 남기는지. 덜 끝난 고화질 구성표나 data 조각이 파일에 안 닿은 일감을 남기면
 # 다음 빌드가 그걸 안 그려 옛 그림이 남고, 끝난 것을 안 남기면 36분 구운 고화질을 통째로 다시 굽는다(2026-10-11)
