@@ -918,7 +918,13 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     });
     c.appendChild(b);
   });
-  document.querySelectorAll('[data-apply]').forEach(function(b){ showDot(b.getAttribute('data-apply')); });
+  // 처음 그릴 때는 점이 저장된 구성표와 지금 구성표만. 나머지는 마크업 기본값(점 없음 · 단추 꺼짐) 그대로라 할 일이 없다 —
+  // 107종을 다 돌리면 구성표마다 문서 전체를 두 번 훑어 모바일 흉내 DCL 이 0.55초 늘었다(2026-10-11)
+  var dotNow = document.getElementById('app').getAttribute('data-scheme');
+  document.querySelectorAll('[data-apply]').forEach(function(b){
+    var sid = b.getAttribute('data-apply');
+    if (DOTS[sid] || sid === dotNow) showDot(sid);
+  });
   var SIZES = [32, 48, 64, 96, 128];
   var size = 32, hue = 0, tint = 0, cache = {};
   try {
