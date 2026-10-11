@@ -29,6 +29,7 @@ from make_cur import canvas_size, is_animated, is_row, read_hotspot, read_rate, 
 # 고화질 구성표만 쓰는 것. 위 줄에 섞으면 그 줄이 build_one 의 해시에 들어 있어 100종을 다시 그린다
 import hd as hdlib
 import hdfx  # noqa: F401 — 이펙트 · 애니 20결을 hd.STYLES 에 등록한다(워커도 이 줄로 받는다)
+import hdpet  # 고화질 펫 결(흰냥이). hd.render · hd.frames 를 감싸므로 워커도 이 줄로 받는다
 from make_cur import SIZES, curs_to_ani, pngs_to_cur
 
 HERE = Path(__file__).parent
@@ -142,7 +143,11 @@ def _hashes() -> tuple[dict, dict, str]:
     hd = _sha(env, *(_dump([_tree(HERE / n)]) for n in ("hd.py", "make_cur.py")),
               *(_dump([_tree(f)]) for f in sorted((HERE / "hdfx").glob("*.py"))),
               _dump(_reach(_tree(HERE / "build.py"), {"build_hd"})))
-    art |= {s["id"]: _sha(hd, json.dumps(s, sort_keys=True)) for s in SCHEMES if s.get("hd")}
+    # 펫 결은 hdpet 폴더도 재료다. 다른 결에는 안 넣는다 — 감싼 render 가 그대로 지나가 바이트가 같고, 넣으면 흰냥이
+    # 한 마리를 고칠 때 26종을 다시 굽는다
+    pet = _sha(*(_dump([_tree(f)]) for f in sorted((HERE / "hdpet").glob("*.py"))))
+    art |= {s["id"]: _sha(hd, *([pet] if s["hd"] in hdpet.PETS else []), json.dumps(s, sort_keys=True))
+            for s in SCHEMES if s.get("hd")}
     keys = {f"{shp['id']}/{sid}": art[sid] if sid in HD else _sha(code[shp["id"]], art[sid])
             for shp in SHAPES for sid in drawn(shp["id"])}
     marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
@@ -216,6 +221,11 @@ HD_PX, HD_STEP = 64, 2
 HUE_KINDS = {"해양 생물 · 애니": "char", "숲속 친구들 · 애니": "char",
              "냥이 · 애니": "both", "댕댕이 · 애니": "both", "짹짹이 · 애니": "both",
              "아기 공룡 · 애니": "both", "햄찌와 친구들 · 애니": "both", "말랑 간식 · 애니": "both"}
+
+
+def hue_kind(s: dict) -> str | None:
+    """구성표의 색조 막대 종류. 고화질은 묶음과 상관없이 하나다(흰냥이) — 256 판을 면적 평균으로 줄여 파랑 끝 비트 표식이 안 산다"""
+    return None if s.get("hd") else HUE_KINDS.get(s["category"])
 
 
 def drawn(shape_id: str) -> list[str]:
@@ -462,7 +472,7 @@ def build() -> str:
         .replace("<!--START_ID-->", START)   # #app 의 처음 구성표. 따옴표 없이 속성에 들어간다
         .replace("/*CLASSIC_ONLY*/", json.dumps(sorted(CLASSIC_ONLY)))
         .replace("/*HD*/", json.dumps(HD, sort_keys=True))
-        .replace("/*HUE_KIND*/", json.dumps({s["id"]: HUE_KINDS[s["category"]] for s in SCHEMES if s["category"] in HUE_KINDS},
+        .replace("/*HUE_KIND*/", json.dumps({s["id"]: k for s in SCHEMES if (k := hue_kind(s))},
                                             sort_keys=True, separators=(",", ":")))
         .replace("/*KEEP*/", json.dumps(sorted(KEEP)))
         .replace("<!--SHAPES-->", "".join(tabs))
@@ -612,7 +622,7 @@ def hd_bit(sid: str, rid: str) -> list:
     floor(값 × 크기 / 32) 해도 파일의 핫스팟과 같은 칸이 된다. 폭·높이는 32 판 첫 장에서 잉크가 닿는 칸 수"""
     frames = ani_frames((HERE / "dist" / sid / f"{rid}.ani").read_bytes())
     uri, box = strip([f[HD_PX][0] for f in frames[::HD_STEP]], rid == "arrow")
-    hx, hy = (v if v % 1 else int(v) for v in (round(v * hdlib.U) / hdlib.U for v in hdlib.cell(rid)[1]))
+    hx, hy = (v if v % 1 else int(v) for v in (round(v * hdlib.U) / hdlib.U for v in hdpet.hot(HD[sid], rid)))
     side, raw = _scanlines(frames[0][32][0])
     ink = [(x, y) for y in range(side) for x in range(side) if raw[y * (side * 4 + 1) + 1 + x * 4 + 3] > 8]
     fallback = next(f for r, _, f in ROLES + EXTRA if r == rid)

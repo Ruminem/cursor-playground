@@ -131,7 +131,7 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 |---|---|---|
 | `art/siamesecatanim` | Siamese cat | A blue-eyed Siamese — cream body with dark brown points; it curls its tail into a question mark and chatters. |
 | `art/russianbluecatanim` | Russian Blue | A silver-blue cat with green eyes — it sits primly until a feather wand catches its eye. |
-| `art/whitecatanim` | Odd-eyed white cat | A snow-white cat with one blue and one gold eye — it laps up milk and rolls about in the sun. |
+| `hd.py whitecat` | Odd-eyed white cat | A snow-white cat with one blue and one gold eye — it laps up milk and rolls about in the sun. |
 | `art/munchkincatanim` | Munchkin | A short-legged cream tabby munchkin — it scurries on stubby legs and stands up like a meerkat to look around. |
 | `art/norwegiancatanim` | Norwegian Forest cat | A long-haired Norwegian Forest cat with a lush ruff and plume tail — it wraps its tail around itself and climbs trees. |
 
@@ -470,7 +470,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 |---|---|---|
 | `art/siamesecatanim` | 샴냥 | 크림 몸에 얼굴·귀·발끝이 짙은 갈색인 파란 눈 샴 고양이. 꼬리를 물음표처럼 세우고 조잘대는 커서. |
 | `art/russianbluecatanim` | 러시안블루 | 은회색 털에 초록 눈 러시안블루. 새침하게 앉아 있다가 낚싯대 장난감에 홀리는 커서. |
-| `art/whitecatanim` | 오드아이 흰냥 | 파랑·노랑 짝짝이 눈의 새하얀 고양이. 우유를 할짝이고 햇살 아래 몸을 굴리는 커서. |
+| `hd.py whitecat` | 오드아이 흰냥 | 파랑·노랑 짝짝이 눈의 새하얀 고양이. 우유를 할짝이고 햇살 아래 몸을 굴리는 커서. |
 | `art/munchkincatanim` | 먼치킨 | 다리가 짧은 크림 줄무늬 먼치킨. 짧은 다리로 종종 뛰고 뒷발로 서서 미어캣처럼 두리번대는 커서. |
 | `art/norwegiancatanim` | 노르웨이숲 | 갈기와 꼬리가 풍성한 장모 노르웨이숲 고양이. 복슬한 꼬리를 휘감고 나무를 타는 커서. |
 
