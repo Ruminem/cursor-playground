@@ -37,7 +37,7 @@ STENCILS = HERE / ".stencils.pkl"   # 매끈한 모양의 스텐실. 빌드가 �
 SCHEMES = json.loads((HERE / "schemes.json").read_text(encoding="utf-8"))
 # 커서 모양 목록. 첫 번째가 기본(테마 그림 그대로)이고, 나머지는 smooth.py 가 그려 테마 색을 입힌다
 SHAPES = json.loads((HERE / "shapes.json").read_text(encoding="utf-8"))
-START = "rainbowflow"   # 시안 페이지가 처음 여는 구성표. 이것의 기본 모양 그림만 페이지에 박는다
+START = "hdclay"        # 시안 페이지가 처음 여는 구성표. 이것의 기본 모양 그림만 페이지에 박는다
 # 구성표 → 재질. 빛을 어떻게 되받는지만 정하고 색은 그대로다 (smooth.MATERIALS)
 MAT = {s["id"]: s.get("material") for s in SCHEMES}
 
