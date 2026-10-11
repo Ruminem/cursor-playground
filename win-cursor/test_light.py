@@ -572,6 +572,16 @@ lie = [f"{st}/{rid}" for st in hdlib.STYLES for rid in ("arrow", "busy")
        if (hdlib.render(st, rid, 0)[0] != hdlib.render(st, rid, 0.5)[0]) != hdlib.animated(st, rid)]
 print(f"고화질 {len(hdlib.STYLES)}결 · 움직임 표가 그림과 어긋난 칸 {len(lie)}개 {lie}")
 assert not lie, f"hd.animated 가 그림과 다름: {lie}"
+# 바쁨 고리 꼬리는 머리에서 멀어질수록 흐려져 끝(둥근 끝·빛 번짐 자리)에서 0 이어야 한다. 각을 한 바퀴로 접던 판은
+# 꼬리 바로 뒤가 머리 값을 받아 끝에서 다시 짙어졌다(2026-10-11 사용자). 꼬리 뒤 반 틈부터 머리까지 한 줄로 잰다
+for a0 in (-hdlib.math.pi / 2, 1.0, 3.0):
+    fade = hdlib.spinner(0, 0, 7.6, 1.55, a0)[1]["fade"]
+    span = hdlib.TAU * 0.62
+    back = 0.95 * (hdlib.TAU - span) / 2       # 틈 한가운데는 앞뒤가 갈리는 자리라 조금 안쪽부터
+    ang = [a0 - back + k * (span + back) / 200 for k in range(201)]
+    run = [fade(7.6 * hdlib.cos(a), 7.6 * hdlib.sin(a)) for a in ang]
+    assert all(p <= q + 1e-9 for p, q in zip(run, run[1:])), f"바쁨 고리 꼬리가 다시 짙어짐 (a0={a0:.2f})"
+    assert run[0] == 0 and run[-1] > 0.99, f"바쁨 고리 꼬리 끝 {run[0]:.2f} · 머리 {run[-1]:.2f}"
 # ani_frames 는 curs_to_ani 의 거꾸로여야 한다 — 크기마다 PNG 바이트와 핫스팟이 그대로 돌아오는지
 pngs = [(hdlib.png(bytes([k, 0, 0, 255]) * s * s, s, s), (k, s - 1 - k)) for k in (1, 2) for s in (32, 48)]
 blob = make_cur.curs_to_ani([make_cur.pngs_to_cur(pngs[:2]), make_cur.pngs_to_cur(pngs[2:])], hdlib.RATE)

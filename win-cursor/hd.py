@@ -168,9 +168,11 @@ def darrow(hl, w=0.75, hw=3.0, hh=3.4):
 def spinner(cx, cy, r, w, a0):
     """바쁨 고리 — 흐린 길 위로 머리가 밝은 꼬리 활."""
     span = TAU * 0.62
+    back = (TAU - span) / 2      # 꼬리 뒤(둥근 끝·빛 번짐)는 한 바퀴 넘기지 않고 음수 각으로 — 넘기면 머리만큼 짙어졌다
 
     def fade(x, y):
-        return 0.12 + 0.88 * clamp(((atan2(y - cy, x - cx) - a0) % TAU) / span)
+        t = clamp(((atan2(y - cy, x - cx) - a0 + back) % TAU - back) / span)
+        return (0.12 + 0.88 * t) * min(1.0, t / 0.15)    # 꼬리 첫 15% 는 0 까지 — 12% 에서 끊으면 둥근 끝이 길 위에 턱으로 남았다
     return [dict(f=ring(cx, cy, r, w), alpha=0.32, shadow=False),
             dict(f=arc(cx, cy, r, w, a0, span), fade=fade)]
 
