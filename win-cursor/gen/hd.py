@@ -1,12 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
-"""고화질 구성표 3종 — 글래스 · 오로라 네온 · 크롬 메탈 — 생성기.
+"""고화질 구성표 10종 생성기 — 글래스 · 오로라 네온 · 크롬 메탈(2026-10-10) 과
+클레이 · 홀로그램 · 젤리 · 미드나잇 골드 · 선셋 · 갤럭시 · 잉크(2026-10-11).
 
 픽셀 그림(.txt)이 아니라 거리함수로 256칸 판에 바로 그린다. .txt 는 글자 하나가 색 하나라
 그라데이션·하이라이트처럼 색이 수천 개인 그림을 못 담고, 기본 모양은 그 그림을 최근접으로 키워
 32 위로는 계단이 그대로 커진다. 여기서는 256 원본을 그리고 크기마다 면적 평균으로 줄인다.
 
 모양은 32칸 판의 한 칸(U = 8px)을 단위로 적는다 — 다른 구성표 그림과 같은 자리·크기 감각.
-재질(Glass·Aurora·Chrome)은 거리 d 와 테두리 법선으로 칠한다: 테두리 쪽 밝기·안쪽 테·바깥 번짐.
+재질은 거리 d 와 테두리 법선으로 칠한다: 테두리 쪽 밝기·안쪽 테·바깥 번짐. 뒤 일곱은 dome() 으로
+테두리 단면에서 법선을 세워 빛을 받고(L3·H3), soft 칸만큼 몸을 부풀리거나 tip_body 로 펜 심을
+몸 색으로 칠할 수 있다. 움직임은 frame(0–1) 에 주기로 걸어 고리 이음매가 없다.
 
     python gen/hd.py <출력 폴더> [재질…]        # 256 PNG 와 견줘 볼 시트
 
@@ -215,8 +218,24 @@ def person(cx, cy):
                  cut(rbox(cx, cy + 2.6, 3.7, 2.7, 2.4), rbox(cx, cy + 5.6, 5, 0.3, 0)))
 
 
-def cell(name, frame=0.0):
-    """칸 → (레이어 목록, 핫스팟). 레이어: f 거리함수, ink 잉크색으로 칠함, alpha·fade 곱, shadow."""
+def cell(name, frame=0.0, soft=0.0, tip_body=False):
+    """칸 → (레이어 목록, 핫스팟). 레이어: f 거리함수, ink 잉크색으로 칠함, alpha·fade 곱, shadow.
+    soft 는 잉크가 아닌 레이어를 그만큼(칸) 부풀린다 — 클레이·젤리는 통통하게, 잉크·선셋은 흰 테를
+    모양 밖에 두르려고(안 부풀리면 I빔·십자 같은 가는 획이 테만 남는다). tip_body 면 연필심도 재질로 칠한다
+    (흰 테 결은 잉크 한 색 심이 어느 한 바탕에서 사라진다)."""
+    layers, hot = _cell(name, frame)
+    if tip_body:
+        for L in layers:
+            if L.get("tip"):
+                L["ink"] = False
+    if soft:
+        for L in layers:
+            if not L.get("ink"):
+                L["f"] = grow(L["f"], soft)
+    return layers, hot
+
+
+def _cell(name, frame):
     A = dict(f=arrow())
     spin = TAU * frame - math.pi / 2
     if name == "arrow":
@@ -238,7 +257,7 @@ def cell(name, frame=0.0):
                             capsule(C - 3.0, 21.0, C + 3.0, 21.0, 0.75)))], (C, C)
     if name == "pen":
         body, tip = pencil()
-        return [dict(f=body), dict(f=tip, ink=True, shadow=False)], (2.6, 21.4)
+        return [dict(f=body), dict(f=tip, ink=True, tip=True, shadow=False)], (2.6, 21.4)
     if name == "no":
         return [dict(f=union(ring(C, C, 8.0, 1.45), turn(capsule(C - 7.6, C, C + 7.6, C, 1.45), math.pi / 4, C, C)),
                      warn=True)], (C, C)
@@ -345,7 +364,219 @@ class Chrome:
         return c, 1.0
 
 
-STYLES = {"glass": Glass(), "aurora": Aurora(), "chrome": Chrome()}
+# ---- 2026-10-11 더한 일곱 결 ----
+# 움직임은 frame(0..1)에 주기로만 기댄다 — 끝 장에서 첫 장으로 넘어갈 때 튀지 않게(글래스·크롬은 아직 튐, NEXT.md)
+
+L3 = (-0.42, -0.56, 0.71)                         # 3D 빛: 왼쪽 위 앞
+H3 = (-0.23, -0.31, 0.92)                         # 빛과 눈(0, 0, 1)의 반각 — 반짝임
+
+
+def dome(nx, ny, depth, R):
+    """테두리에서 R 칸 안쪽까지 둥글게 솟은 면의 3D 법선. 테두리에서는 옆을, R 안쪽은 앞을 본다."""
+    s = clamp(1 - depth / R)
+    return nx * s, ny * s, math.sqrt(1 - s * s)
+
+
+def dot3(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def scale(c, k):
+    return (clamp(c[0] * k), clamp(c[1] * k), clamp(c[2] * k))
+
+
+def ramp_to(pal, t):
+    """끝을 감지 않는 ramp — 처음에서 끝까지 한 번만 간다."""
+    t = clamp(t) * (len(pal) - 1)
+    i = min(int(t), len(pal) - 2)
+    return lerp(pal[i], pal[i + 1], smooth(0, 1, t - i))
+
+
+def hsh(ix, iy, s=0):
+    n = (ix * 374761393 + iy * 668265263 + s * 1442695041) & 0xffffffff
+    n = ((n ^ (n >> 13)) * 1274126177) & 0xffffffff
+    return ((n ^ (n >> 16)) & 0xffff) / 65535.0
+
+
+def noise(x, y, s=0):
+    """값 잡음 0..1."""
+    ix, iy = math.floor(x), math.floor(y)
+    fx, fy = x - ix, y - iy
+    ux, uy = fx * fx * (3 - 2 * fx), fy * fy * (3 - 2 * fy)
+    a, b = hsh(ix, iy, s), hsh(ix + 1, iy, s)
+    c, d = hsh(ix, iy + 1, s), hsh(ix + 1, iy + 1, s)
+    return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy
+
+
+class Clay:
+    """무광 파스텔 찰흙. 통통한 실루엣, 둥근 어깨에만 빛, 반짝임 거의 없음, 넓고 옅은 그림자."""
+    soft = 0.55
+    shadow = (0.34, 0.20, 0.44, 0.24)
+    shadow_off, shadow_blur = (0.35, 1.15), 2.5
+    ink = (0.36, 0.18, 0.40)
+    glow = None
+    PAL = [(1.0, 0.82, 0.70), (0.99, 0.72, 0.80), (0.80, 0.74, 0.99)]
+    WARN = [(1.0, 0.68, 0.58), (0.97, 0.50, 0.55)]
+
+    def body(self, x, y, d, nx, ny, warn, frame):
+        depth = -d
+        base = ramp_to(self.WARN if warn else self.PAL, (x * 0.6 + y) / 34)
+        n = dome(nx, ny, depth, 1.7)
+        c = scale(base, 0.66 + 0.42 * dot3(n, L3))
+        c = lerp(c, WHITE, 0.14 * max(0.0, dot3(n, H3)) ** 10)
+        c = lerp(c, scale(base, 0.55), 0.45 * exp(-(depth / 0.22) ** 2))   # 흰 바탕에서 윤곽이 서게
+        return c, 1.0
+
+
+class Holo:
+    """진주빛 홀로그램 포일. 비스듬한 무지개 띠가 흐르고, 기울어진 테일수록 색이 짙다."""
+    shadow = (0.12, 0.08, 0.24, 0.26)
+    ink = (0.32, 0.22, 0.58)
+    glow = None
+    PAL = [(1.0, 0.62, 0.80), (1.0, 0.85, 0.58), (0.72, 1.0, 0.70), (0.56, 0.90, 1.0), (0.72, 0.64, 1.0)]
+    WARN = [(1.0, 0.55, 0.62), (1.0, 0.74, 0.52), (1.0, 0.52, 0.80)]
+
+    def body(self, x, y, d, nx, ny, warn, frame):
+        depth = -d
+        n = dome(nx, ny, depth, 1.4)
+        tilt = 1 - n[2]
+        t = (x + y) / 20 + 0.22 * sin((x - y) * 0.42) + 0.8 * tilt + frame
+        h = ramp(self.WARN if warn else self.PAL, t)
+        c = lerp((0.97, 0.96, 1.0), h, 0.55 + 0.4 * tilt)
+        lit = dot3(n, L3)
+        c = lerp(c, WHITE, 0.55 * max(0.0, dot3(n, H3)) ** 6)
+        if lit < 0.6:
+            c = lerp(c, (0.50, 0.42, 0.76), (0.6 - lit) * 0.45)
+        c = lerp(c, (0.44, 0.34, 0.70) if not warn else (0.70, 0.25, 0.40), 0.85 * exp(-(depth / 0.26) ** 2))
+        return c, 1.0
+
+
+class Jelly:
+    """딸기 젤리. 비치는 몸, 두꺼운 가운데일수록 진하고, 왼쪽 위 어깨에 젖은 반짝임."""
+    soft = 0.45
+    tip_body = True
+    shadow = (0.55, 0.06, 0.26, 0.22)
+    shadow_off, shadow_blur = (0.45, 1.0), 2.0
+    ink = (1.0, 1.0, 1.0)
+    glow = None
+
+    def body(self, x, y, d, nx, ny, warn, frame):
+        depth = -d
+        light, core, line = (((1.0, 0.62, 0.42), (0.86, 0.12, 0.10), (0.50, 0.04, 0.02)) if warn else
+                             ((1.0, 0.58, 0.74), (0.93, 0.14, 0.42), (0.52, 0.02, 0.20)))
+        k = smooth(0.0, 1.8, depth)
+        c = lerp(light, core, k)
+        a = 0.74 + 0.22 * k
+        back = max(0.0, -(nx * LX + ny * LY)) * exp(-depth / 0.6)      # 아래 오른쪽 테로 빛이 새어 나옴
+        c = lerp(c, (1.0, 0.88, 0.92), 0.6 * back)
+        n = dome(nx, ny, depth, 1.6)
+        spec = clamp(1.6 * max(0.0, dot3(n, H3)) ** 18 - 0.25)         # 젖은 반짝임 — 끝을 잘라 또렷하게
+        c = lerp(c, WHITE, spec)
+        c = lerp(c, line, 0.6 * exp(-(depth / 0.2) ** 2))
+        return c, max(a, spec)
+
+
+GOLD = [(0.40, 0.26, 0.06), (0.78, 0.56, 0.18), (1.0, 0.88, 0.56), (1.0, 0.97, 0.84)]
+
+
+class Gold:
+    """검은 옻칠에 금 테. 금빛이 테를 따라 훑고 지나가고, 옻칠 위에 흰 광택 하나."""
+    shadow = (0.0, 0.0, 0.0, 0.34)
+    ink = (0.92, 0.74, 0.36)
+    glow = None
+    RIM = 0.7
+
+    def body(self, x, y, d, nx, ny, warn, frame):
+        depth = -d
+        t = clamp((x + y) / 40)
+        base = lerp((0.36, 0.05, 0.09), (0.16, 0.02, 0.04), t) if warn else lerp((0.12, 0.12, 0.16), (0.03, 0.03, 0.05), t)
+        n = dome(nx, ny, depth - self.RIM, 1.5)
+        c = lerp(base, (0.86, 0.88, 1.0), 0.7 * max(0.0, dot3(n, H3)) ** 30)
+        w = smooth(self.RIM + 0.12, self.RIM - 0.06, depth)
+        if w > 0:
+            g = ramp_to(GOLD, 0.52 + 0.36 * (nx * LX + ny * LY) + 0.12 * (1 - depth / self.RIM))
+            u = ((x + y) / 44 - frame) % 1.0
+            g = lerp(g, (1.0, 0.98, 0.90), 0.85 * exp(-(min(u, 1 - u) * 44 / 1.3) ** 2))
+            g = lerp(g, (0.30, 0.19, 0.04), 0.4 * exp(-(depth / 0.1) ** 2))
+            c = lerp(c, g, w)
+        return c, 1.0
+
+
+class Sunset:
+    """평면 그라데이션 + 흰 테. 노을색이 대각으로 깔리고 조금씩 오르내린다."""
+    soft = 0.7
+    tip_body = True
+    LINE = 0.7
+    shadow = (0.40, 0.16, 0.52, 0.30)
+    shadow_off, shadow_blur = (0.4, 1.0), 2.2
+    ink = (1.0, 1.0, 1.0)
+    glow = None
+    PAL = [(1.0, 0.80, 0.32), (1.0, 0.52, 0.36), (0.96, 0.30, 0.54), (0.58, 0.30, 0.88)]
+    WARN = [(1.0, 0.56, 0.30), (0.95, 0.20, 0.30), (0.72, 0.10, 0.30)]
+
+    def body(self, x, y, d, nx, ny, warn, frame):
+        depth = -d
+        t = (x * 0.5 + y) / 30 + 0.10 * sin(TAU * frame)
+        c = ramp_to(self.WARN if warn else self.PAL, t)
+        c = lerp(c, WHITE, 0.10 * smooth(4.0, -2.0, y - x * 0.4))            # 위쪽이 아주 조금 밝게
+        return lerp(c, WHITE, smooth(self.LINE + 0.07, self.LINE - 0.07, depth)), 1.0
+
+
+class Galaxy:
+    """밤하늘. 남보라 몸에 성운이 천천히 돌고 별이 깜빡인다. 라일락 테가 어두운 바탕에서도 윤곽을 잡는다."""
+    shadow = (0.03, 0.02, 0.10, 0.30)
+    ink = (1.0, 1.0, 1.0)
+    NEB = [(0.95, 0.35, 0.85), (0.40, 0.52, 1.0), (0.30, 0.92, 0.95)]
+    WARN = [(1.0, 0.35, 0.30), (1.0, 0.60, 0.25), (0.95, 0.25, 0.55)]
+    STEP = 1.25                                    # 별 자리 칸
+
+    def body(self, x, y, d, nx, ny, warn, frame):
+        depth = -d
+        ox, oy = 1.8 * cos(TAU * frame), 1.8 * sin(TAU * frame)
+        n1 = noise((x + ox) * 0.26, (y + oy) * 0.26, 1)
+        n2 = noise(x * 0.55 + oy * 0.3, y * 0.55 - ox * 0.3, 2)
+        neb = clamp((n1 * 0.7 + n2 * 0.3 - 0.36) * 1.9)
+        hue = ramp(self.WARN if warn else self.NEB, n2 * 0.9 + x * 0.02)
+        base = lerp((0.05, 0.04, 0.14), (0.11, 0.05, 0.22), clamp((x + y) / 44))
+        c = lerp(base, hue, 0.6 * neb)
+        gx, gy = math.floor(x / self.STEP), math.floor(y / self.STEP)
+        if hsh(gx, gy, 7) > 0.7:
+            sx = (gx + 0.2 + 0.6 * hsh(gx, gy, 8)) * self.STEP
+            sy = (gy + 0.2 + 0.6 * hsh(gx, gy, 9)) * self.STEP
+            tw = 0.5 + 0.5 * sin(TAU * (frame + hsh(gx, gy, 10)))
+            big = hsh(gx, gy, 11) > 0.8
+            ax, ay = abs(x - sx), abs(y - sy)
+            b = exp(-((ax * ax + ay * ay) / (0.24 if big else 0.17) ** 2))
+            if big:                                                      # 큰 별은 십자 반짝이
+                b = max(b, 0.7 * tw * exp(-(min(ax, ay) / 0.07) ** 2) * exp(-max(ax, ay) / 0.45))
+            c = lerp(c, WHITE, clamp(b * (0.35 + 0.65 * tw)))
+        rim = (1.0, 0.66, 0.66) if warn else (0.84, 0.78, 1.0)
+        return lerp(c, rim, 0.9 * exp(-(depth / 0.36) ** 2)), 1.0
+
+    def glow(self, x, y, d, warn, frame):
+        return ((1.0, 0.40, 0.45) if warn else (0.62, 0.50, 1.0)), 0.48 * exp(-d / 0.7)
+
+
+class Ink:
+    """검정 + 흰 테. 장식 없이 또렷한 매일 쓰는 결 — 어느 바탕이든 테나 몸 한쪽이 선다."""
+    soft = 0.7
+    tip_body = True
+    LINE = 0.7
+    shadow = (0.0, 0.0, 0.0, 0.32)
+    shadow_off, shadow_blur = (0.3, 0.7), 1.9
+    ink = (1.0, 1.0, 1.0)
+    glow = None
+
+    def body(self, x, y, d, nx, ny, warn, frame):
+        depth = -d
+        t = clamp((x + y) / 40)
+        core = lerp((0.88, 0.16, 0.20), (0.70, 0.06, 0.10), t) if warn else lerp((0.17, 0.17, 0.19), (0.04, 0.04, 0.05), t)
+        return lerp(core, WHITE, smooth(self.LINE + 0.07, self.LINE - 0.07, depth)), 1.0
+
+
+STYLES = {"glass": Glass(), "aurora": Aurora(), "chrome": Chrome(),
+          "clay": Clay(), "holo": Holo(), "jelly": Jelly(), "gold": Gold(),
+          "sunset": Sunset(), "galaxy": Galaxy(), "ink": Ink()}
 
 
 # ---- 그리기 ----
@@ -366,7 +597,7 @@ def field(f):
 def render(style, name, frame=0.0):
     """→ 256×256 미리 곱한 RGBA float 목록 넷, 핫스팟(픽셀)."""
     st = STYLES[style]
-    layers, hot = cell(name, frame)
+    layers, hot = cell(name, frame, getattr(st, "soft", 0.0), getattr(st, "tip_body", False))
     R, G, B, A = ([0.0] * (N * N) for _ in range(4))
 
     def over(i, r, g, b, a):
@@ -378,15 +609,17 @@ def render(style, name, frame=0.0):
 
     fields = [field(L["f"]) for L in layers]
     sr, sg, sb, sa = st.shadow
-    ox, oy = round(0.55 * U), round(0.9 * U)
+    sx, sy = getattr(st, "shadow_off", (0.55, 0.9))
+    blur = getattr(st, "shadow_blur", 1.8)
+    ox, oy = round(sx * U), round(sy * U)
     for L, d in zip(layers, fields):                                # 그림자 먼저 다 깐다
         if not L.get("shadow", True):
             continue
         for (px, py) in d:
             e = d.get((px - ox, py - oy))
-            if e is None or e > 1.8:
+            if e is None or e > blur:
                 continue
-            a = sa * (1 - smooth(-0.8, 1.8, e))
+            a = sa * (1 - smooth(-0.8, blur, e))
             if a > 0.002:
                 over(py * N + px, sr * a, sg * a, sb * a, a)
     for L, d in zip(layers, fields):

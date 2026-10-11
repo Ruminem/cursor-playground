@@ -34,5 +34,6 @@ if __name__ == "__main__":
     with open(os.path.join(HERE, "hd_preview.tpl.html"), encoding="utf-8") as fh:
         tpl = fh.read()
     with open(p, "w", encoding="utf-8") as fh:
-        fh.write(tpl.replace("/*DATA*/", json.dumps({"cells": hd.CELLS, "styles": out}, separators=(",", ":"))))
+        tag = '<script type="application/json" id="data">'          # 머리 주석에도 같은 표식 글자가 있어 자리를 집어 바꾼다
+        fh.write(tpl.replace(tag + "/*DATA*/", tag + json.dumps({"cells": hd.CELLS, "styles": out}, separators=(",", ":")), 1))
     print(len(jobs), "장", os.path.getsize(p) // 1024, "KB")
