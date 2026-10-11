@@ -1057,7 +1057,17 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
         var B = img.naturalWidth, n = f < 0 ? B : (px || B), cv = document.createElement('canvas');
         cv.width = n; cv.height = f < 0 ? img.naturalHeight : n;
         var g = cv.getContext('2d'); g.imageSmoothingEnabled = !!soft; g.imageSmoothingQuality = 'high';
-        if (f < 0) g.drawImage(img, 0, 0); else g.drawImage(img, 0, f * B * K, B, B, 0, 0, n, n);
+        if (f < 0) g.drawImage(img, 0, 0);
+        else if (deg && soft && n !== B) {
+          // 섞어 줄이면 이웃 칸 색이 섞여 파랑 끝 비트(동물·커서 표식)가 뭉개진다 — 흰냥이 커서에 커서 색이 동물까지 번졌다.
+          // 그래서 판 크기 그대로 색조를 입힌 뒤에 줄인다
+          var raw = document.createElement('canvas'); raw.width = raw.height = B;
+          var rg = raw.getContext('2d'); rg.drawImage(img, 0, f * B * K, B, B, 0, 0, B, B);
+          var rd = rg.getImageData(0, 0, B, B); recolor(rd, deg); rg.putImageData(rd, 0, 0);
+          g.drawImage(raw, 0, 0, B, B, 0, 0, n, n);
+          deg = 0;
+        }
+        else g.drawImage(img, 0, f * B * K, B, B, 0, 0, n, n);
         if (deg) { var data = g.getImageData(0, 0, cv.width, cv.height); recolor(data, deg); g.putImageData(data, 0, 0); }
         if (dot) mark(g, n / GRID, dot);
         // 카드 그림은 toBlob 으로 굽는다 — toDataURL 은 PNG 를 메인 스레드에서 굽고, 그 주소를 blobOf 가 다시 fetch 해
