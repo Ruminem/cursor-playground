@@ -563,21 +563,24 @@ for sid in (s for s in both if s not in build.HD):   # 고화질 펫은 art 가 
             tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= 36]
             if not (o and e and tip and sum(tip) >= 0.9 * len(tip)):
                 bad.append(f"{sid} round {i}장 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
-# 고화질 펫(흰냥이)은 art 가 없어 그림을 그려 32 판으로 줄인 바이트에서 잰다 — 화살표 칸을 마스크로 따로 그려 줄인 뒤
-# 비트를 박는다(hdpet.rgba_bytes). 기본 화살표와 매끈한 모양 하나를 첫 장만
+# 고화질 펫(흰냥이)은 art 가 없어 그림을 그려 32 · 64 판으로 줄인 바이트에서 잰다 — 화살표 칸을 마스크로 따로 그려 줄인 뒤
+# 비트를 박는다(hdpet.rgba_bytes). 기본 화살표와 매끈한 모양 하나를 첫 장만. 끝 둘레는 매끈한 쪽과 같은 6칸(32 판 기준)이다 —
+# 3칸이던 때는 기본 화살표 32 판에서 한 칸만 들어 아무것도 못 쟀다. 8칸까지 넓혀도 네 모양 다 100% 였다(2026-10-11)
 import hd as hdlib  # noqa: E402
 pets = sorted(sid for sid in both if sid in build.HD)
 for sid in pets:
     for st in (build.HD[sid], f"{build.HD[sid]}@{build.SHAPES[1]['id']}"):
-        img, (hx, hy) = hdlib.render(st, "arrow", 0)
-        raw = hdlib.rgba_bytes(hdlib.sizes(img, [32])[32], 32)
-        f = {(i % 32, i // 32): raw[i * 4:i * 4 + 4] for i in range(32 * 32)}
-        hx, hy = hx * 32 // hdlib.N, hy * 32 // hdlib.N
-        o, e = odd_even(f)
-        tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= 9]
-        print(f"  {st}: 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
-        if not (o and e and tip and sum(tip) >= 0.9 * len(tip)):
-            bad.append(f"{st} 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
+        img, (hx0, hy0) = hdlib.render(st, "arrow", 0)
+        got = hdlib.sizes(img, [32, 64])
+        for n in (32, 64):
+            raw = hdlib.rgba_bytes(got[n], n)
+            f = {(i % n, i // n): raw[i * 4:i * 4 + 4] for i in range(n * n)}
+            hx, hy, r = hx0 * n // hdlib.N, hy0 * n // hdlib.N, 6 * n // 32
+            o, e = odd_even(f)
+            tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= r * r]
+            print(f"  {st} {n}: 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
+            if not (o and e and len(tip) >= 8 and sum(tip) >= 0.9 * len(tip)):
+                bad.append(f"{st} {n} 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
 print(f"막대 둘 구성표 {len(both)}종 · 커서 표식이 어긋난 장 {len(bad)}개")
 assert len(both) == 60, both
 # 막대 둘 묶음은 다 매끈한 모양에 반응한다 — 픽셀 그림은 peek, 고화질은 화살표를 든 펫 결

@@ -144,9 +144,11 @@ def _hashes() -> tuple[dict, dict, str]:
               *(_dump([_tree(f)]) for f in sorted((HERE / "hdfx").glob("*.py"))),
               _dump(_reach(_tree(HERE / "build.py"), {"build_hd"})))
     # 펫 결은 hdpet 폴더도 재료다. 다른 결에는 안 넣는다 — 감싼 render 가 그대로 지나가 바이트가 같고, 넣으면 흰냥이
-    # 한 마리를 고칠 때 26종을 다시 굽는다
-    pet = _sha(*(_dump([_tree(f)]) for f in sorted((HERE / "hdpet").glob("*.py"))))
-    art |= {s["id"]: _sha(hd, *([pet] if s["hd"] in hdpet.PETS else []), json.dumps(s, sort_keys=True))
+    # 한 마리를 고칠 때 26종을 다시 굽는다. 펫끼리도 제 모듈만 넣는다 — 폴더째 넣던 때는 부캉이를 더하자 흰냥이도 다시 구웠다
+    common = _dump([_tree(HERE / "hdpet" / "__init__.py")])
+    pet = {k: _sha(common, _dump([_tree(Path(sys.modules[type(v).__module__].__file__))]))
+           for k, v in hdpet.PETS.items()}
+    art |= {s["id"]: _sha(hd, *([pet[s["hd"]]] if s["hd"] in pet else []), json.dumps(s, sort_keys=True))
             for s in SCHEMES if s.get("hd")}
     tree = _tree(HERE / "build.py")
     # 펫 결의 모양 탭은 화살표 하나만 그 모양으로 굽는다(build_hd_shape). 펫 재료 + 그 모양 줄만 든 smooth.py + 굽는 코드 —

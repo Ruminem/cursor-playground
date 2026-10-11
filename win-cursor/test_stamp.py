@@ -59,6 +59,15 @@ build._tree = bent_at("build.py", "build_hd_shape")
 keys2 = build._hashes()[0]
 build._tree = plain
 assert {k for k in keys0 if keys0[k] != keys2[k]} == pet_shape, "build_hd_shape 를 고치니 다시 그릴 일감이 어긋남"
+# 펫 모듈 하나를 고치면 그 펫만 — 폴더째 해시에 넣던 때는 부캉이를 더하자 흰냥이까지 다시 구웠다
+pet_of = {s["id"]: s["hd"] for s in build.SCHEMES if s.get("hd") in build.hdpet.PETS}
+assert len(set(pet_of.values())) > 1, "펫 결이 둘이 안 돼 서로 안 번지는지 못 잼"
+for st in set(pet_of.values()):
+    build._tree = bent_at(f"{st}.py", "scene")
+    keys2 = build._hashes()[0]
+    build._tree = plain
+    want = {k for k in keys0 if pet_of.get(k.split("/")[1]) == st}
+    assert {k for k in keys0 if keys0[k] != keys2[k]} == want, f"hdpet/{st}.py 를 고치니 다른 펫까지 다시 그림"
 
 # 빌드가 넘어져도 끝난 것의 표식만 남기는지. 덜 끝난 고화질 구성표나 data 조각이 파일에 안 닿은 일감을 남기면
 # 다음 빌드가 그걸 안 그려 옛 그림이 남고, 끝난 것을 안 남기면 36분 구운 고화질을 통째로 다시 굽는다(2026-10-11)

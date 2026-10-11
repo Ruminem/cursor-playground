@@ -119,4 +119,4 @@ def hot(style, name):
 
 hd.render, hd.frames, hd.rgba_bytes = render, frames, rgba_bytes
 
-from . import whitecat  # noqa: E402,F401
+from . import bukang, whitecat  # noqa: E402,F401

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""해양 애니 생성기(`gen/bukang.py`·`gen/dolphin.py` …)가 같이 쓰는 도구. 혼자서는 아무것도 안 그린다.
+"""해양 애니 생성기(`gen/dolphin.py` …)가 같이 쓰는 도구. 혼자서는 아무것도 안 그린다.
 
 장면은 칸 좌표 → 색 사전(`{(x, y): (r, g, b, a)}`) 한 장이 한 프레임이다. 다각형을 4×4 로 찍어 반 넘게 덮인
 칸을 칠하고(`raster`), 테두리 · 반투명 테(`finish`)를 두른다. 옆모습 몸은 `side` 가 동물마다의 `Body` 로 그린다.
