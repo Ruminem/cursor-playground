@@ -53,6 +53,28 @@ for file, name, want in [("hd.py", "render", hd_keys), ("build.py", "build_hd", 
     moved = {k for k in keys0 if keys0[k] != keys2[k]}
     assert moved == want, f"{file} 의 {name} 을 고치니 다시 그릴 일감이 어긋남 — 더 {len(moved - want)} · 빠짐 {len(want - moved)}"
 
+# 빌드가 넘어져도 끝난 것의 표식만 남기는지. 덜 끝난 고화질 구성표나 data 조각이 파일에 안 닿은 일감을 남기면
+# 다음 빌드가 그걸 안 그려 옛 그림이 남고, 끝난 것을 안 남기면 36분 구운 고화질을 통째로 다시 굽는다(2026-10-11)
+from concurrent.futures import Future
+def fut(err=None):
+    f = Future()
+    f.set_exception(err) if err else f.set_result(None)
+    return f
+base, shp = build.SHAPES[0]["id"], build.SHAPES[1]["id"]
+hd2 = sorted(build.HD)[:2]
+plain_sids = [s["id"] for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY][:3]
+held = {"hd": {fut(): (hd2[0], "arrow"), fut(): (hd2[0], "wait"), fut(): (hd2[1], "arrow"), fut(RuntimeError()): (hd2[1], "wait")},
+        "jobs": {fut(): (base, plain_sids[0], True, False),       # data 조각 없음 → 남김
+                 fut(): (shp, plain_sids[1], True, True),         # 조각을 기다리는데 그 모양 data 를 못 씀 → 안 남김
+                 Future(): (base, plain_sids[2], True, False)},   # 안 끝남 → 안 남김
+        "wrote": set(), "stencil": False}
+got = build.done_keys(keys0, marks0, held)
+assert set(got) == {f"{base}/{hd2[0]}", f"{base}/{plain_sids[0]}"}, f"넘어진 빌드의 표식이 어긋남: {sorted(got)}"
+held["wrote"], held["stencil"] = {shp}, True
+got = build.done_keys(keys0, marks0, held)
+assert {f"{shp}/{plain_sids[1]}", f"*data/{shp}", "*stencil"} <= set(got), "다 쓴 모양 data·스텐실 표식을 안 남김"
+assert all(got[k] == {**keys0, **marks0}[k] for k in got), "남긴 표식 값이 이번 해시가 아님"
+
 # 주소 줄에 붙여넣은 주소를 읽는 정규식이, 그 줄이 스스로 뱉는 주소를 도로 읽는지.
 # 둘이 갈리면 복사한 주소를 다시 붙여넣었을 때 "못 읽음" 이 된다
 tpl = open("preview.tpl.html", encoding="utf-8").read()

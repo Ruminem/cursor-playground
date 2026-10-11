@@ -10,6 +10,7 @@ dist/ 의 커서 파일은 시안 페이지 버튼이 GitHub Pages 에서 내려
 """
 import ast
 import base64
+import contextlib
 import hashlib
 import json
 import os
@@ -730,6 +731,39 @@ def update_readme() -> None:
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
+def done_keys(keys: dict, marks: dict, held: dict) -> dict:
+    """넘어진 빌드에서 끝까지 쓴 것의 표식만 고른다. held 는 일감 퓨처들과 그사이 쓴 data·스텐실.
+    고화질은 구성표의 칸이 다 끝나야, build_one 은 시안 데이터 조각을 기다리지 않거나 그 모양 data 를 다 쓴 것만 —
+    조각이 파일에 안 닿았는데 표식을 남기면 다음 빌드가 그 구성표를 안 그려 data 에 옛 그림이 남는다"""
+    ok = lambda f: f.done() and not f.cancelled() and f.exception() is None
+    base, out, whole = SHAPES[0]["id"], {}, {}
+    for f, (sid, _) in held["hd"].items():
+        whole[sid] = whole.get(sid, True) and ok(f)
+    out.update({f"{base}/{sid}": keys[f"{base}/{sid}"] for sid, good in whole.items() if good})
+    for f, (shape_id, sid, _, piece) in held["jobs"].items():
+        if ok(f) and (not piece or shape_id in held["wrote"]):
+            out[f"{shape_id}/{sid}"] = keys[f"{shape_id}/{sid}"]
+    out.update({f"*data/{s}": marks[f"*data/{s}"] for s in held["wrote"]})
+    if held["stencil"]:
+        out["*stencil"] = marks["*stencil"]
+    return out
+
+
+@contextlib.contextmanager
+def keep_done(was: dict, keys: dict, marks: dict, held: dict):
+    """빌드가 중간에 넘어져도 끝난 일감의 표식을 남긴다. 표식을 맨 끝에만 쓰던 때는 고화질 459칸을 36분 구운 뒤
+    페이지 짜다 넘어져 다음 빌드가 그걸 통째로 다시 구웠다(2026-10-11). 풀보다 먼저 열어야 풀이 남은 일감을
+    다 기다린 뒤에 여기로 온다"""
+    try:
+        yield
+    except BaseException:
+        done = done_keys(keys, marks, held)
+        if done:
+            STAMP.write_text(json.dumps({**was, **done}, indent=0), encoding="utf-8", newline="\n")
+            print(f"넘어졌지만 끝난 것 {len(done)}개의 표식을 남김 — 다음 빌드는 나머지만 그린다", file=sys.stderr)
+        raise
+
+
 if __name__ == "__main__":
     clash = {s["id"] for s in SHAPES} & {s["id"] for s in SCHEMES}
     if clash:  # dist/<모양>/ 과 dist/<구성표>/ 가 같은 자리를 쓰게 된다
@@ -745,7 +779,8 @@ if __name__ == "__main__":
         print(f"[{time.time() - t0:5.1f}초] 목록에 없어 지움: {path}")
 
     workers = getattr(os, "process_cpu_count", os.cpu_count)() or 1   # ProcessPoolExecutor 기본값과 같다
-    with ProcessPoolExecutor(workers) as pool:
+    held = {"hd": {}, "jobs": {}, "wrote": set(), "stencil": False}   # 넘어지면 keep_done 이 여기서 끝난 것을 고른다
+    with keep_done(was, keys, marks, held), ProcessPoolExecutor(workers) as pool:
         jobs_of, skipped = [], 0
         # 일감 차례를 정할 어림 값 — 그림 프레임 수. 움직이는 구성표 몇이 일의 대부분이다
         frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES if s["id"] not in HD
@@ -772,6 +807,7 @@ if __name__ == "__main__":
                     print(f"{shp['id']}: 시안 데이터 다시 씀 (그리지 않고 지난 것을 옮김)")
                 else:                                   # 구성표를 지웠거나 data 쓰는 코드만 바뀌었다 — 그릴 것 없이 다시 쓴다
                     write_data(shp["id"], {})
+                    held["wrote"].add(shp["id"])
             # (모양 × 구성표) 하나가 일감 하나. 커서와 시안 데이터를 한 일감에서 같이 만든다.
             # 스텐실은 아래서 먼저 구워 나눠 쓰므로 잘게 쪼개도 다시 굽지 않는다.
             # 모양당 4묶음이던 때는 무거운 구성표(무지개 흐름·용암)가 한 묶음에 몰려 그 묶음이 2배 걸렸고,
@@ -801,6 +837,7 @@ if __name__ == "__main__":
                 and (was.get("*stencil") != marks["*stencil"] or not STENCILS.exists()):
             baked = dict(pool.map(bake, smoothlib.stencil_keys()))
             STENCILS.write_bytes(pickle.dumps(baked, protocol=pickle.HIGHEST_PROTOCOL))
+            held["stencil"] = True
             print(f"[{time.time() - t0:5.1f}초] 스텐실 {len(baked)}벌 구움")
         # 오래 걸리는 것부터 넣는다 — 긴 것이 맨 뒤에 오면 그 하나가 꼬리가 된다. 그릴 프레임 수 순.
         # 매끈한 모양은 프레임마다 세 크기로 새로 칠해서 기본 모양보다 프레임당 몇 배 무겁다.
@@ -818,6 +855,7 @@ if __name__ == "__main__":
         t_sub = time.time()
         hd_futs = {pool.submit(timed, build_hd, j): j for j in hd_jobs}
         jobs = {pool.submit(timed, build_one, j): j for j in jobs_of}
+        held["hd"], held["jobs"] = hd_futs, jobs
         whole = sum(map(cost, jobs_of)) or 1            # 진행률은 이 어림 값의 합으로 센다
         total, made, spent, per_sid, got, step = 0, {}, {}, {}, 0, 1
         spans = []                                      # (시작, 끝) — 가동률과 꼬리를 잰다
@@ -859,6 +897,7 @@ if __name__ == "__main__":
                     what += f" · data/{shape_id}/" + ("" if len(pieces[shape_id]) == len(drawn(shape_id))
                                                           else f" (구성표 {len(pieces[shape_id])}종만)")
                     write_data(shape_id, pieces.pop(shape_id))
+                    held["wrote"].add(shape_id)
                 print(f"[{time.time() - t0:5.1f}초] {what} · 워커 시간 {_dur(spent[shape_id])}")
             if got * 10 >= whole * step and got < whole:
                 step = got * 10 // whole + 1
