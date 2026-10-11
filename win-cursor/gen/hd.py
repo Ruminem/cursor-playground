@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
-"""고화질 구성표 20종 생성기 — 글래스 · 오로라 네온 · 크롬 메탈(2026-10-10) 과
-클레이 · 홀로그램 · 젤리 · 미드나잇 골드 · 선셋 · 갤럭시 · 잉크(2026-10-11 낮),
-그리고 빛 번짐 없이 재질과 디자인 말씨로 가른 열 결(NEW, 2026-10-11 오후) — 백자 청화 · 청자 ·
-대리석 · 테라초 · 현무암 · 월넛 · 가죽 · 종이접기 · 바우하우스 · 청사진. 앞 열이 다 네온에 번짐을
-입혀 진부하다는 말에 뽑았다.
+"""고화질 구성표 7종 생성기 — 클레이 · 젤리 · 홀로그램 · 선셋 · 오로라 네온 · 갤럭시 · 바우하우스.
+스무 결을 시안으로 뽑아(2026-10-10–11) 사용자가 고른 일곱만 남겼다. 지운 열세 결(글래스 · 크롬 메탈 ·
+미드나잇 골드 · 잉크 · 백자 청화 · 청자 · 대리석 · 테라초 · 현무암 · 월넛 · 가죽 · 종이접기 · 청사진)은
+b6e4129 에 있다.
 
 픽셀 그림(.txt)이 아니라 거리함수로 256칸 판에 바로 그린다. .txt 는 글자 하나가 색 하나라
 그라데이션·하이라이트처럼 색이 수천 개인 그림을 못 담고, 기본 모양은 그 그림을 최근접으로 키워
 32 위로는 계단이 그대로 커진다. 여기서는 256 원본을 그리고 크기마다 면적 평균으로 줄인다.
 
 모양은 32칸 판의 한 칸(U = 8px)을 단위로 적는다 — 다른 구성표 그림과 같은 자리·크기 감각.
-재질은 거리 d 와 테두리 법선으로 칠한다: 테두리 쪽 밝기·안쪽 테·바깥 번짐. 뒤 일곱은 dome() 으로
-테두리 단면에서 법선을 세워 빛을 받고(L3·H3), soft 칸만큼 몸을 부풀리거나 tip_body 로 펜 심을
+재질은 거리 d 와 테두리 법선으로 칠한다: 테두리 쪽 밝기·안쪽 테·바깥 번짐. 클레이·홀로그램·젤리는
+dome() 으로 테두리 단면에서 법선을 세워 빛을 받고(L3·H3), soft 칸만큼 몸을 부풀리거나 tip_body 로 펜 심을
 몸 색으로 칠할 수 있다. 움직임은 frame(0–1) 에 주기로 걸어 고리 이음매가 없다.
 
     python gen/hd.py <출력 폴더> [재질…]        # 256 PNG 와 견줘 볼 시트
@@ -292,30 +291,6 @@ WHITE = (1.0, 1.0, 1.0)
 LX, LY = -0.6, -0.8           # 빛이 오는 쪽(왼쪽 위)
 
 
-class Glass:
-    shadow = (0.04, 0.07, 0.16, 0.30)
-    ink = (0.10, 0.30, 0.62)
-    glow = None
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        t = clamp((x + y) / 44)
-        c = lerp((1.0, 0.86, 0.88), (0.96, 0.62, 0.68), t) if warn else lerp((0.90, 0.95, 1.0), (0.58, 0.76, 0.98), t)
-        depth = -d
-        rim = exp(-depth / 0.7)
-        lit = clamp(nx * LX + ny * LY)
-        dark = clamp(-(nx * LX + ny * LY))
-        a = 0.46 + 0.40 * rim
-        c = lerp(c, WHITE, rim * (0.25 + 0.75 * lit))
-        c = lerp(c, (0.55, 0.20, 0.30) if warn else (0.22, 0.40, 0.68), rim * dark * 0.55)
-        a += 0.25 * rim * dark
-        glare = 0.30 * (1 - smooth(-0.6, 0.6, (y - 0.55 * x) - 4.2 - 6.0 * frame))  # 위쪽 비스듬한 반사
-        c = lerp(c, WHITE, glare)
-        a += 0.25 * glare
-        edge = exp(-(depth / 0.36) ** 2)
-        c = lerp(c, (0.36, 0.08, 0.14) if warn else (0.06, 0.13, 0.30), 0.92 * edge)
-        return c, max(clamp(a), 0.97 * edge)
-
-
 AURORA = [(0.15, 0.95, 0.85), (0.45, 1.0, 0.55), (0.30, 0.60, 1.0), (0.75, 0.40, 1.0), (1.0, 0.40, 0.80)]
 EMBER = [(1.0, 0.30, 0.42), (1.0, 0.58, 0.30), (1.0, 0.30, 0.70)]
 
@@ -347,28 +322,8 @@ class Aurora:
         return self.hue(x, y, warn, frame), 0.62 * exp(-d / 0.75)
 
 
-class Chrome:
-    shadow = (0.02, 0.03, 0.06, 0.34)
-    ink = (0.10, 0.11, 0.14)
-    glow = None
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        v = x * 0.42 + y
-        m = 0.58 + 0.27 * sin(v * 0.55 + 0.6) + 0.10 * sin(v * 1.7 + 1.3)
-        c = lerp((0.28, 0.31, 0.36), (0.94, 0.96, 0.99), clamp(m))
-        if warn:
-            c = (c[0] * 1.0, c[1] * 0.72, c[2] * 0.72)
-        depth = -d
-        bev = 1 - smooth(0.0, 1.25, depth)
-        lit = nx * LX + ny * LY
-        c = lerp(c, WHITE, bev * lit * 0.85) if lit > 0 else lerp(c, (0.12, 0.13, 0.16), bev * -lit * 0.75)
-        c = lerp(c, WHITE, 0.6 * exp(-((x + y - 16 - 40 * frame) / 1.4) ** 2))     # 지나가는 반사 띠
-        c = lerp(c, (0.08, 0.09, 0.11), 0.9 * exp(-(depth / 0.2) ** 2))
-        return c, 1.0
-
-
 # ---- 2026-10-11 더한 일곱 결 ----
-# 움직임은 frame(0..1)에 주기로만 기댄다 — 끝 장에서 첫 장으로 넘어갈 때 튀지 않게(글래스·크롬은 아직 튐, NEXT.md)
+# 움직임은 frame(0..1)에 주기로만 기댄다 — 끝 장에서 첫 장으로 넘어갈 때 튀지 않게
 
 L3 = (-0.42, -0.56, 0.71)                         # 3D 빛: 왼쪽 위 앞
 H3 = (-0.23, -0.31, 0.92)                         # 빛과 눈(0, 0, 1)의 반각 — 반짝임
@@ -479,32 +434,6 @@ class Jelly:
         return c, max(a, spec)
 
 
-GOLD = [(0.40, 0.26, 0.06), (0.78, 0.56, 0.18), (1.0, 0.88, 0.56), (1.0, 0.97, 0.84)]
-
-
-class Gold:
-    """검은 옻칠에 금 테. 금빛이 테를 따라 훑고 지나가고, 옻칠 위에 흰 광택 하나."""
-    shadow = (0.0, 0.0, 0.0, 0.34)
-    ink = (0.92, 0.74, 0.36)
-    glow = None
-    RIM = 0.7
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        t = clamp((x + y) / 40)
-        base = lerp((0.36, 0.05, 0.09), (0.16, 0.02, 0.04), t) if warn else lerp((0.12, 0.12, 0.16), (0.03, 0.03, 0.05), t)
-        n = dome(nx, ny, depth - self.RIM, 1.5)
-        c = lerp(base, (0.86, 0.88, 1.0), 0.7 * max(0.0, dot3(n, H3)) ** 30)
-        w = smooth(self.RIM + 0.12, self.RIM - 0.06, depth)
-        if w > 0:
-            g = ramp_to(GOLD, 0.52 + 0.36 * (nx * LX + ny * LY) + 0.12 * (1 - depth / self.RIM))
-            u = ((x + y) / 44 - frame) % 1.0
-            g = lerp(g, (1.0, 0.98, 0.90), 0.85 * exp(-(min(u, 1 - u) * 44 / 1.3) ** 2))
-            g = lerp(g, (0.30, 0.19, 0.04), 0.4 * exp(-(depth / 0.1) ** 2))
-            c = lerp(c, g, w)
-        return c, 1.0
-
-
 class Sunset:
     """평면 그라데이션 + 흰 테. 노을색이 대각으로 깔리고 조금씩 오르내린다."""
     soft = 0.7
@@ -560,265 +489,8 @@ class Galaxy:
         return ((1.0, 0.40, 0.45) if warn else (0.62, 0.50, 1.0)), 0.48 * exp(-d / 0.7)
 
 
-class Ink:
-    """검정 + 흰 테. 장식 없이 또렷한 매일 쓰는 결 — 어느 바탕이든 테나 몸 한쪽이 선다."""
-    soft = 0.7
-    tip_body = True
-    LINE = 0.7
-    shadow = (0.0, 0.0, 0.0, 0.32)
-    shadow_off, shadow_blur = (0.3, 0.7), 1.9
-    ink = (1.0, 1.0, 1.0)
-    glow = None
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        t = clamp((x + y) / 40)
-        core = lerp((0.88, 0.16, 0.20), (0.70, 0.06, 0.10), t) if warn else lerp((0.17, 0.17, 0.19), (0.04, 0.04, 0.05), t)
-        return lerp(core, WHITE, smooth(self.LINE + 0.07, self.LINE - 0.07, depth)), 1.0
-
-
-# ---- 2026-10-11 오후 더한 열 결 — 재료 결 ----
-# 앞 열 결이 "죄다 네온에 글로우"라 진부하다는 말을 듣고 뺀 것: 빛 번짐(glow)·무지개 띠·네온 테.
-# 실제 재료의 질감에 차분한 색, 윤곽은 진한 가는 선이나 상감선으로 세운다.
-
-def fbm(x, y, s=0, n=4):
-    """잡음 겹치기 0..1 언저리."""
-    t, a, f = 0.0, 0.5, 1.0
-    for i in range(n):
-        t += a * noise(x * f, y * f, s + i)
-        a, f = a * 0.5, f * 2.0
-    return t
-
-
-def cells(x, y, s=0):
-    """지터 격자 보로노이 → (가장 가까운 점까지, 둘째까지, 그 칸 ix, iy, 점 x, 점 y)."""
-    ix, iy = math.floor(x), math.floor(y)
-    f1 = f2 = 9.0
-    best = (ix, iy, x, y)
-    for j in (-1, 0, 1):
-        for i in (-1, 0, 1):
-            cx, cy = ix + i, iy + j
-            px, py = cx + hsh(cx, cy, s), cy + hsh(cx, cy, s + 1)
-            q = (px - x) ** 2 + (py - y) ** 2
-            if q < f1:
-                f1, f2, best = q, f1, (cx, cy, px, py)
-            elif q < f2:
-                f2 = q
-    return (math.sqrt(f1), math.sqrt(f2)) + best
-
-
-def line_at(depth, at, w):
-    """테에서 at 칸 안쪽에 그은 굵기 2w 선(0..1)."""
-    return smooth(w + 0.06, w - 0.06, abs(depth - at))
-
-
-class Porcelain:
-    """백자 청화. 푸른 기 도는 젖빛 몸에 유약 광택, 테를 따라 코발트 붓 띠, 안쪽에 다섯 잎 잔꽃이 흩어졌다.
-    붓선 한 줄을 테 안쪽에 긋던 판은 128 에서 테가 두 겹인 것으로만 읽혔다."""
-    soft = 0.4
-    shadow = (0.10, 0.14, 0.26, 0.24)
-    shadow_off, shadow_blur = (0.35, 0.9), 2.0
-    ink = (0.13, 0.22, 0.52)
-    glow = None
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        c = lerp((0.985, 0.98, 0.965), (0.90, 0.92, 0.93), clamp((x + y) / 44))
-        n = dome(nx, ny, depth, 1.5)
-        c = scale(c, 0.87 + 0.15 * dot3(n, L3))
-        blue = (0.66, 0.16, 0.16) if warn else lerp((0.20, 0.33, 0.68), (0.08, 0.15, 0.42), noise(x * 1.3, y * 1.3, 4))
-        band = smooth(0.52 + 0.1 * noise(x * 0.9, y * 0.9, 3), 0.36, depth) * smooth(0.04, 0.12, depth)   # 붓 띠 — 안쪽 가장자리가 흔들린다
-        f1, f2, ix, iy, px, py = cells(x * 0.3, y * 0.3, 5)
-        if hsh(ix, iy, 6) > 0.45 and depth > 0.75:                      # 잔꽃 — 띠와 안 붙게 안쪽에만. 더 촘촘하면 128 에서 깨알로 읽힌다
-            dx, dy = x * 0.3 - px, y * 0.3 - py
-            th = math.atan2(dy, dx) + TAU * hsh(ix, iy, 7)
-            R = 0.26 * (0.55 + 0.45 * abs(cos(2.5 * th)))
-            band = max(band, smooth(R + 0.025, R - 0.025, f1) * smooth(0.035, 0.065, f1))   # 가운데 꽃술은 비운다
-        c = lerp(c, blue, 0.9 * band)
-        c = lerp(c, WHITE, 0.9 * max(0.0, dot3(n, H3)) ** 40)
-        return lerp(c, (0.48, 0.10, 0.12) if warn else (0.12, 0.20, 0.44), 0.7 * exp(-(depth / 0.12) ** 2)), 1.0
-
-
-class Celadon:
-    """고려청자. 비색 유약이 두꺼운 가운데일수록 짙고 얇은 테는 밝게 비친다. 잔 빙렬, 왼쪽 위에 유약 광택.
-    사용 불가 칸은 진사(구리 붉은 유약)."""
-    soft = 0.35
-    shadow = (0.08, 0.16, 0.14, 0.26)
-    shadow_off, shadow_blur = (0.35, 0.9), 2.0
-    ink = (0.18, 0.31, 0.27)
-    glow = None
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        k = smooth(0.0, 1.8, depth)
-        c = lerp((0.86, 0.60, 0.58), (0.62, 0.15, 0.20), k) if warn else lerp((0.76, 0.86, 0.80), (0.46, 0.65, 0.58), k)
-        f1, f2 = cells(x * 0.95, y * 0.95, 51)[:2]
-        c = lerp(c, scale(c, 0.62), 0.45 * exp(-((f2 - f1) / 0.07) ** 2))       # 빙렬
-        n = dome(nx, ny, depth, 1.3)
-        c = scale(c, 0.86 + 0.2 * dot3(n, L3))
-        c = lerp(c, WHITE, 0.85 * max(0.0, dot3(n, H3)) ** 36)
-        return lerp(c, (0.40, 0.08, 0.10) if warn else (0.20, 0.36, 0.31), 0.8 * exp(-(depth / 0.2) ** 2)), 1.0
-
-
-BRASS = [(0.36, 0.25, 0.08), (0.68, 0.52, 0.24), (0.90, 0.78, 0.50), (0.98, 0.92, 0.74)]
-
-
-class Marble:
-    """카라라 대리석에 가는 놋쇠 테. 흰 돌에 회색 결이 흐르고 물갈이한 겉에 은은한 광택.
-    사용 불가 칸은 붉은 대리석(로소)에 흰 결."""
-    shadow = (0.10, 0.10, 0.12, 0.28)
-    ink = (0.20, 0.20, 0.22)
-    glow = None
-    RIM = 0.42
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        u = fbm(x * 0.16 + 0.4 * y * 0.16, y * 0.16, 61, 4)             # 결은 잡음의 등치선 — 사인 줄무늬는 등고선으로 읽혔다
-        w2 = fbm(x * 0.34, y * 0.34, 63, 3)
-        vein = max(smooth(0.035, 0.008, abs(u - 0.5)) * (0.55 + 0.45 * noise(x * 0.3, y * 0.3, 66)),
-                   0.25 * smooth(0.10, 0.0, abs(u - 0.5)),                 # 굵은 결 둘레의 옅은 번짐
-                   0.5 * smooth(0.018, 0.004, abs(w2 - 0.47)))             # 가는 잔결
-        haze = fbm(x * 0.5, y * 0.5, 67, 3)
-        if warn:
-            c = lerp(lerp((0.62, 0.17, 0.16), (0.48, 0.10, 0.11), haze), (0.96, 0.90, 0.88), 0.85 * vein)
-        else:
-            c = lerp(lerp((0.965, 0.96, 0.95), (0.86, 0.86, 0.86), 0.55 * haze), (0.50, 0.52, 0.56), 0.7 * vein)
-        n = dome(nx, ny, depth - self.RIM, 1.2)
-        c = scale(c, 0.9 + 0.12 * dot3(n, L3))
-        c = lerp(c, WHITE, 0.55 * max(0.0, dot3(n, H3)) ** 40)
-        w = smooth(self.RIM + 0.08, self.RIM - 0.05, depth)
-        if w > 0:                                                        # 놋쇠 테 — 빛 쪽이 밝다
-            g = ramp_to(BRASS, 0.5 + 0.38 * (nx * LX + ny * LY) + 0.1 * (1 - depth / self.RIM))
-            g = lerp(g, (0.24, 0.16, 0.05), 0.55 * exp(-(depth / 0.1) ** 2))
-            c = lerp(c, g, w)
-        return c, 1.0
-
-
-class Terrazzo:
-    """테라초. 크림 시멘트에 테라코타·세이지·먹·황토·청회색 돌 조각이 박혔다. 무광, 가는 먹선 윤곽."""
-    soft = 0.45
-    shadow = (0.20, 0.15, 0.10, 0.24)
-    shadow_off, shadow_blur = (0.35, 0.9), 2.0
-    ink = (0.20, 0.20, 0.22)
-    glow = None
-    CHIPS = [(0.78, 0.42, 0.30), (0.55, 0.64, 0.53), (0.22, 0.22, 0.24), (0.86, 0.66, 0.32), (0.44, 0.54, 0.66)]
-    WARN = [(0.78, 0.22, 0.20), (0.92, 0.55, 0.42), (0.30, 0.12, 0.12), (0.96, 0.82, 0.74)]
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        c = (0.96, 0.80, 0.76) if warn else (0.95, 0.92, 0.87)
-        c = scale(c, 0.97 + 0.05 * noise(x * 6, y * 6, 71))
-        f1, f2, ix, iy, px, py = cells(x * 0.78, y * 0.78, 72)
-        if hsh(ix, iy, 74) > 0.38:                                       # 조각 — 돌린 세모·네모·오각
-            k = 3 + int(hsh(ix, iy, 75) * 3)
-            a0 = TAU * hsh(ix, iy, 76)
-            dx, dy = x * 0.78 - px, y * 0.78 - py
-            pd = max(dx * cos(a0 + i * TAU / k) + dy * sin(a0 + i * TAU / k) for i in range(k))
-            r = 0.13 + 0.17 * hsh(ix, iy, 77)
-            pal = self.WARN if warn else self.CHIPS
-            c = lerp(c, pal[int(hsh(ix, iy, 78) * len(pal))], smooth(r + 0.025, r - 0.025, pd))
-        n = dome(nx, ny, depth, 1.3)
-        c = scale(c, 0.9 + 0.14 * dot3(n, L3))
-        return lerp(c, (0.22, 0.21, 0.21), 0.8 * exp(-(depth / 0.2) ** 2)), 1.0
-
-
-class Basalt:
-    """제주 현무암. 잿빛 돌에 숨구멍이 송송, 무광. 모서리가 닳아 밝다. 사용 불가 칸은 붉은 송이."""
-    soft = 0.45
-    tip_body = True
-    shadow = (0.0, 0.0, 0.0, 0.30)
-    shadow_off, shadow_blur = (0.35, 0.9), 2.0
-    ink = (0.93, 0.92, 0.89)
-    glow = None
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        c = lerp((0.66, 0.32, 0.24), (0.50, 0.20, 0.15), clamp((x + y) / 44)) if warn else \
-            lerp((0.56, 0.56, 0.56), (0.44, 0.44, 0.45), clamp((x + y) / 44))      # 어두운 바탕에 묻히지 않을 만큼 밝게
-        c = scale(c, 0.9 + 0.2 * fbm(x * 1.6, y * 1.6, 81, 3))
-        f1, f2, ix, iy, px, py = cells(x * 1.15, y * 1.15, 82)
-        if hsh(ix, iy, 84) > 0.4:                                        # 숨구멍 — 안은 어둡고 아래 오른쪽 벽이 빛을 받는다
-            r = 0.10 + 0.14 * hsh(ix, iy, 85)
-            hole = smooth(r + 0.04, r - 0.03, f1)
-            wall = clamp(((x * 1.15 - px) * -LX + (y * 1.15 - py) * -LY) / (r + 1e-6))
-            c = lerp(c, lerp((0.10, 0.10, 0.11), scale(c, 1.2), 0.45 * wall), hole)
-        n = dome(nx, ny, depth, 1.3)
-        c = scale(c, 0.82 + 0.3 * dot3(n, L3))
-        e = exp(-(depth / 0.32) ** 2)
-        c = lerp(c, (0.86, 0.85, 0.82), e * (0.45 + 0.5 * clamp(nx * LX + ny * LY)))
-        return c, 1.0
-
-
-class Walnut:
-    """호두나무 원목에 단풍나무 상감선 한 줄. 오일 마감이라 광택은 넓고 옅다. 사용 불가 칸은 붉은 블러드우드."""
-    soft = 0.45
-    tip_body = True
-    shadow = (0.12, 0.07, 0.03, 0.30)
-    shadow_off, shadow_blur = (0.35, 0.9), 2.0
-    ink = (0.93, 0.85, 0.68)
-    glow = None
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        g = (x * 0.94 - y * 0.34) * 1.5 + 2.4 * fbm(x * 0.10, y * 0.40, 91, 3)   # 결은 거의 세로, 결을 가로질러 나이테
-        ring = (0.5 + 0.5 * sin(g * 1.9)) ** 3
-        pore = smooth(0.62, 0.8, noise(x * 3.2, y * 0.7, 94))
-        if warn:
-            c = lerp((0.58, 0.14, 0.09), (0.38, 0.07, 0.05), clamp(ring + 0.4 * pore))
-        else:
-            c = lerp((0.40, 0.25, 0.15), (0.22, 0.13, 0.07), clamp(ring + 0.4 * pore))
-        n = dome(nx, ny, depth, 1.4)
-        c = scale(c, 0.85 + 0.3 * dot3(n, L3))
-        c = lerp(c, (1.0, 0.94, 0.84), 0.22 * max(0.0, dot3(n, H3)) ** 8)
-        c = lerp(c, (0.93, 0.84, 0.66), line_at(depth, 0.58, 0.08))        # 상감선
-        return lerp(c, (0.14, 0.08, 0.04), 0.7 * exp(-(depth / 0.18) ** 2)), 1.0
-
-
-class Leather:
-    """새들 가죽. 황갈 몸에 잔 결, 끝은 짙게 태운 마감, 테 안쪽으로 크림색 실 바느질. 사용 불가 칸은 옥스블러드."""
-    soft = 0.55
-    tip_body = True
-    shadow = (0.18, 0.08, 0.03, 0.30)
-    shadow_off, shadow_blur = (0.35, 0.9), 2.0
-    ink = (0.96, 0.90, 0.76)
-    glow = None
-    SD, STEP = 0.82, 0.78                       # 바늘땀 깊이·간격(칸)
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        t = clamp((x + y) / 44)
-        c = lerp((0.50, 0.11, 0.12), (0.34, 0.06, 0.08), t) if warn else lerp((0.72, 0.44, 0.25), (0.56, 0.31, 0.16), t)
-        c = scale(c, 0.9 + 0.12 * noise(x * 2.4, y * 2.4, 101) + 0.06 * noise(x * 6, y * 6, 102))
-        n = dome(nx, ny, depth, 1.1)
-        c = scale(c, 0.88 + 0.22 * dot3(n, L3))
-        c = lerp(c, (1.0, 0.92, 0.80), 0.14 * max(0.0, dot3(n, H3)) ** 10)
-        c = lerp(c, scale(c, 0.78), 0.5 * line_at(depth, self.SD, 0.2))     # 땀 자리가 눌려 조금 어둡다
-        ph = ((x * -ny + y * nx) / self.STEP) % 1.0                         # 테를 따라가는 자리 — 곧은 변에서 길이와 같다
-        dash = smooth(0.30, 0.22, abs(ph - 0.5))
-        c = lerp(c, (0.97, 0.91, 0.78), line_at(depth, self.SD, 0.07) * dash)
-        return lerp(c, (0.22, 0.10, 0.05), 0.85 * smooth(0.32, 0.0, depth)), 1.0
-
-
-class Origami:
-    """산호색 종이를 접은 결. 가장 가까운 테 쪽으로 면이 기울어 접힌 능선이 서고, 면마다 빛을 다르게 받는다.
-    무광이라 면 사이 밝기 차를 줄이고 잔 섬유를 깔았다 — 겨자색에 대비를 세게 준 판은 금 조각으로 읽혔다.
-    사용 불가 칸은 짙은 홍색 종이."""
-    soft = 0.3
-    shadow = (0.30, 0.12, 0.08, 0.24)
-    shadow_off, shadow_blur = (0.4, 1.0), 2.0
-    ink = (0.36, 0.14, 0.10)
-    glow = None
-    TILT = 0.85
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        base = (0.66, 0.13, 0.18) if warn else (0.94, 0.55, 0.45)
-        m = math.sqrt(1 + self.TILT * self.TILT)
-        lam = (nx * self.TILT * L3[0] + ny * self.TILT * L3[1] + L3[2]) / m       # 면마다 기울기가 같아 납작하게 칠해진다
-        c = scale(base, 0.66 + 0.4 * lam)
-        c = scale(c, 0.96 + 0.04 * noise(x * 5, y * 5, 111) + 0.03 * noise(x * 14, y * 3, 112))   # 종이 섬유
-        return lerp(c, scale(base, 0.55), 0.6 * exp(-(depth / 0.12) ** 2)), 1.0
-
+# ---- 2026-10-11 오후 — 빛 번짐 없는 결 ----
+# 앞 결들이 "죄다 네온에 글로우"라 진부하다는 말에 재료·디자인 말씨로 열 결을 더 뽑았고 바우하우스만 남았다.
 
 class Bauhaus:
     """바우하우스 포스터. 크림 몸에 굵은 먹선, 주홍 판 그림자가 블러 없이 비켜 찍힌다. 사용 불가 칸은 주홍 몸에 먹 그림자."""
@@ -836,34 +508,8 @@ class Bauhaus:
         return lerp(c, (0.08, 0.08, 0.09), smooth(self.LINE + 0.05, self.LINE - 0.05, depth)), 1.0
 
 
-class Cyanotype:
-    """시아노타입 청사진. 프러시안 블루 몸에 테를 따라 흰 등고선이 겹겹이 들고, 등고선이 천천히 안으로 흐른다."""
-    soft = 0.35
-    tip_body = True
-    shadow = (0.04, 0.10, 0.22, 0.28)
-    shadow_off, shadow_blur = (0.35, 0.9), 2.0
-    ink = (0.93, 0.96, 0.99)
-    glow = None
-    P = 0.56                                    # 등고선 간격(칸)
-
-    def body(self, x, y, d, nx, ny, warn, frame):
-        depth = -d
-        t = clamp((x + y) / 44)
-        c = lerp((0.62, 0.20, 0.16), (0.46, 0.12, 0.10), t) if warn else lerp((0.14, 0.30, 0.55), (0.08, 0.20, 0.41), t)
-        c = scale(c, 0.94 + 0.1 * fbm(x * 1.4, y * 1.4, 121, 3))
-        q = (depth - self.P * frame) / self.P
-        line = smooth(0.12, 0.05, abs(q - round(q)) * self.P) * smooth(0.25, 0.45, depth)
-        c = lerp(c, (0.84, 0.91, 0.97), 0.6 * line)
-        return lerp(c, (0.93, 0.96, 0.99), 0.92 * exp(-(depth / 0.17) ** 2)), 1.0
-
-
-STYLES = {"glass": Glass(), "aurora": Aurora(), "chrome": Chrome(),
-          "clay": Clay(), "holo": Holo(), "jelly": Jelly(), "gold": Gold(),
-          "sunset": Sunset(), "galaxy": Galaxy(), "ink": Ink(),
-          "porcelain": Porcelain(), "celadon": Celadon(), "marble": Marble(), "terrazzo": Terrazzo(),
-          "basalt": Basalt(), "walnut": Walnut(), "leather": Leather(), "origami": Origami(),
-          "bauhaus": Bauhaus(), "cyanotype": Cyanotype()}
-NEW = ["porcelain", "celadon", "marble", "terrazzo", "basalt", "walnut", "leather", "origami", "bauhaus", "cyanotype"]
+STYLES = {"clay": Clay(), "jelly": Jelly(), "holo": Holo(), "sunset": Sunset(),
+          "aurora": Aurora(), "galaxy": Galaxy(), "bauhaus": Bauhaus()}            # 사용자가 고른 차례
 
 
 # ---- 그리기 ----
