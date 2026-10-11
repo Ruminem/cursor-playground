@@ -1,10 +1,11 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
-<!-- HD 시안 페이지 틀(열 결, 2026-10-11). gen/hd_preview.py 가 /*DATA*/ 자리에 그림을 끼운다  · 올린 곳 https://claude.ai/artifact/WToSbg2DiN2QL76z6SQ2or -->
+<!-- HD 시안 페이지 틀(스무 결, 2026-10-11). 그림은 옆에 둔 hd-new.json · hd-old.json 을 fetch 로 받는다 — 한 파일에 끼우면 16MB 를 넘는다.
+     gen/hd_preview.py 가 셋을 같이 뽑는다 · 올린 곳 https://claude.ai/artifact/WToSbg2DiN2QL76z6SQ2or -->
 <title>HD 커서 시안</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* 레이아웃: 머리 → 조작 띠(결 칩 열 개) → 고른 결 설명 → 17칸 견본판 → 열 결 견줌 → 시험장 */
+/* 레이아웃: 머리 → 조작 띠(결 칩 두 줄 — 새 결 · 지난 결) → 고른 결 설명 → 17칸 견본판 → 스무 결 견줌 → 시험장 */
 :root{
   --bg:#f3f5f8; --panel:#ffffff; --ink:#151a24; --muted:#5b6474; --line:#d9dee7;
   --accent:#3b62d9; --accent-ink:#ffffff; --hot:#e0218a;
@@ -23,12 +24,15 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15p
 .wrap{max-width:1180px;margin:0 auto;display:grid;gap:22px}
 header{display:grid;gap:6px}
 h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:0;letter-spacing:-.01em;text-wrap:balance}
-h1 small{font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:400;margin-left:8px;letter-spacing:0}
+h1 small{font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:400;margin-left:8px;letter-spacing:0;display:inline-block}
 .lede{color:var(--muted);margin:0;max-width:68ch}
 h2{font-size:17px;margin:0 0 10px}
 .bar{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
 .bar .styles{flex-basis:100%}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips{display:grid;gap:8px}
+.chips .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .row>em{font-style:normal;font-size:12px;color:var(--muted);letter-spacing:.06em;min-width:4.2em}
+.chips button:disabled{opacity:.45;cursor:progress}
 .chips button{font:inherit;font-size:14px;border:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 11px;min-height:34px;border-radius:999px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
 .chips button i{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em}
 .chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -62,6 +66,8 @@ h2{font-size:17px;margin:0 0 10px}
 .cols{display:grid;gap:16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
 .trio{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.trio-h{font-size:13px;font-weight:500;color:var(--muted);margin:16px 0 8px}
+.trio-h:first-child{margin-top:0}
 .trio figure{margin:0;display:grid;gap:4px;text-align:center;cursor:pointer;border-radius:10px;padding:2px}
 .trio figure.on .duo{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .trio figure:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -74,18 +80,20 @@ h2{font-size:17px;margin:0 0 10px}
 .play .bg-white{color:#4a5262}.play .bg-dark{color:#aab2c0}.play .bg-photo{color:#fff}.play .bg-check{color:#4a5262}
 .play .txt{place-items:start;padding:12px;font-size:13px;line-height:1.6;background:var(--tile-white);color:#222}
 .note{font-size:13px;color:var(--muted);margin:8px 0 0}
-@media (max-width:640px){.play{grid-template-columns:repeat(2,minmax(0,1fr));height:320px}.bar{position:static}}
+#load:empty{display:none}
+@media (max-width:640px){.play{grid-template-columns:repeat(2,minmax(0,1fr));height:320px}.bar{position:static}h1 small{display:block;margin:4px 0 0}}
 @media (prefers-reduced-motion:reduce){.tile{transition:none}}
 </style>
 
 <div class="wrap">
   <header>
-    <h1>HD 커서 시안 <small>열 결 · 256px 에서 내려 깎음</small></h1>
-    <p class="lede">픽셀 도트 대신 수식(거리함수)으로 그린 고화질 구성표 열 벌이에요. 그림 원본이 벡터처럼 크기와 상관없이 매끈하고, 커서 크기마다 256px 원본을 내려 깎아요. 칸을 누르면 고른 칸이 되고, 칸이나 아래 시험장 위에 마우스를 올리면 그 그림이 진짜 커서로 바뀌어요.</p>
+    <h1>HD 커서 시안 <small>스무 결 · 256px 에서 내려 깎음</small></h1>
+    <p class="lede">픽셀 도트 대신 수식(거리함수)으로 그린 고화질 구성표 스무 벌이에요. 새로 더한 열 결은 네온과 빛 번짐을 빼고 백자·청자·대리석·가죽 같은 재료와 바우하우스·청사진 같은 디자인 말씨로 갔어요. 지난 열 결은 아래 줄에 그대로 있어요. 칸을 누르면 고른 칸이 되고, 칸이나 아래 시험장 위에 마우스를 올리면 그 그림이 진짜 커서로 바뀌어요.</p>
+    <p class="note" id="load" role="status"></p>
   </header>
 
   <div class="bar" role="toolbar" aria-label="보기 설정">
-    <div class="group styles"><span>결</span><div class="chips" id="style"></div></div>
+    <div class="group styles"><div class="chips" id="style" role="group" aria-label="결"></div></div>
     <div class="group"><span>바탕</span><div class="seg" id="bg"></div></div>
     <div class="group"><span>크기</span><div class="seg" id="size"></div></div>
     <label class="chk"><input type="checkbox" id="anim" checked> 움직임</label>
@@ -102,8 +110,8 @@ h2{font-size:17px;margin:0 0 10px}
 
   <section class="cols">
     <div class="card">
-      <h2 id="trioTitle">열 결 견줌</h2>
-      <div class="trio" id="trio"></div>
+      <h2 id="trioTitle">스무 결 견줌</h2>
+      <div id="trio"></div>
     </div>
     <div class="card">
       <h2>시험장</h2>
@@ -118,11 +126,20 @@ h2{font-size:17px;margin:0 0 10px}
   </section>
 </div>
 
-<script type="application/json" id="data">/*DATA*/</script>
 <script>
-const D = JSON.parse(document.getElementById('data').textContent);
+const D = {cells: [], styles: {}};
 const NAMES = {arrow:'기본 화살표',help:'도움말',busy:'백그라운드 작업',wait:'기다림',cross:'정밀 선택',ibeam:'텍스트',pen:'손글씨',no:'사용 불가',ns:'세로 크기',we:'가로 크기',nwse:'대각선 크기 ↘',nesw:'대각선 크기 ↙',move:'이동',up:'대체 선택',hand:'링크',pin:'위치 선택',person:'사용자 선택'};
 const STYLES = {
+  porcelain:{ko:'백자 청화',grp:'new',about:'젖빛 백자에 코발트 붓 띠를 두르고 안쪽에 다섯 잎 잔꽃을 흩뿌렸어요. 유약 광택이 왼쪽 위에 맺혀요. 사용 불가 칸은 붉은 안료.'},
+  celadon:{ko:'청자',grp:'new',about:'비색 유약이 두꺼운 가운데일수록 짙고 얇은 테는 밝게 비쳐요. 몸 전체에 잔 빙렬이 갈라져 있어요. 사용 불가 칸은 진사 유약.'},
+  marble:{ko:'대리석',grp:'new',about:'흰 카라라 대리석에 회색 결이 흐르고 가는 놋쇠 테를 둘렀어요. 놋쇠는 빛 쪽이 밝아요. 사용 불가 칸은 붉은 로소 대리석에 흰 결.'},
+  terrazzo:{ko:'테라초',grp:'new',about:'크림 시멘트에 테라코타·세이지·먹·황토·청회색 돌 조각이 박혀 있어요. 무광에 가는 먹선 윤곽. 사용 불가 칸은 분홍 바탕.'},
+  basalt:{ko:'현무암',grp:'new',about:'제주 현무암. 잿빛 돌에 숨구멍이 송송 나 있고 닳은 모서리만 밝아요. 사용 불가 칸은 붉은 송이.'},
+  walnut:{ko:'월넛',grp:'new',about:'호두나무 원목에 나이테가 흐르고 단풍나무 상감선이 한 줄 들어가요. 오일 마감이라 광택이 넓고 옅어요. 사용 불가 칸은 블러드우드.'},
+  leather:{ko:'가죽',grp:'new',about:'새들 가죽에 잔 결, 짙게 태운 테, 크림색 실 바느질이 테를 따라 돌아요. 사용 불가 칸은 옥스블러드.'},
+  origami:{ko:'종이접기',grp:'new',about:'산호색 종이를 접은 결. 면마다 빛을 다르게 받아 접힌 능선이 서요. 무광에 잔 섬유. 사용 불가 칸은 짙은 홍색 종이.'},
+  bauhaus:{ko:'바우하우스',grp:'new',about:'크림 몸에 굵은 먹선, 주홍 그림자를 번짐 없이 판으로 비켜 찍었어요. 포스터 같은 평면 그래픽. 사용 불가 칸은 주홍 몸.'},
+  cyanotype:{ko:'청사진',grp:'new',about:'시아노타입 인화. 프러시안 블루 몸에 흰 등고선이 테를 따라 겹겹이 들고, 등고선이 천천히 안쪽으로 흘러요.'},
   ink:{ko:'잉크',about:'검정 몸에 흰 테. 장식 없이 또렷해서 매일 쓰기 좋아요. 흰 바탕에선 몸이, 어두운 바탕에선 테가 서요.'},
   glass:{ko:'글래스',old:1,about:'반투명한 하늘빛 유리. 왼쪽 위 빛에 테두리가 하얗게 서고 비스듬한 반사가 지나가요.'},
   chrome:{ko:'크롬 메탈',old:1,about:'띠 진 강철에 빛줄기가 쓸고 지나가요. 어느 바탕에서나 제일 또렷해요.'},
@@ -136,11 +153,17 @@ const STYLES = {
 };
 const BGS = [['white','흰'],['dark','어둠'],['photo','사진'],['check','투명']];
 const SIZES = [32,48,64,128];
-const st = {style:'clay', bg:'white', size:64, cell:'arrow', anim:true, dots:false, frame:0};
-try { Object.assign(st, JSON.parse(localStorage.getItem('hdcur')||'{}')); } catch(e) {}
-if (!STYLES[st.style]) st.style = 'clay';
+const GROUPS = [['new','새 결','새 결 — 재료와 디자인 말씨'],['old','지난 결','지난 결 — 빛과 번짐']];
+const grpOf = s => STYLES[s].grp || 'old';
+const FIRST = 'porcelain';
+// 저장 열쇠를 바꿨다 — 지난 판을 본 사람도 새 결부터 보게
+const st = {style:FIRST, bg:'white', size:64, cell:'arrow', anim:true, dots:false, frame:0};
+try { Object.assign(st, JSON.parse(localStorage.getItem('hdcur2')||'{}')); } catch(e) {}
+if (!STYLES[st.style]) st.style = FIRST;
 st.frame = 0;
-const save = () => { try { localStorage.setItem('hdcur', JSON.stringify({style:st.style,bg:st.bg,size:st.size,cell:st.cell,anim:st.anim,dots:st.dots})); } catch(e) {} };
+const save = () => { try { localStorage.setItem('hdcur2', JSON.stringify({style:st.style,bg:st.bg,size:st.size,cell:st.cell,anim:st.anim,dots:st.dots})); } catch(e) {} };
+const has = s => !!D.styles[s];
+const cur = () => has(st.style) ? st.style : FIRST;   // 고른 결이 아직 안 받아졌으면 그동안 첫 결로 보인다
 
 // 128px 원본 → 작은 크기. 반으로 접기는 정확히 2×2 평균이라 64·32 는 빌드와 같은 꼴
 const imgs = {}, cache = {};
@@ -183,12 +206,19 @@ function seg(id, items, key, fmt) {
 }
 function styleChips() {
   const box = document.getElementById('style'); box.innerHTML = '';
-  for (const [k, v] of Object.entries(STYLES)) {
-    const b = document.createElement('button'); b.type = 'button';
-    b.innerHTML = v.ko + (v.old ? ' <i>어제</i>' : '');
-    b.setAttribute('aria-pressed', String(st.style === k));
-    b.onclick = () => { st.style = k; save(); renderAll(); };
-    box.appendChild(b);
+  for (const [g, label] of GROUPS) {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<em>${label}</em>`;
+    for (const [k, v] of Object.entries(STYLES)) {
+      if (grpOf(k) !== g) continue;
+      const b = document.createElement('button'); b.type = 'button';
+      b.innerHTML = v.ko + (v.old ? ' <i>어제</i>' : '');
+      b.setAttribute('aria-pressed', String(cur() === k));
+      b.disabled = !has(k);
+      b.onclick = () => { st.style = k; save(); renderAll(); };
+      row.appendChild(b);
+    }
+    box.appendChild(row);
   }
 }
 function themeSeg() {
@@ -214,7 +244,7 @@ function buildGrid() {
   }
 }
 function paintTiles() {
-  const s = st.style, size = st.size;
+  const s = cur(), size = st.size;
   for (const c of D.cells) {
     const t = tiles[c];
     const u = scaled(s, c, frameOf(s, c), size);
@@ -235,50 +265,75 @@ function renderAll() {
   grid.classList.toggle('nodots', !st.dots);
   grid.style.setProperty('--px', st.size);
   grid.style.setProperty('--cell', Math.max(st.size + 40, 140) + 'px');
-  document.getElementById('gridTitle').textContent = `${STYLES[st.style].ko} · 17칸 · ${st.size}px`;
-  const sv = STYLES[st.style];
+  document.getElementById('gridTitle').textContent = `${STYLES[cur()].ko} · 17칸 · ${st.size}px`;
+  const sv = STYLES[cur()];
   document.getElementById('about').innerHTML = `<b>${sv.ko}</b>${sv.about}`;
   for (const c of D.cells) {
     tiles[c].classList.toggle('sel', c === st.cell);
     tiles[c].querySelector('.stage').className = 'stage bg-' + st.bg;
     tiles[c].setAttribute('aria-label', `${NAMES[st.cell === c ? c : c]} 고르기`);
   }
-  document.getElementById('trioTitle').textContent = `열 결 견줌 · ${NAMES[st.cell]} · 누르면 그 결로`;
-  document.getElementById('playNote').textContent = `지금 커서: ${STYLES[st.style].ko} · ${NAMES[st.cell]} · ${Math.min(st.size, 128)}px. 웹 브라우저는 커서 그림이 128px 를 넘으면 안 받아요.`;
+  document.getElementById('trioTitle').textContent = `스무 결 견줌 · ${NAMES[st.cell]} · 누르면 그 결로`;
+  document.getElementById('playNote').textContent = `지금 커서: ${STYLES[cur()].ko} · ${NAMES[st.cell]} · ${Math.min(st.size, 128)}px. 웹 브라우저는 커서 그림이 128px 를 넘으면 안 받아요.`;
   paint();
 }
 const trio = document.getElementById('trio');
+const figs = {};
 function paintTrio() {
   if (!trio.children.length) {
-    for (const s of Object.keys(STYLES)) {
-      const f = document.createElement('figure'); f.tabIndex = 0; f.setAttribute('role', 'button');
-      f.innerHTML = `<div class="duo"><div class="bg-white"><img alt=""></div><div class="bg-dark"><img alt=""></div></div><figcaption>${STYLES[s].ko}</figcaption>`;
-      const pick = () => { st.style = s; save(); renderAll(); };
-      f.onclick = pick;
-      f.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
-      trio.appendChild(f);
+    for (const [g, , head] of GROUPS) {
+      const h = document.createElement('h3'); h.className = 'trio-h'; h.textContent = head;
+      const box = document.createElement('div'); box.className = 'trio';
+      trio.append(h, box);
+      for (const s of Object.keys(STYLES)) {
+        if (grpOf(s) !== g) continue;
+        const f = document.createElement('figure'); f.tabIndex = 0; f.setAttribute('role', 'button');
+        f.innerHTML = `<div class="duo"><div class="bg-white"><img alt=""></div><div class="bg-dark"><img alt=""></div></div><figcaption>${STYLES[s].ko}</figcaption>`;
+        const pick = () => { if (!has(s)) return; st.style = s; save(); renderAll(); };
+        f.onclick = pick;
+        f.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
+        box.appendChild(f); figs[s] = f;
+      }
     }
   }
-  Object.keys(STYLES).forEach((s, i) => {
-    trio.children[i].classList.toggle('on', s === st.style);
+  for (const s of Object.keys(STYLES)) {
+    figs[s].classList.toggle('on', s === cur());
+    if (!has(s)) continue;
     const u = scaled(s, st.cell, frameOf(s, st.cell), 128);
-    for (const im of trio.children[i].querySelectorAll('img')) { if (u && im.getAttribute('src') !== u) { im.src = u; im.alt = `${STYLES[s].ko} ${NAMES[st.cell]}`; } }
-  });
+    for (const im of figs[s].querySelectorAll('img')) { if (u && im.getAttribute('src') !== u) { im.src = u; im.alt = `${STYLES[s].ko} ${NAMES[st.cell]}`; } }
+  }
 }
 function paint() {
   paintTiles(); paintTrio();
-  document.getElementById('play').style.cursor = cursorCss(st.style, st.cell, Math.min(st.size, 128));
+  document.getElementById('play').style.cursor = cursorCss(cur(), st.cell, Math.min(st.size, 128));
 }
 document.getElementById('anim').onchange = e => { st.anim = e.target.checked; save(); paint(); };
 document.getElementById('dots').onchange = e => { st.dots = e.target.checked; save(); renderAll(); };
 
-// 모든 원본을 먼저 풀어 둔 뒤 그린다 — 안 풀린 그림을 그리면 빈 장이 끼어 깜빡인다
-const all = [];
-for (const s in D.styles) for (const c in D.styles[s]) D.styles[s][c].frames.forEach((_, k) => { const im = src(s, c, k); all.push(im.decode ? im.decode().catch(() => {}) : Promise.resolve()); });
-buildGrid();
-Promise.all(all).then(() => {
-  renderAll();
+// 묶음마다 받아서 원본을 다 풀어 둔 뒤 그린다 — 안 풀린 그림을 그리면 빈 장이 끼어 깜빡인다.
+// 새 결을 먼저 받아 바로 그리고, 지난 결은 그 뒤에 받아 칩을 켠다
+const load = document.getElementById('load');
+async function take(file) {
+  const r = await fetch(file, {cache: 'no-cache'});
+  if (!r.ok) throw new Error(`${file} ${r.status}`);
+  const j = await r.json();
+  if (!D.cells.length) D.cells = j.cells;
+  const all = [];
+  for (const s in j.styles) for (const c in j.styles[s]) j.styles[s][c].frames.forEach((b, k) => {
+    const im = new Image(); im.src = 'data:image/png;base64,' + b; imgs[s+c+k] = im;
+    all.push(im.decode ? im.decode().catch(() => {}) : Promise.resolve());
+  });
+  await Promise.all(all);
+  Object.assign(D.styles, j.styles);
+}
+(async () => {
+  load.textContent = '새 결 그림 받는 중…';
+  try { await take('hd-new.json'); } catch(e) { load.textContent = `그림을 못 받았어요 (${e.message}). 새로고침해 보세요.`; return; }
+  buildGrid(); renderAll();
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduce) setInterval(() => { if (!st.anim) return; st.frame = (st.frame + 1) % 12; paint(); }, 110);
-});
+  load.textContent = '지난 결 그림 받는 중…';
+  try { await take('hd-old.json'); load.textContent = ''; renderAll(); }
+  catch(e) { load.textContent = `지난 결을 못 받았어요 (${e.message}). 새 결은 그대로 볼 수 있어요.`; }
+})();
 </script>
