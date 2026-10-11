@@ -1441,7 +1441,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   window.cpShapes = function(){ return SHAPES; };
   window.cpRotate = recolor;     // 맥용 .cape 도 윈도우와 같은 식으로 색조를 돌린다 (ImageData, 토큰)
   window.cpAnimated = animated;
-  // 주소에 ?shape=round 를 붙이면 그 모양으로 열린다 (링크로 넘기기 좋게)
+  // 주소에 ?shape=chunky 를 붙이면 그 모양으로 열린다 (링크로 넘기기 좋게)
   var savedShape = (/[?&]shape=([a-z]{1,12})/.exec(location.search) || [])[1];
   try { savedShape = savedShape || localStorage.getItem('cp-shape'); } catch (e) {}
   chooseSize(size); chooseHue(hue); chooseTint(tint); useShape(savedShape || SHAPES[0].id);

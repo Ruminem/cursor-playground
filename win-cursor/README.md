@@ -45,30 +45,30 @@ The list lives in one place, [schemes.json](schemes.json). The build, the local 
 Schemes with `"animated": true` are built as animated cursors (.ani). The tables below are filled in by `python build.py`.
 
 <!-- schemes:en -->
-**Animated**
+**Effects · Animated**
 
 | Folder | Name | Style |
 |---|---|---|
-| `art/rainbowflow` | Rainbow flow | Rainbow bands that keep flowing upwards. |
-| `art/neonpulse` | Neon pulse | A cyan neon glow that swells and fades like breathing. |
-| `art/flicker` | Flickering flame | The flame edge wavers and sparks fly upwards. |
-| `art/twinkle` | Twinkling stars | Stars inside a space body switch on and off in turn. |
-| `art/jitter` | Glitch jitter | The red and cyan slip shakes, and now and then one row jumps sideways. |
-| `art/wave` | Wave | Blue wave bands roll sideways with white foam riding along. |
-| `art/heartbeat` | Heartbeat | The pink body brightens in a double beat and its glow spreads out. |
-| `art/electric` | Electric | The yellow and white outline crackles while blue sparks jump around it. |
-| `art/barber` | Barber pole | Red, white and blue diagonal stripes keep spinning. |
-| `art/coderain` | Matrix | Streams of green code pour down inside a black body. |
-| `art/rainfall` | Rainfall | Raindrops falling without stop, each column at its own pace. |
-| `art/bubbles` | Bubbles | Bubbles rising through water and popping at the top. |
-| `art/lavaflow` | Lava flow | Molten rock rippling as it creeps downward. |
-| `art/spinner` | Spinner | A four-blade pinwheel in red, green, yellow and blue spinning under a white glint. |
-| `art/scan` | Scan | A bright line sweeping from top to bottom. |
-| `art/firework` | Firework | Sparks spreading outward ring by ring and fading. |
-| `art/snowfall` | Snowfall | Snowflakes drifting down around a white body. |
-| `art/chameleon` | Chameleon | The whole body cycling slowly through the colour wheel. |
-| `art/ripple` | Ripple | Rings spreading out from the centre like water. |
-| `art/marquee` | Marquee | Border bulbs lighting one after another around the edge. |
+| `hd.py rainbowflow` | Rainbow flow | Rainbow bands ripple upwards through a glassy body. |
+| `hd.py neonpulse` | Neon pulse | Cyan neon around a black glass tube swells and fades like breathing. |
+| `hd.py flicker` | Flickering flame | Orange and yellow flames waver upwards inside the body, tongues lick along the top edge and small sparks drift up. |
+| `hd.py twinkle` | Twinkling stars | Gold stars switch on and off one by one from the tip inside an indigo body with a violet rim, and one more twinkles outside. |
+| `hd.py jitter` | Glitch jitter | Red and cyan ghosts shake around a white arrow, and now and then one row slips sideways in a spray of digital debris. |
+| `hd.py wave` | Wave | A glass cursor half full of sea: wave bands roll sideways with white foam riding each crest. |
+| `hd.py heartbeat` | Heartbeat | The pink body lights up from inside in a double beat and its glow spreads out in waves. |
+| `hd.py electric` | Electric | Current flashes along the yellow rim of a black body while blue bolts crackle around it. |
+| `hd.py barber` | Barber pole | Red, white and blue stripes wind their way up a glossy glass pole. |
+| `hd.py coderain` | Matrix | Streams of green code pour down inside a black glass body, their heads glowing white under a soft neon rim. |
+| `hd.py rainfall` | Rainfall | Thin streaks of rain fall without stop inside a deep navy cursor like a night window, each column at its own pace. |
+| `hd.py bubbles` | Bubbles | Bubbles wobble up and grow inside a clear aqua cursor, then pop with a splash when they reach the rim. |
+| `hd.py lavaflow` | Lava flow | A dark red crust creeps down over glowing lava, and a drop gathers at the tail and falls. |
+| `hd.py spinner` | Spinner | A four-blade pinwheel in red, green, yellow and blue spinning under a smooth candy gloss. |
+| `hd.py scan` | Scan | A bright cyan scan line sweeps down a navy glass body and spills past the rim like a laser. |
+| `hd.py firework` | Firework | The navy body bursts in gold, two rings of sparks spread out and die away, then coloured embers pop. |
+| `hd.py snowfall` | Snowfall | Blue-rimmed snowflakes drift down without stop around a frosted white cursor. |
+| `hd.py chameleon` | Chameleon | A finely scaled body slowly shifts through the colour wheel, starting from the tip. |
+| `hd.py ripple` | Ripple | A drop falls into the middle of a clear aqua cursor and a ring of light spreads out, rocking the rim as it fades. |
+| `hd.py marquee` | Marquee | Round bulbs line the edge of a plum sign and light up one after another as they chase around. |
 
 **Sea life · Animated**
 
@@ -246,13 +246,7 @@ The **Cursor shape** tabs at the top of the preview page change the silhouette w
 | Id | Name | Look |
 |---|---|---|
 | `art/` | Classic | The theme's own pixel art: an angular arrow with a crisp notch and tail. |
-| `round` | Round | A chubby arrow with every corner rounded off; the tip has the largest radius. |
-| `glow` | Neon | The theme's brightest colour bleeds out around the body; it glows on dark backgrounds. |
 | `cutout` | Sticker | A thick white band around the body and a soft shadow, like a die-cut sticker; reads on any background. |
-| `hollow` | Outline | Hollowed out to a thick ring with a bright rim, so it shows on dark backgrounds and keeps what is underneath readable. |
-| `tube` | Neon tube | A thin hollow ring with light bleeding outward, like a neon sign letter; it glows on dark backgrounds. |
-| `flat` | Flat | A single-colour vector with no shading, gloss or shadow — clean like a modern OS default. |
-| `glass` | Glass | A see-through body with a bright rim, so whatever is underneath shows through. |
 | `dart` | Arrowhead | A tail-less navigation arrow with a concave back — the one with a truly different outline. |
 | `chunky` | Chunky | A wider body and tail, easy to spot on big or high-resolution screens. |
 
@@ -283,7 +277,7 @@ Menu item 6 switches the shape; everything after it registers, removes and repor
 ```bat
 cursors.bat -Install                    :: register all
 cursors.bat -Install -Scheme neonpulse,rainbowflow  :: register some (comma-separated)
-cursors.bat -Install -Shape round       :: register all in the round shape
+cursors.bat -Install -Shape chunky      :: register all in the chunky shape
 cursors.bat -Uninstall                  :: remove all
 cursors.bat -Uninstall -Scheme neon     :: remove some
 cursors.bat -Status                     :: status
@@ -390,30 +384,30 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 `"animated": true` 인 구성표는 움직이는 커서(.ani)로 만들어짐. 아래 표는 `python build.py` 가 채움.
 
 <!-- schemes:ko -->
-**움직이는**
+**이펙트 · 애니**
 
 | 폴더 | 이름 | 스타일 |
 |---|---|---|
-| `art/rainbowflow` | 무지개 흐름 | 빨주노초파보 띠가 위로 쉬지 않고 흘러감. |
-| `art/neonpulse` | 네온 맥박 | 청록 네온 번짐이 숨 쉬듯 커졌다 작아짐. |
-| `art/flicker` | 일렁이는 불꽃 | 불꽃 경계가 흔들리고 위로 불티가 튐. |
-| `art/twinkle` | 반짝이는 별 | 우주 몸체 속 별들이 차례로 켜졌다 꺼짐. |
-| `art/jitter` | 글리치 떨림 | 빨강·청록 어긋남이 떨리고 가끔 한 줄이 옆으로 밀림. |
-| `art/wave` | 파도 | 파란 물결 띠가 옆으로 넘실거리고 흰 포말이 따라 흐름. |
-| `art/heartbeat` | 두근두근 | 분홍 몸체가 콩닥 두 번씩 밝아지며 번짐이 퍼짐. |
-| `art/electric` | 전기 | 노랑·흰 외곽선이 번쩍이고 둘레로 푸른 불꽃이 튐. |
-| `art/barber` | 이발소 기둥 | 빨강·흰·파랑 사선 줄무늬가 쉬지 않고 돌아감. |
-| `art/coderain` | 매트릭스 | 검은 몸체 안에서 초록 글자 줄기가 위에서 아래로 쏟아짐. |
-| `art/rainfall` | 빗줄기 | 빗방울이 줄마다 다른 높이에서 쉬지 않고 떨어짐. |
-| `art/bubbles` | 기포 | 물속 기포가 위로 올라가 톡 터짐. |
-| `art/lavaflow` | 용암 | 붉은 용암이 일렁이며 천천히 흘러내림. |
-| `art/spinner` | 회전 | 빨강·초록·노랑·파랑 네 날 바람개비가 흰 광택 아래에서 빙글빙글 돎. |
-| `art/scan` | 스캔 | 밝은 가로줄이 위에서 아래로 훑고 지나감. |
-| `art/firework` | 폭죽 | 불꽃이 둘레로 한 겹씩 퍼지며 옅어짐. |
-| `art/snowfall` | 눈 내림 | 하얀 몸체 둘레로 눈송이가 계속 내려옴. |
-| `art/chameleon` | 카멜레온 | 몸 전체 색이 색상환을 따라 천천히 바뀜. |
-| `art/ripple` | 파문 | 물결 고리가 가운데에서 바깥으로 퍼짐. |
-| `art/marquee` | 전구 간판 | 테두리 전구가 한 칸씩 차례로 켜지며 흘러감. |
+| `hd.py rainbowflow` | 무지개 흐름 | 무지개 띠가 유리 같은 몸 속을 물결치며 위로 흘러감. |
+| `hd.py neonpulse` | 네온 맥박 | 검은 유리관 테두리의 청록 네온이 숨 쉬듯 번졌다 잦아듦. |
+| `hd.py flicker` | 일렁이는 불꽃 | 주황·노랑 불꽃이 몸 속에서 위로 일렁이고, 윗변에서 불꽃 혀가 날름거리며 작은 불티가 피어오름. |
+| `hd.py twinkle` | 반짝이는 별 | 보랏빛 테를 두른 쪽빛 몸 속에서 금빛 별이 끝에서부터 하나씩 켜졌다 꺼지고, 둘레 밖에도 별 하나가 반짝임. |
+| `hd.py jitter` | 글리치 떨림 | 하얀 화살표 둘레에 빨강·청록 잔상이 떨리고, 가끔 한 줄이 옆으로 밀리며 디지털 부스러기가 튐. |
+| `hd.py wave` | 파도 | 유리 커서 안에 바다가 반쯤 차 있어 물결 띠가 옆으로 넘실대고 마루마다 흰 포말이 따라 흐름. |
+| `hd.py heartbeat` | 두근두근 | 분홍 몸이 콩닥 두 번 안에서부터 환해지고, 번짐이 물결처럼 퍼져 나감. |
+| `hd.py electric` | 전기 | 검은 몸의 노란 테를 따라 전류가 번쩍이며 흐르고, 둘레로 푸른 번개 줄기가 탁탁 튐. |
+| `hd.py barber` | 이발소 기둥 | 윤나는 유리 기둥 위로 빨강·흰·파랑 줄무늬가 감기듯 올라감. |
+| `hd.py coderain` | 매트릭스 | 검은 유리 몸 안으로 초록 글자 줄기가 쏟아지고, 줄기 머리가 하얗게 빛나며 네온 테가 은은히 번짐. |
+| `hd.py rainfall` | 빗줄기 | 밤 유리창 같은 짙은 남색 커서 안으로, 줄마다 다른 박자로 가는 빗줄기가 쉬지 않고 떨어짐. |
+| `hd.py bubbles` | 기포 | 맑은 물빛 커서 안에서 기포가 흔들흔들 떠올라 커지다가, 테에 닿으면 톡 터지며 물방울이 튐. |
+| `hd.py lavaflow` | 용암 | 끈적하게 빛나는 용암 위로 검붉은 껍질이 천천히 흘러내리고, 꼬리 끝에 맺힌 방울이 똑 떨어짐. |
+| `hd.py spinner` | 회전 | 빨강·초록·노랑·파랑 네 날 바람개비가 매끈한 사탕 광택 아래에서 빙글빙글 돎. |
+| `hd.py scan` | 스캔 | 남색 유리 몸 위로 밝은 청록 스캔 빛줄기가 위에서 아래로 훑고 지나가며 테 밖까지 레이저처럼 번짐. |
+| `hd.py firework` | 폭죽 | 남색 몸이 금빛으로 번쩍 터지면 불꽃 줄기가 두 겹으로 둘레에 퍼지며 사그라들고, 그 뒤엔 색 불똥이 톡톡 튐. |
+| `hd.py snowfall` | 눈 내림 | 서리 낀 하얀 커서 둘레로 푸른 테를 두른 눈송이가 쉬지 않고 사르르 내려옴. |
+| `hd.py chameleon` | 카멜레온 | 잔 비늘이 돋은 몸빛이 끝에서부터 색상환을 따라 천천히 물들어 감. |
+| `hd.py ripple` | 파문 | 맑은 물빛 커서 한가운데 물방울이 톡 떨어지면 빛 고리가 둥글게 퍼져 테를 살짝 출렁이며 사라짐. |
+| `hd.py marquee` | 전구 간판 | 자줏빛 간판 테두리를 따라 둥근 전구가 줄지어 있고, 불빛이 한 칸씩 차례로 켜지며 흘러감. |
 
 **해양 생물 · 애니**
 
@@ -591,13 +585,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | 아이디 | 이름 | 생김새 |
 |---|---|---|
 | `art/` | 기본 | 테마가 그린 픽셀 그림 그대로. 각진 화살표에 또렷한 홈과 꼬리. |
-| `round` | 둥근 | 모든 모서리를 큼직하게 둥글린 통통한 화살표. 끝 반지름이 가장 큼. |
-| `glow` | 네온 | 몸 바깥으로 테마의 밝은 색이 번짐. 어두운 배경에서 특히 뜸. |
 | `cutout` | 스티커 | 몸 바깥에 흰 띠를 굵게 두르고 옅은 그림자를 깖. 오려 낸 스티커처럼 어떤 배경에서도 뜸. |
-| `hollow` | 테두리 | 속을 비우고 두꺼운 테만 남김. 테 둘레를 밝게 둘러 어두운 바탕에서도 보이고, 밑의 글자가 보임. |
-| `tube` | 네온 튜브 | 가는 테만 남기고 바깥으로 빛을 번지게 함. 속이 빈 네온 간판 글자처럼 어두운 바탕에서 뜸. |
-| `flat` | 플랫 | 음영·광택·그림자 없이 테마 색 그대로 칠한 단색 벡터. 요즘 OS 기본 커서 같은 깔끔함. |
-| `glass` | 유리 | 몸은 반쯤 비치고 테만 밝게 빛남. 밑에 있는 글자가 비쳐 보임. |
 | `dart` | 화살촉 | 꼬리 없이 네 점, 뒷면을 오목하게 판 내비 화살표. 윤곽부터 다른 단 하나. |
 | `chunky` | 굵은 | 몸과 꼬리를 넓힌 화살표. 큰 화면이나 높은 해상도에서도 한눈에 찾음. |
 
@@ -628,7 +616,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 ```bat
 cursors.bat -Install                    :: 전체 등록
 cursors.bat -Install -Scheme neonpulse,rainbowflow  :: 개별 등록 (쉼표로 여러 개)
-cursors.bat -Install -Shape round       :: 전체를 둥근 모양으로 등록
+cursors.bat -Install -Shape chunky      :: 전체를 굵은 모양으로 등록
 cursors.bat -Uninstall                  :: 전체 제거
 cursors.bat -Uninstall -Scheme neon     :: 개별 제거
 cursors.bat -Status                     :: 현재 상태

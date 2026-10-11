@@ -77,8 +77,9 @@ for url, want in [
 for bad in ["cursor-playground://restore/" + visit, "apply/electric", "https://example.com", f"apply/electric/{visit}/48/270/dot.", f"apply/electric/{visit}/48/270."]:
     assert not parse.fullmatch(bad), f"엉뚱한 주소를 읽어 버림: {bad}"
 
-# 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다
-build.SCHEMES = build.SCHEMES[:3]
+# 전부 돌리면 2분이 넘는다. 지나는 길은 같으니 재료만 줄인다. 매끈한 모양으로 그리는 구성표에서 고른다 —
+# 앞 셋이 classic_only(고화질)가 되자(2026-10-11) 그냥 앞 셋을 쓰던 판은 빈 데이터끼리 견줬다
+build.SCHEMES = [s for s in build.SCHEMES if s["id"] not in build.CLASSIC_ONLY][:3]
 shape_id = build.SHAPES[1]["id"]                 # 매끈한 모양 하나 (기본 모양은 이 파일을 안 만든다)
 sids = [s["id"] for s in build.SCHEMES]
 
