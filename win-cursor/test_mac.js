@@ -38,6 +38,10 @@ const code = tpl.slice(start, end);
 }
 
 const schemes = JSON.parse(read('schemes.json')), shapes = JSON.parse(read('shapes.json'));
+// 기본 모양으로만 내는 구성표는 빌드가 정한다(build.CLASSIC_ONLY) — 이펙트 결은 schemes.json 표식이 있어도 모양 탭이 있다.
+// 그래서 표식이 아니라 모양 data 목록에 없는 것으로 가른다(페이지도 같은 목록을 받는다)
+const drawn = new Set(Object.keys(JSON.parse(read(`data/${shapes[1].id}/index.json`)).data));
+const classicOnly = id => !drawn.has(id);
 const MAC = JSON.parse(read('mac.json')), MAX = 24, PTS = 32;
 const PNG = '89504e470d0a1a0a';
 // 페이지의 animated() 와 같은 규칙: 구성표 안에 .ani 가 하나라도 있으면 그 구성표는 전부 .ani 로 받는다
@@ -67,7 +71,7 @@ function press(sid, shape, hue) {
     };
     const window = {
       cpHue: () => hue, cpHueSay: d => `색조 ${d}°`, cpShape: () => shape, cpShapes: () => shapes, cpAnimated: () => animated(sid),
-      cpClassicOnly: id => !!(schemes.find(x => x.id === id) || {}).classic_only,
+      cpClassicOnly: classicOnly,
       cpRotate(d, deg) { if (deg !== hue) bad.push('색조가 안 넘어감'); },
     };
     const document = {
@@ -130,7 +134,7 @@ function check(xml) {
     // 모양 쪽에 없는 칸은 기본 것으로 넘어가는 게 정상이라, 넘어갈 데도 없는 파일만 적는다
     const lost = r.missing.filter(u => !u.includes(`/${sh.id}/`));
     // 기본 모양으로만 내는 구성표는 모양 폴더가 없다 — 거기를 찾으러 가면 페이지가 모양을 붙여 보낸 것
-    if (s.classic_only && sh !== shapes[0] && r.missing.length) why.push(`모양 폴더를 찾음: ${r.missing[0]}`);
+    if (classicOnly(s.id) && sh !== shapes[0] && r.missing.length) why.push(`모양 폴더를 찾음: ${r.missing[0]}`);
     if (!r.xml) why.push(`구워지지 않음: ${r.err && r.err.message}` + (lost.length ? ` (없는 파일 ${lost.join(', ')})` : ''));
     else why.push(...check(r.xml));
     if (why.length) fails.push(`${s.id} × ${sh.id}: ${[...new Set(why)].slice(0, 5).join(' · ')}`);

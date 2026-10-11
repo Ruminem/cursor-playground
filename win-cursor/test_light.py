@@ -597,6 +597,17 @@ import hdpet  # noqa: E402
 assert build.HD and all(s.get("animated") and bool(s.get("classic_only")) != getattr(hdpet.PETS.get(s["hd"]), "cursor", False)
                         for s in build.SCHEMES if s.get("hd")), "고화질 표시"
 assert set(build.HD.values()) == set(hdlib.STYLES), sorted(set(build.HD.values()) ^ set(hdlib.STYLES))
+# 이펙트 · 애니 결도 화살표만 모양 탭이 있다(hdshape) — 표식(classic_only)은 그대로라 build.CLASSIC_ONLY 가 뺀다.
+# 모양 화살표 핫스팟은 판 안이고 그 칸에 몸(띠 포함)이 있어야 한다 — 몸 밖이면 클릭 자리가 허공이다
+import hdshape  # noqa: E402
+fxs = [sid for sid, st in build.HD.items() if hdshape.fx(st)]
+assert len(fxs) == 20 and not set(fxs) & build.CLASSIC_ONLY and set(fxs) <= set(build.drawn("dart")), "이펙트 결 모양 탭"
+for shp in ("cutout", "dart", "chunky"):
+    g = hdshape.geom(shp)
+    hx, hy = g["hot"]
+    out = hdlib.grow(g["body"], g["band"]) if g["band"] else g["body"]
+    assert 0 < hx < 32 and 0 < hy < 32 and out(hx, hy + 0.3) < 0.5, f"{shp} 모양 화살표 핫스팟 {g['hot']}"
+    assert hdlib.render(f"lavaflow@{shp}", "arrow", 0)[0] != hdlib.render("lavaflow", "arrow", 0)[0], f"{shp} 모양이 안 바뀜"
 # 견주는 장은 0.3 — 파문은 한 바퀴에 물방울이 두 번 떨어져 0 과 0.5 가 같은 그림이다
 lie = [f"{st}/{rid}" for st in hdlib.STYLES for rid in ("arrow", "busy")
        if (hdlib.render(st, rid, 0)[0] != hdlib.render(st, rid, 0.3)[0]) != hdlib.animated(st, rid)]

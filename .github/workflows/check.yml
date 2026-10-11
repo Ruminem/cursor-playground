@@ -109,6 +109,9 @@ jobs:
               if (-not (Test-Path "art\$($s.id)\$slot.txt")) { Write-Host "그림 없음: $($s.id)/$slot.txt"; $fail = 1 }
             }
           }
+          # 기본 모양으로만 내는 구성표는 빌드가 정한다(build.CLASSIC_ONLY) — 이펙트 결은 classic_only 표식이 있어도 모양 탭이 있어서
+          # 표식이 아니라 모양 data 목록에 있는지로 가른다
+          $drawn = @((Get-Content "data\$($shapes[1].id)\index.json" -Raw -Encoding UTF8 | ConvertFrom-Json).data.PSObject.Properties.Name)
           foreach ($shape in $shapes) {
             # 기본 모양은 dist\<구성표>\, 나머지는 dist\<모양>\<구성표>\ 에 들어간다
             $root = if ($shape.id -eq $shapes[0].id) { 'dist' } else { "dist\$($shape.id)" }
@@ -118,11 +121,11 @@ jobs:
             # 모양이 안 바꾸는 칸은 기본 모양 파일과 같아서 모양 쪽에 두지 않는다 (받을 때 기본 것으로 넘어간다)
             $keep = 'ns','we','nwse','nesw','up','cross','pen','hand'
             foreach ($s in $schemes) {
-              # 기본 모양만 있는 구성표(classic_only)는 모양 폴더가 없다. 적용할 때 기본 것으로 넘어간다
-              if ($shape.id -ne $shapes[0].id -and $s.classic_only) { continue }
+              # 기본 모양만 있는 구성표는 모양 폴더가 없다. 적용할 때 기본 것으로 넘어간다
+              if ($shape.id -ne $shapes[0].id -and $drawn -notcontains $s.id) { continue }
               foreach ($slot in $slots) {
                 if ($shape.id -ne $shapes[0].id -and $keep -contains $slot) { continue }
-                # 고화질 펫 결(흰냥이)은 모양 폴더에 화살표만 굽는다(build_hd_shape). 나머지 칸은 같은 약속으로 기본 것으로 넘어간다
+                # 고화질 펫 결(흰냥이)·이펙트 결은 모양 폴더에 화살표만 굽는다(build_hd_shape). 나머지 칸은 같은 약속으로 기본 것으로 넘어간다
                 if ($shape.id -ne $shapes[0].id -and $s.hd -and $slot -ne 'arrow') { continue }
                 $ext = if ($s.animated) { 'ani' } else { 'cur' }
                 if (-not (Test-Path "$root\$($s.id)\$slot.$ext")) { Write-Host "커서 없음: $root/$($s.id)/$slot.$ext"; $fail = 1 }

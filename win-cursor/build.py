@@ -30,6 +30,7 @@ from make_cur import canvas_size, is_animated, is_row, read_hotspot, read_rate, 
 import hd as hdlib
 import hdfx  # noqa: F401 — 이펙트 · 애니 20결을 hd.STYLES 에 등록한다(워커도 이 줄로 받는다)
 import hdpet  # 고화질 펫 결(흰냥이). hd.render · hd.frames 를 감싸므로 워커도 이 줄로 받는다
+import hdshape  # 이펙트 · 애니 결의 모양 화살표("<결>@<모양>"). hdpet 위에 한 겹 더 감싸므로 워커도 이 줄로 받는다
 from make_cur import SIZES, curs_to_ani, pngs_to_cur
 
 HERE = Path(__file__).parent
@@ -154,9 +155,13 @@ def _hashes() -> tuple[dict, dict, str]:
     # 펫 결의 모양 탭은 화살표 하나만 그 모양으로 굽는다(build_hd_shape). 펫 재료 + 그 모양 줄만 든 smooth.py + 굽는 코드 —
     # build_one 쪽 코드(code)는 안 넣는다. 넣으면 기존 구성표 코드를 고칠 때마다 흰냥이 모양 화살표를 다시 굽는다
     shaped = _dump(_reach(tree, {"build_hd_shape", "hd_bit"}))
+    # 이펙트 결의 모양 화살표는 hdshape 가 그린다. 크기를 스티커(cutout) 줄에 맞추므로 그 줄도 재료다
+    fxshape = _sha(*(_dump([_tree(HERE / n)]) for n in ("hdshape.py", "hdpet/__init__.py")),
+                   _dump([_only_shape(_tree(HERE / "smooth.py"), "cutout")]))
     keys = {f"{shp['id']}/{sid}": (art[sid] if shape_of(shp["id"]) is None
                                    else _sha(art[sid], shp["id"], shaped,
-                                             _dump([_only_shape(_tree(HERE / "smooth.py"), shp["id"])])))
+                                             _dump([_only_shape(_tree(HERE / "smooth.py"), shp["id"])]),
+                                             *([fxshape] if hdshape.fx(HD[sid]) else [])))
             if sid in HD else _sha(code[shp["id"]], art[sid])
             for shp in SHAPES for sid in drawn(shp["id"])}
     marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
@@ -213,13 +218,15 @@ KEEPS = {s["id"]: KEEP | set(s.get("keep", ())) | ({r for r, _, _ in ROLES + EXT
 # 몸이 장마다 흔들리는 그림(헤엄) — 매끈한 모양의 번짐 테를 그 장 몸 밖에서만 뜬다 (smooth.samplers_of).
 # 비율만으로 켜면 반짝이·폭죽 move 처럼 몸에서 튀는 것도 걸려서 표식을 단 구성표만
 SWAYS = {s["id"] for s in SCHEMES if s.get("sway")}
-# 기본 모양으로만 내는 구성표(해양 생물 · 애니). 매끈한 모양으로 다시 그리지 않아 dist/<모양>/·data/<모양>/ 에
-# 없고, 시안 페이지는 어느 모양 탭에서든 이것의 기본 그림을 보이고 적용 주소에 모양을 안 붙인다.
-# 그래서 지금은 SWAYS 로 그릴 일이 없다 — 표식을 떼면 다시 그려진다
-CLASSIC_ONLY = {s["id"] for s in SCHEMES if s.get("classic_only")}
 # 고화질 구성표 {구성표: hd.py 재질}. art/ 의 txt 없이 hd.py 가 256 판에 그려 줄인 것을 dist 에 바로 굽는다(build_hd).
 # 칸마다 일감 하나라 칸 하나만 고쳐도 그 재질 17칸을 다 다시 그린다 — 일감 해시는 구성표 단위다
 HD = {s["id"]: s["hd"] for s in SCHEMES if s.get("hd")}
+# 기본 모양으로만 내는 구성표(해양 생물 · 애니). 매끈한 모양으로 다시 그리지 않아 dist/<모양>/·data/<모양>/ 에
+# 없고, 시안 페이지는 어느 모양 탭에서든 이것의 기본 그림을 보이고 적용 주소에 모양을 안 붙인다.
+# 그래서 지금은 SWAYS 로 그릴 일이 없다 — 표식을 떼면 다시 그려진다.
+# 이펙트 · 애니 20결은 schemes.json 에 표식이 있어도 모양 탭이 있다(화살표만, hdshape) — 그 줄은 고화질 일감 해시라
+# 표식을 떼면 29종을 다시 굽는다. 그래서 표식 대신 여기서 뺀다
+CLASSIC_ONLY = {s["id"] for s in SCHEMES if s.get("classic_only")} - {sid for sid, st in HD.items() if hdshape.fx(st)}
 # 시안 페이지에는 64 판을 두 장에 한 장씩 싣는다(20장 · 장마다 1/15초, 한 바퀴는 커서와 같다).
 # 20장으로도 갤럭시 사용 중 칸 하나가 base64 127KB 다(2026-10-11) — 40장이면 그 두 배쯤
 HD_PX, HD_STEP = 64, 2
@@ -612,8 +619,8 @@ def build_hd(job: tuple[str, str]) -> int:
 
 
 def build_hd_shape(job: tuple[str, str]) -> int:
-    """펫 결의 (모양, 구성표) 하나 — 화살표만 그 모양으로 dist/<모양>/<구성표>/arrow.ani 에 굽는다 (워커에서).
-    나머지 칸은 펫이 하는 짓을 그린 것이라 모양이 바꿀 데가 없어 안 쓴다 — 받는 쪽이 기본 모양 파일로 넘어간다.
+    """펫 결 · 이펙트 결의 (모양, 구성표) 하나 — 화살표만 그 모양으로 dist/<모양>/<구성표>/arrow.ani 에 굽는다 (워커에서).
+    나머지 칸은 안 쓴다 — 받는 쪽이 기본 모양 파일로 넘어간다. 이펙트 결 모양 화살표는 hdshape 가 감싸 그린다.
     build_hd 를 고쳐 같이 굽지 않는 것은 그게 고화질 27종 해시에 들어가서다"""
     shape, sid = job
     style = f"{HD[sid]}@{shape}"
@@ -869,7 +876,7 @@ if __name__ == "__main__":
             # 고화질은 칸 하나가 일감 하나다 — 움직이는 재질은 칸마다 40장이라 구성표 하나를 한 워커에 몰면 그 하나가 꼬리가 된다
             if base:
                 hd_jobs += [(sid, rid) for sid in sorted(stale & set(HD)) for rid, _, _ in ROLES + EXTRA]
-            else:                                       # 펫 결만 모양 탭이 있다(classic_only 가 아닌 고화질) — 화살표 하나
+            else:                                       # 펫 결 · 이펙트 결만 모양 탭이 있다(classic_only 가 아닌 고화질) — 화살표 하나
                 hd_shape_jobs += [(shp["id"], sid) for sid in sorted(stale & set(HD))]
                 held["hdfresh"][shp["id"]] = fresh & set(HD)
             if plan and stale & set(HD):
