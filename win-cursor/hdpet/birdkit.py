@@ -58,6 +58,9 @@ class Kind:
       behind(hv) 머리 뒤(볏 깃) — (f, 색) 목록
       marks(hv)  머리 · 몸 위 무늬(모자 · 뺨 · 가면) — (f, 색) 목록, 덩이 안으로 잘라 납작하게
       tail()     몸 뒤 꼬리 — (f, 색) 목록
+      wing_marks(w, rx, ry, a, L, sg)  날개 무늬(줄 · 띠 · 끝 색) — (f, 색) 목록, 날개 w 안으로 잘라 납작하게.
+                 (rx, ry) 는 날개 밑동, a 는 캐논 방향, L 은 길이, sg 는 왼(-1) · 오른(+1)
+      beak(F, o, lu, hv, up)  부리를 마리 것으로(갈고리 부리 · 넓적 부리) — 레이어 목록, None 이면 공용 세모 부리
     waddle 이면 화살표를 이고 뒤뚱 걷고(병아리 · 오리 · 펭귄), 아니면 깡충 뛴다"""
     head = (7.0, 6.6)              # 머리 반지름(가로, 세로) — 가운데 (0, 0)
     body = (7.4, 6.2, 5.0)         # 몸 가운데 v · 가로 · 세로 반지름 — 발바닥은 body v + 세로 + 1.4
@@ -80,6 +83,12 @@ class Kind:
 
     def tail(self):
         return []
+
+    def wing_marks(self, w, rx, ry, a, L, sg):
+        return []
+
+    def beak(self, F, o, lu, hv, up):
+        return None
 
     @property
     def feet_v(self):
@@ -150,14 +159,19 @@ def bird(F, K, mood="open", beak=0.0, wl="fold", wr="fold", sq=0.0, puff=1.0, li
             rx_, ry_ = sg * brx2 * 0.72, bv2 - bry2 * 0.3
             L = K.wing_l * lm
             w = taper(rx_, ry_, r0, rx_ + cos(a) * L, ry_ + sin(a) * L, r1)
-            (front if fr_ else back).append((w, C.wing, C.wing_d))
+            (front if fr_ else back).append((w, C.wing, C.wing_d, K.wing_marks(w, rx_, ry_, a, L, sg)))
     beh = K.behind(hv)
     tops = K.top(hv)
     mk = K.marks(hv)
     allf = [p[0] for p in back + front + beh] + tops + [blob] + [e[0] for e in extra]
     out = [base(*[F.f(g) for g in allf])]
-    for g, col, sh in back:
+
+    def wing_or_foot(g, col, sh, mk=()):
         out.append(part(F.f(g), col, shade=sh))
+        for m, mc in mk:
+            out.append(flat(F.f(inter(m, grow(g, -0.35))), mc))
+    for p in back:
+        wing_or_foot(*p)
     for g, col in beh:
         out.append(part(F.f(g), col))
     out.append(part(F.f(blob), C.base))
@@ -169,8 +183,8 @@ def bird(F, K, mood="open", beak=0.0, wl="fold", wr="fold", sq=0.0, puff=1.0, li
         out += bface(F, K, mood, beak, look, hv, up)
     for g, col in extra:
         out.append(part(F.f(g), col))
-    for g, col, sh in front:
-        out.append(part(F.f(g), col, shade=sh))
+    for p in front:
+        wing_or_foot(*p)
     return out
 
 
@@ -206,7 +220,8 @@ def bface(F, K, mood="open", beak=0.0, look=0.0, hv=0.0, up=False):
             out.append(flat(ell(x, y, er * 0.82, er), C.eye))
             if s >= 0.4:
                 out.append(flat(circle(x - 0.28 * er, y - 0.36 * er, max(0.34 * er, 0.3)), HI))
-    out += beak_layers(F, K, beak, lu, hv, up)
+    own = K.beak(F, beak, lu, hv, up)
+    out += beak_layers(F, K, beak, lu, hv, up) if own is None else own
     return out
 
 
