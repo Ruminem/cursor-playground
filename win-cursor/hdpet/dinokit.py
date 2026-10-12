@@ -90,8 +90,11 @@ class Kind:
       back(P)    몸 뒤(등판 · 돛) — 몸에 붙어 안 까딱
       over(P)    머리 위(뿔 · 돔 · 볏) — 머리와 같이 까딱
       tail_end(P) 꼬리 끝(곤봉 · 가시) — P.tail 끝점에 붙임
-    quad 면 짧은 팔 대신 앞발 둘로 땅을 짚는다. snout 는 주둥이 타원(cx, cy, rx, ry) — 길면 스피노 · 짧으면 파키"""
+    quad 면 짧은 팔 대신 앞발 둘로 땅을 짚는다. snout 는 주둥이 타원(cx, cy, rx, ry) — 길면 스피노 · 짧으면 파키.
+    body 를 주면 dino() 가 그 몸을 대신 그린다(프테라 · 알처럼 선 치비 틀이 안 맞는 마리) — body(F, K, **dino 인자) → 레이어.
+    틀 몸을 감싸 쓰려면 body 안에서 body 가 없는 Kind 로 dino() 를 부른다"""
     quad = False
+    body = None
     snout = (3.6, 1.6, 4.4, 3.3)
     head = (0.0, 0.0, 6.6, 5.6)
     teeth = 0
@@ -142,6 +145,9 @@ def dino(F, K, mood="open", nod=0.0, mouth=0.0, arm=0.0, arm_far=None, step=0.0,
     """선 치비 공룡 → 레이어 목록. 캐논: 머리 (0, 0) · 몸 (-1.2, 8.0) · 발바닥 v ≈ 13.6 · 주둥이 끝 u ≈ 8.0.
     mood: open · blink · happy · squeeze(><) · sad. mouth 0–1 은 벌린 입. arm 은 팔 끝을 든 정도(캐논 칸, + 가 위).
     bob 0–1 은 몸이 살짝 눌림. look 은 눈동자를 앞(+) · 뒤(-)로"""
+    if K.body:
+        return K.body(F, K, mood=mood, nod=nod, mouth=mouth, arm=arm, arm_far=arm_far, step=step, sway=sway,
+                      tail_pts=tail_pts, look=look, bob=bob, face_on=face_on)
     s = F.s
     C = H()
     arm_far = arm if arm_far is None else arm_far
