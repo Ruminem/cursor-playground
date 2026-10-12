@@ -169,16 +169,16 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 
 | Folder | Name | Style |
 |---|---|---|
-| `art/trexanim` | T. rex | A baby T. rex with stubby arms — it flails trying to reach the arrow, and can't even cross its arms to say no. |
-| `art/triceratopsanim` | Triceratops | A triceratops that nudges the arrow tip with its nose horn — it munches grass while you wait, and shakes its horns when the answer is no. |
-| `art/stegoanim` | Stegosaurus | A stegosaurus whose back plates glow one after another while you wait — and it wags its spiky tail when the answer is no. |
-| `art/brachioanim` | Brachiosaurus | A long-necked brachiosaurus — it stretches up to nibble leaves while you wait, and swings its head like a pendulum when the answer is no. |
-| `art/pteraanim` | Pteranodon | A pteranodon that perches on the arrow's edge — it flaps in place while you wait, and crosses its wings in an X when the answer is no. |
-| `art/ankyloanim` | Ankylosaurus | An ankylosaurus with a tail club — it thumps the ground in puffs of dust, and turns its back to tap the club when the answer is no. |
-| `art/pachyanim` | Pachycephalosaurus | A dome-headed pachycephalosaurus — it paws the ground ready to headbutt while you wait, and bonks the no sign's slash. |
-| `art/raptoranim` | Raptor | A baby raptor with a perky crest — it peeks from behind the arrow, tilts its head while you wait, and hisses when the answer is no. |
-| `art/spinoanim` | Spinosaurus | A sail-backed spinosaurus — it fishes at the water's edge while you wait, and flushes its sail red and turns up its nose when the answer is no. |
-| `art/egganim` | Hatchling | A just-hatched dino wearing its eggshell as a hat — it cheers as the hat pops up while you wait, and hides back in the egg when the answer is no. |
+| `hd.py trex` | T. rex | A baby T. rex with stubby arms — it flails trying to reach the arrow, and can't even cross its arms to say no. |
+| `hd.py triceratops` | Triceratops | A triceratops that nudges the arrow tip with its nose horn — it munches grass while you wait, and shakes its horns when the answer is no. |
+| `hd.py stego` | Stegosaurus | A stegosaurus whose back plates glow one after another while you wait — and it wags its spiky tail when the answer is no. |
+| `hd.py brachio` | Brachiosaurus | A long-necked brachiosaurus — it stretches up to nibble leaves while you wait, and swings its head like a pendulum when the answer is no. |
+| `hd.py ptera` | Pteranodon | A pteranodon that perches on the arrow's edge — it flaps in place while you wait, and crosses its wings in an X when the answer is no. |
+| `hd.py ankylo` | Ankylosaurus | An ankylosaurus with a tail club — it thumps the ground in puffs of dust, and turns its back to tap the club when the answer is no. |
+| `hd.py pachy` | Pachycephalosaurus | A dome-headed pachycephalosaurus — it paws the ground ready to headbutt while you wait, and bonks the no sign's slash. |
+| `hd.py raptor` | Raptor | A baby raptor with a perky crest — it peeks from behind the arrow, tilts its head while you wait, and hisses when the answer is no. |
+| `hd.py spino` | Spinosaurus | A sail-backed spinosaurus — it fishes at the water's edge while you wait, and flushes its sail red and turns up its nose when the answer is no. |
+| `hd.py egg` | Hatchling | A just-hatched dino wearing its eggshell as a hat — it cheers as the hat pops up while you wait, and hides back in the egg when the answer is no. |
 
 **Hamsters & friends · Animated**
 
@@ -508,16 +508,16 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 | 폴더 | 이름 | 스타일 |
 |---|---|---|
-| `art/trexanim` | 티라노 | 짧은 팔의 아기 티라노. 화살표 날개를 잡으려다 팔이 안 닿아 버둥, 안 될 때는 X 를 만들려다 또 안 닿는 커서. |
-| `art/triceratopsanim` | 트리케라톱스 | 코뿔로 화살표 끝을 콕콕 미는 트리케라톱스. 기다릴 때는 풀을 우물우물, 안 될 때는 뿔을 들이밀며 도리도리하는 커서. |
-| `art/stegoanim` | 스테고사우루스 | 등판이 반짝이는 스테고사우루스. 기다릴 때는 등판이 앞에서 뒤로 차례로 빛나고, 안 될 때는 꼬리 가시를 흔드는 커서. |
-| `art/brachioanim` | 브라키오사우루스 | 목이 긴 브라키오사우루스. 기다릴 때는 목을 쭉 올려 나뭇잎을 냠냠, 안 될 때는 쳐든 머리를 시계추처럼 흔드는 커서. |
-| `art/pteraanim` | 프테라노돈 | 화살표 빗변에 내려앉는 프테라노돈. 기다릴 때는 제자리 날갯짓, 안 될 때는 두 날개를 X 로 엇거는 커서. |
-| `art/ankyloanim` | 안킬로사우루스 | 꼬리 곤봉을 단 안킬로사우루스. 곤봉으로 땅을 통통 치면 먼지가 퐁, 안 될 때는 등 돌리고 곤봉만 탁탁하는 커서. |
-| `art/pachyanim` | 파키케팔로사우루스 | 돔 머리 파키케팔로사우루스. 기다릴 때는 땅을 긁으며 박치기 준비, 안 될 때는 금지 빗금을 머리로 콩 박는 커서. |
-| `art/raptoranim` | 랩터 | 볏이 쫑긋한 아기 랩터. 화살표 뒤에서 빼꼼, 기다릴 때는 고개를 갸웃갸웃, 안 될 때는 캬악 하는 커서. |
-| `art/spinoanim` | 스피노사우루스 | 등에 돛을 단 스피노사우루스. 기다릴 때는 물가에서 물고기를 낚고, 안 될 때는 돛을 붉히고 고개를 홱 쳐드는 커서. |
-| `art/egganim` | 아기공룡(알) | 알껍데기 모자를 쓴 갓 깬 아기 공룡. 기다릴 때는 모자가 퐁 뜨며 만세, 안 될 때는 알 속으로 쏙 숨는 커서. |
+| `hd.py trex` | 티라노 | 짧은 팔의 아기 티라노. 화살표 날개를 잡으려다 팔이 안 닿아 버둥, 안 될 때는 X 를 만들려다 또 안 닿는 커서. |
+| `hd.py triceratops` | 트리케라톱스 | 코뿔로 화살표 끝을 콕콕 미는 트리케라톱스. 기다릴 때는 풀을 우물우물, 안 될 때는 뿔을 들이밀며 도리도리하는 커서. |
+| `hd.py stego` | 스테고사우루스 | 등판이 반짝이는 스테고사우루스. 기다릴 때는 등판이 앞에서 뒤로 차례로 빛나고, 안 될 때는 꼬리 가시를 흔드는 커서. |
+| `hd.py brachio` | 브라키오사우루스 | 목이 긴 브라키오사우루스. 기다릴 때는 목을 쭉 올려 나뭇잎을 냠냠, 안 될 때는 쳐든 머리를 시계추처럼 흔드는 커서. |
+| `hd.py ptera` | 프테라노돈 | 화살표 빗변에 내려앉는 프테라노돈. 기다릴 때는 제자리 날갯짓, 안 될 때는 두 날개를 X 로 엇거는 커서. |
+| `hd.py ankylo` | 안킬로사우루스 | 꼬리 곤봉을 단 안킬로사우루스. 곤봉으로 땅을 통통 치면 먼지가 퐁, 안 될 때는 등 돌리고 곤봉만 탁탁하는 커서. |
+| `hd.py pachy` | 파키케팔로사우루스 | 돔 머리 파키케팔로사우루스. 기다릴 때는 땅을 긁으며 박치기 준비, 안 될 때는 금지 빗금을 머리로 콩 박는 커서. |
+| `hd.py raptor` | 랩터 | 볏이 쫑긋한 아기 랩터. 화살표 뒤에서 빼꼼, 기다릴 때는 고개를 갸웃갸웃, 안 될 때는 캬악 하는 커서. |
+| `hd.py spino` | 스피노사우루스 | 등에 돛을 단 스피노사우루스. 기다릴 때는 물가에서 물고기를 낚고, 안 될 때는 돛을 붉히고 고개를 홱 쳐드는 커서. |
+| `hd.py egg` | 아기공룡(알) | 알껍데기 모자를 쓴 갓 깬 아기 공룡. 기다릴 때는 모자가 퐁 뜨며 만세, 안 될 때는 알 속으로 쏙 숨는 커서. |
 
 **햄찌와 친구들 · 애니**
 

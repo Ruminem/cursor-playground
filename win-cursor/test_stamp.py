@@ -63,7 +63,10 @@ assert {k for k in keys0 if keys0[k] != keys2[k]} == pet_shape, "build_hd_shape 
 pet_of = {s["id"]: s["hd"] for s in build.SCHEMES if s.get("hd") in build.hdpet.PETS}
 assert len(set(pet_of.values())) > 1, "펫 결이 둘이 안 돼 서로 안 번지는지 못 잼"
 for st in set(pet_of.values()):
-    build._tree = bent_at(f"{st}.py", "scene")
+    # 맨 위 정의 하나를 비튼다 — 이름을 박으면 그 이름이 없는 결(공룡은 scene 대신 sc_<칸>)에서 아무것도 안 바뀐다
+    src = ast.parse((Path(build.__file__).parent / "hdpet" / f"{st}.py").read_text(encoding="utf-8"))
+    first = next(n.name for n in src.body if isinstance(n, (ast.FunctionDef, ast.ClassDef)))
+    build._tree = bent_at(f"{st}.py", first)
     keys2 = build._hashes()[0]
     build._tree = plain
     want = {k for k in keys0 if pet_of.get(k.split("/")[1]) == st}
