@@ -20,7 +20,6 @@ dome() 으로 테두리 단면에서 법선을 세워 빛을 받고(L3·H3), sof
 
     python hd.py <출력 폴더> [재질…]        # 256 PNG 와 견줘 볼 시트 (빌드 없이)
 
-시안 페이지: https://claude.ai/artifact/WToSbg2DiN2QL76z6SQ2or (gen/hd_preview.py 로 다시 뽑음)
 """
 import math
 import os

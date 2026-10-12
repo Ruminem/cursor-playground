@@ -3,8 +3,7 @@
 정지 17칸 + 움직임 맛보기 칸 12장씩. 쓰는 법: python gen/hd_preview.py <나올 html>
 → <html> 과 같은 폴더에 hd.json. 페이지가 fetch 로 받는다 — 열 결일 때 그림을 html 에 끼운 판이 8MB 였고
 스무 결이면 아티팩트 한도 16MB 를 넘어서 뗐다(그때는 두 파일로 나눴다). 올릴 때 hd.json 을 files 로 같이 싣는다.
-로컬에서 볼 때는 file:// 로 열면 fetch 가 막히니 http 서버로 연다.
-올린 곳(비공개 아티팩트, 2026-10-10): https://claude.ai/artifact/WToSbg2DiN2QL76z6SQ2or — 다시 올릴 때 이 주소에 덮어쓴다"""
+로컬에서 볼 때는 file:// 로 열면 fetch 가 막히니 http 서버로 연다."""
 import base64, json, os, sys
 from concurrent.futures import ProcessPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
