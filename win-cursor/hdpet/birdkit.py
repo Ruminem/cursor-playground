@@ -313,12 +313,19 @@ def _scaled(f, hx_, hy_, k):
 
 
 def _tail(f):
-    """화살표 꼬리 끝 — 핫스팟에서 대각선(↘)으로 가장 먼 안쪽 칸들의 가운데. 0.2칸 격자로 잰다.
-    화살촉(dart)처럼 꼬리 없이 미늘 둘이 끝이면 그 둘 사이 홈 가운데가 나온다"""
+    """화살표 꼬리 끝 — 핫스팟에서 대각선(↘)으로 가장 먼 안쪽 칸들의 가운데. 0.2칸 격자로 잰다"""
     pts = [(i * 0.2, j * 0.2) for j in range(160) for i in range(160) if f(i * 0.2, j * 0.2) < 0]
     d = max(x + y for x, y in pts)
     near = [p for p in pts if p[0] + p[1] > d - 0.8]
     return sum(p[0] for p in near) / len(near), sum(p[1] for p in near) / len(near)
+
+
+def _hook(f):
+    """화살촉 아래 꼭지점 — 가장 낮은 안쪽 칸들의 가운데(0.2칸 격자). 꼬리가 없어 새가 여기 매달린다"""
+    pts = [(i * 0.2, j * 0.2) for j in range(160) for i in range(160) if f(i * 0.2, j * 0.2) < 0]
+    d = max(y for _, y in pts)
+    near = [p for p in pts if p[1] > d - 0.5]
+    return sum(p[0] for p in near) / len(near), d
 
 
 def arrow_geo(shape=None):
@@ -330,6 +337,8 @@ def arrow_geo(shape=None):
             g = dict(body=_scaled(g0["body"], hx_, hy_, KS), outer=_scaled(g0["outer"], hx_, hy_, KS),
                      band=g0["band"] * KS, hot=g0["hot"])
             g["stem"] = _tail(g["outer"])
+            if shape == "dart":                         # 꼬리 없이 미늘 둘 — 아래 꼭지점에 매달림(2026-10-12 사용자)
+                g["hook"] = _hook(g["outer"])
         else:
             P = [(TIP[0] + SC * x, TIP[1] + SC * y) for x, y in ARROW]
             arw = rpoly(P, 0.5)
@@ -363,6 +372,19 @@ def carry_waddle(K, fr, g, s=0.66, **kw):
     wr = (("fold", "out"), 0.45 * max(0.0, sw))
     out = bird(F, K, mood, beak=0.8 if k in (3, 4) else 0.0, wl=wl, wr=wr, sq=0.35 * abs(cos(ph)),
                lift=(1.3 * max(0.0, sw), 1.3 * max(0.0, -sw)), **kw)
+    return out + arrow_layers(g)
+
+
+def dangle(K, fr, g, s=0.6):
+    """화살촉 아래 꼭지점에 머리 꼭대기를 대고 매달려 대롱대롱 — 두 날개를 들어 붙잡고 발을 번갈아 찬다.
+    꼭지점이 판 왼쪽 끝 가까이라 몸은 오른쪽으로 기운 채(-19–-33°) 흔들린다. 화살표가 맨 위"""
+    ph, k = ph_k(fr)
+    sw = sin(ph)
+    px, py = g["hook"]
+    F = hang(K, px, py - 0.6, s, radians(-26 + 7 * sw))
+    mood = "blink" if k == 11 else "happy" if k in (2, 3, 8, 9) else "open"
+    kick = (1.4 * max(0.0, sin(ph * 2)), 1.4 * max(0.0, -sin(ph * 2)))
+    out = bird(F, K, mood, beak=0.8 if k in (2, 3) else 0.0, wl="up", wr="up", sq=-0.4, lift=kick)
     return out + arrow_layers(g)
 
 
@@ -658,6 +680,8 @@ class BirdPet(Pet):
         use(self.coat)
         if name == "arrow":
             g = arrow_geo(shape)
+            if "hook" in g:
+                return dangle(self.kind, frame, g), g["hot"]
             return self.own["arrow"](frame, g), g["hot"]
         ax, ay = self.hot[name]
         if name in self.own:
