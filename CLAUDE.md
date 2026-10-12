@@ -142,7 +142,7 @@
 - 주석·커밋 메시지·문서는 한국어. 소스 머리에 `// SPDX-License-Identifier: Apache-2.0`
 - `handler.ps1` 은 한글 때문에 **UTF-8 BOM** 으로 저장해야 한다 (PowerShell 5.1 이 BOM 없으면 ANSI 로 읽음)
 - 워크플로에서 한글을 찍는 스텝은 `shell: pwsh`, 파이썬은 `PYTHONUTF8: '1'`
-- 세션을 마치면 `NEXT.md` 세 줄(여기까지 됨 / 다음 할 것 / 막힌 것)을 고친다
+- 세션을 마치면 진행 메모(notes 저장소 `progress/cursor-playground/NEXT.md`) 세 줄(여기까지 됨 / 다음 할 것 / 막힌 것)을 고친다
 
 ## 측정 (클라우드 세션만)
 이 저장소를 연 클라우드 세션은 규칙이 안 실린 대조군이라 `ruminem/rules` 의 측정 로그에 행을 남긴다.
