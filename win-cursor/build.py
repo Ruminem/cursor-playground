@@ -805,7 +805,16 @@ def prune() -> list[str]:
     gone += [d for d in data.glob("*/") if d.name not in shps] if data.is_dir() else []
     for d in gone:
         shutil.rmtree(d)
-    return [str(d.relative_to(HERE)) for d in gone]
+    # 모양 탭이 있는 고화질 구성표의 모양 폴더에는 화살표만 있어야 한다(build_hd_shape). 냥이·공룡·새가 픽셀 빼꼼이던 때
+    # 모양 폴더에 기본 그림 바이트로 쓴 8칸(KEEPS)이 고화질로 바꾼 뒤에도 CI 캐시를 타고 남아, hd_bit·hd_hi·handler.ps1 이
+    # 모양 폴더 것을 먼저 집어 옛 픽셀 그림이 나왔다(2026-10-12). 그 구성표의 128 판도 그 칸을 떠 갔으니 지워 다시 뜨게 한다 —
+    # 그 파일이 없는 구성표는 빌드가 시안 데이터를 새로 뜬다
+    olds = [f for shp in shps - {SHAPES[0]["id"]} for sid in set(HD) - CLASSIC_ONLY
+            for f in (dist / shp / sid).glob("*.ani") if f.name != "arrow.ani"]
+    for f in olds:
+        f.unlink()
+        (data / f.parent.parent.name / f"{f.parent.name}.hd.json").unlink(missing_ok=True)
+    return [str(d.relative_to(HERE)) for d in gone + olds]
 
 
 def update_readme() -> None:
@@ -911,9 +920,11 @@ if __name__ == "__main__":
             skipped += len(sids) - len(stale)
             fresh: set[str] = set()                     # 시안 데이터 조각을 새로 그릴 구성표
             mark = f"*data/{shp['id']}"
-            if not base and (was.get(mark) != marks[mark] or not (data_dir(shp["id"]) / "index.json").exists()):
+            # 128 판이 없는 고화질 구성표 — prune 이 옛 칸과 같이 지웠다. 넘어져서 못 썼어도 다음 빌드가 다시 잡는다
+            unhi = {sid for sid in sids if sid in HD and not (data_dir(shp["id"]) / f"{sid}.hd.json").exists()}
+            if not base and (was.get(mark) != marks[mark] or not (data_dir(shp["id"]) / "index.json").exists() or unhi):
                 missing = data_missing(shp["id"])
-                fresh = set(sids) if missing is None else (changed | missing) & set(sids)
+                fresh = set(sids) if missing is None else (changed | missing | unhi) & set(sids)
                 if fresh:
                     pieces[shp["id"]] = {}
                 elif plan:

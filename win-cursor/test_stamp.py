@@ -180,4 +180,16 @@ for d in keep + drop:
     (here / d).mkdir(parents=True, exist_ok=True)
 assert sorted(build.prune()) == sorted(str(Path(d)) for d in drop), "지운 폴더 목록이 다름"
 assert all((here / d).is_dir() for d in keep) and not any((here / d).exists() for d in drop), "엉뚱한 폴더를 지우거나 남김"
+# 모양 탭이 있는 고화질 구성표의 모양 폴더에는 화살표만 남긴다 — 픽셀 빼꼼이던 때 쓴 칸이 남으면 옛 그림이 나온다(2026-10-12).
+# 그 구성표의 128 판도 지워 다시 뜨게 하고, 고화질이 아닌 구성표의 칸은 건드리지 않는다
+hd_was, build.HD = build.HD, {sids[2]: "x"}
+for f in [f"dist/{shape_id}/{sids[2]}/arrow.ani", f"dist/{shape_id}/{sids[2]}/ibeam.ani", f"dist/{shape_id}/{sids[0]}/ibeam.ani",
+          f"data/{shape_id}/{sids[2]}.hd.json", f"data/{shape_id}/{sids[0]}.json"]:
+    (here / f).parent.mkdir(parents=True, exist_ok=True)
+    (here / f).write_bytes(b"")
+assert build.prune() == [str(Path(f"dist/{shape_id}/{sids[2]}/ibeam.ani"))], "고화질 모양 폴더의 옛 칸을 못 치움"
+assert not (here / f"data/{shape_id}/{sids[2]}.hd.json").exists(), "옛 칸을 뜬 128 판이 남음"
+assert all((here / f).exists() for f in [f"dist/{shape_id}/{sids[2]}/arrow.ani", f"dist/{shape_id}/{sids[0]}/ibeam.ani",
+                                          f"data/{shape_id}/{sids[0]}.json"]), "치울 것 말고 지움"
+build.HD = hd_was
 print(f"갈아 끼우기 OK · {shape_id} · 구성표 {len(sids)}종 · {len(dump(whole))}바이트 · 더하기·지우기·정리 OK")
