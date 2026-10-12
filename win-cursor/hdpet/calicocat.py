@@ -9,7 +9,7 @@
   arrow   크림 화살표 빗변 뒤에서 빼꼼(catkit.peek) — 빗변을 잡은 앞발 둘은 주황
   busy    작은 화살표 삼색냥 + 작은 골판지 상자 둘레를 도는 분홍 발자국 여덟, 상자 날개가 까딱
   cross   앞모습 얼굴 — 볼 수염이 가로 조준선, 위로 낚싯대 장난감 줄(끝 깃털이 까딱) · 턱 밑 줄이 세로선. 코가 핫스팟
-  hand    배 깔고 엎드린 식빵 삼색냥이 앞발을 위로 쭉 내밀어 톡톡 — 누를 때 발바닥이 눌리고 젤리가 벌어짐. 발끝이 핫스팟
+  hand    앉은 삼색냥이 짧은 앞발을 들어 큰 흰 발바닥(분홍 젤리)으로 톡톡 — 누를 때 발바닥이 퍼지고 눈은 ^^. 발바닥 꼭대기가 핫스팟
   help    작은 화살표 삼색냥 + 까만 꼬리(끝 주황)를 말아 만든 물음표, 점은 분홍 발자국
   ibeam   스크래처 기둥(삼줄)이 I — 뒷발로 서서 끌어안고 두 앞발을 번갈아 박박 긁는다(긁힌 자국). 핫스팟은 기둥 가운데
   move    골판지 상자에 쏙 들어간 삼색냥이 상자째 좌우로 들썩 — 네 방향 분홍 화살촉
@@ -300,32 +300,25 @@ def sc_wait(fr):
 
 
 def sc_hand(fr):
-    """배를 깔고 엎드린 식빵 삼색냥이 앞발을 위로 쭉 내밀어 톡톡 — 누를 때(장 3–5, 9–11) 발바닥이 눌려 넓어지고
-    젤리가 벌어지며 톡 줄이 선다. 발바닥 꼭대기가 핫스팟이라 장마다 그대로, 팔꿈치가 굽었다 펴진다"""
+    """앉은 삼색냥이 앞발을 앞으로 쭉 내밀어 흰 발바닥(분홍 젤리)으로 톡톡 — 누를 때(장 3–5, 9–11) 몸이 앞으로 살짝
+    쏠리고 눈은 ^^, 발 둘레에 톡 줄. 발은 안 움직이고 발끝(위)이 핫스팟.
+    엎드린 식빵이 막대 같은 팔을 쭉 뻗던 판은 "너무 못생김"(2026-10-13)이라 앉은 몸 + 머리 위로 그리는 털 팔로 바꿈"""
     ph = TAU * fr
     k = kof(fr)
     tap = k % 6 in (3, 4, 5)
-    F = Frame(13.4, 15.2, 0.74)
-    loaf = smin(1.0, ell(18.2, 22.4, 9.4, 4.4), ell(18.2, 24.5, 9.9, 2.8))
-    tpts = [(27.0, 21.8), (28.8, 19.8 + 0.6 * sin(ph)), (28.6 + 0.4 * sin(ph), 16.4 + 0.8 * sin(ph))]
-    tail = chain(tpts, 1.35, 1.1)
-    paw2 = ell(15.4, 27.1, 2.2, 1.3)
-    lcol = spots((oell(14.0, 20.4, 4.2, 2.6, -0.2), ORNG), (ell(24.4, 22.6, 3.2, 3.0), BLK))
-    out = cat(F, "happy" if tap else "open", look=(-0.6, -0.8), turn_=-0.5, body=False, paws=False, tail=False,
-              extra_under=[(tail, tail_col(tpts[-1], 2.0)), (loaf, lcol), (paw2, solid(WHITE))])
-    ra, rb = (2.5, 1.65) if tap else (2.05, 2.0)
-    pc = (6.5, 2.05 + rb)
-    elbow = (5.6 if tap else 4.8, 11.4 if tap else 11.0)
-    arm = chain([(9.6, 19.0), elbow, (pc[0], pc[1] + 1.3)], 1.75, 1.55)
-    pad = ell(pc[0], pc[1], ra, rb)
-    out += [base(arm, pad), part(arm, lambda x, y: _pick(ORNG if y > 15.6 else WHITE), shade=_Shade()),
-            part(pad, solid(WHITE))]
-    out += jellies(ID(), (pc[0], pc[1] - 0.15), 0.3 if tap else 0.0)
-    if tap:
-        for sg in (-1, 1):
-            for j in (-0.6, 0.9):
-                x0 = pc[0] + sg * (ra + 1.0)
-                out.append(flat(capsule(x0, pc[1] + j, x0 + sg * 1.1, pc[1] + j * 1.5, 0.22), OUT, 0.85))
+    lean = 0.5 if tap else 0.0
+    s = 0.78
+    F = Frame(17.2 - lean, 15.2 - lean * 0.4, s)
+    hand = F.loc(6.4, 4.3)
+    tp = [(3.6, 10.4), (7.8, 10.6), (9.9, 7.6), (9.4 + 0.6 * sin(ph), 3.9), (8.2 + 0.9 * sin(ph), 2.0)]
+    out = cat(F, "happy" if tap else "open", look=(-0.8, -0.6), turn_=-0.5, tail_pts=tp,
+              arms=[((-5.8, 3.6), hand, True)], ear_tilt=(-0.5, 0.0))
+    if tap:                                               # 톡 — 발 둘레 눌림 줄(판 안에 드는 것만)
+        for a in (pi, 2.4, -2.4, -0.7):
+            ex, ey = 6.4 + 3.7 * cos(a), 4.3 + 3.7 * sin(a)
+            if 1.0 < ex < 30.5 and 1.0 < ey < 30.5:
+                c = capsule(ex, ey, ex + 1.2 * cos(a), ey + 1.2 * sin(a), 0.36)
+                out += [base(c), flat(c, OUT)]
     return out
 
 

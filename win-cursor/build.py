@@ -31,6 +31,7 @@ import hd as hdlib
 import hdfx  # noqa: F401 — 이펙트 · 애니 20결을 hd.STYLES 에 등록한다(워커도 이 줄로 받는다)
 import hdpet  # 고화질 펫 결(흰냥이). hd.render · hd.frames 를 감싸므로 워커도 이 줄로 받는다
 import hdshape  # 이펙트 · 애니 결의 모양 화살표("<결>@<모양>"). hdpet 위에 한 겹 더 감싸므로 워커도 이 줄로 받는다
+import hdmini  # 펫 결 모양 탭의 작은 화살표 칸(help · busy · person · pin). hdshape 위에 한 겹 더 감싸므로 워커도 이 줄로 받는다
 from make_cur import SIZES, curs_to_ani, pngs_to_cur
 
 HERE = Path(__file__).parent
@@ -169,13 +170,16 @@ def _hashes() -> tuple[dict, dict, str]:
     # 펫 결의 모양 탭은 화살표 하나만 그 모양으로 굽는다(build_hd_shape). 펫 재료 + 그 모양 줄만 든 smooth.py + 굽는 코드 —
     # build_one 쪽 코드(code)는 안 넣는다. 넣으면 기존 구성표 코드를 고칠 때마다 흰냥이 모양 화살표를 다시 굽는다
     shaped = _dump(_reach(tree, {"build_hd_shape", "hd_bit"}))
+    # 펫 결 모양 탭의 작은 화살표 칸은 hdmini 가 그린다 — 펫 모양 일감에만 넣는다(이펙트 결은 화살표뿐이라 안 지난다)
+    mini = _dump([_tree(HERE / "hdmini.py")])
     # 이펙트 결의 모양 화살표는 hdshape 가 그린다. 크기를 스티커(cutout) 줄에 맞추므로 그 줄도 재료다
     fxshape = _sha(*(_dump([_tree(HERE / n)]) for n in ("hdshape.py", "hdpet/__init__.py")),
                    _dump([_only_shape(_tree(HERE / "smooth.py"), "cutout")]))
     keys = {f"{shp['id']}/{sid}": (art[sid] if shape_of(shp["id"]) is None
                                    else _sha(art[sid], shp["id"], shaped,
                                              _dump([_only_shape(_tree(HERE / "smooth.py"), shp["id"])]),
-                                             *([fxshape] if hdshape.fx(HD[sid]) else [])))
+                                             *([fxshape] if hdshape.fx(HD[sid]) else []),
+                                             *([mini] if HD[sid] in hdpet.PETS else [])))
             if sid in HD else _sha(code[shp["id"]], art[sid])
             for shp in SHAPES for sid in drawn(shp["id"])}
     marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
@@ -636,21 +640,24 @@ def build_hd(job: tuple[str, str]) -> int:
 
 
 def build_hd_shape(job: tuple[str, str]) -> int:
-    """펫 결 · 이펙트 결의 (모양, 구성표) 하나 — 화살표만 그 모양으로 dist/<모양>/<구성표>/arrow.ani 에 굽는다 (워커에서).
-    나머지 칸은 안 쓴다 — 받는 쪽이 기본 모양 파일로 넘어간다. 이펙트 결 모양 화살표는 hdshape 가 감싸 그린다.
+    """펫 결 · 이펙트 결의 (모양, 구성표) 하나 — 화살표와, 펫이면 작은 화살표 칸(hdmini.shaped_cells)을 그 모양으로
+    dist/<모양>/<구성표>/<칸>.ani 에 굽는다 (워커에서). 나머지 칸은 안 쓴다 — 받는 쪽이 기본 모양 파일로 넘어간다.
+    이펙트 결 모양 화살표는 hdshape 가, 작은 화살표는 hdmini 가 감싸 그린다.
     build_hd 를 고쳐 같이 굽지 않는 것은 그게 고화질 27종 해시에 들어가서다"""
     shape, sid = job
     style = f"{HD[sid]}@{shape}"
-    n, rate = hdlib.frames(style, "arrow")
-    curs = []
-    for k in range(n):
-        img, (hx, hy) = hdlib.render(style, "arrow", k / n)
-        curs.append(pngs_to_cur([(hdlib.png(hdlib.rgba_bytes(small, s), s, s), (hx * s // hdlib.N, hy * s // hdlib.N))
-                                 for s, small in hdlib.sizes(img, SIZES).items()]))
     out = HERE / "dist" / shape / sid
     out.mkdir(parents=True, exist_ok=True)
-    (out / "arrow.ani").write_bytes(curs_to_ani(curs, rate))
-    return 1
+    rids = hdmini.shaped_cells(style)
+    for rid in rids:
+        n, rate = hdlib.frames(style, rid)
+        curs = []
+        for k in range(n):
+            img, (hx, hy) = hdlib.render(style, rid, k / n)
+            curs.append(pngs_to_cur([(hdlib.png(hdlib.rgba_bytes(small, s), s, s), (hx * s // hdlib.N, hy * s // hdlib.N))
+                                     for s, small in hdlib.sizes(img, SIZES).items()]))
+        (out / f"{rid}.ani").write_bytes(curs_to_ani(curs, rate))
+    return len(rids)
 
 
 def ani_frames(blob: bytes) -> list[dict[int, tuple[bytes, tuple[int, int]]]]:
@@ -676,7 +683,7 @@ def hd_bit(sid: str, rid: str, shape: str | None = None) -> list:
     """고화질 구성표의 시안 데이터 칸 하나 — data_bit 과 같은 꼴. 다시 그리지 않고 build_hd 가 구운 dist 의 .ani 에서
     HD_PX 판을 HD_STEP 장마다 떠 온다. 핫스팟은 32칸 판 기준 소수(256 판 픽셀 / 8)라 페이지가 어느 크기로 줄여
     floor(값 × 크기 / 32) 해도 파일의 핫스팟과 같은 칸이 된다. 폭·높이는 32 판 첫 장에서 잉크가 닿는 칸 수.
-    shape 를 주면 그 모양 폴더에 구운 칸(build_hd_shape, 화살표뿐)을, 없는 칸은 기본 모양 것을 뜬다"""
+    shape 를 주면 그 모양 폴더에 구운 칸(build_hd_shape, 화살표 · 작은 화살표 칸)을, 없는 칸은 기본 모양 것을 뜬다"""
     own = shape is not None and (HERE / "dist" / shape / sid / f"{rid}.ani").exists()
     style = f"{HD[sid]}@{shape}" if own else HD[sid]
     frames = ani_frames((HERE / "dist" / (f"{shape}/{sid}" if own else sid) / f"{rid}.ani").read_bytes())
@@ -805,12 +812,13 @@ def prune() -> list[str]:
     gone += [d for d in data.glob("*/") if d.name not in shps] if data.is_dir() else []
     for d in gone:
         shutil.rmtree(d)
-    # 모양 탭이 있는 고화질 구성표의 모양 폴더에는 화살표만 있어야 한다(build_hd_shape). 냥이·공룡·새가 픽셀 빼꼼이던 때
+    # 모양 탭이 있는 고화질 구성표의 모양 폴더에는 build_hd_shape 가 굽는 칸(화살표 · 펫의 작은 화살표 칸)만 있어야 한다. 냥이·공룡·새가 픽셀 빼꼼이던 때
     # 모양 폴더에 기본 그림 바이트로 쓴 8칸(KEEPS)이 고화질로 바꾼 뒤에도 CI 캐시를 타고 남아, hd_bit·hd_hi·handler.ps1 이
     # 모양 폴더 것을 먼저 집어 옛 픽셀 그림이 나왔다(2026-10-12). 그 구성표의 128 판도 그 칸을 떠 갔으니 지워 다시 뜨게 한다 —
     # 그 파일이 없는 구성표는 빌드가 시안 데이터를 새로 뜬다
     olds = [f for shp in shps - {SHAPES[0]["id"]} for sid in set(HD) - CLASSIC_ONLY
-            for f in (dist / shp / sid).glob("*.ani") if f.name != "arrow.ani"]
+            for f in (dist / shp / sid).glob("*.ani")
+            if f.name not in {f"{r}.ani" for r in hdmini.shaped_cells(f"{HD[sid]}@{shp}")}]
     for f in olds:
         f.unlink()
         (data / f.parent.parent.name / f"{f.parent.name}.hd.json").unlink(missing_ok=True)
@@ -984,7 +992,7 @@ if __name__ == "__main__":
         hd_jobs.sort(key=hd_cost, reverse=True)
         t_sub = time.time()
         hd_futs = {pool.submit(timed, build_hd, j): j for j in hd_jobs}
-        shape_cost = lambda j: hdlib.frames(f"{HD[j[1]]}@{j[0]}", "arrow")[0]
+        shape_cost = lambda j: sum(hdlib.frames(f"{HD[j[1]]}@{j[0]}", r)[0] for r in hdmini.shaped_cells(f"{HD[j[1]]}@{j[0]}"))
         shape_futs = {pool.submit(timed, build_hd_shape, j): j for j in hd_shape_jobs}
         jobs = {pool.submit(timed, build_one, j): j for j in jobs_of}
         held["hd"], held["hdshape"], held["jobs"] = hd_futs, shape_futs, jobs

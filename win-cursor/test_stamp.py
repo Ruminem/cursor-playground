@@ -191,5 +191,10 @@ assert build.prune() == [str(Path(f"dist/{shape_id}/{sids[2]}/ibeam.ani"))], "�
 assert not (here / f"data/{shape_id}/{sids[2]}.hd.json").exists(), "옛 칸을 뜬 128 판이 남음"
 assert all((here / f).exists() for f in [f"dist/{shape_id}/{sids[2]}/arrow.ani", f"dist/{shape_id}/{sids[0]}/ibeam.ani",
                                           f"data/{shape_id}/{sids[0]}.json"]), "치울 것 말고 지움"
+# 펫 결은 작은 화살표 칸(hdmini — help · busy · person · pin)도 모양 폴더에 굽는다. 그 칸은 남기고 나머지만 치운다
+build.HD = {sids[2]: "whitecat"}
+for r in ("help", "pin", "wait"):
+    (here / f"dist/{shape_id}/{sids[2]}/{r}.ani").write_bytes(b"")
+assert build.prune() == [str(Path(f"dist/{shape_id}/{sids[2]}/wait.ani"))], "펫 모양 폴더의 작은 화살표 칸을 치우거나 옛 칸을 남김"
 build.HD = hd_was
 print(f"갈아 끼우기 OK · {shape_id} · 구성표 {len(sids)}종 · {len(dump(whole))}바이트 · 더하기·지우기·정리 OK")
