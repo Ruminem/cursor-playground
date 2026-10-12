@@ -316,7 +316,9 @@ def npeek_shape(fr, shape):
     ph = TAU * fr
     cx, cy = g["cat"]
     lift = 0.5 * (1 - cos(ph)) / 2
-    out = _peek_cat(Frame(cx, cy - lift + 1.3, 0.8), fr)
+    # 모양 탭(shaped)은 냥이 귀 1.2칸만 재 판을 내려서, 귀 끝 털 · 꼬리 깃털이 판 위 · 오른쪽으로 넘었다(2026-10-12).
+    # 조금 내리고 줄인다 — 더 내리거나 왼쪽으로 밀면 얼굴이 빗변 뒤로 숨는다
+    out = _peek_cat(Frame(cx, cy - lift + 1.8, 0.7), fr)
     if g["band"]:
         out += cur([base(g["outer"]), part(g["outer"], HI_WHITE, sh=0.0), part(g["body"], cream_of, line=0.0)])
     else:

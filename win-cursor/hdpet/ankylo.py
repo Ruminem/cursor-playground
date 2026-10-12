@@ -156,7 +156,8 @@ def sc_arrow(fr, g):
     s = 0.64
     h = abs(sin(ph))
     wx, wy = g["wing"]
-    ox = min(wx + 9.0, 30.6 - (13.8 + club_r(s)) * s)       # 곤봉 끝이 판 안에
+    r = max(0.9, 1.5 * s)                                    # ground_puffs 의 먼지 크기
+    ox = min(wx + 9.0, 30.6 - 13.8 * s - max(club_r(s) * s, 3.4 * r))   # 곤봉 끝 · 오른쪽 먼지(곤봉 + 3.2r)가 판 안에
     oy = min(wy + 4.0, 30.4 - 13.8 * s)                      # 발바닥이 판 안에
     F = DF(ox, oy, s, fx=-1)
     tp = tail(h)

@@ -852,8 +852,11 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
   var CLASSIC_ONLY = {};
   /*CLASSIC_ONLY*/.forEach(function(sid){ CLASSIC_ONLY[sid] = true; });
   window.cpClassicOnly = function(sid){ return !!CLASSIC_ONLY[sid]; };
-  // 고화질 구성표(build.HD, 구성표 → hd.py 결). 픽셀아트가 아니라 64px 판에서 줄이고 늘려 보이므로 칸을 안 뭉갠다
+  // 고화질 구성표(build.HD, 구성표 → hd.py 결). 픽셀아트가 아니라 판에서 줄이고 늘려 보이므로 칸을 안 뭉갠다.
+  // 카드 · 마우스 커서 그림은 그 구성표를 볼 때 128px 판(<구성표>.hd.json)으로 받는다 — 64px 판을 카드(128px)에 늘려 흐렸다.
+  // 페이지에 박힌 START 그림과 목록 썸네일은 64px 라, START 도 첫 화면 뒤에 128 판을 받게 받은 표시를 지운다
   var HD = /*HD*/;
+  if (HD[/*START*/]) packs[shape].full[/*START*/] = false;
   // 색조 막대가 무엇을 돌리나(build.HUE_KIND). 없으면 "cursor" — 커서뿐이라 막대 하나가 전부를 돌린다.
   // "char" 는 동물뿐이라 막대 하나, "both" 는 동물이 화살표를 들어서 막대 둘(동물 색조 · 커서 색)
   var HUE_KIND = /*HUE_KIND*/;
@@ -1393,7 +1396,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     var mine = CLASSIC_ONLY[sid] ? SHAPES[0].id : shape, pack = packs[mine];
     if (!pack.full || pack.full[sid] || pack.asking[sid]) return;
     pack.asking[sid] = true;
-    getJSON('data/' + mine + '/' + sid + '.json').then(function(one){
+    getJSON('data/' + mine + '/' + sid + (HD[sid] ? '.hd' : '') + '.json').then(function(one){
       Object.keys(one.data).forEach(function(rid){ pack.data[sid][rid][0] = one.data[rid]; });
       pack.full[sid] = true;
       if (pack === base) { layScheme(sid); Object.keys(packs).forEach(function(k){ lend(packs[k]); }); }
@@ -1427,7 +1430,8 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
       // 목록 썸네일(구성표마다 화살표 한 장)은 모양을 바꾼 뒤에 받는다. 받기 전까지는 전 모양 그림 그대로
       if (pack.arrows) showThumbs(pick.id, pack);
       else (pack === base ? baseThumbs() : getJSON('data/' + pick.id + '/arrows.json').then(function(one){
-        Object.keys(one.data).forEach(function(sid){ if (pack.data[sid]) pack.data[sid].arrow[0] = one.data[sid]; });
+        // 고화질은 128 판을 받아 둔 구성표면 그대로 둔다 — 64 판으로 덮으면 카드 화살표만 도로 흐려진다
+        Object.keys(one.data).forEach(function(sid){ if (pack.data[sid] && !(HD[sid] && pack.full[sid])) pack.data[sid].arrow[0] = one.data[sid]; });
         pack.arrows = true;
       })).then(function(){ if (shape === pick.id) showThumbs(pick.id, pack); }, function(){});
       if (done) done();  // 모양 묶음을 받고 나서야 백업이 그 모양으로 적용을 보낼 수 있다
@@ -1435,7 +1439,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     if (packs[pick.id]) { put(packs[pick.id]); return; }
     shapeNote.textContent = pick.name + ' 모양 받는 중…';
     var sid = app.getAttribute('data-scheme');
-    if (sid && !CLASSIC_ONLY[sid]) getJSON('data/' + pick.id + '/' + sid + '.json').catch(function(){});   // 지금 구성표는 목록과 같이 받는다(기본만 있는 것은 그 모양 폴더에 없음)
+    if (sid && !CLASSIC_ONLY[sid]) getJSON('data/' + pick.id + '/' + sid + (HD[sid] ? '.hd' : '') + '.json').catch(function(){});   // 지금 구성표는 목록과 같이 받는다(기본만 있는 것은 그 모양 폴더에 없음)
     getJSON('data/' + pick.id + '/index.json').then(function(index){
       packs[pick.id] = packs[pick.id] || { data: index.data, full: {}, asking: {} };
       put(packs[pick.id]);
@@ -1450,7 +1454,7 @@ html,.pane.menu{scroll-padding-top:var(--head,0px);scroll-padding-bottom:calc(va
     return getJSON('data/' + SHAPES[0].id + '/arrows.json').then(function(one){
       Object.keys(one.data).forEach(function(sid){
         if (!base.data[sid]) return;
-        base.data[sid].arrow[0] = one.data[sid];
+        if (!(HD[sid] && base.full[sid])) base.data[sid].arrow[0] = one.data[sid];   // 128 판을 받은 고화질은 그대로(위와 같음)
         if (thumbOf[sid]) lay(thumbOf[sid], one.data[sid], base.data[sid].arrow[7]);
       });
       base.arrows = true;

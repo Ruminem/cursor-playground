@@ -101,11 +101,13 @@ K = RaptorKind()
 
 def sc_arrow(fr, g):
     """화살표 오른쪽 어깨 뒤에서 왼쪽(끝)을 보고 빼꼼 — 앞발 둘을 빗변에 걸고 고개를 갸웃, 볏이 쫑긋. 화살표가 위.
-    머리 자리는 흰냥이 빼꼼과 같은 약속(빗변 0.797 자리에서 바깥 테 + 6.75)이라 모양 탭(shaped)이 잰 판 안에 든다"""
+    머리 자리는 흰냥이 빼꼼과 같은 약속(빗변 0.797 자리에서 바깥 테 + 6.75)에서 아래로 민다"""
     ph, k = ph_k(fr)
     s = 0.74
     cx, cy = edge_pt(g, 0.797, 6.75)
     lift = 0.5 * (1 - cos(ph)) / 2
+    cy += 3.5 if "cat" in g else 1.0                     # 냥이 귀보다 볏이 높아 그 약속대로면 머리 · 볏이 판 위로 넘었다(2026-10-12).
+                                                         # 모양 탭(shaped)은 냥이 귀 1.2칸만 재 판을 내려서 더 내린다
     F = DF(cx, cy - lift, s, fx=-1)
     out = dino(F, RaptorKind(crest=0.9 if k % 4 == 0 else 0.0), "blink" if k == 7 else "open", nod=0.16 * sin(ph),
                arm=1.6, sway=0.7 * sin(ph), tail_pts=TAIL_UP, look=0.8)

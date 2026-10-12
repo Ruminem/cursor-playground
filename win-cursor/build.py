@@ -244,6 +244,9 @@ CLASSIC_ONLY = {s["id"] for s in SCHEMES if s.get("classic_only")} - {sid for si
 # 시안 페이지에는 64 판을 두 장에 한 장씩 싣는다(20장 · 장마다 1/15초, 한 바퀴는 커서와 같다).
 # 20장으로도 갤럭시 사용 중 칸 하나가 base64 127KB 다(2026-10-11) — 40장이면 그 두 배쯤
 HD_PX, HD_STEP = 64, 2
+# 카드(128 CSS px) · 마우스 커서는 그 구성표를 볼 때 128 판(<구성표>.hd.json, write_hi)으로 갈아 낀다. 64 판을 2배로 늘려
+# 흐렸다(2026-10-12). 페이지에 박는 START 그림과 목록 썸네일(arrows.json)은 64 그대로 — 128 이면 4배라 첫 화면이 늦다
+HD_HI = 128
 # 시안 페이지 색조 막대가 무엇을 돌리나. 없는 묶음은 "cursor"(커서뿐, 막대 하나가 전부). "char" 는 동물뿐이라 막대 하나,
 # "both" 는 동물이 화살표를 들어서 막대 둘 — 화살표 칸 색은 gen/sea.mark 가 파랑 끝 비트로 갈라 둔다.
 # schemes.json 줄에 달면 그 줄이 일감 해시에 들어가 50종을 다시 그리므로 묶음 이름으로 고른다
@@ -733,6 +736,40 @@ def data_missing(shape_id: str) -> set[str] | None:
     return None if old is None else set(drawn(shape_id)) - set(old["data"])
 
 
+def hd_hi(sid: str, shape: str | None = None) -> dict[str, str]:
+    """고화질 구성표의 카드 · 마우스 커서용 그림 {칸: 주소}. hd_bit 과 같은 장을 HD_HI 판으로 뜬다.
+    64 판을 카드(128 CSS px)에 2배로 늘려 흐렸다(2026-10-12). hd_bit 의 "모양 폴더에 구운 칸이면 그것" 셈을
+    따로 둔 것은 hd_bit 이 모양 화살표 일감 해시에 들어서다 — 고치면 모양 화살표 120개를 다시 굽는다"""
+    got = {}
+    for rid, _, _ in ROLES + EXTRA:
+        src = HERE / "dist" / shape / sid / f"{rid}.ani" if shape else None
+        if src is None or not src.exists():
+            src = HERE / "dist" / sid / f"{rid}.ani"
+        got[rid] = strip([f[HD_HI][0] for f in ani_frames(src.read_bytes())[::HD_STEP]])[0]
+    return got
+
+
+def write_hi(root: Path, shape_id: str, sids) -> set[str]:
+    """고화질 구성표마다 <구성표>.hd.json(128 판)을 쓰고 그 파일 이름들을 돌려준다. 재료 .ani 보다 새것이고 판 크기 ·
+    장 간격이 같으면 건너뛴다 — 페이지를 다시 만들 때마다(커밋마다) 49종을 다 뜨면 15초쯤 든다"""
+    head = f'{{"px":{HD_HI},"step":{HD_STEP},'
+    names = set()
+    for sid in sids:
+        if sid not in HD:
+            continue
+        f = root / f"{sid}.hd.json"
+        names.add(f.name)
+        shape = None if shape_id == SHAPES[0]["id"] else shape_id
+        srcs = [p for p in (HERE / "dist" / sid, HERE / "dist" / shape / sid if shape else None) if p and p.is_dir()]
+        newest = max(a.stat().st_mtime for p in srcs for a in p.glob("*.ani"))
+        if f.exists() and f.stat().st_mtime >= newest:
+            with f.open(encoding="utf-8") as fh:
+                if fh.read(len(head)) == head:
+                    continue
+        f.write_text(head + json.dumps({"data": hd_hi(sid, shape)}, separators=(",", ":"))[1:], encoding="utf-8", newline="\n")
+    return names
+
+
 def write_split(shape_id: str, whole: dict) -> None:
     """split_data 를 data/<모양>/ 에 쓰고, 이번에 안 쓴 .json(지운 구성표의 것)은 지운다.
     남겨 두면 CI 캐시를 타고 Pages 에 계속 올라간다"""
@@ -741,8 +778,9 @@ def write_split(shape_id: str, whole: dict) -> None:
     files = split_data(whole)
     for name, body in files.items():
         (root / name).write_text(json.dumps(body, separators=(",", ":")), encoding="utf-8", newline="\n")
+    keep = set(files) | write_hi(root, shape_id, whole["data"])
     for f in root.glob("*.json"):
-        if f.name not in files:
+        if f.name not in keep:
             f.unlink()
 
 
