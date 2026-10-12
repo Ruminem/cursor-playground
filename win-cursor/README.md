@@ -154,16 +154,16 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 
 | Folder | Name | Style |
 |---|---|---|
-| `art/javasparrowanim` | Java sparrow | A Java sparrow with a chunky pink beak — it hops along with the arrow on its head, and dozes on its eggs while you wait. |
-| `art/budgieanim` | Budgie | A chatty budgie — it bobs and chatters at its mirror while you wait, and crosses its wings in an X when the answer is no. |
-| `art/cockatielanim` | Cockatiel | A cockatiel with a jaunty crest — it slowly raises and lowers its crest while you wait, and hisses with its wings spread when the answer is no. |
-| `art/sparrowanim` | Sparrow | A plump sparrow — it pecks up grains one by one while you wait, and turns its head away with a huff when the answer is no. |
-| `art/crowtitanim` | Parrotbill | A rosy-cheeked parrotbill — it sways on the tip of a twig while you wait, and squeezes its eyes shut and shakes its head when the answer is no. |
-| `art/shimaenagaanim` | Shimaenaga | A rice-cake-round Shimaenaga (long-tailed tit) — it fluffs up into a ball in the falling snow, and puffs up even more when cross. |
-| `art/chickanim` | Chick | A chick in eggshell pants — it waddles along with the arrow on its head, and jumps with a cheep while you wait. |
-| `art/ducklinganim` | Duckling | A flat-billed duckling — it bobs on the water while you wait, and opens wide for a big quack when the answer is no. |
-| `art/canaryanim` | Canary | A yellow canary — it sways and sings while you wait, with little notes floating up. |
-| `art/penguinanim` | Baby penguin | A grey baby penguin — it waddles across the ice, lifting one flipper and then the other. |
+| `hd.py javasparrow` | Java sparrow | A Java sparrow with a chunky pink beak — it hops along with the arrow on its head, and dozes on its eggs while you wait. |
+| `hd.py budgie` | Budgie | A chatty budgie — it bobs and chatters at its mirror while you wait, and crosses its wings in an X when the answer is no. |
+| `hd.py cockatiel` | Cockatiel | A cockatiel with a jaunty crest — it slowly raises and lowers its crest while you wait, and hisses with its wings spread when the answer is no. |
+| `hd.py sparrow` | Sparrow | A plump sparrow — it pecks up grains one by one while you wait, and turns its head away with a huff when the answer is no. |
+| `hd.py crowtit` | Parrotbill | A rosy-cheeked parrotbill — it sways on the tip of a twig while you wait, and squeezes its eyes shut and shakes its head when the answer is no. |
+| `hd.py shimaenaga` | Shimaenaga | A rice-cake-round Shimaenaga (long-tailed tit) — it fluffs up into a ball in the falling snow, and puffs up even more when cross. |
+| `hd.py chick` | Chick | A chick in eggshell pants — it waddles along with the arrow on its head, and jumps with a cheep while you wait. |
+| `hd.py duckling` | Duckling | A flat-billed duckling — it bobs on the water while you wait, and opens wide for a big quack when the answer is no. |
+| `hd.py canary` | Canary | A yellow canary — it sways and sings while you wait, with little notes floating up. |
+| `hd.py penguin` | Baby penguin | A grey baby penguin — it waddles across the ice, lifting one flipper and then the other. |
 
 **Baby dinos · Animated**
 
@@ -493,16 +493,16 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 
 | 폴더 | 이름 | 스타일 |
 |---|---|---|
-| `art/javasparrowanim` | 문조 | 굵은 분홍 부리의 문조. 화살표를 머리에 이고 통통, 기다릴 때는 둥지에서 알을 품고 꾸벅꾸벅 조는 커서. |
-| `art/budgieanim` | 사랑앵무 | 수다쟁이 사랑앵무. 기다릴 때는 거울을 보며 고개 까딱 수다, 안 될 때는 날개를 X 로 엇거는 커서. |
-| `art/cockatielanim` | 왕관앵무 | 볏이 멋진 왕관앵무. 기다릴 때는 볏을 천천히 올렸다 내리고, 안 될 때는 볏을 세우고 날개를 쫙 펴 쉭쉭 하는 커서. |
-| `art/sparrowanim` | 참새 | 통통한 참새. 기다릴 때는 땅의 모이를 하나씩 콕콕 쪼아 먹고, 안 될 때는 고개를 홱 돌리는 커서. |
-| `art/crowtitanim` | 뱁새 | 볼이 발그레한 뱁새. 기다릴 때는 가지 끝에 앉아 가지째 살랑살랑, 안 될 때는 눈을 질끈 감고 도리도리하는 커서. |
-| `art/shimaenagaanim` | 시마에나가 | 찹쌀떡 같은 시마에나가(흰머리오목눈이). 눈 오는 날 솜털을 부풀려 동그래지고, 화나면 더 빵빵해지는 커서. |
-| `art/chickanim` | 병아리 | 알껍데기 바지를 입은 병아리. 화살표를 이고 뒤뚱뒤뚱, 기다릴 때는 삐약 점프하는 커서. |
-| `art/ducklinganim` | 아기오리 | 넓적 부리 아기오리. 기다릴 때는 물에 둥둥 떠 있고, 안 될 때는 부리를 크게 벌려 꽥 하는 커서. |
-| `art/canaryanim` | 카나리아 | 노란 카나리아. 기다릴 때는 고개를 흔들며 노래하고 음표가 솟는 커서. |
-| `art/penguinanim` | 아기펭귄 | 회색 아기펭귄. 얼음판에서 지느러미를 번갈아 들며 뒤뚱뒤뚱 걷는 커서. |
+| `hd.py javasparrow` | 문조 | 굵은 분홍 부리의 문조. 화살표를 머리에 이고 통통, 기다릴 때는 둥지에서 알을 품고 꾸벅꾸벅 조는 커서. |
+| `hd.py budgie` | 사랑앵무 | 수다쟁이 사랑앵무. 기다릴 때는 거울을 보며 고개 까딱 수다, 안 될 때는 날개를 X 로 엇거는 커서. |
+| `hd.py cockatiel` | 왕관앵무 | 볏이 멋진 왕관앵무. 기다릴 때는 볏을 천천히 올렸다 내리고, 안 될 때는 볏을 세우고 날개를 쫙 펴 쉭쉭 하는 커서. |
+| `hd.py sparrow` | 참새 | 통통한 참새. 기다릴 때는 땅의 모이를 하나씩 콕콕 쪼아 먹고, 안 될 때는 고개를 홱 돌리는 커서. |
+| `hd.py crowtit` | 뱁새 | 볼이 발그레한 뱁새. 기다릴 때는 가지 끝에 앉아 가지째 살랑살랑, 안 될 때는 눈을 질끈 감고 도리도리하는 커서. |
+| `hd.py shimaenaga` | 시마에나가 | 찹쌀떡 같은 시마에나가(흰머리오목눈이). 눈 오는 날 솜털을 부풀려 동그래지고, 화나면 더 빵빵해지는 커서. |
+| `hd.py chick` | 병아리 | 알껍데기 바지를 입은 병아리. 화살표를 이고 뒤뚱뒤뚱, 기다릴 때는 삐약 점프하는 커서. |
+| `hd.py duckling` | 아기오리 | 넓적 부리 아기오리. 기다릴 때는 물에 둥둥 떠 있고, 안 될 때는 부리를 크게 벌려 꽥 하는 커서. |
+| `hd.py canary` | 카나리아 | 노란 카나리아. 기다릴 때는 고개를 흔들며 노래하고 음표가 솟는 커서. |
+| `hd.py penguin` | 아기펭귄 | 회색 아기펭귄. 얼음판에서 지느러미를 번갈아 들며 뒤뚱뒤뚱 걷는 커서. |
 
 **아기 공룡 · 애니**
 
