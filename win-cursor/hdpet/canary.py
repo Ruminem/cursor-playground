@@ -3,39 +3,43 @@
 
 픽셀 판(지운 gen/bird.py)의 짓 그대로: 화살표를 머리에 이고 통통(화살표), 나뭇가지에 앉아 고개를 좌우로 흔들며 노래 —
 부리를 벌릴 때마다 음표가 하나씩 솟아 흩어짐(기다림), 노래 안 해 — 날개로 부리를 꾹 가리고 고개를 돌림, 옆에 빗금 그은
-음표(금지). 병아리 · 아기오리보다 진한 노랑에 머리가 작고 몸이 늘씬하며, 날개 끝 주황 줄 · 주황 꽁지가 표식이다.
+음표(금지). 노란 셋(병아리 · 아기오리 · 카나리아)이 32 에서 한 덩이로 읽혀서(2026-10-12 사용자) 카나리아만 색 가족을
+갈랐다 — 레몬 노랑 몸에 올리브 초록 날개(연노랑 띠 하나) · 길게 갈라진 초록 꽁지 · 작은 분홍 부리, 머리가 작고 몸이 늘씬하다.
 """
 from . import catkit, register
 from .birdkit import (Plume, Kind, BirdPet, bird, at_mid, stand, carry_hop, chain, inter, circle, hx, no_sign, ph_k, base, part,
                       layer, capsule, oell, union, WOOD, WOOD_D, LEAF, LEAF_D, OUT, sin, cos, pi, atan2, hypot)
 
-Y_YEL, Y_YEL_L, Y_ORA, Y_OLIVE = hx("fcce1a"), hx("ffe466"), hx("f2a21a"), hx("c8a020")
-PLUME = Plume(Y_YEL, Y_OLIVE, Y_YEL_L, Y_YEL, hx("f6c0a8"), hx("d89a84"), foot=hx("e8b0a0"))
+Y_YEL, Y_YEL_D, Y_YEL_L = hx("ffe23c"), hx("e8bc1e"), hx("fff4a8")
+G_WING, G_WING_D, G_BAR = hx("a8c64e"), hx("7a9a36"), hx("f8f4b0")
+PLUME = Plume(Y_YEL, Y_YEL_D, Y_YEL_L, G_WING, hx("f6b8b0"), hx("d48c86"), foot=hx("e8a8a0"), wing_d=G_WING_D)
 NOTE = (hx("f07c9c"), hx("6aa8e0"), hx("8cc864"))
 
 
 class CanaryKind(Kind):
-    head = (6.1, 5.9)
-    body = (8.1, 5.5, 5.6)         # 머리가 작고 몸이 세로로 긴 늘씬한 새
-    eye = (2.8, 0.8)
-    beak_y = 2.4
-    bw, bh = 1.3, 1.5
-    wing_l, wing_w = 3.6, 1.8
+    head = (5.8, 5.6)
+    body = (8.2, 5.0, 5.8)         # 머리가 작고 몸이 세로로 긴 늘씬한 새
+    eye = (2.7, 0.8)
+    beak_y = 2.3
+    bw, bh = 1.05, 1.25            # 작은 분홍 부리 — 오리의 넓적 주황 부리와 반대 끝
+    wing_l, wing_w = 4.0, 1.9
 
     def wing_marks(self, w, rx, ry, a, L, sg):
-        """날개 끝 주황 줄 — 밑동에서 45–78% 자리, 그 너머 끝은 올리브"""
+        """날개 가운데 연노랑 띠 하나 — 32 에서 초록 날개가 줄무늬 없이 한 덩이로 남게 띠는 하나만"""
         c, s = cos(a), sin(a)
 
         def t(x, y):
             return ((x - rx) * c + (y - ry) * s) / L
-        return [(lambda x, y: (abs(t(x, y) - 0.62) - 0.17) * L, Y_ORA), (lambda x, y: (0.79 - t(x, y)) * L, Y_OLIVE)]
+        return [(lambda x, y: (abs(t(x, y) - 0.5) - 0.11) * L, G_BAR)]
 
     def tail(self):
-        """몸 뒤 오른쪽 아래로 뻗은 꽁지 — 밑동은 주황, 끝은 올리브"""
+        """몸 뒤로 뻗어 끝이 둘로 갈라진 초록 꽁지 — 몸 밑으로 빠져나와 오른쪽으로. 더 아래로 빼면 화살표 칸에서 판 밑에 잘린다"""
         bv, brx, bry = self.body
-        pts = [(1.2, bv + 1.6), (3.8, bv + bry - 0.4), (brx + 0.9, bv + bry + 0.8)]
-        f = chain(pts, 1.7, 1.2)
-        return [(f, Y_ORA), (inter(f, circle(pts[2][0] + 0.6, pts[2][1] + 0.6, 2.0)), Y_OLIVE)]
+        root = (1.0, bv + 1.4)
+        mid = (3.4, bv + bry - 0.9)
+        f = union(chain([root, mid, (brx + 2.6, bv + bry - 0.4)], 1.6, 0.85),
+                  chain([root, mid, (brx + 1.4, bv + bry + 0.6)], 1.6, 0.85))
+        return [(f, G_WING)]
 
 
 K = CanaryKind()

@@ -3,11 +3,13 @@
 
 픽셀 판(지운 gen/bird.py)의 짓 그대로: 화살표를 머리에 이고 뒤뚱(화살표), 물에 둥둥 떠서 위아래로 출렁 · 물결이 번짐
 (기다림 — 물 밑은 안 보인다), 넓적한 부리를 크게 벌려 꽥! 하며 날개를 들고 소리 줄이 양옆으로 퍼짐(금지).
-병아리와 같은 노랑이라 32 에서 가르는 것은 넓적한 주황 부리 · 진한 정수리 · 옆으로 솟은 꽁지다.
+병아리와 같은 노랑이라 32 에서 가르는 것은 넓적한 주황 부리 · 낮고 퍼진 몸 · 옆으로 솟은 꽁지다.
+카나리아와 한 덩이로 읽혀서(2026-10-12 사용자) 부리를 머리 폭의 3/5 까지 키우고 몸을 낮고 넓게 했다.
+물갈퀴는 몸 뒤에 그려져 몸 밑으로 나온 띠가 먹선(1칸) 두 겹보다 얇아 32 에서 까만 점이라 접었다.
 """
 from . import catkit, register
 from .birdkit import (Plume, Kind, BirdPet, bird, at_mid, carry_waddle, ell, inter, hx, zip_lines, no_sign, ph_k,
-                      Frame, base, part, flat, chain, circle, capsule, clip_y, grow, lerp,
+                      Frame, base, part, flat, chain, circle, capsule, clip_y, grow, lerp, beak_layers,
                       sin, cos, pi, OUT, P_)
 
 D_YEL, D_YEL_D, D_YEL_L, D_BILL, D_BILL_D = hx("ffd23c"), hx("e6b028"), hx("ffe88c"), hx("f58a2a"), hx("c8641a")
@@ -16,14 +18,13 @@ WATER, WATER_D, WATER_I = hx("bfe6f5"), hx("7cc4d8"), hx("5a9cc8")
 
 
 class DuckKind(Kind):
-    head = (6.8, 6.3)
-    body = (8.0, 6.6, 4.8)
-    eye = (3.3, 0.5)
+    head = (6.6, 6.1)
+    body = (8.0, 7.4, 4.6)         # 낮고 옆으로 퍼진 몸 — 늘씬한 카나리아와 반대 끝
+    eye = (3.2, 0.2)
     beak_y = 3.0
-    bw, bh = 3.1, 1.6              # 넓적 부리 — 반폭이 머리 반지름의 절반 가까이라 1배에서도 주황 띠로 남는다
+    bw, bh = 4.0, 2.0              # 넓적 부리 — 반폭이 머리 반지름의 3/5 라 1배에서도 주황 띠로 남는다
     wing_l, wing_w = 2.9, 2.0
-    foot_x = 2.6
-    waddle = True
+    foot_x = 3.0
 
     def marks(self, hv):
         """정수리만 한 톤 진한 노랑(픽셀 판 머리 맨 위 15%)"""
@@ -45,20 +46,20 @@ class DuckKind(Kind):
         s = F.s
         C = P_()
         bh = max(self.bh, 1.0 / s)
-        ink = lerp(C.beak_d, OUT, 0.45)
-        if up:
-            return None
+        ink = lerp(C.beak_d, OUT, 0.3)
+        if up:                                                 # 정면 부리를 키워도 쳐든 세모는 평 받은 크기(반폭 3.1) 그대로
+            return beak_layers(F, UP_K, o, lu, hv, True)
         bw = max(self.bw, 1.6 / s)
         bx, by = lu, self.beak_y + hv
         up_o, dn_o = o * bh * 0.35, o * bh * 1.0
-        upper = ell(bx, by - up_o - 0.15, bw, bh * 0.62)
-        lower = ell(bx, by + dn_o + 0.45, bw * 0.8, bh * 0.5)
+        upper = ell(bx, by - up_o - 0.1, bw, bh * 0.68)
+        lower = ell(bx, by + dn_o + 0.55, bw * 0.72, bh * 0.42)
         out = []
         if o > 0.05:
             m = ell(bx, by + (dn_o - up_o) * 0.5 + 0.2, bw * 0.72, (up_o + dn_o) * 0.5 + 0.35)
             out.append(flat(F.f(m), hx("8a2a3a"), line=0.32, ink=ink))
-        out.append(part(F.f(lower), C.beak_d, shade=lerp(C.beak_d, OUT, 0.25), line=0.38, sh=0.0, ink=ink))
-        out.append(part(F.f(upper), C.beak, shade=C.beak_d, line=0.38, sh=0.0, ink=ink))
+        out.append(part(F.f(lower), C.beak, shade=C.beak_d, line=0.32, sh=0.0, ink=ink))
+        out.append(part(F.f(upper), C.beak, shade=C.beak_d, line=0.32, sh=0.0, ink=ink))   # 아랫부리도 같은 주황 — 진하게 두면 32 에서 갈색 입술 띠(햄버거)로 읽혔다
         if s >= 0.5:                                           # 콧구멍 두 점 — 128 에서만 보이는 크기
             for sg in (-1, 1):
                 out.append(flat(F.f(circle(bx + sg * bw * 0.32, by - up_o - 0.45, 0.22)), C.beak_d))
@@ -66,6 +67,13 @@ class DuckKind(Kind):
 
 
 K = DuckKind()
+
+
+class _UpKind(DuckKind):
+    bw, bh = 3.1, 1.6
+
+
+UP_K = _UpKind()
 
 
 def head_v(sq=0.0, puff=1.0):
