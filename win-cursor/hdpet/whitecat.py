@@ -330,36 +330,52 @@ def sc_up(fr):
     return out + btl
 
 
+PINK_L, SOFTINK = hx("ffd3dc"), hx("e690a3")   # 발도장 위쪽 연분홍 · 옅은 테
+
+
+def curl(ph, n=9):
+    """둥근 S 꼬리 — 3차 베지어를 점 n 개로 떠서 chain 이 기역 자로 꺾이지 않게"""
+    p0, p1, p2, p3 = (3.6, 10.4), (10.2, 11.8), (11.0, 5.2), (8.0 + 0.9 * sin(ph), 1.8 + 0.3 * sin(ph))
+    out = []
+    for i in range(n):
+        t = i / (n - 1)
+        a, b, c, d = (1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t * t, t ** 3
+        out.append((a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]))
+    return out
+
+
+def soft_print(bx, by, a=1.0, sq=0.0):
+    """말랑 발도장 — 옅은 테 · 위는 연분홍 아래로 볼 분홍 · 젤리마다 흰 윤 한 점. sq 는 꾹 눌려 납작해지는 정도"""
+    kx, ky = 1 + 0.12 * sq, 1 - 0.14 * sq
+
+    def grad(cy, h):
+        return lambda x, y: lerp(PINK_L, CHEEK, smooth(cy - h, cy + h, y))
+    mf = smin(0.6, ell(bx, by + 0.95 * ky, 2.05 * kx, 1.45 * ky), ell(bx, by + 1.7 * ky, 1.25 * kx, 0.9 * ky))
+    out = [flat(mf, grad(by + 0.9 * ky, 1.6 * ky), a, line=0.22, ink=SOFTINK),
+           soft(ell(bx - 0.75 * kx, by + 0.45 * ky, 0.55, 0.35), HI, 0.8 * a)]
+    for tx, ty, r in ((-2.75, -1.35, 0.82), (-0.95, -2.55, 0.9), (0.95, -2.55, 0.9), (2.75, -1.35, 0.82)):
+        cx, cy = bx + tx * kx, by + ty * ky
+        out.append(flat(ell(cx, cy, r * kx, r * 1.12 * ky), grad(cy, r * ky), a, line=0.2, ink=SOFTINK))
+        out.append(soft(ell(cx - 0.25, cy - 0.35, 0.24, 0.18), HI, 0.75 * a))
+    return out
+
+
 def sc_hand(fr):
-    """머리 옆에서 짧은 앞발을 들어 큰 젤리 발바닥을 활짝 보이는 하이파이브 — 짝 할 때(장 3–5 · 9–11) 발가락 젤리가
-    벌어지고 눈을 ^^, 볕 반짝. 발바닥 꼭대기가 핫스팟이라 위 끝은 장마다 그대로다.
-    예전 판은 머리만 한 굵기의 긴 팔 끝에 작은 발이 달려 32px 에서 잠망경 · 대롱으로 읽혔다(2026-10-13 "너무 못생김")"""
-    ph = TAU * fr
+    """클릭 자리에 말랑 분홍 발도장을 꾹 — 냥이는 오른쪽 아래서 앞발을 볼 밖으로 들고, 꾹(장 4 · 10)에 도장이 납작
+    눌리며 ^^ · 몸 꿀렁, 이어 두 장 동안 연분홍 고리가 퍼진다. 가운데 두 발가락 사이 위가 핫스팟 (7, 1).
+    고리는 가로로 넓은 타원이라 위 끝이 판 안(y 0.9)에 든다 — 동그라미로 퍼뜨리니 위가 잘렸다(2026-10-13).
+    전 판은 팔꿈치 꺾은 굵은 팔 끝에 큰 발바닥이었다("팔이 너무 커"), 시안 열다섯 장 끝에 고른 것(docs/taste.md)"""
     k = round(fr * NF) % NF
     tap = k % 6 in (3, 4, 5)
     clap = k % 6 == 4
-    sp = 0.35 if tap else 0.0
-    rx, ry = 4.3 + sp, 4.1
-    pcx, pcy = 7.5, 1.45 + ry                             # 위 끝(1.45)은 그대로 — 핫스팟 (7, 1)
-    F = Frame(17.6, 10.4, 0.84)
-    sh = F.w(-4.8, 6.2)
-    # 팔꿈치에서 꺾어 아래팔을 머리 왼쪽으로 곧게 세운다 — 곧은 팔은 어떻게 놓아도 얼굴을 가로질렀다.
-    # 팔은 몸 앞에 그린다 — 뒤에 두면 몸의 흰 바깥 테가 흰 팔을 덮어 실 한 가닥만 남는다
-    arm = chain([sh, (8.4, 14.2), (pcx + 0.5, pcy + 1.4)], 2.5, 2.3)
-    tp = [(3.6, 10.4), (7.8, 10.6), (9.9, 7.6), (9.4 + 0.6 * sin(ph), 3.9), (8.2 + 0.9 * sin(ph), 2.0)]
-    out = cat(F, "happy" if clap else "open", look=(-0.7, -0.6), turn_=-0.5, tail_pts=tp, paws=True,
-              ear_tilt=(-0.8, 0.0))
-    pad = ell(pcx, pcy, rx, ry)
-    out += [base(arm, pad), part(arm), part(pad)]
-    bx, by = pcx, pcy + ry * 0.3                          # 큰 젤리(가로로 넓은 세모꼴) + 발가락 젤리 넷 부채꼴
-    jink = hx("d8728a")
-    out.append(flat(rpoly([(bx - 2.0 - sp, by - 0.4), (bx + 2.0 + sp, by - 0.4), (bx + 1.1, by + 1.9),
-                           (bx - 1.1, by + 1.9)], 0.7), CHEEK, line=0.3, ink=jink))
-    for tx, ty in ((-2.85, -1.45), (-1.05, -2.85), (1.05, -2.85), (2.85, -1.45)):
-        out.append(flat(ell(bx + tx * (1 + sp * 0.4), by + ty - sp * 0.3, 0.8, 0.95), CHEEK, line=0.25, ink=jink))
-    if tap:
-        L = 2.0 if clap else 1.3
-        out += sparkle(2.0, 9.6, L, 0.55) + sparkle(13.6, 2.4, L, 0.55)
+    F = Frame(16.6, 15.6, 0.8)
+    out = []
+    if k % 6 in (4, 5):
+        rx, ry, a = (3.8, 3.2, 0.9) if k % 6 == 4 else (5.0, 4.2, 0.5)
+        out.append(flat(lambda x, y: abs(ell(7.5, 5.4, rx, ry)(x, y)) - 0.32, PINK_L, a))
+    out += soft_print(7.5, 5.0, 1.0 if tap else 0.92, 1.0 if clap else 0.0)
+    out += cat(F, "happy" if clap else "open", look=(-0.6, -0.7), turn_=0.15, tail_pts=curl(TAU * fr), paws=True,
+               bob=0.6 if clap else 0.0, arms=[((-6.4, 5.4), (-9.9, 0.2 if tap else -0.5), True)])
     return out
 
 
