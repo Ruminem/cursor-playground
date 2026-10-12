@@ -331,18 +331,35 @@ def sc_up(fr):
 
 
 def sc_hand(fr):
-    """앉아서 앞발 하나를 위로 번쩍 들어 젤리를 보이며 하이파이브 — 짝 할 때 눈을 ^^, 볕 반짝"""
+    """머리 옆에서 짧은 앞발을 들어 큰 젤리 발바닥을 활짝 보이는 하이파이브 — 짝 할 때(장 3–5 · 9–11) 발가락 젤리가
+    벌어지고 눈을 ^^, 볕 반짝. 발바닥 꼭대기가 핫스팟이라 위 끝은 장마다 그대로다.
+    예전 판은 머리만 한 굵기의 긴 팔 끝에 작은 발이 달려 32px 에서 잠망경 · 대롱으로 읽혔다(2026-10-13 "너무 못생김")"""
     ph = TAU * fr
     k = round(fr * NF) % NF
     tap = k % 6 in (3, 4, 5)
-    s = 0.8
-    F = Frame(17.0, 13.6, s)
-    hand = F.loc(7.5, 3.75 + (0.3 if tap else 0.0))
-    out = cat(F, "happy" if k % 6 == 4 else "open", turn_=-0.35, look=(-0.6, -0.5), sway=0.5 * sin(ph),
-              arms=[((-7.0, 3.4), hand, True)], ear_tilt=(-1.1, 0.0))
+    clap = k % 6 == 4
+    sp = 0.35 if tap else 0.0
+    rx, ry = 4.3 + sp, 4.1
+    pcx, pcy = 7.5, 1.45 + ry                             # 위 끝(1.45)은 그대로 — 핫스팟 (7, 1)
+    F = Frame(17.6, 10.4, 0.84)
+    sh = F.w(-4.8, 6.2)
+    # 팔꿈치에서 꺾어 아래팔을 머리 왼쪽으로 곧게 세운다 — 곧은 팔은 어떻게 놓아도 얼굴을 가로질렀다.
+    # 팔은 몸 앞에 그린다 — 뒤에 두면 몸의 흰 바깥 테가 흰 팔을 덮어 실 한 가닥만 남는다
+    arm = chain([sh, (8.4, 14.2), (pcx + 0.5, pcy + 1.4)], 2.5, 2.3)
+    tp = [(3.6, 10.4), (7.8, 10.6), (9.9, 7.6), (9.4 + 0.6 * sin(ph), 3.9), (8.2 + 0.9 * sin(ph), 2.0)]
+    out = cat(F, "happy" if clap else "open", look=(-0.7, -0.6), turn_=-0.5, tail_pts=tp, paws=True,
+              ear_tilt=(-0.8, 0.0))
+    pad = ell(pcx, pcy, rx, ry)
+    out += [base(arm, pad), part(arm), part(pad)]
+    bx, by = pcx, pcy + ry * 0.3                          # 큰 젤리(가로로 넓은 세모꼴) + 발가락 젤리 넷 부채꼴
+    jink = hx("d8728a")
+    out.append(flat(rpoly([(bx - 2.0 - sp, by - 0.4), (bx + 2.0 + sp, by - 0.4), (bx + 1.1, by + 1.9),
+                           (bx - 1.1, by + 1.9)], 0.7), CHEEK, line=0.3, ink=jink))
+    for tx, ty in ((-2.85, -1.45), (-1.05, -2.85), (1.05, -2.85), (2.85, -1.45)):
+        out.append(flat(ell(bx + tx * (1 + sp * 0.4), by + ty - sp * 0.3, 0.8, 0.95), CHEEK, line=0.25, ink=jink))
     if tap:
-        L = 1.9 if k % 6 == 4 else 1.3
-        out += sparkle(2.8, 7.0, L, 0.55) + sparkle(12.6, 2.6, L, 0.55)
+        L = 2.0 if clap else 1.3
+        out += sparkle(2.0, 9.6, L, 0.55) + sparkle(13.6, 2.4, L, 0.55)
     return out
 
 
