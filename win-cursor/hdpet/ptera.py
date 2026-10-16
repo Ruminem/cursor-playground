@@ -198,7 +198,7 @@ EDGE_T, EDGE_OFF = 0.96, 0.5                             # 빗변(끝 0 … 날�
 def sc_arrow(fr, g):
     """화살표 빗변에 내려앉아 끝 쪽을 보고 날개를 폈다 접었다 — 볏이 까딱, 한 번 끔뻑. 화살표가 맨 위"""
     ph, k = ph_k(fr)
-    s = 0.74
+    s = 0.95
     px, py = edge_pt(g, EDGE_T, EDGE_OFF)
     top = at_foot(px, py, s, -1).w(-1.0, -6.4)[1]          # 볏 · 머리 위 끝
     py += max(0.0, 3.0 - top)                              # 스티커는 빗변이 높아 머리가 판 위로 나간다 — 발을 빗변 안쪽으로 내림

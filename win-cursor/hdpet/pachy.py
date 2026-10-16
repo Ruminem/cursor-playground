@@ -115,7 +115,7 @@ def sc_arrow(fr, g):
     화살표가 맨 위"""
     ph, k = ph_k(fr)
     b = BONK_A[k]
-    s = 0.58
+    s = 0.74
     nod = 0.1 + 0.18 * b
     wx, wy = g["wing"]
     ox, oy = place(s, -1, 0.1 + 0.18 * 3, wx + 0.9, wy + 0.9)

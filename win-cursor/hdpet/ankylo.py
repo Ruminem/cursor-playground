@@ -153,7 +153,7 @@ def ground_puffs(F, s, end):
 def sc_arrow(fr, g):
     """화살표 날개 오른쪽 아래에서 왼쪽 위 화살표를 올려다보며 꼬리 곤봉을 통통 — 땅에 닿으면 먼지 퐁 · 눈웃음. 화살표가 맨 위"""
     ph, k = ph_k(fr)
-    s = 0.64
+    s = 0.82
     h = abs(sin(ph))
     wx, wy = g["wing"]
     r = max(0.9, 1.5 * s)                                    # ground_puffs 의 먼지 크기

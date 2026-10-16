@@ -119,7 +119,7 @@ def sc_arrow(fr, g):
     nod = 0.06 if sniff else 0.0
     ang = 0.26 + 0.04 * sin(ph)                         # 몸째 뒤로 젖혀 주둥이가 왼쪽 위(날개 끝)로 — 고개만 들면 머리가 돛을 덮음
     tu, tv = Pose(nod).hp(SNOUT[0] + SNOUT[2], SNOUT[1])         # 주둥이 끝(캐논)
-    s = 0.62
+    s = 0.80
     F0 = DF(0.0, 0.0, s, ang, fx=-1)
     tx, ty = F0.w(tu, tv)
     R = SAIL_R + 0.7 + 1.0                                        # 돛 끝(물결 포함)
