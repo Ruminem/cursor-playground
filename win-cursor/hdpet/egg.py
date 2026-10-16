@@ -125,7 +125,7 @@ def sc_arrow(fr, g):
     ph, k = ph_k(fr)
     s = 0.92
     wx, wy = g["wing"]
-    ox = min(wx + 6.0, 29.1 - 9.4 * s)                    # 꼬리 끝(캐논 -9.4 + 반지름)이 판 안에
+    ox = min(wx + 6.0, 28.9 - 9.4 * s)                    # 꼬리 끝(캐논 -9.4 + 반지름)이 판 안에
     oy = min(wy + 1.6, 30.4 - 14.0 * s)                   # 발바닥(캐논 14)이 판 안에
     pop = k in (2, 3, 4, 5)
     mood = "happy" if k in (3, 4) else "blink" if k == 8 else "open"

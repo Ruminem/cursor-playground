@@ -201,7 +201,7 @@ def sc_arrow(fr, g):
     s = 0.95
     px, py = edge_pt(g, EDGE_T, EDGE_OFF)
     top = at_foot(px, py, s, -1).w(-1.0, -6.4)[1]          # 볏 · 머리 위 끝
-    py += max(0.0, 3.0 - top)                              # 스티커는 빗변이 높아 머리가 판 위로 나간다 — 발을 빗변 안쪽으로 내림
+    py += max(0.0, 3.4 - top)                              # 스티커는 빗변이 높아 머리가 판 위로 나간다 — 발을 빗변 안쪽으로 내림
     F = at_foot(px, py, s, -1)
     op = 0.5 + 0.5 * cos(ph)                               # 1 활짝 … 0 접음
     out = ptera(F, "blink" if k == 6 else "open", nod=-0.08 * sin(ph), near=(0.15 + 0.9 * op, 0.25 + 0.75 * op),

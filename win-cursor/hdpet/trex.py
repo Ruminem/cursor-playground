@@ -18,7 +18,7 @@ def sc_arrow(fr, g):
     ph, k = ph_k(fr)
     s = 0.95
     wx, wy = g["wing"]
-    ox = min(wx + 6.4, 29.1 - 9.4 * s)                    # 꼬리 끝(캐논 -9.4 + 반지름 1.5칸)이 판 안에
+    ox = min(wx + 6.4, 28.9 - 9.4 * s)                    # 꼬리 끝(캐논 -9.4 + 반지름 1.5칸)이 판 안에
     oy = min(wy + 2.6, 30.4 - 14.0 * s)                   # 발바닥(캐논 14)이 판 안에
     reach = abs(sin(ph))
     out = dino(DF(ox, oy, s, fx=-1), K, "squeeze" if k % 6 in (2, 3) else "open", nod=-0.35 - 0.12 * reach,

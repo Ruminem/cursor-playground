@@ -165,7 +165,7 @@ def sc_arrow(fr, g):
     ph, k = ph_k(fr)
     s = 0.90
     wx, wy = g["wing"]
-    ox = min(wx + 5.4, 29.4 - 12.2 * s)                   # 등판 끝(캐논 -12 안팎)이 판 안에
+    ox = min(wx + 5.4, 29.2 - 12.2 * s)                   # 등판 끝(캐논 -12 안팎)이 판 안에
     oy = min(wy + 2.8, 30.4 - 14.0 * s)                   # 발바닥(캐논 14)이 판 안에
     sniff = k % 4 in (1, 2)
     F = DF(ox, oy, s, fx=-1)

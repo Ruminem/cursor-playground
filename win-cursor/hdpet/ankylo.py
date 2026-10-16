@@ -142,26 +142,27 @@ class AnkyloKind(Kind):
 K = AnkyloKind()
 
 
-def ground_puffs(F, s, end):
-    """곤봉이 땅에 닿은 장에 곤봉 밑 양옆으로 먼지 퐁"""
+def ground_puffs(F, s, end, right=True):
+    """곤봉이 땅에 닿은 장에 곤봉 밑 양옆으로 먼지 퐁 — right 가 거짓이면 왼쪽 하나만"""
     ex, _ = F.w(*end)
     _, gy = F.w(0.0, 13.8)
     r = max(0.9, 1.5 * s)
-    return puff(ex - 2.3 * r, gy - 0.6 * r, r, 0.9) + puff(ex + 2.1 * r, gy - 0.5 * r, r * 0.85, 0.85)
+    out = puff(ex - 2.3 * r, gy - 0.6 * r, r, 0.9)
+    return out + puff(ex + 2.1 * r, gy - 0.5 * r, r * 0.85, 0.85) if right else out
 
 
 def sc_arrow(fr, g):
     """화살표 날개 오른쪽 아래에서 왼쪽 위 화살표를 올려다보며 꼬리 곤봉을 통통 — 땅에 닿으면 먼지 퐁 · 눈웃음. 화살표가 맨 위"""
     ph, k = ph_k(fr)
-    s = 0.82
+    s = 0.72                                                 # 다른 공룡(1.28배)보다 덜 — 몸이 길어 더 키우면 얼굴이 화살표 뒤로 숨음
     h = abs(sin(ph))
     wx, wy = g["wing"]
-    r = max(0.9, 1.5 * s)                                    # ground_puffs 의 먼지 크기
-    ox = min(wx + 9.0, 30.6 - 13.8 * s - max(club_r(s) * s, 3.4 * r))   # 곤봉 끝 · 오른쪽 먼지(곤봉 + 3.2r)가 판 안에
+    ox = min(wx + 9.0, 30.6 - 13.8 * s - club_r(s) * s - 0.6)   # 곤봉 끝(+ 먹선)이 판 안에. 오른쪽 먼지는 뺀다 —
+                                                             # 그 폭만큼 몸이 왼쪽으로 밀려 얼굴이 화살표 뒤로 숨었다(2026-10-16)
     oy = min(wy + 4.0, 30.4 - 13.8 * s)                      # 발바닥이 판 안에
     F = DF(ox, oy, s, fx=-1)
     tp = tail(h)
-    out = ground_puffs(F, s, tp[-1]) if h < 0.3 else []
+    out = ground_puffs(F, s, tp[-1], right=False) if h < 0.3 else []
     out += K.body(F, K, mood="happy" if h < 0.3 else "open", nod=-0.3, look=0.8, tail_pts=tp, bob=0.4 * (1 - h))
     return out + arrow_layers(g)
 
