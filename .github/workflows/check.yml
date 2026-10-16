@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-# 푸시할 때마다 빌드해서 커서 파일이 성한지 보고, main 이면 그 결과를 GitHub Pages 에 올린다.
+# main 에 푸시할 때마다 빌드해서 커서 파일이 성한지 보고, 그 결과를 GitHub Pages 에 올린다.
 # dist/·data/·preview.html 은 저장소에 커밋하지 않는다 — 여기서 만들어 바로 배포한다.
 name: check
 
 on:
+  # 세션 브랜치 푸시는 돌리지 않는다. 브랜치가 구운 캐시를 main 이 못 받아 같은 굽기를 두 번 했다
+  # (2026-10-16 공룡 10종: 브랜치 #551 178분 + main #552 328분). 브랜치에서 보고 싶으면 Actions 에서 손으로 돌린다
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
