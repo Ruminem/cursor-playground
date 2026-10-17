@@ -267,7 +267,8 @@ jobs:
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main'
+    # 샤드가 건너뛰면 암묵 success() 가 조상까지 봐서 deploy 도 건너뛴다 — build 결과만 본다
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
