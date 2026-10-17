@@ -29,7 +29,7 @@ jobs:
           path: cursor-playground   # zip 을 풀면 이 이름의 폴더 하나가 나오게
       - uses: actions/setup-python@v7
         with:
-          python-version: '3.14'
+          python-version: '3.14.8'   # check.yml 과 같아야 캐시를 그대로 쓴다(일감 해시에 sys.version)
 
       # check.yml 이 main 에서 저장한 캐시를 받기만 한다 (저장은 안 한다 — 태그마다 232MB 가 쌓인다).
       # 키가 맞으면 태그 커밋과 같은 코드·그림으로 만든 결과라 빌드가 건너뛰고, 안 맞으면 바뀐 구성표만

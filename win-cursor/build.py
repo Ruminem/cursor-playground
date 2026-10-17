@@ -128,12 +128,17 @@ def _pet_files(path: Path, seen: list | None = None) -> list[Path]:
     seen = [] if seen is None else seen
     if path not in seen:
         seen.append(path)
-        for n in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            if isinstance(n, ast.ImportFrom) and n.level == 1:
-                for m in [n.module] if n.module else [a.name for a in n.names]:
-                    if (path.parent / f"{m}.py").exists():
-                        _pet_files(path.parent / f"{m}.py", seen)
+        if path not in _SIBLINGS:     # 펫 30종이 같은 틀(catkit 등)을 읽어 틀마다 수십 번 파싱하던 것을 한 번으로
+            _SIBLINGS[path] = [path.parent / f"{m}.py" for n in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+                               if isinstance(n, ast.ImportFrom) and n.level == 1
+                               for m in ([n.module] if n.module else [a.name for a in n.names])
+                               if (path.parent / f"{m}.py").exists()]
+        for f in _SIBLINGS[path]:
+            _pet_files(f, seen)
     return seen
+
+
+_SIBLINGS: dict[Path, list[Path]] = {}
 
 
 def _hashes() -> tuple[dict, dict, str]:
@@ -147,42 +152,52 @@ def _hashes() -> tuple[dict, dict, str]:
     # 파이썬·zlib 버전도 코드로 친다. PNG 바이트가 버전마다 달라서, 다른 파이썬이 만든 캐시를
     # 받으면(러너의 3.14 패치가 올라간 날 등) 섞이지 않고 전부 다시 그려야 한다 — 릴리스가 캐시를 쓴다
     env = _sha(sys.version, zlib.ZLIB_RUNTIME_VERSION)
-    base = _sha(env, *(_dump([_tree(HERE / n)]) for n in ("make_cur.py", "shape.py")),
-                _dump(_reach(_tree(HERE / "build.py"), {"build_one", "bake"})))
+    memo: dict = {}
+
+    def dumped(path: Path, shape: str | None = None) -> str:
+        # 파일 하나(모양을 주면 smooth.py 의 그 모양 줄만)의 dump 를 한 번만 뜬다. 고화질 일감마다 smooth.py 를 다시
+        # 파싱해 한 번에 _tree 252번(그중 smooth.py 155번) · 10초였고, 이걸 수십 번 부르는 test_stamp 가 CI 12분이었다.
+        # 메모는 부를 때마다 새로 — test_stamp 가 _tree 를 갈아 끼우고 다시 부른다
+        if (path, shape) not in memo:
+            tree = _tree(path)
+            memo[path, shape] = _dump([tree if shape is None else _only_shape(tree, shape)])
+        return memo[path, shape]
+    tree = _tree(HERE / "build.py")
+    base = _sha(env, *(dumped(HERE / n) for n in ("make_cur.py", "shape.py")),
+                _dump(_reach(tree, {"build_one", "bake"})))
     code = {shp["id"]: base if shape_of(shp["id"]) is None
-            else _sha(base, shp["id"], _dump([_only_shape(_tree(HERE / "smooth.py"), shp["id"])]))
+            else _sha(base, shp["id"], dumped(HERE / "smooth.py", shp["id"]))
             for shp in SHAPES}
     art = {s["id"]: _sha(json.dumps(s, sort_keys=True),
                          *(f.read_bytes() for f in sorted((HERE / "art" / s["id"]).iterdir())))
            for s in SCHEMES if not s.get("hd")}
     # 고화질은 그림이 코드(hd.py)라 그것과 커서 굽는 코드가 재료다. 기본 모양으로만 내서 기본 모양 키만 있다
-    hd = _sha(env, *(_dump([_tree(HERE / n)]) for n in ("hd.py", "make_cur.py")),
-              *(_dump([_tree(f)]) for f in sorted((HERE / "hdfx").glob("*.py"))),
-              _dump(_reach(_tree(HERE / "build.py"), {"build_hd"})))
+    hd = _sha(env, *(dumped(HERE / n) for n in ("hd.py", "make_cur.py")),
+              *(dumped(f) for f in sorted((HERE / "hdfx").glob("*.py"))),
+              _dump(_reach(tree, {"build_hd"})))
     # 펫 결은 hdpet 폴더도 재료다. 다른 결에는 안 넣는다 — 감싼 render 가 그대로 지나가 바이트가 같고, 넣으면 흰냥이
     # 한 마리를 고칠 때 26종을 다시 굽는다. 펫끼리도 제 모듈만 넣는다 — 폴더째 넣던 때는 부캉이를 더하자 흰냥이도 다시 구웠다
-    common = _dump([_tree(HERE / "hdpet" / "__init__.py")])
-    pet = {k: _sha(common, _dump([_tree(f) for f in _pet_files(Path(sys.modules[type(v).__module__].__file__))]))
+    common = dumped(HERE / "hdpet" / "__init__.py")
+    pet = {k: _sha(common, "\n".join(dumped(f) for f in _pet_files(Path(sys.modules[type(v).__module__].__file__))))
            for k, v in hdpet.PETS.items()}
     art |= {s["id"]: _sha(hd, *([pet[s["hd"]]] if s["hd"] in pet else []), json.dumps(s, sort_keys=True))
             for s in SCHEMES if s.get("hd")}
-    tree = _tree(HERE / "build.py")
     # 펫 결의 모양 탭은 화살표 하나만 그 모양으로 굽는다(build_hd_shape). 펫 재료 + 그 모양 줄만 든 smooth.py + 굽는 코드 —
     # build_one 쪽 코드(code)는 안 넣는다. 넣으면 기존 구성표 코드를 고칠 때마다 흰냥이 모양 화살표를 다시 굽는다
     shaped = _dump(_reach(tree, {"build_hd_shape", "hd_bit"}))
     # 펫 결 모양 탭의 작은 화살표 칸은 hdmini 가 그린다 — 펫 모양 일감에만 넣는다(이펙트 결은 화살표뿐이라 안 지난다)
-    mini = _dump([_tree(HERE / "hdmini.py")])
+    mini = dumped(HERE / "hdmini.py")
     # 이펙트 결의 모양 화살표는 hdshape 가 그린다. 크기를 스티커(cutout) 줄에 맞추므로 그 줄도 재료다
-    fxshape = _sha(*(_dump([_tree(HERE / n)]) for n in ("hdshape.py", "hdpet/__init__.py")),
-                   _dump([_only_shape(_tree(HERE / "smooth.py"), "cutout")]))
+    fxshape = _sha(*(dumped(HERE / n) for n in ("hdshape.py", "hdpet/__init__.py")),
+                   dumped(HERE / "smooth.py", "cutout"))
     keys = {f"{shp['id']}/{sid}": (art[sid] if shape_of(shp["id"]) is None
                                    else _sha(art[sid], shp["id"], shaped,
-                                             _dump([_only_shape(_tree(HERE / "smooth.py"), shp["id"])]),
+                                             dumped(HERE / "smooth.py", shp["id"]),
                                              *([fxshape] if hdshape.fx(HD[sid]) else []),
                                              *([mini] if HD[sid] in hdpet.PETS else [])))
             if sid in HD else _sha(code[shp["id"]], art[sid])
             for shp in SHAPES for sid in drawn(shp["id"])}
-    marks = {"*stencil": _sha(env, _dump([_tree(HERE / "smooth.py")]))}
+    marks = {"*stencil": _sha(env, dumped(HERE / "smooth.py"))}
     # 모양 데이터는 구성표 목록 차례까지 한 묶음이라 하나만 바뀌거나 빠져도 그 모양 data 를 다시 맞춘다.
     # data 파일을 나누고 쓰는 코드(부모가 돌린다)도 넣는다 — 빠졌을 때는 split_data 를 고쳐도 data 가 옛 꼴로 남았다
     writer = _dump(_reach(tree, {"write_data", "data_missing"}))
