@@ -567,6 +567,7 @@ for sid in (s for s in both if s not in build.HD):   # 고화질 펫은 art 가 
 # 비트를 박는다(hdpet.rgba_bytes). 기본 화살표와 매끈한 모양 하나를 첫 장만. 끝 둘레는 매끈한 쪽과 같은 6칸(32 판 기준)이다 —
 # 3칸이던 때는 기본 화살표 32 판에서 한 칸만 들어 아무것도 못 쟀다. 8칸까지 넓혀도 네 모양 다 100% 였다(2026-10-11)
 import hd as hdlib  # noqa: E402
+import hdpic  # noqa: E402
 pets = sorted(sid for sid in both if sid in build.HD)
 for sid in pets:
     for st in (build.HD[sid], f"{build.HD[sid]}@{build.SHAPES[1]['id']}"):
@@ -577,12 +578,15 @@ for sid in pets:
             f = {(i % n, i // n): raw[i * 4:i * 4 + 4] for i in range(n * n)}
             hx, hy, r = hx0 * n // hdlib.N, hy0 * n // hdlib.N, 6 * n // 32
             o, e = odd_even(f)
-            tip = [c[2] & 1 for (x, y), c in f.items() if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= r * r]
+            # 그림 결은 끝이 개 몸 한가운데라 원 안이 대부분 개다 — 화살표가 뻗는 쐐기(대각선과 세로 사이, 테 한 칸 띄움)만 잰다
+            wedge = (lambda x, y: x - hx >= 1 and (y - hy) - (x - hx) >= 1) if sid in hdpic.PICS else (lambda x, y: True)
+            tip = [c[2] & 1 for (x, y), c in f.items()
+                   if c[3] == 255 and (x - hx) ** 2 + (y - hy) ** 2 <= r * r and wedge(x, y)]
             print(f"  {st} {n}: 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
             if not (o and e and len(tip) >= 8 and sum(tip) >= 0.9 * len(tip)):
                 bad.append(f"{st} {n} 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
 print(f"막대 둘 구성표 {len(both)}종 · 커서 표식이 어긋난 장 {len(bad)}개")
-assert len(both) == 60, both
+assert len(both) == 61, both
 # 막대 둘 묶음은 다 매끈한 모양에 반응한다 — 픽셀 그림은 peek, 고화질은 화살표를 든 펫 결
 assert set(both) == build.PEEK | set(pets), sorted(set(both) ^ (build.PEEK | set(pets)))
 assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".join(bad[:8])
@@ -594,7 +598,7 @@ print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)
 # 안 움직이는 그림을 40장 굽는다. 한 구성표는 확장자가 하나라(handler.ps1·CI) 고화질은 다 animated 여야 한다
 # 모양 탭이 있는 것은 화살표를 든 펫 결뿐이다(build_hd_shape) — 나머지는 모양으로 다시 그릴 몸이 없어 기본 모양만
 import hdpet  # noqa: E402
-assert build.HD and all(s.get("animated") and bool(s.get("classic_only")) != getattr(hdpet.PETS.get(s["hd"]), "cursor", False)
+assert build.HD and all(s.get("animated") and bool(s.get("classic_only")) != getattr(hdlib.STYLES.get(s["hd"]), "cursor", False)
                         for s in build.SCHEMES if s.get("hd")), "고화질 표시"
 assert set(build.HD.values()) == set(hdlib.STYLES), sorted(set(build.HD.values()) ^ set(hdlib.STYLES))
 # 이펙트 · 애니 결도 화살표만 모양 탭이 있다(hdshape) — 표식(classic_only)은 그대로라 build.CLASSIC_ONLY 가 뺀다.

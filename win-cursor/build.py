@@ -199,7 +199,8 @@ def _hashes() -> tuple[dict, dict, str]:
                                    else _sha(art[sid], shp["id"], shaped,
                                              dumped(HERE / "smooth.py", shp["id"]),
                                              *([fxshape] if hdshape.fx(HD[sid]) else []),
-                                             *([mini] if HD[sid] in hdpet.PETS else [])))
+                                             *([mini] if HD[sid] in hdpet.PETS else []),
+                                             *([fxshape] if HD[sid] in hdpic.PICS else [])))
             if sid in HD else _sha(code[shp["id"]], art[sid])
             for shp in SHAPES for sid in drawn(shp["id"])}
     marks = {"*stencil": _sha(env, dumped(HERE / "smooth.py"))}
@@ -281,9 +282,9 @@ HUE_KINDS = {"해양 생물 · 애니": "char", "숲속 친구들 · 애니": "c
 
 def hue_kind(s: dict) -> str | None:
     """구성표의 색조 막대 종류. 고화질은 하나다 — 256 판을 면적 평균으로 줄이면 파랑 끝 비트 표식이 안 산다.
-    화살표를 든 펫 결(hdpet 의 cursor)만 둘이다 — 화살표 칸을 따로 그린 마스크로 줄인 뒤에 비트를 박는다(hdpet.rgba_bytes)"""
+    화살표를 든 펫 결 · 그림 결(cursor)만 둘이다 — 화살표 칸을 따로 그린 마스크로 줄인 뒤에 비트를 박는다(hdpet.rgba_bytes)"""
     if s.get("hd"):
-        return "both" if getattr(hdpet.PETS.get(s["hd"]), "cursor", False) else None
+        return "both" if getattr(hdlib.STYLES.get(s["hd"]), "cursor", False) else None
     return HUE_KINDS.get(s["category"])
 
 
