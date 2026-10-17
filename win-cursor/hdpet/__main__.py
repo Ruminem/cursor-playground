@@ -24,6 +24,38 @@ if sys.argv[2:3] == ["--arrows"]:
     hd.sheet(out, f"{style}_arrows", got)
     print("시트", os.path.join(out, f"sheet_{style}_arrows.png"), flush=True)
     sys.exit()
+if sys.argv[2:3] == ["--small"]:
+    # 실물 32 판을 4배(최근접)로 — 칸마다 한 줄, 장 넷 × 흰 · 어두운 바탕. 32 에서 무엇으로 읽히나 볼 때
+    style, cells = sys.argv[3], sys.argv[4:] or hd.CELLS
+    Z, frs, bgs = 4, (0.0, 0.25, 0.5, 0.75), ((255, 255, 255), (32, 33, 36))
+    cw = 32 * Z + 8
+    W, H = cw * len(frs) * 2, cw * len(cells)
+    pix = bytearray(b"\xc8" * (W * H * 3))
+    for r, name in enumerate(cells):
+        for j, fr in enumerate(frs):
+            img, _ = hd.render(style, name, fr)
+            R, G, B, A = hd.shrink(img[:4], 32)
+            for b, bg in enumerate(bgs):
+                ox, oy = (b * len(frs) + j) * cw + 4, r * cw + 4
+                for y in range(32 * Z):
+                    for x in range(32 * Z):
+                        i = (y // Z) * 32 + x // Z
+                        k = 1 - A[i]
+                        o = ((oy + y) * W + ox + x) * 3
+                        pix[o:o + 3] = bytes(round(min(1, c + bc / 255 * k) * 255) for c, bc in zip((R[i], G[i], B[i]), bg))
+        print(name, flush=True)
+    raw = b"".join(b"\x00" + bytes(pix[y * W * 3:(y + 1) * W * 3]) for y in range(H))
+    p = os.path.join(out, f"small_{style}.png")
+    import struct
+    import zlib
+
+    def chunk(t, d):
+        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
+    with open(p, "wb") as fh:
+        fh.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", W, H, 8, 2, 0, 0, 0))
+                 + chunk(b"IDAT", zlib.compress(raw, 6)) + chunk(b"IEND", b""))
+    print("시트", p, flush=True)
+    sys.exit()
 for style in sys.argv[2:] or list(hdpet.PETS):
     got = {}
     for name in hd.CELLS:

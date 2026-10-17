@@ -72,6 +72,8 @@ DOGS = [
     dict(id="jindo", name="진돗개", fur="faf3e4", dark="ddd0b8", light="fffaf0", inner="ead8b8", ear="prick", ear_s=1.15,
          tail="curl", marks=(), sock=False, rim=RIM_GREY, mouth="smile", snout=1.2, gape=True),
 ]
+HD = {"shiba"}                                                  # 고화질 펫 결(hdpet)로 옮긴 견종 — 다시 그리면 지운 art 가 되살아난다
+DOGS = [d for d in DOGS if d["id"] not in HD]
 D: dict = {}      # 지금 그리는 견종 (use 가 정한다)
 
 
