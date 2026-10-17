@@ -1617,7 +1617,7 @@ def one(d: dict, cells=None) -> None:
 
 def main() -> None:
     """python gen/dog.py [견종...] [--cells busy,help]"""
-    from concurrent.futures import ProcessPoolExecutor
+    import lowprio
     from functools import partial
     args = sys.argv[1:]
     cells = None
@@ -1626,7 +1626,7 @@ def main() -> None:
         cells = args[i + 1].split(",")
         del args[i:i + 2]
     only = args
-    with ProcessPoolExecutor() as ex:
+    with lowprio.pool() as ex:
         list(ex.map(partial(one, cells=cells), [d for d in DOGS if not only or d["id"] in only]))
 
 

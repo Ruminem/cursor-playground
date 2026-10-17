@@ -5,10 +5,10 @@
 스무 결이면 아티팩트 한도 16MB 를 넘어서 뗐다(그때는 두 파일로 나눴다). 올릴 때 hd.json 을 files 로 같이 싣는다.
 로컬에서 볼 때는 file:// 로 열면 fetch 가 막히니 http 서버로 연다."""
 import base64, json, os, sys
-from concurrent.futures import ProcessPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))       # hd.py 는 빌드가 부르게 되면서 win-cursor/ 로 옮겼다
 import hd
+import lowprio
 
 ANIM = ["arrow", "busy", "wait", "hand"]
 FR = 12
@@ -25,7 +25,7 @@ def one(arg):
 if __name__ == "__main__":
     jobs = [(s, c, k) for s in hd.STYLES for c in hd.CELLS for k in (range(FR) if c in ANIM else [0])]
     out = {s: {} for s in hd.STYLES}
-    with ProcessPoolExecutor() as ex:
+    with lowprio.pool() as ex:
         for s, c, k, b, hot in ex.map(one, jobs):
             d = out[s].setdefault(c, {"hot": hot, "frames": []})
             d["frames"].append((k, b))

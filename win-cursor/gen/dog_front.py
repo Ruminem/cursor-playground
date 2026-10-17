@@ -164,9 +164,9 @@ def one(d: dict) -> None:
 
 
 def main() -> None:
-    from concurrent.futures import ProcessPoolExecutor
+    import lowprio
     only = sys.argv[1:]
-    with ProcessPoolExecutor() as ex:
+    with lowprio.pool() as ex:
         list(ex.map(one, [d for d in DOGS if not only or d["id"] in only]))
 
 

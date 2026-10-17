@@ -940,6 +940,7 @@ def keep_done(was: dict, keys: dict, marks: dict, held: dict):
 
 
 if __name__ == "__main__":
+    import lowprio  # 굽기 워커를 '낮음 이하' 우선순위로(윈도우). 머리에 두면 그 줄이 일감 해시에 들어가 다 다시 굽는다
     clash = {s["id"] for s in SHAPES} & {s["id"] for s in SCHEMES}
     if clash:  # dist/<모양>/ 과 dist/<구성표>/ 가 같은 자리를 쓰게 된다
         raise SystemExit(f"모양 이름이 구성표 이름과 겹침: {sorted(clash)}")
@@ -950,7 +951,7 @@ if __name__ == "__main__":
     if arg("--shard") is not None:
         units = json.loads(Path(sys.argv[sys.argv.index("--shard") + 2]).read_text(encoding="utf-8"))["shards"][int(arg("--shard"))]
         busy = 0.0
-        with ProcessPoolExecutor(workers) as pool:
+        with lowprio.pool(workers) as pool:
             futs = {pool.submit(timed, build_hd_cell, u): u for u in units}
             for n, done in enumerate(as_completed(futs), 1):
                 _, a, b = done.result()
@@ -973,7 +974,7 @@ if __name__ == "__main__":
         print(f"[{time.time() - t0:5.1f}초] 목록에 없어 지움: {path}")
 
     held = {"hd": {}, "hdshape": {}, "hdfresh": {}, "jobs": {}, "wrote": set(), "stencil": False}   # 넘어지면 keep_done 이 여기서 끝난 것을 고른다
-    with keep_done(was, keys, marks, held), ProcessPoolExecutor(workers) as pool:
+    with keep_done(was, keys, marks, held), lowprio.pool(workers) as pool:
         jobs_of, skipped = [], 0
         # 일감 차례를 정할 어림 값 — 그림 프레임 수. 움직이는 구성표 몇이 일의 대부분이다
         frames = {(s["id"], rid): len(split_frames(art_raw(s["id"], rid))) for s in SCHEMES if s["id"] not in HD
