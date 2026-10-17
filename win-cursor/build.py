@@ -675,6 +675,37 @@ def build_hd_shape(job: tuple[str, str]) -> int:
     return len(rids)
 
 
+def build_hd_cell(unit: list) -> int:
+    """CI 샤드가 굽는 고화질 칸 하나 — [모양, 구성표, 칸], 기본 모양이면 모양이 "" (워커에서).
+    모양 일감은 칸 다섯(펫)이라 그 하나가 샤드의 꼬리라서 칸으로 쪼갠다. build_hd_shape 를 고치면 모양 화살표 150개의
+    해시가 바뀌어 다 다시 구우므로, 그 함수를 그대로 부르되 칸 목록만 이 칸 하나로 잠깐 갈아 끼운다(hdmini 의 render 는
+    shaped_cells 가 아니라 cells 를 본다). 이 함수는 일감 해시에 안 든다 — build_hd_shape 의 칸 고르는 법이 바뀌면 같이 볼 것"""
+    shape, sid, rid = unit
+    if not shape:
+        return build_hd((sid, rid))
+    real = hdmini.shaped_cells
+    hdmini.shaped_cells = lambda style: [rid]
+    try:
+        return build_hd_shape((shape, sid))
+    finally:
+        hdmini.shaped_cells = real
+
+
+def split_shards(units: list, cost, most: int, per: float) -> list[list]:
+    """고화질 칸들을 샤드로 나눈다 — 샤드마다 어림 비용이 per 안팎이 되게, 많아야 most 개. 큰 것부터 제일 가벼운
+    샤드에 넣는다(LPT). 샤드 안에서도 큰 것부터 돌도록 그 차례로 둔다"""
+    if not units:
+        return []
+    units = sorted(units, key=cost, reverse=True)
+    n = max(1, min(most, len(units), -(-sum(map(cost, units)) // per)))
+    shards, load = [[] for _ in range(int(n))], [0.0] * int(n)
+    for u in units:
+        i = load.index(min(load))
+        shards[i].append(u)
+        load[i] += cost(u)
+    return shards
+
+
 def ani_frames(blob: bytes) -> list[dict[int, tuple[bytes, tuple[int, int]]]]:
     """curs_to_ani 의 거꾸로 — 장마다 {크기: (PNG, 핫스팟)}. 우리가 구운 꼴(icon 조각마다 PNG 를 담은 .cur)만 읽는다"""
     le = lambda b: int.from_bytes(b, "little")
@@ -913,16 +944,34 @@ if __name__ == "__main__":
     if clash:  # dist/<모양>/ 과 dist/<구성표>/ 가 같은 자리를 쓰게 된다
         raise SystemExit(f"모양 이름이 구성표 이름과 겹침: {sorted(clash)}")
     t0 = time.time()
+    arg = lambda flag: sys.argv[sys.argv.index(flag) + 1] if flag in sys.argv else None
+    workers = getattr(os, "process_cpu_count", os.cpu_count)() or 1   # ProcessPoolExecutor 기본값과 같다
+    # CI 샤드(check.yml) — --plan-json 이 나눈 몫 하나만 dist 에 굽고 끝낸다. 표식·data·페이지는 모으는 잡(--baked)이 쓴다
+    if arg("--shard") is not None:
+        units = json.loads(Path(sys.argv[sys.argv.index("--shard") + 2]).read_text(encoding="utf-8"))["shards"][int(arg("--shard"))]
+        busy = 0.0
+        with ProcessPoolExecutor(workers) as pool:
+            futs = {pool.submit(timed, build_hd_cell, u): u for u in units}
+            for n, done in enumerate(as_completed(futs), 1):
+                _, a, b = done.result()
+                busy += b - a
+                print(f"[{time.time() - t0:6.1f}초] {n}/{len(futs)} {'/'.join(x for x in futs[done] if x)} {b - a:.1f}초", flush=True)
+        print(f"샤드 {arg('--shard')} · 칸 {len(units)}개 · 워커 시간 {_dur(busy)} · 전부 {time.time() - t0:.1f}초")
+        raise SystemExit
     # 지난번 빌드가 남긴 표식. 재료가 그대로인 산출물은 다시 그리지 않는다.
     # CI 는 늘 빈 체크아웃이라 표식이 없어 전부 다시 만든다. 손으로 그러려면 --all
     # --plan 은 무엇을 다시 그릴지만 찍고 끝낸다 (아무것도 안 지우고 안 쓴다)
     keys, marks, page_key = _hashes()
-    plan = "--plan" in sys.argv
+    plan = "--plan" in sys.argv or "--plan-json" in sys.argv
     was = {} if "--all" in sys.argv else json.loads(STAMP.read_text()) if STAMP.exists() else {}
+    force = set(filter(None, (arg("--force") or "").split(",")))
+    was = {k: v for k, v in was.items() if k.split("/")[-1] not in force}
+    # 샤드가 이미 구운 고화질 칸 — 다시 안 굽고 끝난 셈 친다(표식은 남긴다). 받은 dist 파일이 없으면 여기서 굽는다
+    baked = {tuple(u) for sh in json.loads(Path(arg("--baked")).read_text(encoding="utf-8"))["shards"] for u in sh} \
+        if arg("--baked") else set()
     for path in [] if plan else prune():
         print(f"[{time.time() - t0:5.1f}초] 목록에 없어 지움: {path}")
 
-    workers = getattr(os, "process_cpu_count", os.cpu_count)() or 1   # ProcessPoolExecutor 기본값과 같다
     held = {"hd": {}, "hdshape": {}, "hdfresh": {}, "jobs": {}, "wrote": set(), "stencil": False}   # 넘어지면 keep_done 이 여기서 끝난 것을 고른다
     with keep_done(was, keys, marks, held), ProcessPoolExecutor(workers) as pool:
         jobs_of, skipped = [], 0
@@ -975,6 +1024,24 @@ if __name__ == "__main__":
                 if plan:
                     print(f"{shp['id']}: 커서 {sum(j[2] for j in mine)}종 · 시안 데이터 {sum(j[3] for j in mine)}종"
                           f" (구성표 {len(sids)}종 중)" + ("" if len(mine) > 8 else " — " + " ".join(j[1] for j in mine)))
+        # 고화질을 칸 단위로 — 기본 모양은 이미 칸 하나가 일감이고, 모양 일감은 칸으로 쪼갠다(build_hd_cell)
+        cells = [("", sid, rid) for sid, rid in hd_jobs] + \
+            [(shp, sid, rid) for shp, sid in hd_shape_jobs for rid in hdmini.shaped_cells(f"{HD[sid]}@{shp}")]
+        if arg("--plan-json"):
+            # 어림 비용 = 장 수 × 무게. 모양 화살표 칸은 장마다 기본 칸의 다섯 배쯤(trex 컨테이너 3.29초 · 0.66초, 2026-10-17).
+            # 샤드 하나에 컨테이너 약 300초(장 600 몫) — 러너 4코어 · 컨테이너의 2.3배로 3분쯤. 많아야 16 (무료 동시 잡 20)
+            weight = lambda u: hdlib.frames(f"{HD[u[1]]}@{u[0]}" if u[0] else HD[u[1]], u[2])[0] * (5 if u[0] else 1)
+            shards = split_shards(cells, weight, 16, 600)
+            Path(arg("--plan-json")).write_text(json.dumps({"shards": shards}), encoding="utf-8")
+            print(f"고화질 칸 {len(cells)}개 → 샤드 {len(shards)}개 (어림 " + " · ".join(str(sum(map(weight, sh))) for sh in shards) + ")")
+        if baked:
+            done_cells = {c for c in cells if c in baked and (HERE / "dist" / c[0] / c[1] / f"{c[2]}.ani").exists()}
+            hd_jobs = [(sid, rid) for sid, rid in hd_jobs if ("", sid, rid) not in done_cells]
+            pre_shape = [j for j in hd_shape_jobs
+                         if all((j[0], j[1], r) in done_cells for r in hdmini.shaped_cells(f"{HD[j[1]]}@{j[0]}"))]
+            hd_shape_jobs = [j for j in hd_shape_jobs if j not in pre_shape]
+            print(f"[{time.time() - t0:5.1f}초] 샤드가 구운 고화질 칸 {len(done_cells)}개 받음 · 여기서 구울 것 "
+                  f"기본 {len(hd_jobs)} · 모양 일감 {len(hd_shape_jobs)}")
         if plan:
             print(f"다시 그릴 일감 {len(jobs_of)}개" + (f" · 고화질 칸 {len(hd_jobs)}개" if hd_jobs else "")
                   + (f" · 고화질 모양 화살표 {len(hd_shape_jobs)}개" if hd_shape_jobs else "")

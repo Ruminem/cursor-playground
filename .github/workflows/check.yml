@@ -10,6 +10,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      force:
+        description: 표식을 무시하고 다시 구울 구성표·모양 id (쉼표로) — 샤드 시간을 잴 때
+        required: false
+        default: ''
 
 permissions:
   contents: read      # 올릴 권한은 아래 deploy 잡에만 준다 (build 잡은 PR 코드를 돌린다)
@@ -24,7 +29,92 @@ env:
   PYTHONUTF8: '1'
 
 jobs:
+  # 고화질 칸 굽기를 샤드로 나눈다 — 한 잡에서 구우면 공룡 10종이 328분이었다(2026-10-16 #552).
+  # plan 이 캐시의 표식으로 다시 구울 칸을 골라 나누고, shard 들이 동시에 굽고, build 가 받아 모아 나머지를 한다.
+  # 바이트가 윈도우 zlib 을 타서 샤드도 윈도우 러너다. 굽는 게 없으면 shard 는 건너뛴다
+  plan:
+    runs-on: windows-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14.8'   # 아래 build 잡과 같아야 한다 (일감 해시에 sys.version)
+      # 표식만 있으면 되지만 표식만 따로 캐시하지 않는다. path·key 는 build 잡과 글자까지 같아야 받아진다
+      - uses: actions/cache/restore@v6
+        with:
+          path: |
+            win-cursor/dist
+            win-cursor/data
+            win-cursor/.build-stamp.json
+            win-cursor/.stencils.pkl
+          key: cursors-${{ runner.os }}-${{ hashFiles('win-cursor/art/**', 'win-cursor/*.py', 'win-cursor/hdfx/**', 'win-cursor/hdpet/**', 'win-cursor/*.json', 'win-cursor/preview.tpl.html') }}
+          restore-keys: cursors-${{ runner.os }}-
+      - id: plan
+        name: 다시 구울 고화질 칸을 샤드로 나누기
+        shell: pwsh
+        working-directory: win-cursor
+        run: |
+          $f = '${{ inputs.force }}'
+          $extra = if ($f) { @('--force', $f) } else { @() }
+          python build.py --plan-json $env:RUNNER_TEMP/plan.json @extra
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $n = @((Get-Content $env:RUNNER_TEMP/plan.json -Raw | ConvertFrom-Json).shards).Count
+          $list = if ($n) { '[' + ((0..($n - 1)) -join ',') + ']' } else { '[]' }
+          "shards=$list" >> $env:GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plan
+          path: ${{ runner.temp }}/plan.json
+          retention-days: 1
+
+  # 부분 빌드는 아래 전체 빌드가 지나지 않는 길이라 따로 본다 (CI 1분). 샤드와 같이 돈다
+  test:
+    runs-on: windows-latest
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14.8'
+      - name: 바뀐 자리만 갈아 끼우기가 통째로 만든 것과 같은지
+        working-directory: win-cursor
+        run: python test_stamp.py
+
+  shard:
+    needs: plan
+    if: needs.plan.outputs.shards != '[]'
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        i: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14.8'
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan
+          path: ${{ runner.temp }}   # 저장소에 떨어지면 아래 git status 검사에 걸린다
+      # 빈 dist 에 제 몫만 굽는다 — 올리는 것이 곧 이 샤드가 구운 파일이다
+      - name: 고화질 칸 굽기
+        working-directory: win-cursor
+        shell: pwsh
+        run: python build.py --shard ${{ matrix.i }} $env:RUNNER_TEMP/plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.i }}
+          path: win-cursor/dist
+          retention-days: 1
+
   build:
+    needs: [plan, shard, test]
+    # shard 를 건너뛰어도 돈다. 하나라도 실패하면 안 돈다
+    if: ${{ !cancelled() && !failure() }}
     runs-on: windows-latest
     steps:
       # 줄바꿈이 CRLF 로 바뀌면 build.py 결과와 달라져 아래 README 비교가 헛되이 실패한다
@@ -35,13 +125,8 @@ jobs:
           # PNG 압축 결과가 파이썬(zlib) 버전마다 달라서 개발에 쓰는 버전과 맞춘다
           # (올라가는 커서가 러너 환경을 타지 않게. 커밋된 결과와 비교하지는 않는다)
           # 패치까지 박는다 — 일감 해시에 sys.version 이 들어가서 러너가 3.14.7→3.14.8 로 오른 날 캐시를 받고도
-          # 전부 다시 구웠다(2026-10-16 #551 178분 · #552 328분). 올릴 때는 release.yml 과 같이, 다 구울 각오로
+          # 전부 다시 구웠다(2026-10-16 #551 178분 · #552 328분). 올릴 때는 release.yml 과 위 잡들과 같이, 다 구울 각오로
           python-version: '3.14.8'
-
-      # 부분 빌드는 아래 전체 빌드가 지나지 않는 길이라 따로 본다 (몇 초)
-      - name: 바뀐 자리만 갈아 끼우기가 통째로 만든 것과 같은지
-        working-directory: win-cursor
-        run: python test_stamp.py
 
       # 러너는 체크아웃이 새것이라 표식이 없어 커서 6,099개를 매번 처음부터 그렸다.
       # 산출물과 표식을 같이 캐시해 두면 재료가 그대로인 구성표는 건너뛴다. 키가 정확히
@@ -57,9 +142,26 @@ jobs:
           key: cursors-${{ runner.os }}-${{ hashFiles('win-cursor/art/**', 'win-cursor/*.py', 'win-cursor/hdfx/**', 'win-cursor/hdpet/**', 'win-cursor/*.json', 'win-cursor/preview.tpl.html') }}
           restore-keys: cursors-${{ runner.os }}-
 
+      # 샤드가 구운 파일을 캐시에서 받은 dist 위에 덮는다
+      - uses: actions/download-artifact@v4
+        if: needs.plan.outputs.shards != '[]'
+        with:
+          pattern: shard-*
+          path: win-cursor/dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan
+          path: ${{ runner.temp }}   # 저장소에 떨어지면 아래 git status 검사에 걸린다
+
+      # --baked: 샤드가 구운 칸은 다시 안 굽고 표식만 남긴다. 받은 파일이 없는 칸은 여기서 굽는다
       - name: 빌드
+        shell: pwsh
         working-directory: win-cursor
-        run: python build.py
+        run: |
+          $f = '${{ inputs.force }}'
+          $extra = if ($f) { @('--force', $f) } else { @() }
+          python build.py --baked $env:RUNNER_TEMP/plan.json @extra
 
       - name: build.py 가 고친 추적 파일을 커밋했는지
         shell: pwsh
