@@ -287,15 +287,19 @@ def dface(F, K, P, mood="open", mouth=None, look=0.0, tongue=0.0):
         return F.f(P.hf(lambda u, v: g(u / kn, ny0 + (v - ny0) / kn) * kn))
     nose = rpoly([(-1.35, ny0 - 0.62), (1.35, ny0 - 0.62), (0.0, ny0 + 0.85)], 0.45)
     my = ny0 + 0.85
-    if mouth in ("smile", "tongue"):
+    if mouth in ("smile", "tongue", "pant"):
         out.append(flat(at(capsule(0.0, ny0 + 0.4, 0.0, my + 0.35, 0.2)), C.out, 0.95))
         for sg in (-1, 1):
             out.append(flat(at(arc(sg * 0.78, my + 0.15, 0.78, 0.2, pi * 0.08, pi * 0.84)), C.out, 0.95))
-        if mouth == "tongue" or tongue:
+        if mouth == "pant":                                      # 헥헥 — ω 밑 가운데로 혀. 어두운 입안을 그리면 32 에서 혀 옆 검은 점이 됐다
+            tl = 1.6 + 0.5 * tongue
+            tg = smin(0.3, ell(0.0, my + 0.8 + tl * 0.4, 0.95, tl * 0.5), circle(0.0, my + 0.6 + tl, 0.95))
+            out.append(flat(at(tg), TONGUE, line=0.24, ink=TONGUE_D))
+        elif mouth == "tongue" or tongue:
             tl = 1.1 + 0.8 * tongue
             tg = smin(0.3, ell(0.35, my + 0.9 + tl * 0.4, 0.85, tl * 0.5), circle(0.35, my + 0.7 + tl, 0.85))
             out.append(flat(at(tg), TONGUE, line=0.24, ink=TONGUE_D))
-    elif mouth in ("pant", "open", "O"):
+    elif mouth in ("open", "O"):
         if mouth == "O":
             g = ell(0.0, my + 1.1, 0.9, 1.15)
         elif mouth == "open":
@@ -418,7 +422,7 @@ def fetch(K, fr):
     out = cur([base(arw), part(arw, cream_of, sh=0.0)])
     out += dog(F, K, "blink" if k == 7 else "open", look=-0.5, tilt=TILT, wag=1.6 * w)                # 입은 결 것(시바는 혀) — 웃는 입만이면 32 에서 여우
     poke = inter(arw, circle(*bite, POKE))
-    out += cur([part(poke, cream_of, sh=0.0, line=0.6)])
+    out += cur([part(poke, cream_of, sh=0.0, line=0.0)])        # 먹선을 두면 0.3 이어도 볼 연지와 입꼬리 사이에 검은 줄이 남았다
     return out
 
 
