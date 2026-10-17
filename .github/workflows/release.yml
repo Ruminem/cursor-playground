@@ -44,7 +44,7 @@ jobs:
             win-cursor/data
             win-cursor/.build-stamp.json
             win-cursor/.stencils.pkl
-          key: cursors-${{ runner.os }}-${{ hashFiles('cursor-playground/win-cursor/art/**', 'cursor-playground/win-cursor/*.py', 'cursor-playground/win-cursor/hdfx/**', 'cursor-playground/win-cursor/hdpet/**', 'cursor-playground/win-cursor/*.json', 'cursor-playground/win-cursor/preview.tpl.html') }}
+          key: cursors-${{ runner.os }}-${{ hashFiles('cursor-playground/win-cursor/art/**', 'cursor-playground/win-cursor/*.py', 'cursor-playground/win-cursor/hdfx/**', 'cursor-playground/win-cursor/hdpet/**', 'cursor-playground/win-cursor/pic/**', 'cursor-playground/win-cursor/*.json', 'cursor-playground/win-cursor/preview.tpl.html') }}
           restore-keys: cursors-${{ runner.os }}-
 
       - name: 받은 캐시를 체크아웃 자리로

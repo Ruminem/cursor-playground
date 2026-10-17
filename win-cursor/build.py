@@ -32,6 +32,7 @@ import hdfx  # noqa: F401 — 이펙트 · 애니 20결을 hd.STYLES 에 등록�
 import hdpet  # 고화질 펫 결(흰냥이). hd.render · hd.frames 를 감싸므로 워커도 이 줄로 받는다
 import hdshape  # 이펙트 · 애니 결의 모양 화살표("<결>@<모양>"). hdpet 위에 한 겹 더 감싸므로 워커도 이 줄로 받는다
 import hdmini  # 펫 결 모양 탭의 작은 화살표 칸(help · busy · person · pin). hdshape 위에 한 겹 더 감싸므로 워커도 이 줄로 받는다
+import hdpic  # 그림 결(pic/<구성표>/ 의 포즈 PNG + hd 기호). hdmini 위에 한 겹 더 감싸므로 워커도 이 줄로 받는다
 from make_cur import SIZES, curs_to_ani, pngs_to_cur
 
 HERE = Path(__file__).parent
@@ -180,7 +181,11 @@ def _hashes() -> tuple[dict, dict, str]:
     common = dumped(HERE / "hdpet" / "__init__.py")
     pet = {k: _sha(common, "\n".join(dumped(f) for f in _pet_files(Path(sys.modules[type(v).__module__].__file__))))
            for k, v in hdpet.PETS.items()}
-    art |= {s["id"]: _sha(hd, *([pet[s["hd"]]] if s["hd"] in pet else []), json.dumps(s, sort_keys=True))
+    # 그림 결은 hdpic.py 와 pic/<결>/ 파일(포즈 PNG · cells.json)이 재료다 — 그 결에만 넣는다
+    pic = {k: _sha(dumped(HERE / "hdpic.py"), *(f.read_bytes() for f in sorted(v.dir.iterdir())))
+           for k, v in hdpic.PICS.items()}
+    art |= {s["id"]: _sha(hd, *([pet[s["hd"]]] if s["hd"] in pet else []), *([pic[s["hd"]]] if s["hd"] in pic else []),
+                          json.dumps(s, sort_keys=True))
             for s in SCHEMES if s.get("hd")}
     # 펫 결의 모양 탭은 화살표 하나만 그 모양으로 굽는다(build_hd_shape). 펫 재료 + 그 모양 줄만 든 smooth.py + 굽는 코드 —
     # build_one 쪽 코드(code)는 안 넣는다. 넣으면 기존 구성표 코드를 고칠 때마다 흰냥이 모양 화살표를 다시 굽는다
