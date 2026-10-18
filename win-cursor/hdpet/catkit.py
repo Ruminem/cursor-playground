@@ -457,7 +457,7 @@ def shaped(shape):
             ring_ = sm.fillet([(x * k, y * k) for x, y in spec["pts"]], [r * spec["rscale"] * k for r in spec["radii"]], 8)
             dx = 1.07 + band - min(p[0] for p in ring_)
             dy = 1.07 + band - min(p[1] for p in ring_)
-            (x0, y0), (x1, y1) = ((x * k + dx, y * k + dy) for x, y in spec["pts"][:2])
+            (x0, y0), (x1, y1) = ((x * k + dx, y * k + dy) for x, y in spec.get("edge", spec["pts"][:2]))
             body = poly([(x + dx, y + dy) for x, y in ring_])
             el = hypot(x1 - x0, y1 - y0)
             g = dict(outer=grow(body, band) if band else body, P0=(x0, y0), u=((x1 - x0) / el, (y1 - y0) / el), L=el)
