@@ -591,6 +591,23 @@ assert len(both) == 61, both
 assert set(both) == build.PEEK | set(pets), sorted(set(both) ^ (build.PEEK | set(pets)))
 assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".join(bad[:8])
 print("커서 표식 OK — 화살표 칸마다 커서(홀수)와 동물(짝수)이 갈려 있다")
+# 그림 결에서 앞발이 화살표를 잡는 칸("grip")은 모양 탭마다 화살표를 앞발에 맞춰 다시 놓는다(hdpic._fit) — 기본 자리에 그대로
+# 두면 모양 화살표가 앞발에서 13–30px 떨어져 발이 허공을 쥔다(2026-10-18 사용자). 앞발 층 무게중심에서 테두리까지 거리가 기본
+# 화살표 때와 6px 안이어야 한다. 맞춘 값은 cutout 0.2 · dart 5.3 · chunky 4.6px 차였다
+for sid, pic in hdpic.PICS.items():
+    for rid, c in pic.cells.items():
+        if not c.get("grip"):
+            continue
+        pts = []
+        for paw in pic.paws(c["pose"]):
+            A = pic.img(paw)[3]
+            pts.append((sum(a * (i % hdpic.N) for i, a in enumerate(A)) / sum(A), sum(a * (i // hdpic.N) for i, a in enumerate(A)) / sum(A)))
+        d0 = [hdpic._edge(None, c["at"], c.get("scale", 1.0))(x, y) for x, y in pts]
+        for shp in ("cutout", "dart", "chunky"):
+            f = hdpic._fit(sid, rid, shp)
+            d = [hdpic._edge(shp, f["at"], f["scale"])(x, y) for x, y in pts]
+            assert pts and all(abs(p - q) <= 6 for p, q in zip(d, d0)), f"{sid}/{rid}@{shp} 앞발이 화살표에서 뜸 {d} (기본 {d0})"
+print("그림 결 OK — 앞발이 잡는 칸은 모양 탭에서도 화살표 테두리에 붙어 있다")
 
 
 # ── 고화질 구성표 — 움직이는 칸만 여러 장(hd.frames)으로 굽고, .ani 를 거꾸로 읽어 시안에 쓴다 ───────────────

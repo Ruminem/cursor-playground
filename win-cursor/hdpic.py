@@ -9,6 +9,8 @@
   cells.<칸>.at        기호의 핫스팟을 둘 자리(256px). 커서 핫스팟도 여기다 — 기호와 핫스팟은 장마다 그대로고 개만 움직인다
   cells.<칸>.scale     hd 칸 그림 배율(1 이면 hd 화살표 그대로, 22칸 ≈ 176px)
   cells.<칸>.rot       기호를 핫스팟 축으로 돌리는 각(도, 시계 방향)
+  cells.<칸>.grip      앞발 층이 화살표 테두리를 잡는 칸 — 모양 탭에서 그 모양 화살표의 배율 · 자리를 앞발에 맞춰 옮긴다(_fit)
+  cells.<칸>.flip      포즈를 몸 상자 안에서 좌우로 뒤집음
   cells.<칸>.move      개의 움직임: breathe(숨) · bob(통통) · sway(갸웃) · none
   cells.<칸>.frames · rate   그 칸만 장 수 · 틱을 따로(도는 기호는 12fps 면 끊겨 보여 40장 × 2틱)
 기호가 도는 칸(busy · wait)은 move 가 none 이어도 움직인다(hd 의 스피너가 frame 을 받는다).
@@ -235,12 +237,73 @@ def _over(dst, img, src, box, cur=False):
             DC[i] = (a if cur else 0.0) + DC[i] * k
 
 
+def _edge(shape, at, s):
+    """기호 화살표 몸(스티커는 띠 바깥)의 거리함수를 256 판 px 로 — _placed 와 같은 놓기"""
+    if shape:
+        g = hdshape.geom(shape)
+        body, (hx, hy) = hd.grow(g["body"], g["band"]), g["hot"]
+    else:
+        body, (hx, hy) = hd.arrow(), hd.TIP
+    k = s * U
+    return lambda x, y: k * body(hx + (x - at[0]) / k, hy + (y - at[1]) / k)
+
+
+_FIT = {}
+
+
+def _fit(sid, name, shape):
+    """앞발이 화살표를 잡는 칸(cells.json "grip")의 모양 탭 — 앞발 층 무게중심마다 기본 화살표 테두리까지의 거리 · 방향을
+    재고, 그 모양 화살표가 같은 거리 · 방향이 되는 배율 · 끝 자리를 찾는다. 돌리지 않고, 판 4px 안을 넘는 자리는 버린다.
+    ponytail: 격자 찾기(배율 16 × 자리 25² 뒤 ±3px 다듬기)라 모양마다 몇 초 — 느리면 cells.json 에 값을 박는다"""
+    c = PICS[sid].cells[name]
+    if not (shape and c.get("grip")):
+        return c
+    key = (sid, name, shape)
+    if key in _FIT:
+        return _FIT[key]
+    pic, s0, at0 = PICS[sid], c.get("scale", 1.0), c["at"]
+    pts = []
+    for paw in pic.paws(c["pose"]):
+        A = pic.img(paw)[3]
+        w = sum(A)
+        pts.append((sum(a * (i % N) for i, a in enumerate(A)) / w, sum(a * (i // N) for i, a in enumerate(A)) / w))
+
+    def look(f):
+        out = []
+        for x, y in pts:
+            gx, gy = f(x + 1, y) - f(x - 1, y), f(x, y + 1) - f(x, y - 1)
+            n = math.hypot(gx, gy) or 1.0
+            out.append((f(x, y), gx / n, gy / n))
+        return out
+    want = look(_edge(None, at0, s0))
+
+    def cost(s, at):
+        e = 4.0 * (1 - s / s0) ** 2 * 100 + 0.002 * ((at[0] - at0[0]) ** 2 + (at[1] - at0[1]) ** 2)
+        for (d, nx, ny), (d0, nx0, ny0) in zip(look(_edge(shape, at, s)), want):
+            e += (d - d0) ** 2 + 100 * (1 - nx * nx0 - ny * ny0)
+        return e
+
+    def inside(s, at):
+        f = _edge(shape, at, s)
+        return all(f(x, y) > 0 for t in range(0, 249, 4) for x, y in ((4, 4 + t), (252, 4 + t), (4 + t, 4), (4 + t, 252)))
+    cands = sorted((cost(s0 * (0.70 + 0.02 * i), (at0[0] + dx, at0[1] + dy)), s0 * (0.70 + 0.02 * i), (at0[0] + dx, at0[1] + dy))
+                   for i in range(16) for dx in range(-48, 49, 4) for dy in range(-48, 49, 4))
+    _, s, at = next(x for x in cands if inside(x[1], x[2]))
+    _, s, at = min((cost(s, (at[0] + dx, at[1] + dy)), s, (at[0] + dx, at[1] + dy))
+                   for dx in range(-3, 4) for dy in range(-3, 4) if inside(s, (at[0] + dx, at[1] + dy)))
+    _FIT[key] = dict(c, scale=s, at=[at[0], at[1]])
+    return _FIT[key]
+
+
 def _pic_render(sid, shape, name, frame):
     pic = PICS[sid]
-    c = pic.cells[name]
+    c = _fit(sid, name, shape)
     back = pic.img(c["pose"])
     box = _box(back[3])
     src = _motion(c.get("move", "none"), frame, box)
+    flip = c.get("flip")
+    if flip:
+        back = _flip(back, box)
     out = tuple([0.0] * (N * N) for _ in range(5))
     _over(out, back, src, box)
     if c.get("el"):
@@ -253,8 +316,18 @@ def _pic_render(sid, shape, name, frame):
     else:
         hot = (round(c["hot"][0]), round(c["hot"][1]))
     for paw in pic.paws(c["pose"]):
-        _over(out, pic.img(paw), src, box)
+        _over(out, _flip(pic.img(paw), box) if flip else pic.img(paw), src, box)
     return out, hot
+
+
+def _flip(img, box):
+    """포즈를 몸 상자 안에서 좌우로 뒤집는다 — 개가 제자리에서 반대쪽을 본다(cells.json "flip")"""
+    x0, _, x1, _ = box
+    out = tuple(list(p) for p in img)
+    for p, q in zip(img, out):
+        for y in range(N):
+            q[y * N + x0:y * N + x1] = p[y * N + x0:y * N + x1][::-1]
+    return out
 
 
 def _split(style):
@@ -280,11 +353,11 @@ def animated(style, name):
 
 
 def hot(style, name):
-    """칸 단위 핫스팟 — 기호 자리(at)라 모양이 달라도 같다(모양 화살표 끝을 그 자리에 놓는다)"""
-    sid = _split(style)[0]
+    """칸 단위 핫스팟 — 기호 자리(at). 모양 화살표 끝을 그 자리에 놓으므로 모양이 달라도 같다(grip 칸만 _fit 이 옮긴다)"""
+    sid, shape = _split(style)
     if sid is None:
         return _hot(style, name)
-    c = PICS[sid].cells[name]
+    c = _fit(sid, name, shape)
     x, y = c["at"] if c.get("el") else c["hot"]
     return x / U, y / U
 

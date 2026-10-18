@@ -2,8 +2,8 @@
   "frames": 24,
   "rate": 5,
   "cells": {
-    "arrow":  {"pose": "aim", "el": "arrow", "at": [16, 16], "scale": 0.6, "move": "breathe"},
-    "help":   {"pose": "aim", "el": "help", "at": [16, 16], "scale": 0.6, "move": "breathe"},
+    "arrow":  {"pose": "cling", "grip": true, "el": "arrow", "at": [14, 68], "scale": 1.0, "move": "breathe"},
+    "help":   {"pose": "aim", "flip": true, "el": "help", "at": [16, 16], "scale": 0.6, "move": "breathe"},
     "up":     {"pose": "hug", "el": "up", "at": [186, 92], "scale": 0.65, "move": "breathe"},
     "busy":   {"pose": "chase", "el": "busy", "frames": 40, "rate": 2, "at": [24, 24], "scale": 0.6, "move": "bob"},
     "wait":   {"pose": "chase", "el": "wait", "frames": 40, "rate": 2, "at": [56, 48], "scale": 0.65, "move": "bob"},
