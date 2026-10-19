@@ -1,0 +1,23 @@
+{
+  "frames": 24,
+  "rate": 5,
+  "cells": {
+    "arrow":  {"pose": "cling", "grip": true, "el": "arrow", "at": [14, 68], "scale": 1.0, "move": "breathe"},
+    "help":   {"pose": "aim", "el": "help", "at": [16, 16], "scale": 0.6, "move": "breathe"},
+    "up":     {"pose": "hug", "el": "up", "at": [225, 60], "scale": 0.65, "move": "breathe"},
+    "busy":   {"pose": "chase", "el": "busy", "frames": 40, "rate": 2, "at": [24, 24], "scale": 0.6, "move": "bob"},
+    "wait":   {"pose": "wait", "el": "wait", "frames": 40, "rate": 2, "at": [65, 55], "scale": 0.65, "move": "bob"},
+    "cross":  {"pose": "watch", "el": "cross", "at": [128, 120], "scale": 0.7, "move": "breathe"},
+    "ibeam":  {"pose": "watch", "el": "ibeam", "at": [128, 110], "scale": 0.7, "move": "breathe"},
+    "pen":    {"pose": "watch", "el": "pen", "at": [70, 70], "scale": 0.65, "move": "breathe"},
+    "no":     {"pose": "sulk", "el": "no", "at": [65, 55], "scale": 0.6, "move": "breathe"},
+    "ns":     {"pose": "ns", "el": "ns", "at": [128, 165], "scale": 0.65, "move": "breathe"},
+    "we":     {"pose": "we", "el": "we", "at": [128, 120], "scale": 0.65, "move": "breathe"},
+    "nwse":   {"pose": "nwse", "el": "nwse", "at": [60, 195], "scale": 0.65, "move": "breathe"},
+    "nesw":   {"pose": "nesw", "el": "nesw", "at": [198, 198], "scale": 0.65, "move": "breathe"},
+    "move":   {"pose": "stretch", "el": "move", "at": [128, 62], "scale": 0.65, "move": "breathe"},
+    "hand":   {"pose": "point", "el": null, "hot": [201, 96], "move": "none"},
+    "pin":    {"pose": "peep", "el": "pin", "at": [14, 14], "scale": 0.6, "move": "sway"},
+    "person": {"pose": "peep", "el": "person", "at": [14, 14], "scale": 0.6, "move": "sway"}
+  }
+}

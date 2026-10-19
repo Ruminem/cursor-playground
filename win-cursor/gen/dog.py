@@ -53,8 +53,6 @@ ERASER, FERRULE = hx("f2a0a8ff"), hx("b8b8c0ff")
 DOGS = [
     dict(id="pomeranian", name="포메", fur="f4b462", dark="d99540", light="fff0d6", inner="fbd8b8", ear="small", ear_s=0.75,
          tail="pom", marks=(), coat="fluff", ruff=True, sock=False, rim=RIM_WARM, mouth="tongue", muzzle=1),
-    dict(id="bichon", name="비숑", fur="fffdf8", dark="dedad2", light="fffdf8", inner="fffdf8", ear="none",
-         tail="fluff", marks=(), coat="fluff", big=True, sock=False, rim=RIM_GREY, mouth="smile", muzzle=1),
     dict(id="retriever", name="골든리트리버", fur="e8b45a", dark="c68e36", light="f8dfa8", inner="c68e36", ear="drop",
          ear_len=1.0, tail="feather", marks=(), sock=False, rim=RIM_WARM, mouth="tongue"),
     dict(id="dachshund", name="닥스훈트", fur="b0602e", dark="7c3e1a", light="d99a62", inner="7c3e1a", ear="drop",
@@ -653,20 +651,6 @@ def w_pomeranian():
     return frames
 
 
-def w_bichon():
-    """솜머리 통통 — 동그란 솜사탕 머리가 납작 · 길쭉 통통 튀고 몸이 따라 들썩"""
-    frames = []
-    for k, ph in enumerate(phases()):
-        sq = 0.16 * math.cos(2 * ph)
-        hop = 1.4 * max(0.0, -math.cos(2 * ph))
-        rig = Rig(16.0, 18.0 - hop, 0.0, 0.82)
-        f = sit(rig, k, squash=sq, mood="happy" if sq > 0.08 else "open", hc=(0.0, -7.5 + sq * 3))
-        if sq > 0.1:
-            marks(f, [(4, 9), (5, 8), (27, 9), (26, 8)], MARK_L)
-        frames.append(finish(f))
-    return frames
-
-
 def w_retriever():
     """혀 내밀고 헥헥 — 혀가 들썩이고 어깨가 오르내리며 꼬리를 바닥에 탁탁"""
     frames = []
@@ -772,19 +756,6 @@ def n_pomeranian():
             for i, (x, y) in enumerate(((7, 7), (24, 7))):
                 glyph(f, BANG[1:], x + (i * 2 - 1), y, OUT)
             marks(f, [(6, 12), (5, 13), (25, 12), (26, 13)])
-        frames.append(finish(in_sign(f)))
-    return frames
-
-
-def n_bichon():
-    """도리도리 — 솜머리를 좌우로 세차게 흔든다(움직임 줄)"""
-    frames = []
-    for k, ph in enumerate(phases()):
-        side_ = 1 if (k // 2) % 2 == 0 else -1
-        rig = Rig(15.6, 18.2, 0.0, 0.66)
-        f = sit(rig, k, turn=side_ * 2.2, tilt=side_ * 8, mood="squeeze", mo="flat")
-        x0 = 6 if side_ > 0 else 25
-        marks(f, [(x0, 8), (x0, 10), (x0, 12), (x0 - side_, 9), (x0 - side_, 11)])
         frames.append(finish(in_sign(f)))
     return frames
 
@@ -1435,9 +1406,9 @@ HOT = {"busy": (1, 1), "help": (1, 1), "person": (1, 1), "pin": (1, 1), "hand": 
        "nesw": (15, 15), "pen": (math.floor(TIP[0]), math.floor(TIP[1])), "up": head_top}
 
 
-WAIT = {"pomeranian": w_pomeranian, "bichon": w_bichon, "retriever": w_retriever,
+WAIT = {"pomeranian": w_pomeranian, "retriever": w_retriever,
         "dachshund": w_dachshund, "husky": w_husky, "poodle": w_poodle, "maltese": w_maltese, "jindo": w_jindo}
-NO = {"pomeranian": n_pomeranian, "bichon": n_bichon, "retriever": n_retriever,
+NO = {"pomeranian": n_pomeranian, "retriever": n_retriever,
       "dachshund": n_dachshund, "husky": n_husky, "poodle": n_poodle, "maltese": n_maltese, "jindo": n_jindo}
 
 
