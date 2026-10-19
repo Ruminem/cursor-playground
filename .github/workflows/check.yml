@@ -279,3 +279,23 @@ jobs:
     steps:
       - id: deploy
         uses: actions/deploy-pages@v5
+
+  # main 캐시는 가장 새 한 벌만 남긴다. 코드를 고친 푸시마다 키가 새로 생겨 쌓여서 7벌이 10GB 한도에
+  # 닿았다(2026-10-19, 쓰이는 것은 새 한 벌 2.7GB). 다음 런은 restore-keys 로 가장 새 것만 받는다.
+  # build 안에 두면 캐시 저장(잡 끝 post 단계)보다 먼저 돌아 직전 것을 남기므로 잡을 따로 둔다
+  cache-prune:
+    needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: prune old caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh cache list --key cursors-Windows- --ref refs/heads/main \
+            --sort created_at --order desc --limit 100 --json id --jq '.[1:][].id' |
+            xargs -r -n1 gh cache delete
+          gh cache list --key cursors-Windows- --ref refs/heads/main
