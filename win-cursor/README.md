@@ -248,8 +248,15 @@ The **Cursor shape** tabs at the top of the preview page change the silhouette w
 |---|---|---|
 | `art/` | Classic | The theme's own pixel art: an angular arrow with a crisp notch and tail. |
 | `cutout` | Sticker | A thick white band around the body and a soft shadow, like a die-cut sticker; reads on any background. |
-| `dart` | Arrowhead | A tail-less navigation arrow with a concave back — the one with a truly different outline. |
+| `dart` | Arrowhead | A tail-less navigation arrow with a concave back. |
 | `chunky` | Chunky | A wider body and tail, easy to spot on big or high-resolution screens. |
+| `sprout` | Sprout | An arrow with one plump leaf sprouting from its edge. |
+| `chubby` | Chubby | A round arrow puffed up like a balloon, tip included. |
+| `hearttail` | Heart tail | An arrow whose tail ends in a little heart. |
+| `drop` | Droplet | A tail-less arrow that swells into a plump droplet. |
+| `bean` | Bean | A round arrow with an edge that bows out like a bean. |
+| `tail` | Fluffy tail | An arrow with a fluffy tail curling up at the end. |
+| `pebble` | Pebble | A short-tailed arrow, round and flat like a pebble. |
 
 <!-- /shapes:en -->
 
@@ -588,8 +595,15 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 |---|---|---|
 | `art/` | 기본 | 테마가 그린 픽셀 그림 그대로. 각진 화살표에 또렷한 홈과 꼬리. |
 | `cutout` | 스티커 | 몸 바깥에 흰 띠를 굵게 두르고 옅은 그림자를 깖. 오려 낸 스티커처럼 어떤 배경에서도 뜸. |
-| `dart` | 화살촉 | 꼬리 없이 네 점, 뒷면을 오목하게 판 내비 화살표. 윤곽부터 다른 단 하나. |
+| `dart` | 화살촉 | 꼬리 없이 네 점, 뒷면을 오목하게 판 내비 화살표. |
 | `chunky` | 굵은 | 몸과 꼬리를 넓힌 화살표. 큰 화면이나 높은 해상도에서도 한눈에 찾음. |
+| `sprout` | 새싹 | 빗변에 통통한 떡잎 하나가 돋은 화살표. |
+| `chubby` | 통통이 | 바람 넣은 풍선처럼 부푼 둥근 화살표. 끝도 둥긂. |
+| `hearttail` | 하트꼬리 | 꼬리 끝을 하트처럼 오목볼록하게 맺은 화살표. |
+| `drop` | 물방울 | 꼬리 없이 한쪽으로 통통하게 부푼 물방울 화살표. |
+| `bean` | 완두콩 | 빗변이 콩처럼 바깥으로 휜 둥근 화살표. |
+| `tail` | 살랑꼬리 | 꼬리 끝이 복슬하게 말려 올라간 화살표. |
+| `pebble` | 조약돌 | 꼬리가 짧고 둥글넓적한 조약돌 화살표. |
 
 <!-- /shapes:ko -->
 
