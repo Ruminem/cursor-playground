@@ -14,6 +14,10 @@
                        "front": true 면 포즈를 기호 위에 통째로 얹는다 — 앱이 마젠타 위에 개를 그린 그대로라 앞 층이 필요 없다
   cells.<칸>.flip      포즈를 몸 상자 안에서 좌우로 뒤집음
   cells.<칸>.move      개의 움직임: breathe(숨) · bob(통통) · sway(갸웃) · none
+  cells.<칸>.tilt      머리만 갸웃하는 칸 — 장마다 각도(도, 시계 방향 +, 길이 = 칸 장 수). 포즈를 층 셋으로 받아
+                       <pose>_body → <pose>_head(HEAD_AXIS 축으로 돌림) → <pose>_tilt<n>(앞발) 로 장마다 합친다.
+                       층 이름은 pic_pull 이 노션 <pose>_head · _body · _paw<n> 을 받아 붙인다(_paw 가 아닌 것은
+                       <pose>_paw* 가 원본 포즈의 앞발 층으로 읽히지 않게)
   cells.<칸>.frames · rate   그 칸만 장 수 · 틱을 따로(도는 기호는 12fps 면 끊겨 보여 40장 × 2틱)
 기호가 도는 칸(busy · wait)은 move 가 none 이어도 움직인다(hd 의 스피너가 frame 을 받는다).
 
@@ -299,11 +303,37 @@ def _fit(sid, name, shape):
     return _FIT[key]
 
 
+HEAD_AXIS = (90, 175)                              # watch 머리 층이 도는 목 자리(256px, agy 설계 SA-69)
+
+
+def _tilted(pic, pose, ang):
+    """머리 층이 있는 포즈의 한 장: body → head(목 축으로 ang 도, 시계 방향 +, 쌍선형) → tilt 앞발"""
+    key = (pose, ang)
+    if key not in pic._img:
+        out = tuple([0.0] * (N * N) for _ in range(5))
+        full = (0, 0, N, N)
+        _over(out, pic.img(f"{pose}_body"), None, full)
+        r, (px, py) = math.radians(ang), HEAD_AXIS
+        co, si = math.cos(r), math.sin(r)
+        _over(out, pic.img(f"{pose}_head"), None if not ang else lambda x, y: (
+            px + (x - px) * co + (y - py) * si, py - (x - px) * si + (y - py) * co), full)
+        for p in sorted(q.stem for q in pic.dir.glob(f"{pose}_tilt*.png")):
+            _over(out, pic.img(p), None, full)
+        pic._img[key] = out[:4]
+    return pic._img[key]
+
+
 def _pic_render(sid, shape, name, frame):
     pic = PICS[sid]
     c = _fit(sid, name, shape)
-    back = pic.img(c["pose"])
-    box = _box(back[3])
+    if "tilt" in c:
+        t = c["tilt"]
+        assert len(t) == pic.frames(name)[0], f"{name}: tilt {len(t)}장 ≠ 칸 {pic.frames(name)[0]}장"
+        box = _box(_tilted(pic, c["pose"], 0)[3])
+        back = _tilted(pic, c["pose"], t[round(frame * len(t)) % len(t)])
+    else:
+        back = pic.img(c["pose"])
+        box = _box(back[3])
     src = _motion(c.get("move", "none"), frame, box)
     flip = c.get("flip")
     if flip:

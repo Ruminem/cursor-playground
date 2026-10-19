@@ -36,6 +36,15 @@ def main():
                     {"filter": {"property": "ID", "unique_id": {"equals": int(sa.split("-")[1])}}})["results"][0]
         files = {f["name"]: (f.get("file") or f.get("external"))["url"] for f in page["properties"]["그림"]["files"]}
         orig = [n for n in files if re.fullmatch(r"[a-z]+_pose_[a-z]+\.png", n)]
+        if not orig:   # 층으로만 나눈 행(SA-69 머리 갸웃): <자세>_head · _body · _paw<n> → <자세>_head · _body · _tilt<n>
+            got = []
+            for n, url in files.items():
+                if m := re.fullmatch(r"([a-z]+)_(head|body|paw\d)\.png", n):
+                    got.append(f"{m[1]}_{m[2].replace('paw', 'tilt')}.png")
+                    (out / got[-1]).write_bytes(fetch(url))
+            assert got, f"{sa}: 원본도 층도 없음 {sorted(files)}"
+            print(sa, sorted(got))
+            continue
         assert len(orig) == 1, f"{sa}: 원본이 하나가 아님 {sorted(files)}"
         pose = orig[0][:-4].rsplit("_", 1)[1]
         body = fetch(files[orig[0]])
