@@ -586,7 +586,7 @@ for sid in pets:
             if not (o and e and len(tip) >= 8 and sum(tip) >= 0.9 * len(tip)):
                 bad.append(f"{st} {n} 홀{o}·짝{e}·끝 홀{sum(tip)}/{len(tip)}")
 print(f"막대 둘 구성표 {len(both)}종 · 커서 표식이 어긋난 장 {len(bad)}개")
-assert len(both) == 61, both
+assert len(both) == 62, both
 # 막대 둘 묶음은 다 매끈한 모양에 반응한다 — 픽셀 그림은 peek, 고화질은 화살표를 든 펫 결
 assert set(both) == build.PEEK | set(pets), sorted(set(both) ^ (build.PEEK | set(pets)))
 assert not bad, "커서 표식(파랑 끝 비트)이 어긋남 — " + " · ".join(bad[:8])

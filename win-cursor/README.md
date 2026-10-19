@@ -141,6 +141,7 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 |---|---|---|
 | `hd.py shiba` | Shiba Inu | A Shiba Inu with a donut-curled tail and a white muzzle — it fetches the arrow and wags its curly tail, and plants all four feet when the answer is no. |
 | `hd.py shibapic` | Storybook Shiba | A Shiba straight out of a picture book — it hugs the arrow and breathes, bounces in a play bow while you wait, and turns away with a huff when the answer is no. |
+| `hd.py corgipic` | Storybook Corgi | A Welsh Corgi straight out of a picture book — it hangs on the arrow and breathes, wiggles its loaf-shaped bottom while you wait, and turns its back with a huff when the answer is no. |
 | `art/corgianim` | Welsh Corgi | A Welsh Corgi with big perky ears — it wiggles its loaf-shaped bottom while you wait, and turns its back with a huff when the answer is no. |
 | `art/pomeraniananim` | Pomeranian | A fluff-ball Pomeranian — it spins and bounces on the spot while you wait, and puffs up and yaps when the answer is no. |
 | `art/bichonanim` | Bichon Frise | A Bichon Frise with a cotton-candy head — it bounces its fluffy head while you wait, and shakes it when the answer is no. |
@@ -488,6 +489,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 |---|---|---|
 | `hd.py shiba` | 시바 | 도넛처럼 말린 꼬리에 주둥이만 하얀 시바견. 화살표를 물고 와 말린 꼬리를 붕붕, 안 된다고 하면 네 발로 버티는 커서. |
 | `hd.py shibapic` | 그림 시바 | 그림책에서 걸어 나온 시바. 화살표를 꼭 안고 숨을 쉬다가, 기다릴 때는 엎드려 놀자고 통통, 안 될 때는 고개를 돌리고 흥 하는 커서. |
+| `hd.py corgipic` | 그림 코기 | 그림책에서 걸어 나온 웰시코기. 화살표에 매달려 숨을 쉬다가, 기다릴 때는 뒤돌아 식빵 엉덩이를 씰룩, 안 될 때는 등 돌리고 흥 하는 커서. |
 | `art/corgianim` | 웰시코기 | 큰 귀를 쫑긋 세운 웰시코기. 기다릴 때는 뒤돌아 식빵 엉덩이를 씰룩, 안 될 때는 등 돌리고 흥 하는 커서. |
 | `art/pomeraniananim` | 포메 | 솜털이 동그란 포메라니안. 기다릴 때는 제자리에서 빙글빙글 통통, 안 될 때는 털을 부풀리고 왈왈 짖는 커서. |
 | `art/bichonanim` | 비숑 | 솜사탕 머리의 비숑. 기다릴 때는 솜머리를 통통 튀기고, 안 될 때는 도리도리하는 커서. |
