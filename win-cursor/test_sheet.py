@@ -11,7 +11,7 @@ import sheet
 
 SIZE = 64
 tile = SIZE + 2 * sheet.PAD
-shapes, schemes = ["classic", "cutout"], ["pomeraniananim", "corgianim"]
+shapes, schemes = ["classic", "cutout"], ["pomeraniananim", "poodleanim"]
 
 out = sheet.main([",".join(shapes), ",".join(schemes), "--size", str(SIZE),
                   "-o", str(Path(tempfile.gettempdir()) / "test-sheet.png")])

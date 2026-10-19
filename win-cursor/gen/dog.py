@@ -51,10 +51,6 @@ ERASER, FERRULE = hx("f2a0a8ff"), hx("b8b8c0ff")
 # ── 견종 표 ──────────────────────────────────────────────────────────────────
 # fur 털 · dark 짙은 털(귀 · 무늬 · 그늘) · light 밝은 털(주둥이 · 가슴 · 양말) · inner 귀 속
 DOGS = [
-    dict(id="shiba", name="시바", fur="e0893a", dark="b8692a", light="fff4e4", inner="fff0dc", ear="prick", ear_s=1.0,
-         tail="curl", marks=("urajiro", "brow"), sock=True, rim=RIM_WARM, mouth="smile"),
-    dict(id="corgi", name="웰시코기", fur="ea9a40", dark="c47628", light="fff6ea", inner="f6c8b8", ear="prick", ear_s=1.45,
-         tail="stub", marks=("blaze",), sock=True, rim=RIM_WARM, mouth="tongue", short=True),
     dict(id="pomeranian", name="포메", fur="f4b462", dark="d99540", light="fff0d6", inner="fbd8b8", ear="small", ear_s=0.75,
          tail="pom", marks=(), coat="fluff", ruff=True, sock=False, rim=RIM_WARM, mouth="tongue", muzzle=1),
     dict(id="bichon", name="비숑", fur="fffdf8", dark="dedad2", light="fffdf8", inner="fffdf8", ear="none",
@@ -72,7 +68,7 @@ DOGS = [
     dict(id="jindo", name="진돗개", fur="faf3e4", dark="ddd0b8", light="fffaf0", inner="ead8b8", ear="prick", ear_s=1.15,
          tail="curl", marks=(), sock=False, rim=RIM_GREY, mouth="smile", snout=1.2, gape=True),
 ]
-HD = {"shiba", "jindo"}                                                  # 고화질 펫 결(hdpet)로 옮긴 견종 — 다시 그리면 지운 art 가 되살아난다
+HD = {"jindo"}                                                  # 고화질 펫 결(hdpet)로 옮긴 견종 — 다시 그리면 지운 art 가 되살아난다
 DOGS = [d for d in DOGS if d["id"] not in HD]
 D: dict = {}      # 지금 그리는 견종 (use 가 정한다)
 
@@ -635,91 +631,6 @@ def dachs_side(rig: Rig, k=0, yawn=0.0, mood="open", snout_up=0.0, tail_up=0.0, 
 
 
 # ── wait ─────────────────────────────────────────────────────────────────────
-def w_shiba():
-    """공을 물고 꼬리 프로펠러 — 말린 꼬리가 뒤에서 뱅글뱅글, 바람 줄이 돈다"""
-    frames = []
-    rig = Rig(15.0, 17.4, 0.0, 0.8)
-    for k, ph in enumerate(phases()):
-        a = 2 * math.pi * k / 6
-        tip = (7.0 + 3.6 * math.cos(a), 0.6 + 3.6 * math.sin(a))
-        prop = ("tail", chain([(4.8, 3.6), (7.0, 0.6), tip], 1.9, 1.4), lambda u, v: D["LIGHT"] if v > 2.4 else D["FUR"],
-                False)
-        by = -1.8 + 0.3 * math.sin(2 * ph)
-        ball = ("ball", ell(0.0, by, 3.5, 3.2),
-                lambda u, v: BALL_W if abs(math.hypot(u + 3.4, v - by) - 3.2) < 0.6 else BALL, True)
-        hop = 0.4 * abs(math.sin(2 * ph))
-        f = sit(Rig(15.0, 17.4 - hop, 0.0, 0.8), k, mood="happy", mo="none", tail="none", behind=[prop], front=[ball])
-        for i in range(3):   # 바람 고리
-            b = a + 2.0 + i * 0.5
-            x, y = rig.world(7.0 + 5.6 * math.cos(b), 0.6 + 5.6 * math.sin(b))
-            marks(f, [(math.floor(x), math.floor(y))], MARK_L)
-        frames.append(finish(f))
-    return frames
-
-
-def corgi_butt(rig: Rig, k, sway: float, look: int = -1, mood="open", mo="tongue", hop=0.0) -> dict:
-    """뒷모습 코기 — 하트 식빵 엉덩이(가운데 흰 솜털) · 짧은 다리 · 어깨 너머로 돌아보는 얼굴"""
-    F, Dk, L = D["FUR"], D["DARK"], D["LIGHT"]
-    hips = Rig(*rig.world(0.0, 6.0), rig.ang + sway, rig.k)
-    legs = [("feet", any_of(ell(-4.0, 7.8, 2.2, 1.3), ell(4.0, 7.8, 2.2, 1.3)), L, True),
-            ("legs", any_of(bar((-4.0, 4.0), (-4.0, 7.2), 1.9), bar((4.0, 4.0), (4.0, 7.2), 1.9)), F, True)]
-    f = draw(rig, legs)
-    pants = ("pants", any_of(ell(-1.5, 0.0, 2.0, 2.2), ell(1.5, 0.0, 2.0, 2.2), ell(0.0, 1.4, 1.6, 1.8)), L, False)
-    cheeks = ("butt", any_of(ell(-3.9, -2.2 - hop, 4.9, 4.0), ell(3.9, -2.2 - hop, 4.9, 4.0)), F, False)
-    back = ("back", ell(0.0, -7.0, 4.8, 4.2), F, False)
-    stub = ("stub", fluff(0.0, -5.6 - hop, 1.6, 1.2, n=5, amp=0.15), L, True)
-    f.update(draw(hips, [stub, pants, cheeks, back]))
-    # 엉덩이 골
-    for t in range(3):
-        x, y = hips.world(0.0, -4.0 + t)
-        f.setdefault((math.floor(x), math.floor(y)), OUT)
-        if f.get((math.floor(x), math.floor(y))) == F:
-            f[math.floor(x), math.floor(y)] = OUT
-    hc = (look * 2.6, -13.6)
-    hr = Rig(*hips.world(0.0, 0.0), rig.ang, rig.k)
-    r = 6.8      # 뒤통수 + 어깨 너머로 내민 옆 주둥이 · 눈 하나 — 앞얼굴을 그리면 앞모습으로 읽혔다
-    tip = (hc[0] + look * r * 1.12, hc[1] + r * 0.3)
-    snout = (f"snout", ell(hc[0] + look * r * 0.82, hc[1] + r * 0.3, r * 0.46, r * 0.32), L, True)
-    g = draw(hr, [snout] + head_parts(hc, r, rear=True))
-    nx, ny = hr.cell(*tip)
-    g[nx, ny - 1] = NOSE
-    g[nx - look, ny - 1] = NOSE
-    if mo in ("tongue",) and k % 4 < 2:
-        g[nx - look * 2, ny + 1] = TONGUE
-        g[nx - look * 2, ny + 2] = TONGUE
-    ex, ey = hr.cell(hc[0] + look * r * 0.5, hc[1] - r * 0.1)
-    if mood == "open":
-        g[ex, ey] = EYE
-        g[ex, ey + 1] = EYE
-    elif mood == "happy":
-        g[ex - 1, ey + 1] = EYE
-        g[ex, ey] = EYE
-        g[ex + 1, ey + 1] = EYE
-    else:
-        g[ex - 1, ey + 1] = EYE
-        g[ex, ey + 1] = EYE
-        g[ex + 1, ey + 1] = EYE
-    cx, cy = hr.cell(hc[0] + look * r * 0.55, hc[1] + r * 0.32)
-    if g.get((cx, cy)) not in (OUT, None):
-        g[cx, cy] = CHEEK
-    f.update(g)
-    return f
-
-
-def w_corgi():
-    """식빵 엉덩이 씰룩씰룩 — 뒤돌아 엉덩이를 흔들며 어깨 너머로 해맑게 돌아본다"""
-    frames = []
-    for k, ph in enumerate(phases()):
-        sway = 9.0 * math.sin(2 * ph)
-        f = corgi_butt(Rig(16.0, 20.0, 0.0, 0.82), k, sway, look=-1, mood="happy" if k % 6 < 3 else "open", mo="tongue")
-        if abs(math.sin(2 * ph)) > 0.8:
-            sd = 1 if math.sin(2 * ph) > 0 else -1
-            x0 = 16 + sd * 11
-            marks(f, [(x0, 19), (x0, 21), (x0 + sd, 20), (x0 + sd, 22)])
-        frames.append(finish(f))
-    return frames
-
-
 def w_pomeranian():
     """제자리 빙글 — 앞 · 옆 · 뒤 · 옆으로 돌며 통 튄다. 뒤일 때는 솜꼬리가 몸을 덮는다"""
     frames = []
@@ -849,44 +760,6 @@ def w_jindo():
 
 
 # ── no ───────────────────────────────────────────────────────────────────────
-def n_shiba():
-    """산책 거부 — 목줄이 왼쪽 위로 당겨도 네 발로 버티고 뒤로 기댄 채 '싫어' 눈"""
-    frames = []
-    for k, ph in enumerate(phases()):
-        tug = k % 4 in (0, 1)
-        lean = 10.0 + (5.0 if tug else 0.0)
-        rig = Rig(17.0, 18.2, lean, 0.66)
-        paws = [[(-2.6, 1.0), (-5.6, 8.0)], [(2.4, 1.0), (-1.4, 8.4)]]   # 앞발을 앞으로 내밀어 버팀
-        collar = ("collar", bar((-4.4, -1.6), (4.4, -1.6), 0.9), LEASH, True)
-        f = sit(rig, k, paws=paws, mood="squeeze" if tug else "sulk", mo="flat", turn=1.2, front=[collar], wag=0.2)
-        cx, cy = rig.world(-2.0, -1.4)
-        x1, y1 = 5.0, 5.0
-        n = 24
-        for i in range(n + 1):   # 목줄 — 당길 때 팽팽, 늦출 때 처짐
-            t = i / n
-            x = cx + (x1 - cx) * t
-            y = cy + (y1 - cy) * t + (0 if tug else 2.0 * math.sin(math.pi * t))
-            f[math.floor(x), math.floor(y)] = LEASH_D
-        if tug:
-            marks(f, [(24, 10), (25, 10), (24, 13), (25, 13)])
-        frames.append(finish(in_sign(f)))
-    return frames
-
-
-def n_corgi():
-    """홱 엉덩이 돌리기 — 등을 보이고 앉아 어깨 너머로 흥, 엉덩이를 좌우로 탁탁"""
-    frames = []
-    for k, ph in enumerate(phases()):
-        side_ = -1 if k < 6 else 1
-        snap = k in (0, 6)
-        f = corgi_butt(Rig(15.6, 19.0, 0.0, 0.7), k, side_ * (4.0 if snap else 8.0), look=side_, mood="sulk", mo="flat")
-        if snap:
-            x0 = 25 if side_ < 0 else 6
-            marks(f, [(x0, 14), (x0, 16), (x0, 18), (x0 + 1, 14), (x0 + 1, 16), (x0 + 1, 18)])
-        frames.append(finish(in_sign(f)))
-    return frames
-
-
 def n_pomeranian():
     """왈왈! — 털을 부풀리고 앞발로 통통 뛰며 짖는다"""
     frames = []
@@ -1562,9 +1435,9 @@ HOT = {"busy": (1, 1), "help": (1, 1), "person": (1, 1), "pin": (1, 1), "hand": 
        "nesw": (15, 15), "pen": (math.floor(TIP[0]), math.floor(TIP[1])), "up": head_top}
 
 
-WAIT = {"shiba": w_shiba, "corgi": w_corgi, "pomeranian": w_pomeranian, "bichon": w_bichon, "retriever": w_retriever,
+WAIT = {"pomeranian": w_pomeranian, "bichon": w_bichon, "retriever": w_retriever,
         "dachshund": w_dachshund, "husky": w_husky, "poodle": w_poodle, "maltese": w_maltese, "jindo": w_jindo}
-NO = {"shiba": n_shiba, "corgi": n_corgi, "pomeranian": n_pomeranian, "bichon": n_bichon, "retriever": n_retriever,
+NO = {"pomeranian": n_pomeranian, "bichon": n_bichon, "retriever": n_retriever,
       "dachshund": n_dachshund, "husky": n_husky, "poodle": n_poodle, "maltese": n_maltese, "jindo": n_jindo}
 
 
