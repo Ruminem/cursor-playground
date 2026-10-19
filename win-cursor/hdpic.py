@@ -10,6 +10,7 @@
   cells.<칸>.scale     hd 칸 그림 배율(1 이면 hd 화살표 그대로, 22칸 ≈ 176px)
   cells.<칸>.rot       기호를 핫스팟 축으로 돌리는 각(도, 시계 방향)
   cells.<칸>.grip      앞발 층이 화살표 테두리를 잡는 칸 — 모양 탭에서 그 모양 화살표의 배율 · 자리를 앞발에 맞춰 옮긴다(_fit)
+  cells.<칸>.shapes    grip 칸의 모양별 포즈 {모양: {pose, scale, at}} — 그 모양을 잡고 그린 포즈가 있으면 _fit 대신 이 값(agy 안내 그림 자리)
   cells.<칸>.flip      포즈를 몸 상자 안에서 좌우로 뒤집음
   cells.<칸>.move      개의 움직임: breathe(숨) · bob(통통) · sway(갸웃) · none
   cells.<칸>.frames · rate   그 칸만 장 수 · 틱을 따로(도는 기호는 12fps 면 끊겨 보여 40장 × 2틱)
@@ -258,6 +259,8 @@ def _fit(sid, name, shape):
     c = PICS[sid].cells[name]
     if not (shape and c.get("grip")):
         return c
+    if shape in c.get("shapes", {}):
+        return dict(c, **c["shapes"][shape])
     key = (sid, name, shape)
     if key in _FIT:
         return _FIT[key]
