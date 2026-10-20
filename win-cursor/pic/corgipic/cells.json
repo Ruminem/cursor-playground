@@ -2,7 +2,14 @@
   "frames": 24,
   "rate": 5,
   "cells": {
-    "arrow":  {"pose": "cling", "grip": true, "el": "arrow", "at": [14, 68], "scale": 1.0, "move": "breathe"},
+    "arrow":  {"pose": "cling", "grip": true, "el": "arrow", "at": [14, 68], "scale": 1.0, "move": "breathe", "shapes": {
+        "dart":      {"pose": "clingdart",      "at": [14, 68], "scale": 1.117, "front": true},
+        "sprout":    {"pose": "clingsprout",    "at": [14, 68], "scale": 0.834, "front": true},
+        "hearttail": {"pose": "clinghearttail", "at": [14, 68], "scale": 0.819, "front": true},
+        "drop":      {"pose": "clingdrop",      "at": [9, 58],  "scale": 1.001, "front": true},
+        "tail":      {"pose": "clingtail",      "at": [14, 68], "scale": 0.914, "front": true},
+        "chubby":    {"pose": "clingchubby",    "at": [20, 68], "scale": 0.819, "front": true},
+        "bean":      {"pose": "clingbean",      "at": [20, 68], "scale": 0.831, "front": true}}},
     "help":   {"pose": "aim", "el": "help", "at": [16, 16], "scale": 0.6, "move": "breathe"},
     "up":     {"pose": "hug", "el": "up", "at": [200, 72], "scale": 0.65, "move": "breathe"},
     "busy":   {"pose": "chase", "el": "busy", "frames": 40, "rate": 2, "at": [24, 24], "scale": 0.6, "move": "bob"},
