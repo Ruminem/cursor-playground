@@ -605,6 +605,9 @@ for sid, pic in hdpic.PICS.items():
         d0 = [hdpic._edge(None, c["at"], c.get("scale", 1.0))(x, y) for x, y in pts]
         for shp in ("cutout", "dart", "chunky"):
             f = hdpic._fit(sid, rid, shp)
+            if f.get("front"):  # 모양마다 그린 포즈를 통째로 얹어 기본 포즈 앞발 층을 안 쓴다(_pic_render) — 잴 것이 없다
+                print(f"  grip 건너뜀 {sid}/{rid}@{shp} — front 포즈 {f['pose']}")
+                continue
             d = [hdpic._edge(shp, f["at"], f["scale"])(x, y) for x, y in pts]
             assert pts and all(abs(p - q) <= 6 for p, q in zip(d, d0)), f"{sid}/{rid}@{shp} 앞발이 화살표에서 뜸 {d} (기본 {d0})"
 print("그림 결 OK — 앞발이 잡는 칸은 모양 탭에서도 화살표 테두리에 붙어 있다")
