@@ -142,7 +142,7 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `hd.py shibapic` | Shiba Inu | A Shiba straight out of a picture book — it hugs the arrow and breathes, bounces in a play bow while you wait, and turns away with a huff when the answer is no. |
 | `hd.py corgipic` | Welsh Corgi | A Welsh Corgi straight out of a picture book — it hangs on the arrow and breathes, wiggles its loaf-shaped bottom while you wait, and turns its back with a huff when the answer is no. |
 | `hd.py bichonpic` | Bichon Frise | A cotton-candy Bichon straight out of a picture book — it hangs on the arrow and breathes, bounces its fluffy head while you wait, and shuts its eyes and turns away when the answer is no. |
-| `art/pomeraniananim` | Pomeranian | A fluff-ball Pomeranian — it spins and bounces on the spot while you wait, and puffs up and yaps when the answer is no. |
+| `hd.py pomeranianpic` | Pomeranian | A fluff-ball Pomeranian — it spins and bounces on the spot while you wait, and puffs up and yaps when the answer is no. |
 | `art/retrieveranim` | Golden Retriever | A Golden Retriever with a feathery tail — it pants with its tongue out while you wait, and lies down with a teary sigh when the answer is no. |
 | `art/dachshundanim` | Dachshund | A long-snouted Dachshund with floppy ears — it lies down and yawns while you wait, and sticks its nose in the air when the answer is no. |
 | `art/huskyanim` | Husky | A Husky with a grey mask and blue eyes — it howls at the sky while you wait, and flops on its back in protest when the answer is no. |
@@ -488,7 +488,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `hd.py shibapic` | 시바 | 그림책에서 걸어 나온 시바. 화살표를 꼭 안고 숨을 쉬다가, 기다릴 때는 엎드려 놀자고 통통, 안 될 때는 고개를 돌리고 흥 하는 커서. |
 | `hd.py corgipic` | 웰시코기 | 그림책에서 걸어 나온 웰시코기. 화살표에 매달려 숨을 쉬다가, 기다릴 때는 뒤돌아 식빵 엉덩이를 씰룩, 안 될 때는 등 돌리고 흥 하는 커서. |
 | `hd.py bichonpic` | 비숑 | 그림책에서 걸어 나온 솜사탕 비숑. 화살표에 매달려 숨을 쉬다가, 기다릴 때는 솜머리를 통통, 안 될 때는 눈을 감고 고개를 홱 돌리는 커서. |
-| `art/pomeraniananim` | 포메 | 솜털이 동그란 포메라니안. 기다릴 때는 제자리에서 빙글빙글 통통, 안 될 때는 털을 부풀리고 왈왈 짖는 커서. |
+| `hd.py pomeranianpic` | 포메 | 솜털이 동그란 포메라니안. 기다릴 때는 제자리에서 빙글빙글 통통, 안 될 때는 털을 부풀리고 왈왈 짖는 커서. |
 | `art/retrieveranim` | 골든리트리버 | 깃털 꼬리의 골든리트리버. 기다릴 때는 혀 내밀고 헥헥, 안 될 때는 엎드려 촉촉한 눈으로 한숨 쉬는 커서. |
 | `art/dachshundanim` | 닥스훈트 | 귀가 늘어진 긴 주둥이 닥스훈트. 기다릴 때는 엎드려 하품, 안 될 때는 코를 쳐들고 외면하는 커서. |
 | `art/huskyanim` | 허스키 | 회색 가면에 파란 눈의 허스키. 기다릴 때는 고개 쳐들고 아우우, 안 될 때는 발라당 누워 허우적 항의하는 커서. |

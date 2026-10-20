@@ -51,8 +51,6 @@ ERASER, FERRULE = hx("f2a0a8ff"), hx("b8b8c0ff")
 # ── 견종 표 ──────────────────────────────────────────────────────────────────
 # fur 털 · dark 짙은 털(귀 · 무늬 · 그늘) · light 밝은 털(주둥이 · 가슴 · 양말) · inner 귀 속
 DOGS = [
-    dict(id="pomeranian", name="포메", fur="f4b462", dark="d99540", light="fff0d6", inner="fbd8b8", ear="small", ear_s=0.75,
-         tail="pom", marks=(), coat="fluff", ruff=True, sock=False, rim=RIM_WARM, mouth="tongue", muzzle=1),
     dict(id="retriever", name="골든리트리버", fur="e8b45a", dark="c68e36", light="f8dfa8", inner="c68e36", ear="drop",
          ear_len=1.0, tail="feather", marks=(), sock=False, rim=RIM_WARM, mouth="tongue"),
     dict(id="dachshund", name="닥스훈트", fur="b0602e", dark="7c3e1a", light="d99a62", inner="7c3e1a", ear="drop",
@@ -629,28 +627,6 @@ def dachs_side(rig: Rig, k=0, yawn=0.0, mood="open", snout_up=0.0, tail_up=0.0, 
 
 
 # ── wait ─────────────────────────────────────────────────────────────────────
-def w_pomeranian():
-    """제자리 빙글 — 앞 · 옆 · 뒤 · 옆으로 돌며 통 튄다. 뒤일 때는 솜꼬리가 몸을 덮는다"""
-    frames = []
-    for k, ph in enumerate(phases()):
-        a = 2 * math.pi * k / N
-        turn = 3.4 * math.sin(a)
-        back = math.cos(a) < -0.35
-        hop = 1.2 * abs(math.sin(a))
-        rig = Rig(16.0, 17.0 - hop, 0.0, 0.78)
-        tail = ("tail", fluff(-turn * 1.4, 1.0, 4.6, 4.0, n=9, amp=0.12, ph=k), D["FUR"], False)
-        if back:
-            f = sit(rig, k, turn=turn, tail="none", face=False, front=[tail])
-        else:
-            f = sit(rig, k, turn=turn, mood="happy", mo="tongue", tail="none" if abs(turn) < 2 else "pom")
-        cx, cy = 16, 28
-        for i in range(8):   # 바닥 소용돌이
-            b = a * 2 + i * 0.5
-            marks(f, [(round(cx + 9 * math.cos(b)), round(cy + 1.4 * math.sin(b)))], MARK_L if i > 3 else MARK)
-        frames.append(finish(f))
-    return frames
-
-
 def w_retriever():
     """혀 내밀고 헥헥 — 혀가 들썩이고 어깨가 오르내리며 꼬리를 바닥에 탁탁"""
     frames = []
@@ -744,22 +720,6 @@ def w_jindo():
 
 
 # ── no ───────────────────────────────────────────────────────────────────────
-def n_pomeranian():
-    """왈왈! — 털을 부풀리고 앞발로 통통 뛰며 짖는다"""
-    frames = []
-    for k, ph in enumerate(phases()):
-        bark = k % 3 != 2
-        hop = 1.2 if bark else 0.0
-        rig = Rig(15.6, 18.0 - hop, 0.0, 0.66)
-        f = sit(rig, k, mood="angry", mo="open" if bark else "flat", wag=1.6)
-        if bark:
-            for i, (x, y) in enumerate(((7, 7), (24, 7))):
-                glyph(f, BANG[1:], x + (i * 2 - 1), y, OUT)
-            marks(f, [(6, 12), (5, 13), (25, 12), (26, 13)])
-        frames.append(finish(in_sign(f)))
-    return frames
-
-
 def n_retriever():
     """엎드려 꿈쩍 안 함 — 앞발 위에 턱을 괴고 촉촉한 눈으로 한숨"""
     frames = []
@@ -1406,9 +1366,9 @@ HOT = {"busy": (1, 1), "help": (1, 1), "person": (1, 1), "pin": (1, 1), "hand": 
        "nesw": (15, 15), "pen": (math.floor(TIP[0]), math.floor(TIP[1])), "up": head_top}
 
 
-WAIT = {"pomeranian": w_pomeranian, "retriever": w_retriever,
+WAIT = {"retriever": w_retriever,
         "dachshund": w_dachshund, "husky": w_husky, "poodle": w_poodle, "maltese": w_maltese, "jindo": w_jindo}
-NO = {"pomeranian": n_pomeranian, "retriever": n_retriever,
+NO = {"retriever": n_retriever,
       "dachshund": n_dachshund, "husky": n_husky, "poodle": n_poodle, "maltese": n_maltese, "jindo": n_jindo}
 
 
