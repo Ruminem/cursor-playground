@@ -4,10 +4,12 @@
   "cells": {
     "arrow":  {"pose": "cling", "grip": true, "el": "arrow", "at": [14, 68], "scale": 1.0, "move": "breathe", "shapes": {
         "dart":      {"pose": "clingdart",      "at": [14, 68], "scale": 1.117, "front": true},
+        "chunky":    {"pose": "clingchunky",    "at": [22, 68], "scale": 0.924, "front": true},
         "sprout":    {"pose": "clingsprout",    "at": [14, 68], "scale": 0.834, "front": true},
         "hearttail": {"pose": "clinghearttail", "at": [14, 68], "scale": 0.819, "front": true},
         "drop":      {"pose": "clingdrop",      "at": [9, 58],  "scale": 1.001, "front": true},
         "tail":      {"pose": "clingtail",      "at": [14, 68], "scale": 0.914, "front": true},
+        "pebble":    {"pose": "clingpebble",    "at": [14, 68], "scale": 0.896, "front": true},
         "chubby":    {"pose": "clingchubby",    "at": [20, 68], "scale": 0.819, "front": true},
         "bean":      {"pose": "clingbean",      "at": [20, 68], "scale": 0.831, "front": true}}},
     "help":   {"pose": "aim", "el": "help", "at": [16, 16], "scale": 0.6, "move": "breathe"},
