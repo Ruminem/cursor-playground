@@ -2,7 +2,8 @@
   "frames": 24,
   "rate": 5,
   "cells": {
-    "arrow":  {"pose": "cling", "grip": true, "el": "arrow", "at": [14, 68], "scale": 1.0, "move": "breathe"},
+    "arrow":  {"pose": "cling", "grip": true, "el": "arrow", "at": [14, 68], "scale": 1.0, "move": "breathe", "shapes": {
+        "dart": {"pose": "clingdart", "at": [14, 68], "scale": 1.117}}},
     "help":   {"pose": "aim", "el": "help", "at": [16, 16], "scale": 0.6, "move": "breathe"},
     "up":     {"pose": "hug", "el": "up", "at": [222, 55], "scale": 0.55, "move": "breathe"},
     "busy":   {"pose": "chase", "el": "busy", "frames": 40, "rate": 2, "at": [24, 24], "scale": 0.6, "move": "bob"},

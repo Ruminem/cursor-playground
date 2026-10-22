@@ -608,6 +608,17 @@ for sid, pic in hdpic.PICS.items():
             if f.get("front"):  # 모양마다 그린 포즈를 통째로 얹어 기본 포즈 앞발 층을 안 쓴다(_pic_render) — 잴 것이 없다
                 print(f"  grip 건너뜀 {sid}/{rid}@{shp} — front 포즈 {f['pose']}")
                 continue
+            if f["pose"] != c["pose"]:
+                # 모양마다 그린 포즈(앞발 층 있음) — 그 포즈 앞발 층을 그리므로 기본 포즈 거리와 견주지 않는다. 앞발 무게중심이 테두리
+                # 밖 20px · 안 6px 안이어야 한다(포메 dart 16.2 · 0.4, 기본 포즈 10.8 · 13.3). 배율 0.8 이면 25.9, 16px 오른쪽이면 −8.5 로 걸린다
+                own = []
+                for paw in pic.paws(f["pose"]):
+                    A = pic.img(paw)[3]
+                    own.append((sum(a * (i % hdpic.N) for i, a in enumerate(A)) / sum(A), sum(a * (i // hdpic.N) for i, a in enumerate(A)) / sum(A)))
+                d = [hdpic._edge(shp, f["at"], f["scale"])(x, y) for x, y in own]
+                assert d and all(-6 <= v <= 20 for v in d), f"{sid}/{rid}@{shp} {f['pose']} 앞발이 화살표에서 뜸 {d}"
+                print(f"  grip {sid}/{rid}@{shp} — {f['pose']} 앞발 층 무게중심 테두리까지 {[round(v, 1) for v in d]}")
+                continue
             d = [hdpic._edge(shp, f["at"], f["scale"])(x, y) for x, y in pts]
             assert pts and all(abs(p - q) <= 6 for p, q in zip(d, d0)), f"{sid}/{rid}@{shp} 앞발이 화살표에서 뜸 {d} (기본 {d0})"
 print("그림 결 OK — 앞발이 잡는 칸은 모양 탭에서도 화살표 테두리에 붙어 있다")
