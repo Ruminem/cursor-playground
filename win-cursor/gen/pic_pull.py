@@ -35,7 +35,8 @@ def main():
         page = call(f"https://api.notion.com/v1/databases/{DB}/query",
                     {"filter": {"property": "ID", "unique_id": {"equals": int(sa.split("-")[1])}}})["results"][0]
         files = {f["name"]: (f.get("file") or f.get("external"))["url"] for f in page["properties"]["그림"]["files"]}
-        orig = [n for n in files if re.fullmatch(r"[a-z]+_pose_[a-z]+\.png", n)]
+        # 다시 뽑은 칸 행(SA-173 골든 aim)은 _pose_ 없이 <이름>_<자세>.png 로 올라온다
+        orig = [n for n in files if re.fullmatch(r"[a-z]+_(pose_)?(?!head\.|body\.)[a-z]+\.png", n)]
         if not orig:   # 층으로만 나눈 행(SA-69 머리 갸웃): <자세>_head · _body · _paw<n> → <자세>_head · _body · _tilt<n>
             got = []
             for n, url in files.items():
