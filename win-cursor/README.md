@@ -148,7 +148,7 @@ Schemes with `"animated": true` are built as animated cursors (.ani). The tables
 | `hd.py huskypic` | Husky | A Husky with a grey mask and blue eyes — it howls at the sky while you wait, and flops on its back in protest when the answer is no. |
 | `hd.py poodlepic` | Poodle | A Poodle with curly ears and a pom-pom tail — it tilts its head this way and that while you wait, and flicks its nose up when the answer is no. |
 | `hd.py maltesepic` | Maltese | A Maltese with a pink bow — it nods off while you wait, and covers its eyes with its paws when the answer is no. |
-| `hd.py jindo` | Jindo | A Jindo with pointed ears and a curled tail — it sits up on alert while you wait, and huffs with an anger mark when the answer is no. |
+| `hd.py jindopic` | Jindo | A Jindo with pointed ears and a curled tail — it sits up on alert while you wait, and huffs with an anger mark when the answer is no. |
 
 **Little birds · Animated**
 
@@ -494,7 +494,7 @@ python make_cur.py my-art.png out/mine.cur --hotspot 0,0   # PNG (transparent ba
 | `hd.py huskypic` | 허스키 | 회색 가면에 파란 눈의 허스키. 기다릴 때는 고개 쳐들고 아우우, 안 될 때는 발라당 누워 허우적 항의하는 커서. |
 | `hd.py poodlepic` | 푸들 | 곱슬 귀에 방울 꼬리의 푸들. 기다릴 때는 고개를 갸웃갸웃, 안 될 때는 콧대 높게 고개를 홱 돌리는 커서. |
 | `hd.py maltesepic` | 말티즈 | 분홍 리본을 단 말티즈. 기다릴 때는 리본을 흔들며 꾸벅꾸벅 졸고, 안 될 때는 앞발로 눈을 가리는 커서. |
-| `hd.py jindo` | 진돗개 | 뾰족 귀에 말린 꼬리의 진돗개. 기다릴 때는 똑바로 앉아 귀를 쫑긋 세우고, 안 될 때는 뿔이 나서 씩씩대는 커서. |
+| `hd.py jindopic` | 진돗개 | 뾰족 귀에 말린 꼬리의 진돗개. 기다릴 때는 똑바로 앉아 귀를 쫑긋 세우고, 안 될 때는 뿔이 나서 씩씩대는 커서. |
 
 **짹짹이 · 애니**
 
